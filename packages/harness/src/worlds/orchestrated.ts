@@ -94,7 +94,8 @@ export function orchestratedWorlds(parts: OrchestratedParts): (scenario: Scenari
     return {
       orchestrator,
       setTime: (at) => clock.set(at),
-      answer: (decisionId, choice) => signEscalationAnswer({ decision_id: decisionId, choice, answered_at: clock.now() }, delegator),
+      answer: (escalated, choice) =>
+        signEscalationAnswer({ decision_id: escalated.id, mandate_id: escalated.mandate_id, cart: escalated.cart, choice, answered_at: clock.now() }, delegator),
       revocation: () => signRevocation({ mandate_id: scenario.mandate.id, revoked_at: clock.now(), reason: "revoked by the simulated delegator" }, delegator),
       entries: async () => (await store.read(logId)).slice(prior),
       audit: () => auditStore(store, logId, engine.did),

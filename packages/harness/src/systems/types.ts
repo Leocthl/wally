@@ -131,8 +131,8 @@ export interface World {
 export interface OrchestratedWorld {
   readonly orchestrator: Orchestrator;
   setTime(at: Date): void;
-  /** The delegator's signed answer to an escalation. */
-  answer(decisionId: string, choice: "APPROVE" | "DENY"): EscalationAnswer;
+  /** The delegator's signed answer to an escalation, bound to the escalated decision's mandate and cart (laisee.resolve.v2). */
+  answer(escalated: Decision, choice: "APPROVE" | "DENY"): EscalationAnswer;
   /** The delegator's signed revocation of the mandate. */
   revocation(): Revocation;
   /** Entries from the decision on: the sealed credential and the seeded history are not in it. */

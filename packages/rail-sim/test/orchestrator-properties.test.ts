@@ -149,11 +149,12 @@ async function runSequence(ops: readonly Op[]): Promise<World> {
       stub.setMode(op.mode);
       record(await orchestrator.checkout({ cardId }));
     } else if (op.kind === "answer") {
-      const escalations = (await logged()).flatMap((e) => (e.kind === "DECISION" && e.payload.outcome === "ESCALATE" ? [e.payload.id] : []));
-      const id = escalations[op.esc % Math.max(1, escalations.length)];
-      if (id === undefined) continue;
+      const escalations = (await logged()).flatMap((e) => (e.kind === "DECISION" && e.payload.outcome === "ESCALATE" ? [e.payload] : []));
+      const esc = escalations[op.esc % Math.max(1, escalations.length)];
+      if (esc === undefined) continue;
       const signer = op.forged ? k.engine : k.delegator;
-      record(await orchestrator.answerEscalation(signEscalationAnswer({ decision_id: id, choice: op.choice, answered_at: clock.now() }, signer)));
+      const answer = signEscalationAnswer({ decision_id: esc.id, mandate_id: esc.mandate_id, cart: esc.cart, choice: op.choice, answered_at: clock.now() }, signer);
+      record(await orchestrator.answerEscalation(answer));
     } else if (op.kind === "revoke") {
       await orchestrator.revoke(signRevocation({ mandate_id: "mnd_demoM0", revoked_at: clock.now() }, k.delegator));
     } else {
