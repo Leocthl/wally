@@ -29,6 +29,14 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+function plainCopy<T>(payload: T): T {
+  try {
+    return structuredClone(payload);
+  } catch {
+    throw new LogError("SCHEMA", "payload is not plain JSON data");
+  }
+}
+
 function sealedLogId(payload: unknown): string {
   try {
     return logIdForMandate(mandateIdFromCredentialId((payload as MandateCredential).id));
@@ -53,7 +61,7 @@ export function buildEntry<K extends LogEntryKind>(args: BuildEntryArgs<K>): Log
   if (head !== null && head.log_id !== logId) throw new LogError("HEAD", `head belongs to ${head.log_id}, not ${logId}`);
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new LogError("CLOCK", "now is not a valid Date");
   const seq = head === null ? 0 : head.seq + 1;
-  const payload = structuredClone(args.payload);
+  const payload = plainCopy(args.payload);
   checkPlacement(kind, seq, logId, payload);
   const finding = findCardData(payload);
   if (finding !== null) throw new LogError("CARD_DATA", `refused (I8): ${finding}`);

@@ -93,6 +93,15 @@ describe("appendEntry", () => {
     expect(await store.read(LOG_ID)).toEqual([]);
   });
 
+  it("refuses a payload that is not plain JSON data with a LogError", async () => {
+    const keys = demoKeys();
+    const store = new MemoryLogStore();
+    const credential = { ...demoCredential(keys), hook: () => undefined };
+    await expect(appendEntry(store, keys.engine, LOG_ID, "MANDATE_SEALED", credential as never, NOW)).rejects.toMatchObject({
+      code: "SCHEMA",
+    });
+  });
+
   it("propagates a store failure and leaves nothing half-written", async () => {
     const keys = demoKeys();
     const failing: LogStore = {

@@ -1,6 +1,6 @@
-import type { Checkpoint, VerifyFailure, VerifyResult } from "../ports";
+import type { Checkpoint, VerifyFailure } from "../ports";
 
-/** VerifyResult plus a human-readable detail on failure (CLI, verifier page). Assignable to VerifyResult. */
+/** VerifyResult (ports.ts) plus a human-readable detail on failure (CLI, verifier page); assignable to it. */
 export type VerifyReport =
   | { readonly ok: true; readonly head: Checkpoint }
   | { readonly ok: false; readonly failedSeq: number; readonly reason: VerifyFailure; readonly detail: string };
@@ -8,9 +8,6 @@ export type VerifyReport =
 export function fail(failedSeq: number, reason: VerifyFailure, detail: string): VerifyReport {
   return { ok: false, failedSeq, reason, detail };
 }
-
-/** Compile-time check that a VerifyReport is a VerifyResult (ports.ts). */
-export const asVerifyResult = (report: VerifyReport): VerifyResult => report;
 
 export interface PublicKeys {
   /** Engine (operator) did:keys allowed to sign log entries. */

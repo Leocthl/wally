@@ -88,5 +88,5 @@ export function verifyChain(entries: readonly unknown[], publicKeys: PublicKeys,
   return truncated ?? { ok: true, head: checkpointOf(last) };
 }
 
-/** verifyChain conforms to the VerifyChain port. */
-export const _verifyChainConforms: VerifyChain = verifyChain;
+/** Compile-time check: verifyChain conforms to the VerifyChain port (VerifyReport is a VerifyResult). */
+const _verifyChainConforms: VerifyChain = verifyChain;

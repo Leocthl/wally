@@ -3,7 +3,7 @@
 export { verifyChain } from "./chain";
 export { parseLogText, verifyLogText, type ParsedLog } from "./text";
 export { parsePublicKeys } from "./keys";
-export { asVerifyResult, type PublicKeys, type VerifyReport } from "./report";
+export type { PublicKeys, VerifyReport } from "./report";
 export { checkpointOf, parseCheckpoint } from "../log/checkpoint";
 export { verifyEscalationAnswer, verifyRevocation, type DelegatorCheck } from "../log/delegator";
 export { verifyMandateCredential, type CredentialCheck, type CredentialFailure } from "../vc/proof";
