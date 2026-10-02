@@ -11,14 +11,16 @@ export const COMPILER_SYSTEM_PROMPT = [
   "2. Copy only what the sentence states. Use null or not_stated for anything it does not state. Never invent a limit.",
   "3. Amounts are whole Hong Kong dollars: HK$800, $800, 800 dollars, 800蚊 and 八百蚊 are all 800.",
   '4. period is how long the whole budget lasts: "this_month" when it says this month; "days" or "weeks" with period_count when it says the budget runs for a number of days or weeks; otherwise "not_stated". A rate such as "5 purchases a day" is not a period. Do not compute dates.',
-  '5. sellers: "verified_only" when it limits purchases to verified sellers; "any" only when it clearly allows any seller; otherwise "not_stated".',
-  "6. cap_hkd: a fixed limit for one purchase. ask_above_hkd: ask the shopper before a purchase above this amount. share_percent: a limit for one purchase as a share of what is left (half = 50).",
-  "7. max_purchases with per: a limit on how many purchases per hour, day or week (\"at most 5 purchases a day\" is max_purchases 5, per day).",
-  "8. The sentence may be in English, Traditional Chinese or Cantonese.",
+  "5. end_month and end_day: when the sentence names a calendar date the budget ends on ('until 31 Oct' is end_month 10, end_day 31; 'until the end of November' is end_month 11, end_day null; '十月底前' is end_month 10, end_day null), copy that month and day; otherwise null. A date that belongs to something else (shipping, delivery, a sale) is not an end date.",
+  '6. sellers: "verified_only" when it limits purchases to verified sellers; "any" only when it clearly allows any seller; otherwise "not_stated".',
+  "7. cap_hkd: a fixed limit for one purchase. ask_above_hkd: ask the shopper before a purchase above this amount. share_percent: a limit for one purchase as a share of what is left (half = 50).",
+  "8. max_purchases with per: a limit on how many purchases per hour, day or week (\"at most 5 purchases a day\" is max_purchases 5, per day).",
+  "9. The sentence may be in English, Traditional Chinese or Cantonese.",
   "Answer with the JSON object only, compact on one line, no line breaks.",
 ].join("\n");
 
-const nullableInt = (max: number) => ({ anyOf: [{ type: "integer", minimum: 0, maximum: max }, { type: "null" }] });
+const nullableRange = (min: number, max: number) => ({ anyOf: [{ type: "integer", minimum: min, maximum: max }, { type: "null" }] });
+const nullableInt = (max: number) => nullableRange(0, max);
 
 /** Largest whole-dollar amount the grammar lets through; code clamps to the rail ceiling anyway. */
 const MAX_HKD = 1_000_000;
@@ -41,6 +43,9 @@ export function buildCompilerSchema(categories: readonly string[]): Record<strin
       share_percent: nullableInt(100),
       max_purchases: nullableInt(1_000),
       per: { enum: ["hour", "day", "week", "not_stated"] },
+      // A calendar date the budget ends on; the year is never asked for (a date means its next occurrence).
+      end_month: nullableRange(1, 12),
+      end_day: nullableRange(1, 31),
     },
   };
 }

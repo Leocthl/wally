@@ -6,5 +6,6 @@
 export { compileMandateText, type CompileFailure, type CompileInput, type CompileOutcome } from "./compile-mandate";
 export { DEFAULT_CATEGORIES, DEFAULT_COMPILER_LIMITS, DEFAULT_COMPILER_TIMEOUT_MS, MAX_SENTENCE_CHARS, type CompilerLimits } from "./config";
 export { labelsFor, type ChipKind, type RuleLabel } from "./labels";
-export { buildRules, monthEndHk, type Clamp, type Note, type RawRules } from "./rules";
+export { capEnd, describeEndDate, isRealDate, resolveEndDate, type EndDate, type ResolvedEnd } from "./end-date";
+export { buildRules, monthEndHk, periodClamp, toTimestamp, type Clamp, type Note, type RawRules } from "./rules";
 export { COMPILER_SYSTEM_PROMPT } from "./prompt";

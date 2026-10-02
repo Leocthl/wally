@@ -2,6 +2,7 @@
 // model), so the Seal screen can show one chip per rule without extra logic. Dates are shown in Hong Kong time.
 import type { CompiledRules } from "@laisee/core/generated";
 import type { DEFAULT_CATEGORIES } from "./config";
+import { SHORT_MONTHS } from "./end-date";
 
 export type ChipKind = "budget" | "expiry" | "category" | "sellers" | "cap" | "askAbove" | "share" | "velocity";
 
@@ -14,7 +15,6 @@ export interface RuleLabel {
 }
 
 const HKT_OFFSET_MS = 8 * 3_600_000;
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 const HALF_BP = 5_000;
 
 const hkd = (minor: number): string => (minor % 100 === 0 ? `HK$${minor / 100}` : `HK$${(minor / 100).toFixed(2)}`);
@@ -23,7 +23,7 @@ function untilLabel(validUntil: string): Pick<RuleLabel, "en" | "zhHK"> {
   const hk = new Date(Date.parse(validUntil) + HKT_OFFSET_MS);
   const day = hk.getUTCDate();
   const month = hk.getUTCMonth();
-  return { en: `Until ${day} ${MONTHS[month] ?? ""}`, zhHK: `至${month + 1}月${day}日` };
+  return { en: `Until ${day} ${SHORT_MONTHS[month] ?? ""}`, zhHK: `至${month + 1}月${day}日` };
 }
 
 function categoryLabel(slugs: readonly string[], names: typeof DEFAULT_CATEGORIES): Pick<RuleLabel, "en" | "zhHK"> {
