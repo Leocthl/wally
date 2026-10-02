@@ -62,6 +62,11 @@ describe("findCardData after normalising (S-I8-1)", () => {
     ["a soft hyphen between every digit", pan.split("").join(String.fromCharCode(0xad))],
     ["an ideographic space between groups", pan.replace(/(\d{4})(?=\d)/g, `$1${String.fromCharCode(0x3000)}`)],
     ["Chinese text right before it", `卡號${pan}`],
+    ["a date in front of it", `2026-10-03 ${spaced}`],
+    ["a reference number in front of it", `ref 2026 1003 ${spaced}`],
+    ["en dashes between groups", pan.replace(/(\d{4})(?=\d)/g, `$1${String.fromCharCode(0x2013)}`)],
+    ["minus signs between groups", pan.replace(/(\d{4})(?=\d)/g, `$1${String.fromCharCode(0x2212)}`)],
+    ["middle dots between groups", pan.replace(/(\d{4})(?=\d)/g, `$1${String.fromCharCode(0xb7)}`)],
   ])("flags a PAN written with %s", (_name, text) => {
     expect(findCardData({ reason: text })).not.toBeNull();
   });
@@ -73,7 +78,7 @@ describe("findCardData after normalising (S-I8-1)", () => {
     },
   );
 
-  it.each(["send the CVC", "cvv: 123", "CVV2", "security-code", "card verification"])("flags the text %j", (text) => {
+  it.each(["send the CVC", "cvv: 123", "CVV2", "security-code", "card verification", "sec code 123"])("flags the text %j", (text) => {
     expect(findCardData({ reason: text })).not.toBeNull();
   });
 
@@ -122,6 +127,13 @@ describe("findCardData after normalising (S-I8-1)", () => {
     for (const file of readdirSync(SCHEMA_DIR).filter((f) => f.endsWith(".schema.json"))) collect(JSON.parse(readFileSync(join(SCHEMA_DIR, file), "utf8")));
     expect(names.size).toBeGreaterThan(100);
     for (const name of names) expect(findCardData({ [name]: "x" }), name).toBeNull();
+  });
+
+  it("scans in linear time: a 64 KB line of digit groups is checked fast", () => {
+    const groups = Array.from({ length: 13_000 }, (_, i) => String(i % 10).repeat(1 + (i % 4))).join(" ");
+    const started = performance.now();
+    findCardData({ reason: groups, other: `${"9".repeat(64 * 1024)}x` });
+    expect(performance.now() - started).toBeLessThan(2_000);
   });
 
   it("refuses a long digit run inside a card handle even within a token", () => {

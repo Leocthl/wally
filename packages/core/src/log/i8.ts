@@ -2,30 +2,26 @@
 // this also covers free text and free keys (intent text, revoke reason, rule and explanation inputs).
 // Text and keys are normalised first: NFKC (fullwidth digits, no-break spaces), format characters removed
 // (\p{Cf}: zero-width spaces, joiners, soft hyphens) and every Unicode decimal digit read as its ASCII digit.
-// Then it flags Luhn-valid 13-19 digit runs that stand alone (not inside a hex or base64 token), with up to
-// 3 separators [\s./_-] between digits; card-data key names (card-number, cc_no, cvv2, security code, pan,
-// card expiry); and CVV or security-code mentions. Findings name the path, never the digits.
+// Then it flags Luhn-valid 13-19 digit spans that stand alone (not inside a hex or base64 token), with up to
+// 3 separators between digit groups (pan-scan.ts); card-data key names (card-number, cc_no, cvv2, security
+// code, pan, card expiry); and CVV or security-code mentions. Findings name the path, never the digits.
 // CARD_MINTED carries the SIMULATED rail handle by schema design: an opaque hdl_ reference, not a card number.
 // The guard still scans it, and any 13+ digit run inside a handle is refused even within a token.
+import { hasLongDigitRun, hasPanRun } from "./pan-scan";
 
-/** ISO/IEC 7812 card numbers are 13-19 digits. */
-const PAN_MIN_DIGITS = 13;
-const PAN_MAX_DIGITS = 19;
-/** Separator characters allowed between two digits of one run, and how many in a row. */
-const SEPARATORS = "[\\s./_-]";
-const MAX_SEPARATORS = 3;
 /** Longest stretch of consecutive Unicode digits scanned back to find a digit's value (Nd ranges hold 10). */
 const MAX_DIGIT_SCAN = 100;
+/** Digits in a key name from which the name itself is never echoed. */
+const KEY_DIGITS_WITHHELD = 4;
 
-const PAN_RUN = new RegExp(`(?<![A-Za-z0-9])\\d(?:${SEPARATORS}{0,${MAX_SEPARATORS}}\\d){${PAN_MIN_DIGITS - 1},${PAN_MAX_DIGITS - 1}}(?![A-Za-z0-9])`, "g");
-const LONG_DIGIT_RUN = new RegExp(`\\d(?:${SEPARATORS}{0,${MAX_SEPARATORS}}\\d){${PAN_MIN_DIGITS - 1},}`);
-const SEPARATOR_CHARS = new RegExp(SEPARATORS, "g");
+export { luhnValid } from "./pan-scan";
+
 const FORMAT_CHARS = /\p{Cf}/gu;
 const UNICODE_DIGIT = /\p{Nd}/u;
 const NON_ASCII_DIGIT = /(?![0-9])\p{Nd}/gu;
 
 const CVV_TEXT = /(?<![A-Za-z0-9])(cvv|cvc)\d*(?![A-Za-z0-9])/i;
-const SECURITY_CODE_TEXT = /security[\s._-]*code|card[\s._-]*verification/i;
+const SECURITY_CODE_TEXT = /sec(urity)?[\s._-]*code|card[\s._-]*verification/i;
 /** Signatures, hashes and other encodings: one long token, no spaces. Never prose, so no CVV wording check. */
 const OPAQUE_TOKEN = /^[A-Za-z0-9_-]{40,}$/;
 /** Key names, compared after normalising and joining their word tokens ("card-number" -> "cardnumber"). */
@@ -33,18 +29,6 @@ const CARD_KEY_JOINED =
   /^((credit|debit|payment)?(card|cc)(no|nbr|num|number|pan)|primaryaccountnumber|securitycode|cardsecuritycode|(card)?expiry(date)?|(card)?exp(date|month|year)|(card)?expiration(date|month|year))$/;
 const CARD_KEY_CONTAINS = /(cardnumber|primaryaccount|securitycode|cardverification|cvv|cvc)/;
 const CARD_KEY_TOKEN = /^(pan|cvv\d*|cvc\d*|cvn\d*|csc|cvd)$/;
-
-/** Luhn (mod 10) check over a digit string. */
-export function luhnValid(digits: string): boolean {
-  if (!/^\d+$/.test(digits)) return false;
-  let sum = 0;
-  for (let i = 0; i < digits.length; i++) {
-    let d = Number(digits[digits.length - 1 - i]);
-    if (i % 2 === 1) d = d * 2 > 9 ? d * 2 - 9 : d * 2;
-    sum += d;
-  }
-  return sum % 10 === 0;
-}
 
 /**
  * ASCII value of a non-ASCII decimal digit. Unicode encodes decimal digits in runs of ten from zero, so the value
@@ -62,18 +46,10 @@ export function normaliseForI8(text: string): string {
   return folded.replace(NON_ASCII_DIGIT, (d) => digitValue(d.codePointAt(0) ?? 0));
 }
 
-function panLike(text: string): boolean {
-  for (const match of text.matchAll(PAN_RUN)) {
-    const digits = match[0].replace(SEPARATOR_CHARS, "");
-    if (digits.length >= PAN_MIN_DIGITS && digits.length <= PAN_MAX_DIGITS && luhnValid(digits)) return true;
-  }
-  return false;
-}
-
 function textFinding(raw: string, path: string, key: string | null): string | null {
   const text = normaliseForI8(raw);
-  if (panLike(text)) return `PAN-like digit run at ${path}`;
-  if (key === "handle" && LONG_DIGIT_RUN.test(text)) return `long digit run in the card handle at ${path}`;
+  if (hasPanRun(text)) return `PAN-like digit run at ${path}`;
+  if (key === "handle" && hasLongDigitRun(text)) return `long digit run in the card handle at ${path}`;
   if (OPAQUE_TOKEN.test(text)) return null;
   if (CVV_TEXT.test(text) || SECURITY_CODE_TEXT.test(text)) return `CVV or security code mention at ${path}`;
   return null;
@@ -81,7 +57,7 @@ function textFinding(raw: string, path: string, key: string | null): string | nu
 
 function checkScalar(value: unknown, path: string, key: string | null): string | null {
   if (typeof value === "string") return textFinding(value, path, key);
-  if (typeof value === "number" && Number.isInteger(value) && panLike(String(Math.abs(value)))) {
+  if (typeof value === "number" && Number.isInteger(value) && hasPanRun(String(Math.abs(value)))) {
     return `PAN-like number at ${path}`;
   }
   return null;
@@ -97,11 +73,11 @@ function keyTokens(key: string): string[] {
 function keyFinding(key: string, path: string): string | null {
   const tokens = keyTokens(key);
   const joined = tokens.join("");
-  const shown = /\d{4}/.test(normaliseForI8(key).replace(SEPARATOR_CHARS, "")) ? "(name withheld)" : key;
+  const shown = (normaliseForI8(key).match(/\d/g) ?? []).length >= KEY_DIGITS_WITHHELD ? "(name withheld)" : key;
   if (tokens.some((t) => CARD_KEY_TOKEN.test(t)) || CARD_KEY_JOINED.test(joined) || CARD_KEY_CONTAINS.test(joined)) {
     return `card data field ${path}.${shown}`;
   }
-  return panLike(normaliseForI8(key)) ? `PAN-like digit run in a key under ${path}` : null;
+  return hasPanRun(normaliseForI8(key)) ? `PAN-like digit run in a key under ${path}` : null;
 }
 
 function findInObject(value: object, path: string): string | null {
