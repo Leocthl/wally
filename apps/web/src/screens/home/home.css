@@ -76,6 +76,13 @@
 .home-try__icon--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
 .home-try__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
 .home-try__desc { font-size: var(--text-sm); color: var(--c-ink-muted); line-height: var(--lh-snug); }
+/* Pills: the same scenarios as one-tap shortcuts (Ask sheet). */
+.home-try--pills { gap: var(--sp-3); }
+.home-try--pills .home-try__grid { display: flex; flex-wrap: wrap; }
+.home-try--pills .home-try__grid > li { max-width: 100%; }
+.home-try--pills .home-try__card { display: inline-flex; align-items: center; gap: var(--sp-2); width: auto; min-height: var(--tap); padding: var(--sp-1) var(--sp-4) var(--sp-1) var(--sp-1); border-radius: var(--r-pill); }
+.home-try--pills .home-try__icon { width: 2rem; height: 2rem; margin: 0; border-radius: 50%; }
+.home-try--pills .home-try__title { font-size: var(--text-sm); }
 
 /* One-off cards */
 .console-tickets { display: grid; gap: var(--sp-3); }

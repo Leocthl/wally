@@ -1,5 +1,5 @@
-// The Ask sheet, opened by the raised tab button on every screen: Try asking shortcuts, "Try to trick Wally" (the text
-// goes to api.propose as an untrusted listing description), and the slot for the natural-language request.
+// The Ask sheet, opened by the raised tab button on every screen: the slot for the natural-language request, "Try to
+// trick Wally" (the text goes to api.propose as an untrusted listing description), and Try asking shortcuts.
 import { useId, useState, type FormEvent, type ReactElement } from "react";
 import type { ScenarioId } from "../api/types";
 import { BRAND } from "../brand";
@@ -21,9 +21,10 @@ import { useProposer, useScenarioRunner } from "./actions";
 export type AskWally = (request: string) => Promise<void>;
 
 function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; readonly busy: boolean }): ReactElement {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { info } = useBoothContext();
   const [text, setText] = useState("");
+  const gap = locale === "zh-HK" ? "" : " ";
   const trimmed = text.trim();
   const titleId = useId();
   const submit = (e: FormEvent): void => {
@@ -36,7 +37,7 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
       <h3 id={titleId} className="shell-trick__title"><Icon name="shieldAlert" size={20} /> {t(UI["shell.trickTitle"](BRAND.name))}</h3>
       <TextArea
         label={t(UI["shell.trickLabel"])}
-        hint={info?.kind === "mock" ? `${t(UI["shell.trickHint"])} ${t(UI["shell.trickStandIn"])}` : t(UI["shell.trickHint"])}
+        hint={info?.kind === "mock" ? `${t(UI["shell.trickHint"])}${gap}${t(UI["shell.trickStandIn"])}` : t(UI["shell.trickHint"])}
         placeholder={t(UI["shell.trickPlaceholder"])}
         rows={3}
         value={text}
@@ -103,8 +104,9 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
     <Sheet open={open} onClose={onClose} title={t(UI["shell.askTitle"](BRAND.name))} description={t(UI["shell.askLead"])}>
       <div className="shell-ask">
         {onAsk ? <AskField onAsk={onAsk} busy={busy} onSent={onClose} /> : null}
-        <TryAsking onRun={pick} busy={busy} />
+        {/* The trick box first: it is what only this sheet offers (Budget already lists the scenarios as cards). */}
         <TrickBox onSend={send} busy={busy} />
+        <TryAsking onRun={pick} busy={busy} variant="pills" />
       </div>
     </Sheet>
   );

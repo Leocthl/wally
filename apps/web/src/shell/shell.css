@@ -91,7 +91,7 @@
 
 /* Ask sheet */
 .shell-ask { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
-.shell-trick { display: grid; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--c-surface-sunken); }
+.shell-trick { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--shadow-1); }
 .shell-trick__title { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .shell-trick__title svg { flex: none; color: var(--c-primary-ink); }
 .shell-askfield { display: block; }

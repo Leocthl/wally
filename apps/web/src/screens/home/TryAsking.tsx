@@ -14,9 +14,11 @@ export interface TryAskingProps {
   readonly busy: boolean;
   /** Heading level for the group titles (3 on Budget under "Try asking", 3 in the sheet). */
   readonly headingLevel?: 2 | 3;
+  /** "cards" with a one-line description (Budget); "pills" with the title only (the Ask sheet's shortcuts). */
+  readonly variant?: "cards" | "pills";
 }
 
-function Group({ group, onRun, busy, headingLevel }: { readonly group: TryGroup } & Required<TryAskingProps>): ReactElement {
+function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<TryAskingProps>): ReactElement {
   const { t } = useLocale();
   const id = useId();
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -29,7 +31,7 @@ function Group({ group, onRun, busy, headingLevel }: { readonly group: TryGroup 
             <button type="button" className="home-try__card" data-scenario={s.id} disabled={busy} onClick={() => onRun(s.id)}>
               <span className={cx("home-try__icon", `home-try__icon--${s.tone}`)}><Icon name={s.icon} size={20} /></span>
               <span className="home-try__title">{t(UI[`home.sc.${s.id}`])}</span>
-              <span className="home-try__desc">{t(UI[`home.sc.${s.id}.d`])}</span>
+              {variant === "cards" ? <span className="home-try__desc">{t(UI[`home.sc.${s.id}.d`])}</span> : null}
             </button>
           </li>
         ))}
@@ -38,11 +40,11 @@ function Group({ group, onRun, busy, headingLevel }: { readonly group: TryGroup 
   );
 }
 
-export function TryAsking({ onRun, busy, headingLevel = 3 }: TryAskingProps): ReactElement {
+export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards" }: TryAskingProps): ReactElement {
   return (
-    <div className="home-try">
+    <div className={cx("home-try", `home-try--${variant}`)}>
       {TRY_GROUPS.map((g) => (
-        <Group key={g} group={g} onRun={onRun} busy={busy} headingLevel={headingLevel} />
+        <Group key={g} group={g} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
       ))}
     </div>
   );
