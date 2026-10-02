@@ -26,9 +26,10 @@ function judgeSourceLine(input: ResultInput): string {
   return `recorded answers${from === null ? "" : ` (recorded ${from.recordedAt} on ${from.device ?? "unknown device"}, commit ${from.commit.slice(0, 7)})`}; ${stats?.hits ?? 0} replayed, ${stats?.misses ?? 0} without a recording`;
 }
 
-export function renderSummary(input: ResultInput, c: Computed): string {
-  const m = c.metrics;
-  const lines: string[] = [
+const section = (title: string, body: readonly string[]): string[] => [`## ${title}`, ...body, ""];
+
+function header(input: ResultInput, c: Computed): string[] {
+  return [
     `# Harness result: seed ${input.seed}, ${input.mode}`,
     "",
     `- **Label**: ${c.chip}`,
@@ -39,57 +40,73 @@ export function renderSummary(input: ResultInput, c: Computed): string {
     `- **Judge source**: ${judgeSourceLine(input)}`,
     `- **Scenarios**: ${c.n} SIMULATED, one recorded planner output each; rail SIMULATED [F37]`,
     "",
-    "## Evidence status",
-    `- **Valid as product evidence**: ${c.evidence.valid ? "yes" : "no"}`,
-    ...c.evidence.reasons.map((r) => `- ${r}`),
-    "",
-    "## Baselines (k/n, percentage in brackets)",
-    ...table(["Metric", "B0", "B1", "B2", "Ref"], [
-      ratioRow("Overspend rate", "[F38]", (b) => m[b].overspend),
-      ratioRow("Over-limit mint rate", "[F38]", (b) => m[b].overLimitMint),
-      ratioRow("Wrong-merchant rate", "[F38]", (b) => m[b].wrongMerchant),
-      ratioRow("False-block rate", "[F38]", (b) => m[b].falseBlock),
-      ratioRow("Stop-breach rate", "[F38]", (b) => m[b].stopBreach),
-      ratioRow("Injection pass-through, judge-only cases", "[F36]", (b) => m[b].injectionPassThrough),
-      ratioRow("Label agreement", "[F37]", (b) => m[b].labelAgreement),
-      ["Decision latency", ...BASELINES.map((b) => latencyCell(m[b].latency)), "[F35] [F26]"],
-    ]),
-    "",
-    "- **Cost per decision**: no per-call charge (local compute); wall time per decision is the latency row [F35]",
-    "",
-    "## Judge false-allow, B2, injection set",
-    `- **All**: ${formatRatio(c.judge.falseAllow)} [F36]`,
-    `- **Tuning split**: ${formatRatio(c.judge.tuning)} [F36]`,
-    `- **Held-out split**: ${formatRatio(c.judge.heldout)} [F36]`,
-    `- **Escalated because the judge was unavailable**: ${c.judge.unavailable} of ${c.judge.injectionSet} injection-set scenarios`,
-    `- **Not scored** (no injection_risk check in the engine's decision): ${c.judge.notEvaluated}`,
-    `- **Judge's own scores against the mirrored threshold**: all ${formatRatio(c.judge.atMirrorThreshold.falseAllow)}, tuning ${formatRatio(c.judge.atMirrorThreshold.tuning)}, held-out ${formatRatio(c.judge.atMirrorThreshold.heldout)} [F36]`,
-    "",
-    "## Judge on the whole injection corpus, engine-independent",
-    `- **Attack items let through**: ${formatRatio(input.corpus.falseAllow)} [F36]`,
-    `- **Tuning split**: ${formatRatio(input.corpus.tuning)}, **held-out split**: ${formatRatio(input.corpus.heldout)} [F36]`,
-    `- **Benign instruction-like sentences flagged**: ${formatRatio(input.corpus.benign)} [F36]`,
-    `- **Unavailable**: ${input.corpus.unavailable}`,
-    "",
-    "## Acceptance [F38]",
-    ...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`),
-    "- A miss is reported as a miss; nothing is retuned to turn it green [F38]",
-    "",
-    "## Categories (k/n completed, k/n where B2 matches the label)",
-    ...table(["Category", "n", "legit", "B0", "B1", "B2", "B2 matches"], c.categories.B2.map((r) => {
-      const of = (b: Baseline): string => kn(c.categories[b].find((x) => x.category === r.category)?.completed ?? { k: 0, n: 0 });
-      return [r.category, String(r.scenarios), String(r.legitimate), of("B0"), of("B1"), of("B2"), kn(r.agreement)];
-    })),
-    "",
-    "## Label disagreements, B2",
-    ...(c.disagreements.length === 0 ? ["- none"] : c.disagreements.slice(0, 25).map((d) => `- ${d.baseline} ${d.scenario} (${d.variant}): ${d.reason ?? "unknown"}`)),
-    ...(c.disagreements.length > 25 ? [`- ... ${c.disagreements.length - 25} more in the JSON`] : []),
-    "",
-    "## Definitions",
-    ...BASELINES.map((b) => `- **${b}**: ${input.systemDescriptions[b]}`),
-    "- **False block**: a legitimate purchase that did not complete, including a rail decline of a pre-authorisation [F2]",
-    "- **Overspend**: authorised amount above min(remaining, per-purchase cap, rail ceiling)",
-    "",
   ];
-  return lines.join("\n");
+}
+
+function baselineTable(c: Computed): string[] {
+  const m = c.metrics;
+  return table(["Metric", "B0", "B1", "B2", "Ref"], [
+    ratioRow("Overspend rate", "[F38]", (b) => m[b].overspend),
+    ratioRow("Over-limit mint rate", "[F38]", (b) => m[b].overLimitMint),
+    ratioRow("Wrong-merchant rate", "[F38]", (b) => m[b].wrongMerchant),
+    ratioRow("False-block rate", "[F38]", (b) => m[b].falseBlock),
+    ratioRow("Stop-breach rate", "[F38]", (b) => m[b].stopBreach),
+    ratioRow("Injection pass-through, judge-only cases", "[F36]", (b) => m[b].injectionPassThrough),
+    ratioRow("Label agreement", "[F37]", (b) => m[b].labelAgreement),
+    ["Decision latency", ...BASELINES.map((b) => latencyCell(m[b].latency)), "[F35] [F26]"],
+  ]);
+}
+
+function judgeLines(c: Computed): string[] {
+  const j = c.judge;
+  return [
+    `- **All**: ${formatRatio(j.falseAllow)} [F36]`,
+    `- **Tuning split**: ${formatRatio(j.tuning)} [F36]`,
+    `- **Held-out split**: ${formatRatio(j.heldout)} [F36]`,
+    `- **Escalated because the judge was unavailable**: ${j.unavailable} of ${j.injectionSet} injection-set scenarios`,
+    `- **Not scored** (no injection_risk check in the engine's decision): ${j.notEvaluated}`,
+    `- **Judge's own scores against the mirrored threshold**: all ${formatRatio(j.atMirrorThreshold.falseAllow)}, tuning ${formatRatio(j.atMirrorThreshold.tuning)}, held-out ${formatRatio(j.atMirrorThreshold.heldout)} [F36]`,
+  ];
+}
+
+function corpusLines(input: ResultInput): string[] {
+  const k = input.corpus;
+  return [
+    `- **Attack items let through**: ${formatRatio(k.falseAllow)} [F36]`,
+    `- **Tuning split**: ${formatRatio(k.tuning)}, **held-out split**: ${formatRatio(k.heldout)} [F36]`,
+    `- **Benign instruction-like sentences flagged**: ${formatRatio(k.benign)} [F36]`,
+    `- **Unavailable**: ${k.unavailable}`,
+  ];
+}
+
+function categoryTable(c: Computed): string[] {
+  const completed = (b: Baseline, category: string): string => kn(c.categories[b].find((x) => x.category === category)?.completed ?? { k: 0, n: 0 });
+  return table(
+    ["Category", "n", "legit", "B0", "B1", "B2", "B2 matches"],
+    c.categories.B2.map((r) => [r.category, String(r.scenarios), String(r.legitimate), completed("B0", r.category), completed("B1", r.category), completed("B2", r.category), kn(r.agreement)]),
+  );
+}
+
+function disagreementLines(c: Computed): string[] {
+  if (c.disagreements.length === 0) return ["- none"];
+  const shown = c.disagreements.slice(0, 25).map((d) => `- ${d.scenario} (${d.variant}): ${d.reason ?? "unknown"}`);
+  return c.disagreements.length > 25 ? [...shown, `- ... ${c.disagreements.length - 25} more in the JSON`] : shown;
+}
+
+export function renderSummary(input: ResultInput, c: Computed): string {
+  return [
+    ...header(input, c),
+    ...section("Evidence status", [`- **Valid as product evidence**: ${c.evidence.valid ? "yes" : "no"}`, ...c.evidence.reasons.map((r) => `- ${r}`)]),
+    ...section("Baselines (k/n, percentage in brackets)", [...baselineTable(c), "", "- **Cost per decision**: no per-call charge (local compute); wall time per decision is the latency row [F35]"]),
+    ...section("Judge false-allow, B2, injection set", judgeLines(c)),
+    ...section("Judge on the whole injection corpus, engine-independent", corpusLines(input)),
+    ...section("Acceptance [F38]", [...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`), "- A miss is reported as a miss; nothing is retuned to turn it green [F38]"]),
+    ...section("Categories (k/n completed, k/n where B2 matches the label)", categoryTable(c)),
+    ...section("Label disagreements, B2", disagreementLines(c)),
+    ...section("Definitions", [
+      ...BASELINES.map((b) => `- **${b}**: ${input.systemDescriptions[b]}`),
+      "- **False block**: a legitimate purchase that did not complete, including a rail decline of a pre-authorisation [F2]",
+      "- **Overspend**: authorised amount above min(remaining, per-purchase cap, rail ceiling)",
+    ]),
+  ].join("\n");
 }

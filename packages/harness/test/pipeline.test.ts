@@ -76,6 +76,19 @@ describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
   });
 });
 
+describe("label sweep: B2 agrees with every label across many seeds, so no rare parameter mix is mislabelled", () => {
+  it("holds for seeds 100 to 111", async () => {
+    const misses: string[] = [];
+    for (let seed = 100; seed < 112; seed += 1) {
+      for (const s of generateScenarios({ seed, n: 100 })) {
+        const a = labelAgreement(s, await B2!.run(s));
+        if (!a.all) misses.push(`seed ${seed} ${s.id} ${s.variant}: ${a.reason}`);
+      }
+    }
+    expect(misses).toEqual([]);
+  });
+});
+
 describe("pipeline behaviour by category", () => {
   it("duplicate: the repeat returns the earlier decision, one mint, one charge", async () => {
     const out = await B2!.run(pick("duplicate", "double_submit"));

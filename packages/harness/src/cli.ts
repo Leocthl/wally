@@ -23,17 +23,19 @@ function checkpointRevision(): string {
   return readFileSync(join(REPO_ROOT, "services/laya/MODEL_REVISION"), "utf8").trim();
 }
 
-async function chooseSource(opts: CliOptions, outDir: string): Promise<{ source: JudgeSource; device: string | null } | string> {
+type Chosen = { readonly source: JudgeSource; readonly device: string | null } | { readonly skip: string } | { readonly error: string };
+
+async function chooseSource(opts: CliOptions, outDir: string): Promise<Chosen> {
   if (opts.judge === "recorded") {
     const path = resolve(opts.recordingPath ?? join(outDir, `harness-${opts.seed}-recording.json`));
     try {
       return { source: createRecordedSource(parseRecording(JSON.parse(readFileSync(path, "utf8"))), monotonicTimer), device: null };
     } catch (err) {
-      return `no usable recording at ${path} (${err instanceof Error ? err.message : String(err)}). Make one with: pnpm harness -- --seed ${opts.seed} --n ${opts.n} --judge live --record`;
+      return { error: `no usable recording at ${path} (${err instanceof Error ? err.message : String(err)}). Make one with: pnpm harness -- --seed ${opts.seed} --n ${opts.n} --judge live --record` };
     }
   }
   const health = await probeLaya(opts.layaUrl);
-  if (health === null) return `Laya is not reachable at ${opts.layaUrl}/health. Start it with services/laya/serve.sh, or run --judge recorded. This run never starts or stops the server and never falls back to another judge.`;
+  if (health === null) return { skip: `Laya is not reachable at ${opts.layaUrl}/health. Start it with services/laya/serve.sh, or run --judge recorded. This run never starts or stops the server and never falls back to another judge; no result was written.` };
   const source = createLiveSource({ baseUrl: opts.layaUrl, timer: monotonicTimer, revision: checkpointRevision(), record: opts.record });
   return { source, device: health.device };
 }
@@ -58,8 +60,12 @@ async function main(): Promise<number> {
   }
   const outDir = opts.outDir === null ? DEFAULT_OUT : resolve(opts.outDir);
   const chosen = await chooseSource(opts, outDir);
-  if (typeof chosen === "string") {
-    console.error(chosen);
+  if ("skip" in chosen) {
+    console.error(`SKIPPED: ${chosen.skip}`);
+    return 0;
+  }
+  if ("error" in chosen) {
+    console.error(chosen.error);
     return 2;
   }
   const out = await runHarness({

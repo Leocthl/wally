@@ -100,5 +100,6 @@ export function parseRecording(raw: unknown): Recording {
       throw new Error(`recording entry ${key.slice(0, 12)} is malformed`);
     }
   }
+  // The checks above cover every field a replay reads; answers are re-validated by ChoiceJudge before the engine sees them.
   return raw as unknown as Recording;
 }

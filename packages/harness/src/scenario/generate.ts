@@ -9,6 +9,7 @@ import { FLAGGED_SELLER, INJECTED_TEXT, OFF_CATEGORY, PADDED_LISTING } from "./v
 import { DUPLICATE, JUDGE_DOWN, PRICE_DRIFT, RAIL_TIMEOUT, REPLAY, WRONG_MERCHANT } from "./variants/rail";
 import type { VariantDef } from "./variants/shared";
 import { EXPIRED, REVOKED, VELOCITY_BURST } from "./variants/state";
+import { assertScenarioValid } from "./validate";
 import { assemble, epochMs, makeTag, scenarioId, type Ctx } from "./world";
 
 export const CATEGORY_VARIANTS: Readonly<Record<Category, readonly VariantDef[]>> = {
@@ -83,6 +84,8 @@ export function generateScenarios(opts: GenerateOptions): readonly Scenario[] {
     const ctx = contextFor(opts.seed, index);
     const variant = CYCLES[ctx.category].find((v) => v.name === ctx.variant);
     if (!variant) throw new Error(`no variant ${ctx.variant} in ${ctx.category}`);
-    return assemble(ctx, variant.build(ctx), opts.buildCart);
+    const scenario = assemble(ctx, variant.build(ctx), opts.buildCart);
+    assertScenarioValid(scenario);
+    return scenario;
   });
 }

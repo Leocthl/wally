@@ -6,13 +6,13 @@ import type { ComponentReport } from "./factory";
 import type { JudgeSource } from "./judge/sources";
 import type { Recording, RecordingSource } from "./judge/recording";
 import type { MetaReader, RunMeta } from "./report/meta";
-import { buildResult, computeReport, type Computed, type Mode } from "./report/result";
+import { buildResult, computeReport, type Computed, type Mode, type ResultInput } from "./report/result";
 import { evaluateCorpus } from "./judge/corpus-eval";
 import { renderSummary } from "./report/markdown";
 import type { CartBuilder } from "./scenario/cart";
 import { generateScenarios } from "./scenario/generate";
 import { createSystems } from "./systems/create";
-import type { Components, RunOutcome } from "./systems/types";
+import type { Components, RunOutcome, SystemUnderTest } from "./systems/types";
 import type { Timer } from "./timer";
 import { BASELINES, type Baseline, type Scenario } from "./types";
 
@@ -50,8 +50,19 @@ function probeEngineVersion(components: Components, scenario: Scenario | undefin
   }
 }
 
+async function collect(scenarios: readonly Scenario[], systems: readonly SystemUnderTest[], onProgress: RunInput["onProgress"]): Promise<Record<Baseline, RunOutcome[]>> {
+  const collected: Record<Baseline, RunOutcome[]> = { B0: [], B1: [], B2: [] };
+  for (const [i, scenario] of scenarios.entries()) {
+    for (const system of systems) collected[system.id].push(await system.run(scenario));
+    onProgress?.(i + 1, scenarios.length);
+  }
+  return collected;
+}
+
 export async function runHarness(input: RunInput): Promise<RunOutput> {
   const scenarios = generateScenarios({ seed: input.seed, n: input.n, ...(input.buildCart === undefined ? {} : { buildCart: input.buildCart }) });
+  const base = scenarios[0];
+  if (base === undefined) throw new RangeError("a run needs at least one scenario");
   await input.source.warmUp();
   const systems = createSystems({
     components: input.components,
@@ -60,13 +71,7 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     timer: input.timer,
     measureLatency: input.source.measureLatency,
   });
-  const collected: Record<Baseline, RunOutcome[]> = { B0: [], B1: [], B2: [] };
-  for (const [i, scenario] of scenarios.entries()) {
-    for (const system of systems) collected[system.id].push(await system.run(scenario));
-    input.onProgress?.(i + 1, scenarios.length);
-  }
-  const base = scenarios[0];
-  if (base === undefined) throw new RangeError("a run needs at least one scenario");
+  const outcomes = await collect(scenarios, systems, input.onProgress);
   const corpus = await evaluateCorpus(input.source, base);
   const meta: RunMeta = input.meta.read();
   const runAt = input.clock.now();
@@ -80,29 +85,22 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     n: input.n,
   };
   const sourceOutcome = input.source.finish(recordingSource);
-  const resultInput = {
+  const resultInput: ResultInput = {
     mode: input.mode,
     seed: input.seed,
     meta,
     runAt,
     source: input.source.info,
     sourceOutcome,
-    components: input.describe(probeEngineVersion(input.components, scenarios[0])),
+    components: input.describe(probeEngineVersion(input.components, base)),
     scenarios,
-    outcomes: collected,
+    outcomes,
     systemDescriptions: Object.fromEntries(systems.map((s) => [s.id, s.description])) as Record<Baseline, string>,
     warmedUp: input.source.info.kind === "live",
     corpus,
   };
   const computed = computeReport(resultInput);
-  return {
-    scenarios,
-    outcomes: collected,
-    computed,
-    result: buildResult(resultInput, computed),
-    summary: renderSummary(resultInput, computed),
-    recording: sourceOutcome.recording,
-  };
+  return { scenarios, outcomes, computed, result: buildResult(resultInput, computed), summary: renderSummary(resultInput, computed), recording: sourceOutcome.recording };
 }
 
 export { BASELINES };
