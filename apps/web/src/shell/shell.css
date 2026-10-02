@@ -33,7 +33,9 @@
   background: var(--c-bg);
   border-bottom: 1px solid var(--c-line);
 }
-.shell-bar__inner { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--tap-lg); }
+/* The bar doubles as the app-wide chip row (.chip-scope__chips); keep the legacy chip-row layout off it. */
+.shell-bar.chip-scope__chips { display: block; margin: 0; }
+.shell-bar__inner { display: flex; align-items: center; gap: var(--sp-1); min-height: var(--tap-lg); }
 .shell-brand {
   display: inline-flex;
   align-items: center;
@@ -51,10 +53,11 @@
   text-decoration: none;
 }
 .shell-sim { display: inline-flex; flex: none; }
+.shell-sim .chip { padding: 0.0625rem 0.4375rem; font-size: 0.6875rem; letter-spacing: 0.04em; }
 .shell-lang { flex: none; }
 .shell-bar__about { flex: none; margin-right: calc(-1 * var(--sp-2)); }
 /* Narrow phones: the character stands in for the name. */
-@media (max-width: 23rem) {
+@media (max-width: 21.25rem) {
   .shell-brand__name { display: none; }
 }
 

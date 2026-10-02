@@ -1,5 +1,6 @@
 // Seal (#/seal): first run in three calm steps (Meet Wally, Describe your budget, Check and seal), or Top up and Change
-// the rules (#/seal?mode=topup|edit) starting at step two, prefilled from the signed rules. Sealing always makes a new
+// the rules (#/seal?mode=topup|edit) starting at step two, prefilled from the signed rules. #/seal?mode=welcome shows
+// the first-run steps even when a budget exists (the booth crew can walk a judge through onboarding). Sealing always makes a new
 // signed budget through api.seal (SealRequest unchanged); nothing seals by itself.
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import type { Mandate } from "../../api/types";
@@ -28,8 +29,8 @@ interface Start {
   readonly form: RulesForm;
 }
 
-function startFrom(mandate: Mandate | null, locale: Locale, now: Date): Start {
-  if (mandate) {
+function startFrom(mandate: Mandate | null, locale: Locale, now: Date, welcome: boolean): Start {
+  if (mandate && !welcome) {
     const form = formFromRules(mandate.rules, mandate.valid_until);
     const stale = form.until < hkDay(now.toISOString());
     return { step: "describe", sentence: mandate.intent_text, form: stale ? { ...form, until: monthEndDay(now) } : form };
@@ -62,7 +63,7 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
   const { t, locale } = useLocale();
   const mode = useRouteParam(PARAM.mode);
   const now = useMemo(() => new Date(), []);
-  const start = useMemo(() => startFrom(booth.state.mandate, locale, now), []);
+  const start = useMemo(() => startFrom(booth.state.mandate, locale, now, mode === "welcome"), []);
   const [step, setStep] = useState<Step>(start.step);
   const [sentence, setSentence] = useState(start.sentence);
   const [form, setForm] = useState<RulesForm>(start.form);
@@ -116,7 +117,7 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
       {step === "meet" ? <MeetStep onStart={() => setStep("describe")} /> : null}
       {step === "describe" ? (
         <>
-          <Header title={title} step={step} onBack={() => (replacing ? navigate("budget") : setStep("meet"))} />
+          <Header title={title} step={step} onBack={() => (start.step === "meet" ? setStep("meet") : navigate("budget"))} />
           <p className="seal-lead seal-screen__lead">{t(UI["seal.describeLead"])}</p>
           <DescribeStep
             sentence={sentence}

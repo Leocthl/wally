@@ -41,9 +41,8 @@ function Ticket({ card, now }: { readonly card: CardRecord; readonly now: number
 function PastCards({ cards }: { readonly cards: readonly CardRecord[] }): ReactElement {
   const { t } = useLocale();
   return (
-    <section className="home-section" data-chip-scope aria-labelledby="console-past-title">
+    <section className="home-section" aria-labelledby="console-past-title">
       <h3 id="console-past-title" className="home-section__title home-section__title--sm">{t(UI["home.pastCards"])}</h3>
-      <ScopeChip prov={PROV} />
       <List inset label={t(UI["home.pastCards"])}>
         {cards.map((c) => (
           <ListRow

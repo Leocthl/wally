@@ -35,7 +35,8 @@ function Categories({ form, error, onChange, onTouch }: { readonly form: RulesFo
     onTouch();
   };
   return (
-    <fieldset className="seal-field seal-cats" data-field="categories" data-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined}>
+    <div className="seal-field" data-field="categories">
+    <fieldset className="seal-cats" data-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined}>
       <legend className="w-field__label">{t(UI["seal.what"])}</legend>
       <div className="seal-cats__list">
         {CATEGORY_SLUGS.map((slug) => {
@@ -50,6 +51,7 @@ function Categories({ form, error, onChange, onTouch }: { readonly form: RulesFo
       </div>
       {error ? <span id={errorId} className="w-field__error"><Icon name="alert" size={16} />{error}</span> : null}
     </fieldset>
+    </div>
   );
 }
 

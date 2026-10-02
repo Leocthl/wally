@@ -4,6 +4,8 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CardRecord } from "../src/api/types";
 import { HOLD_MS } from "../src/design/motion";
+import { SIMULATED } from "../src/domain/provenance";
+import { ProvenanceChip } from "../src/ui/Chip";
 import { CancelBudget } from "../src/screens/console/CancelBudget";
 import { CardsSection } from "../src/screens/console/CardsSection";
 import { bootApp, go, press } from "./helpers/app";
@@ -123,7 +125,13 @@ describe("one-off cards", () => {
   });
 
   it("lists used, cancelled and expired cards with an icon and words, never colour alone", () => {
-    const { container } = render(<CardsSection active={[]} past={[card({ id: "a", state: "USED" }), card({ id: "b", state: "VOIDED" }), card({ id: "c", state: "EXPIRED" })]} />);
+    // Inside the app the top bar's SIMULATED note covers these amounts; the same chip row stands in for it here.
+    const { container } = render(
+      <div data-chip-scope>
+        <span className="chip-scope__chips"><ProvenanceChip prov={SIMULATED} /></span>
+        <CardsSection active={[]} past={[card({ id: "a", state: "USED" }), card({ id: "b", state: "VOIDED" }), card({ id: "c", state: "EXPIRED" })]} />
+      </div>,
+    );
     for (const [state, word] of [["USED", "Used"], ["VOIDED", "Cancelled"], ["EXPIRED", "Expired"]] as const) {
       const row = container.querySelector(`[data-card-state="${state}"]`)!.closest("li")!;
       expect(row).toHaveTextContent(word);
@@ -144,7 +152,8 @@ describe("Cancel this budget in the app", () => {
     const h = await bootApp();
     await press(h, "revoke");
     await waitFor(() => expect(document.querySelector('.console-ticket[data-card-state="ACTIVE"]')).not.toBeNull());
-    expect(window.location.hash).toBe("#/budget?focus=console");
+    await waitFor(() => expect(document.activeElement).toBe(document.getElementById("budget-console")));
+    expect(window.location.hash).toBe("#/budget");
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       fireEvent.pointerDown(button());

@@ -42,7 +42,9 @@ export function SimulatedNote(): ReactElement {
 export function ShellBar({ onAbout }: { readonly onAbout: () => void }): ReactElement {
   const { t } = useLocale();
   return (
-    <header className="shell-bar">
+    // The bar is the app-wide chip row (chip-scope__chips): its SIMULATED note covers every SIMULATED figure on every
+    // screen (test/helpers/figures.ts), so a screen adds a chip only where a surface needs its own (budget card, card).
+    <header className="shell-bar chip-scope__chips">
       <div className="shell-bar__inner">
         <a className="shell-brand" href={routeHref("budget")} aria-label={t(UI["shell.homeLink"](BRAND.name))}>
           <Wally state="idle" size={30} decorative />

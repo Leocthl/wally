@@ -7,7 +7,7 @@ import { UI } from "../../i18n/ui";
 import { Icon, type IconName } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { List, ListRow } from "../../ui/Surface";
-import { Money, ScopeChip } from "../../shell/figures";
+import { Money } from "../../shell/figures";
 import type { DecisionOutcome, DecisionRow } from "./selectors";
 
 const LOOK: Readonly<Record<DecisionOutcome, { readonly icon: IconName; readonly tone: "ok" | "stop" | "warn" }>> = {
@@ -19,9 +19,8 @@ const LOOK: Readonly<Record<DecisionOutcome, { readonly icon: IconName; readonly
 export function RecentSection({ rows }: { readonly rows: readonly DecisionRow[] }): ReactElement {
   const { t } = useLocale();
   return (
-    <section className="home-section" data-chip-scope aria-labelledby="home-recent-title">
+    <section className="home-section" aria-labelledby="home-recent-title">
       <h2 id="home-recent-title" className="home-section__title">{t(UI["home.recent"])}</h2>
-      {rows.length > 0 ? <ScopeChip prov={SIMULATED} /> : null}
       <a className="home-section__action" href={routeHref("receipts")}>{t(UI["home.seeAll"])}</a>
       {rows.length === 0 ? (
         <p className="home-section__empty">{t(UI["home.recentEmpty"])}</p>

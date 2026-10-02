@@ -128,7 +128,7 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
 
   return (
     <ShellProvider openAsk={openAsk} openAbout={openAbout}>
-      <div className={cx("shell-app", wide && "shell-app--wide", tabbar && "shell-app--tabs")} data-route={route.name} lang={locale}>
+      <div className={cx("shell-app", wide && "shell-app--wide", tabbar && "shell-app--tabs")} data-route={route.name} lang={locale} data-chip-scope>
         <a className="sr-only" href="#main" onClick={skip}>{t(UI["shell.skip"])}</a>
         <ShellBar onAbout={openAbout} />
         <ConnectionBanners />

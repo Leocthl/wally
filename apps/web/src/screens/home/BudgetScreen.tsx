@@ -2,7 +2,7 @@
 // asking, and Manage this budget. Everything reads the booth state through the selectors, never its own copy.
 import { useEffect, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
-import { PARAM, routeHref, useRouteParam } from "../../hooks/useRoute";
+import { navigate, PARAM, routeHref, useRouteParam } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
 import { IosInstallHint } from "../../pwa/InstallUi";
 import { Card, Skeleton } from "../../ui/Surface";
@@ -35,18 +35,36 @@ function BudgetSkeleton(): ReactElement {
   );
 }
 
-function Ended({ revoked }: { readonly revoked: boolean }): ReactElement {
+type Closed = "cancelled" | "ended" | "usedUp";
+
+const CLOSED_TEXT = {
+  cancelled: { title: "home.cancelledTitle", body: "home.cancelledBody", action: "home.newBudget" },
+  ended: { title: "home.endedTitle", body: "home.cancelledBody", action: "home.newBudget" },
+  usedUp: { title: "home.usedUpTitle", body: "home.usedUpBody", action: "console.topUp" },
+} as const;
+
+/** Cancelled, ended or all used: say so, and offer the one next step (a new budget, or a top up). */
+function Closed({ why }: { readonly why: Closed }): ReactElement {
   const { t } = useLocale();
+  const text = CLOSED_TEXT[why];
+  const href = why === "usedUp" ? routeHref("seal", { [PARAM.mode]: "topup" }) : routeHref("seal");
   return (
     <Card padding="lg" className="home-ended" role="status">
       <Wally state="idle" size={72} decorative />
       <div className="home-ended__text">
-        <p className="home-ended__title">{t(UI[revoked ? "home.cancelledTitle" : "home.endedTitle"])}</p>
-        <p className="home-ended__body">{t(UI["home.cancelledBody"])}</p>
+        <p className="home-ended__title">{t(UI[text.title])}</p>
+        <p className="home-ended__body">{t(UI[text.body])}</p>
       </div>
-      <a className="w-btn w-btn--primary w-btn--md w-btn--block" href={routeHref("seal")}><span className="w-btn__label">{t(UI["home.newBudget"])}</span></a>
+      <a className="w-btn w-btn--primary w-btn--md w-btn--block" href={href}><span className="w-btn__label">{t(UI[text.action])}</span></a>
     </Card>
   );
+}
+
+function closedWhy(status: string, revoked: boolean): Closed | null {
+  if (revoked || status === "REVOKED") return "cancelled";
+  if (status === "EXPIRED") return "ended";
+  if (status === "EXHAUSTED") return "usedUp";
+  return null;
 }
 
 export function BudgetScreen(): ReactElement {
@@ -58,15 +76,22 @@ export function BudgetScreen(): ReactElement {
   const focus = useRouteParam(PARAM.focus);
   const loaded = state.packet !== null && state.mandate !== null;
 
+  // #/budget?focus=console (the old #/console, Cancel the budget): reveal once, then drop the param so later changes
+  // on this screen never pull the page down again.
   useEffect(() => {
-    if (focus === "console" && loaded) revealConsole();
+    if (focus !== "console" || !loaded) return;
+    revealConsole();
+    navigate("budget", {}, { replace: true });
   }, [focus, loaded]);
 
   if (!state.packet || !state.mandate) return <BudgetSkeleton />;
   const { packet, mandate } = state;
-  const active = packet.status === "ACTIVE" && !state.revoked;
+  const closed = closedWhy(packet.status, state.revoked);
+  // All used is still a live budget: it can be topped up or cancelled. Cancelled and ended are over.
+  const active = closed === null || closed === "usedUp";
   const cards = cardGroups(state);
-  const waiting = openEscalations(state);
+  // A cancelled budget cannot approve anything, so nothing is waiting for an answer there.
+  const waiting = active ? openEscalations(state) : [];
 
   const cancel = async (): Promise<void> => {
     if (await attempt(booth, () => booth.api.revoke())) toast.show({ message: t(UI["console.cancelled"]), tone: "info" });
@@ -76,7 +101,7 @@ export function BudgetScreen(): ReactElement {
     <div className="home">
       <IosInstallHint />
       <BudgetHero packet={packet} mandate={mandate} />
-      {active ? null : <Ended revoked={state.revoked || packet.status === "REVOKED"} />}
+      {closed ? <Closed why={closed} /> : null}
       {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
       <CardsSection active={cards.active} past={cards.past} />
       <RecentSection rows={recentDecisions(state)} />

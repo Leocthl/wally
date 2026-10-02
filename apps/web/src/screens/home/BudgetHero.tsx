@@ -84,12 +84,12 @@ export function BudgetHero({ packet, mandate }: BudgetHeroProps): ReactElement {
       {active ? null : <Tag tone="on-hero" size="sm" className="home-hero__status" icon={<Icon name="lock" size={14} />}>{t(UI[`home.status.${packet.status}`])}</Tag>}
       <ScopeChip prov={PROV} className="home-hero__chip" />
       <div className="w-stat w-stat--xl w-stat--on-hero home-hero__stat">
-        <span className="w-stat__label">{t(UI["home.left"])}</span>
+        <span className="w-stat__label">{t(UI[packet.status === "REVOKED" ? "home.leftCancelled" : packet.status === "EXPIRED" ? "home.leftEnded" : "home.left"])}</span>
         <span className="w-stat__row">
           <span className="w-stat__value" data-selectable><Money minor={packet.remaining_minor} prov={PROV} /></span>
         </span>
         <span className="w-stat__sub">
-          <Fill text={t(UI["home.of"])} slots={{ total: <Money minor={packet.budget_minor} prov={PROV} />, until: until(mandate, locale) }} />
+          <span><Fill text={t(UI["home.of"])} slots={{ total: <Money minor={packet.budget_minor} prov={PROV} />, until: until(mandate, locale) }} /></span>
         </span>
       </div>
       <ProgressBar tone="on-hero" role="meter" value={packet.remaining_minor} max={packet.budget_minor} label={t(UI["home.left"])} valueText={meterText(packet, t)} className="home-hero__meter" />

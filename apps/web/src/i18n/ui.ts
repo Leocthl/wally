@@ -54,6 +54,8 @@ const SHELL = {
 
   "home.heading": label("Your budget", "你的預算"), // NEEDS-REVIEW
   "home.left": label("Budget left", "預算剩餘"), // NEEDS-REVIEW
+  "home.leftCancelled": label("Left when cancelled", "取消時剩餘"), // NEEDS-REVIEW
+  "home.leftEnded": label("Left when it ended", "到期時剩餘"), // NEEDS-REVIEW
   "home.of": label("of your {total} budget · until {until}", "總預算 {total} · 有效至 {until}"), // NEEDS-REVIEW
   "home.meter": label("{left} left of {total}, SIMULATED", "剩餘 {left}，總額 {total}，SIMULATED"), // NEEDS-REVIEW
   "home.spent": label("Spent", "已用"), // NEEDS-REVIEW
@@ -78,6 +80,8 @@ const SHELL = {
   "home.endedTitle": label("This budget has ended", "呢個預算已到期"), // NEEDS-REVIEW
   "home.cancelledBody": label("Wally can't make new cards. Set up a new budget to keep shopping.", "Wally 唔可以再發卡。設定新預算就可以繼續購物。"), // NEEDS-REVIEW
   "home.newBudget": label("Set up a new budget", "設定新預算"), // NEEDS-REVIEW
+  "home.usedUpTitle": label("This budget is all used", "呢個預算已用完"), // NEEDS-REVIEW
+  "home.usedUpBody": label("Wally can't make a new card until you top up.", "增加預算之前，Wally 唔可以再發卡。"), // NEEDS-REVIEW
   "home.cards": label("One-off cards", "一次性卡"), // NEEDS-REVIEW
   "home.cardsEmpty": label("No cards right now. Wally makes one only after the rules say yes.", "暫時冇卡。規則批准後 Wally 先會發卡。"), // NEEDS-REVIEW
   "home.cardOnce": label("Works once, for {amount} only", "只可用一次，限 {amount}"), // NEEDS-REVIEW

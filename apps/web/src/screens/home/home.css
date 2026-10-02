@@ -18,6 +18,8 @@
 .home-hero__tags .fig, .home-hero .w-stat__sub .fig { color: inherit; }
 .home-hero .w-progress__fill { transition: width var(--dur-mint) var(--ease-out); }
 .home-hero-skeleton { display: grid; gap: var(--sp-4); min-height: 16rem; }
+/* A cancelled or ended budget stays readable but steps back: less colour, the words say why. */
+.home-hero:is([data-status="REVOKED"], [data-status="EXPIRED"]) { filter: saturate(0.35); }
 
 /* Cancelled or ended */
 .home-ended { display: grid; justify-items: center; gap: var(--sp-3); text-align: center; }
@@ -32,8 +34,8 @@
 .home-block__empty { color: var(--c-ink-muted); }
 .home-block__foot { margin-top: var(--sp-1); }
 
-.home-section { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--sp-3) var(--sp-2); }
-.home-section > :not(.home-section__title, .fig-chip, .home-section__action) { grid-column: 1 / -1; }
+.home-section { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3) var(--sp-2); }
+.home-section > :not(.home-section__title, .home-section__action) { grid-column: 1 / -1; }
 .home-section__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); }
 .home-section__title--sm { font-size: var(--text-md); letter-spacing: 0; }
 .home-section__action { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--sp-2); border-radius: var(--r-pill); color: var(--c-primary-ink); font-weight: var(--weight-semibold); text-decoration: none; }
@@ -79,7 +81,7 @@
 .console-tickets { display: grid; gap: var(--sp-3); }
 .console-ticket { display: grid; gap: var(--sp-2); animation: console-ticket-in var(--dur-mint) var(--ease-out) both; }
 .console-ticket__label { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--c-on-ticket-muted); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
-.console-ticket__number { font-family: var(--font-mono); font-size: var(--text-2xl); letter-spacing: 0.12em; }
+.console-ticket .console-ticket__number { font-family: var(--font-mono); line-height: var(--lh-snug); font-size: var(--text-2xl); letter-spacing: 0.12em; }
 .console-ticket__once { font-size: var(--text-lg); font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
 .console-ticket__meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); color: var(--c-on-ticket-muted); font-size: var(--text-sm); }
 .console-ticket__chip { justify-self: start; margin-top: var(--sp-1); }
@@ -91,7 +93,7 @@
 .console-esc__icon { grid-row: span 2; display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--c-warn); color: var(--c-on-warn); }
 .console-esc__title { font-size: var(--text-md); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .console-esc__body { font-size: var(--text-sm); line-height: var(--lh-snug); }
-.console-esc__chip, .console-esc__go { grid-column: 2; justify-self: start; }
+.console-esc__go { grid-column: 2; justify-self: start; }
 
 /* Manage this budget */
 .console { scroll-margin-top: calc(var(--tap-lg) + var(--sp-6)); }

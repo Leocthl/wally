@@ -10,7 +10,7 @@ import { Icon, type IconName } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { Card } from "../../ui/Surface";
 import { Wally } from "../../wally/Wally";
-import { Fig, Fill, Money, ScopeChip } from "../../shell/figures";
+import { Fig, Fill, Money } from "../../shell/figures";
 import { formatLongDay } from "../../shell/format";
 import { categoriesText } from "../home/BudgetHero";
 import { SealLock } from "./SealLock";
@@ -52,15 +52,15 @@ function SummaryRow({ icon, label, children }: { readonly icon: IconName; readon
   );
 }
 
-/** The rules as a short list, figures marked SIMULATED (a demo budget). */
-export function RulesSummary({ form }: { readonly form: RulesForm }): ReactElement {
+/** The rules as a short list (SIMULATED figures, covered by the top bar's note). Edit goes back to the rows. */
+export function RulesSummary({ form, onEdit, editDisabled = false }: { readonly form: RulesForm; readonly onEdit?: () => void; readonly editDisabled?: boolean }): ReactElement {
   const { t, locale } = useLocale();
   const amount = moneyOf(form.amount) ?? 0;
   const ask = form.askAbove === null ? null : moneyOf(form.askAbove);
   const cap = form.cap === null ? null : moneyOf(form.cap);
   return (
-    <Card className="seal-summary" data-chip-scope>
-      <ScopeChip prov={PROV} className="seal-summary__chip" />
+    <Card className="seal-summary">
+      {onEdit ? <Button variant="ghost" size="sm" className="seal-summary__edit" onClick={onEdit} disabled={editDisabled}>{t(UI["seal.edit"])}</Button> : null}
       <ul className="seal-summary__list">
         <SummaryRow icon="wallet" label={t(UI["seal.summaryAmount"])}><Money minor={amount} prov={PROV} className="seal-summary__amount" /></SummaryRow>
         <SummaryRow icon="tag" label={t(UI["seal.summaryWhat"])}>{categoriesText(form.categories, t)}</SummaryRow>
@@ -87,8 +87,7 @@ export function ReviewStep({ form, sealing, replacing, onEdit, onSeal }: ReviewS
   return (
     <div className="seal-step seal-review">
       <SealLock locked={false} size={96} className="seal-review__lock" />
-      <RulesSummary form={form} />
-      <Button variant="ghost" icon={<Icon name="chevronLeft" size={20} />} onClick={onEdit} disabled={sealing}>{t(UI["seal.edit"])}</Button>
+      <RulesSummary form={form} onEdit={onEdit} editDisabled={sealing} />
       <p className="seal-lead seal-review__lead">{t(UI["seal.reviewLead"])}</p>
       {replacing ? <p className="seal-note seal-note--info"><Icon name="info" size={18} /> {t(UI["seal.newLog"])}</p> : null}
       <div className="seal-actions">

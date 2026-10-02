@@ -15,6 +15,15 @@ export async function attempt(booth: Pick<Booth, "exec">, task: () => Promise<un
   return ok;
 }
 
+/** Runs after React has painted the latest state (two frames), e.g. once a new card has pushed the layout down. */
+export function afterPaint(fn: () => void): void {
+  if (typeof requestAnimationFrame !== "function") {
+    setTimeout(fn, 0);
+    return;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(fn));
+}
+
 /** Brings "Manage this budget" (cards and Cancel this budget) into view and gives it focus. */
 export function revealConsole(): void {
   const el = document.getElementById("budget-console");
@@ -34,7 +43,7 @@ export function useScenarioRunner(): (id: ScenarioId) => void {
       if (onBudget) navigate("budget", { [PARAM.focus]: "console" });
       else navigate("wally");
       void runScenario(id).then(() => {
-        if (onBudget) revealConsole();
+        if (onBudget) afterPaint(revealConsole);
       });
     },
     [runScenario],
