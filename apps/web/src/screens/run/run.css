@@ -16,7 +16,7 @@
 .run-section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .run-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-size: var(--text-sm); color: var(--c-ink-muted); }
 .run-link { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--tap); color: var(--c-primary-ink); font-weight: var(--weight-semibold); text-decoration: none; }
-.run-link:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { .run-link:hover { text-decoration: underline; } }
 
 /* Budget now */
 .run-budget { display: grid; gap: var(--sp-2); padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }

@@ -10,6 +10,7 @@ import { useReveal } from "../src/evidence/useReveal";
 import { TEMPLATES } from "../src/explain/templates";
 import { OneOffCard } from "../src/screens/console/OneOffCard";
 import { claimAsk, noteAsk } from "../src/screens/run/askEcho";
+import { CardStory } from "../src/screens/run/components/CardStory";
 import { Stopped } from "../src/screens/run/components/Stopped";
 import { selectScreen } from "../src/screens/run/model/screen";
 import { ChainStrip } from "../src/screens/proof/components/ChainStrip";
@@ -203,5 +204,17 @@ describe("the stop sentences Receipts and the Presenter show", () => {
       expect(template.en({}), `${id} en`).not.toMatch(words);
       expect(template.zh({}), `${id} zh`).not.toMatch(words);
     }
+  });
+});
+
+describe("the checkout story", () => {
+  const row = (key: string, kind: "exact" | "overshoot" = "exact", tone: "ok" | "held" = "ok") => ({ key, kind, tone, amountMinor: 25900 }) as const;
+
+  it("rows already there when it first shows stay still; a row that arrives later rises in", () => {
+    const view = render(<LocaleProvider locale="en"><CardStory story={[row("a")]} limitMinor={25900} /></LocaleProvider>);
+    expect(view.container.querySelectorAll(".run-story__item--new")).toHaveLength(0);
+    view.rerender(<LocaleProvider locale="en"><CardStory story={[row("a"), row("b", "overshoot", "held")]} limitMinor={25900} /></LocaleProvider>);
+    const items = [...view.container.querySelectorAll(".run-story__item")];
+    expect(items.map((li) => li.classList.contains("run-story__item--new"))).toEqual([false, true]);
   });
 });
