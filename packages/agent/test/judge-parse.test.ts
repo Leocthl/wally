@@ -242,7 +242,13 @@ describe("averageDistributions", () => {
     return { a: x / total, b: y / total, c: z / total };
   });
 
-  it("is the per-label arithmetic mean, normalised and keyed in label order", () => {
+  it("keeps the raw means: a sum inside the tolerance is never renormalised, so a risk cannot shrink", () => {
+    const avg = averageDistributions([{ a: 0.355, b: 0.32, c: 0.33 }], labels);
+    expect((avg.b ?? 0) + (avg.c ?? 0)).toBeCloseTo(0.65, 9);
+    expect(avg.a).toBeCloseTo(0.355, 9);
+  });
+
+  it("is the per-label arithmetic mean, keyed in label order", () => {
     const avg = averageDistributions([{ a: 0.6, b: 0.4, c: 0 }, { a: 0.2, b: 0.2, c: 0.6 }], labels);
     expect(Object.keys(avg)).toEqual(["a", "b", "c"]);
     expect(avg.a).toBeCloseTo(0.4, 6);

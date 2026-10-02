@@ -25,7 +25,12 @@ export interface GateSpec {
   readonly labelOf: (labels: CorpusLabels) => string;
 }
 
-const injectionValue = (a: JudgeAnswers): number => a.injection_risk.suspicious + a.injection_risk.injection;
+// The engine's metrics (packages/core/src/rules/judge.ts): the tighter of P(x) and 1 - P(not x). They agree when a
+// question's options sum to 1; taking the same form here keeps a boundary case on the same side as the engine.
+const injectionValue = (a: JudgeAnswers): number => Math.max(a.injection_risk.suspicious + a.injection_risk.injection, 1 - a.injection_risk.clean);
+const inScopeValue = (a: JudgeAnswers): number => Math.min(a.scope_fit.in_scope, 1 - a.scope_fit.out_of_scope);
+const highRiskValue = (a: JudgeAnswers): number => Math.max(a.seller_risk.high_risk, 1 - a.seller_risk.low_risk);
+const escalateValue = (a: JudgeAnswers): number => Math.max(a.escalate_or_proceed.escalate, 1 - a.escalate_or_proceed.proceed);
 
 export const GATES: readonly GateSpec[] = [
   {
@@ -33,9 +38,9 @@ export const GATES: readonly GateSpec[] = [
     question: "scope_fit",
     thresholdName: "T_scope",
     rule: "P(in_scope) < T_scope => ESCALATE (R10.scope)",
-    engineValue: (a) => a.scope_fit.in_scope,
+    engineValue: inScopeValue,
     stopsBelow: true,
-    risk: (a) => 1 - a.scope_fit.in_scope,
+    risk: (a) => 1 - inScopeValue(a),
     positive: (l) => l.scope_fit === "out_of_scope",
     labelOf: (l) => l.scope_fit,
   },
@@ -55,9 +60,9 @@ export const GATES: readonly GateSpec[] = [
     question: "seller_risk",
     thresholdName: "T_sell_esc",
     rule: "P(high_risk) >= T_sell_esc => ESCALATE (R10.seller_risk)",
-    engineValue: (a) => a.seller_risk.high_risk,
+    engineValue: highRiskValue,
     stopsBelow: false,
-    risk: (a) => a.seller_risk.high_risk,
+    risk: highRiskValue,
     positive: (l) => l.seller_risk === "high_risk",
     labelOf: (l) => l.seller_risk,
   },
@@ -66,9 +71,9 @@ export const GATES: readonly GateSpec[] = [
     question: "seller_risk",
     thresholdName: "T_sell_deny",
     rule: "P(high_risk) >= T_sell_deny => DENY (R10.seller_risk)",
-    engineValue: (a) => a.seller_risk.high_risk,
+    engineValue: highRiskValue,
     stopsBelow: false,
-    risk: (a) => a.seller_risk.high_risk,
+    risk: highRiskValue,
     positive: (l) => l.seller_risk === "high_risk",
     labelOf: (l) => l.seller_risk,
   },
@@ -77,9 +82,9 @@ export const GATES: readonly GateSpec[] = [
     question: "escalate_or_proceed",
     thresholdName: "T_esc",
     rule: "P(escalate) >= T_esc => ESCALATE (R10.escalate)",
-    engineValue: (a) => a.escalate_or_proceed.escalate,
+    engineValue: escalateValue,
     stopsBelow: false,
-    risk: (a) => a.escalate_or_proceed.escalate,
+    risk: escalateValue,
     positive: (l) => l.escalate_or_proceed === "escalate",
     labelOf: (l) => l.escalate_or_proceed,
   },

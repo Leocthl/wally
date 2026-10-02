@@ -1,7 +1,7 @@
 // Builds the `state` JSON sent to the judge: intent text, a short rules summary, a short cart summary, the
 // Scameter state and the listing. The listing text is untrusted data. It lives in one JSON field of its own
 // (`listing.description`), where JSON string escaping stops it from adding or replacing fields, and it is never
-// placed in a question's `instructions`.
+// placed in a question's `instructions`. Every string from a listing goes through modelText first (M8).
 //
 // Why a nested object and not text markers: in a first live run on the SIMULATED corpus (data/results/judge-fit-*),
 // text markers such as `<<<LISTING TEXT BEGIN ...>>>` plus a note saying the text is untrusted lowered injection
@@ -34,15 +34,28 @@ export interface JudgeState {
 // C0 controls other than tab and newline, plus DEL.
 // eslint-disable-next-line no-control-regex -- the point of this pattern is to match control characters
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+/** Format characters: zero-width, bidi controls, soft hyphen, word joiner, BOM, tag characters (M8, S-JUDGE-4). */
+const FORMAT_CHARS = /\p{Cf}/gu;
+/** Literal special tokens of the checkpoint's tokenizer; in listing text they would read as structure, not words. */
+const TOKENIZER_CONTROL_TOKENS = /\[(CLS|SEP|PAD|UNK|MASK)\]/gi;
 
-/** Replaces control characters with spaces. Everything else, including odd Unicode, is left for the judge to see. */
+/** Replaces control characters with spaces. */
 export function stripControls(text: string): string {
   return text.replace(CONTROL_CHARS, " ");
 }
 
-/** One short line: controls stripped, whitespace collapsed, clipped. For strings that came from a listing record. */
+/**
+ * The copy of untrusted text the model sees (M8): NFKC-normalised (fullwidth and other compatibility forms fold to
+ * their plain letters), format characters removed, tokenizer control tokens such as [SEP] turned into (SEP), C0
+ * controls replaced by spaces. Only this copy changes; the original text stays in the input for the log and hash.
+ */
+export function modelText(text: string): string {
+  return stripControls(text.normalize("NFKC").replace(FORMAT_CHARS, "").replace(TOKENIZER_CONTROL_TOKENS, "($1)"));
+}
+
+/** One short line: model-facing copy, whitespace collapsed, clipped. For strings that came from a listing record. */
 export function cleanInline(text: string, max: number = MAX_INLINE_TEXT_CHARS): string {
-  return stripControls(text).replace(/\s+/g, " ").trim().slice(0, max);
+  return modelText(text).replace(/\s+/g, " ").trim().slice(0, max);
 }
 
 /** HKD minor units to "259.00" using integer arithmetic only. Anything that is not money prints "n/a". */
@@ -78,7 +91,7 @@ export function buildJudgeState(input: JudgeInput, part: ListingPart): JudgeStat
     scameter: SCAMETER_TEXT[input.scameter.state] ?? "unknown",
     listing: {
       title: title.slice(0, MAX_INLINE_TEXT_CHARS),
-      description: stripControls(part.text),
+      description: modelText(part.text),
       ...(part.total > 1 ? { part: `${part.index + 1} of ${part.total}` } : {}),
     },
   };

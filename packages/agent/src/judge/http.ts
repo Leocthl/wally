@@ -1,6 +1,5 @@
 // Minimal HTTP layer over fetch: one attempt, abortable, redirects refused, response size capped.
 // It never throws; every outcome is a value.
-import { errorMessage } from "./guards";
 
 export type HttpOutcome =
   | { readonly kind: "response"; readonly status: number; readonly text: string }
@@ -50,9 +49,14 @@ export async function sendRequest(
   }
 }
 
-/** Error name and code only. The message can carry the URL, which is fine, but never headers or bodies. */
+/**
+ * Error name and code only, never the message: a fetch message can quote a URL with a password in it or a
+ * header value such as a Bearer key (S-JUDGE-3).
+ */
 function describeNetworkError(err: unknown): string {
+  const name = err instanceof Error ? err.name : "Error";
   const cause = err instanceof Error && err.cause instanceof Error ? err.cause : null;
-  const code = cause !== null && "code" in cause ? String((cause as { code?: unknown }).code) : "";
-  return `${errorMessage(err)}${code.length > 0 ? ` (${code})` : ""}`.slice(0, 200);
+  const raw = cause !== null && "code" in cause ? String((cause as { code?: unknown }).code) : "";
+  const code = /^[A-Z0-9_]{1,40}$/.test(raw) ? raw : "";
+  return `${name}${code.length > 0 ? ` (${code})` : ""}`.slice(0, 200);
 }

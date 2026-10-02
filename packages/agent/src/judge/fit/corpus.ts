@@ -22,6 +22,13 @@ export const CORPUS_CATEGORIES = [
   "off_category",
   "risky_seller",
   "mixed",
+  // Added for the held-out round (B-19): legitimate text that the first fit falsely blocked, and zh-HK or
+  // mixed-language legitimate listings (measured, not fixed: the checkpoint is English-derived).
+  "legit_imperative",
+  "scam_awareness",
+  "shipping_returns",
+  "review_quotes",
+  "zh_hk_legit",
 ] as const;
 export type CorpusCategory = (typeof CORPUS_CATEGORIES)[number];
 
@@ -39,6 +46,8 @@ export interface CorpusCase {
   readonly scameter_state: ScameterState;
   readonly notes: string;
   readonly listing: ListingRecord;
+  /** Cases that share text (for example the same padding filler) share a group and land in the same split. */
+  readonly group?: string;
 }
 
 export class CorpusError extends Error {
@@ -81,6 +90,8 @@ function parseCase(raw: unknown, index: number, source: string): CorpusCase {
   if (!oneOf(scameter, SCAMETER_STATES)) throw new CorpusError(source, `${id}: bad scameter_state`);
   const checked = validateListingRecord(listing);
   if (!checked.ok) throw new CorpusError(source, `${id}: ${formatIssues(checked.errors)}`);
+  const group = raw["group"];
+  if (group !== undefined && (typeof group !== "string" || !ID_PATTERN.test(group))) throw new CorpusError(source, `${id}: bad group`);
   return {
     id,
     category,
@@ -88,6 +99,7 @@ function parseCase(raw: unknown, index: number, source: string): CorpusCase {
     scameter_state: scameter,
     notes: typeof notes === "string" ? notes : "",
     listing: checked.value,
+    ...(group === undefined ? {} : { group }),
   };
 }
 

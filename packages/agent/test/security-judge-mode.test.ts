@@ -33,23 +33,23 @@ describe("setup", () => {
   });
 });
 
-describe("KNOWN DEFECT S-JUDGE-2: the judge defaults to shadow mode (no effect, not even fail closed)", () => {
-  it.fails("with no JUDGE_MODE the adapter enforces", () => {
+describe("FIXED S-JUDGE-2 (was a known defect): the judge defaults to enforce", () => {
+  it("with no JUDGE_MODE the adapter enforces", () => {
     expect(DEFAULT_ENV.ok && DEFAULT_ENV.settings.mode).toBe("enforce");
   });
 
-  it.fails("a judge that cannot be reached yields a record the engine must act on (shadow: false)", () => {
+  it("a judge that cannot be reached yields a record the engine must act on (shadow: false)", () => {
     expect(DOWN_RECORD.shadow).toBe(false);
   });
 });
 
-describe("KNOWN DEFECT S-JUDGE-3: secrets reach judge diagnostics through fetch error messages", () => {
-  it.fails("userinfo in LAYA_BASE_URL is refused and never echoed", () => {
-    expect(USERINFO_DIAG).not.toContain("hunter2"); // today: "Request cannot be constructed from a URL that includes credentials: http://audit:hunter2@..."
+describe("FIXED S-JUDGE-3 (was a known defect): no secret reaches judge diagnostics", () => {
+  it("userinfo in LAYA_BASE_URL is refused and never echoed", () => {
+    expect(USERINFO_DIAG).not.toContain("hunter2");
     expect(parseJudgeEnv({ JUDGE_PROVIDER: "laya", LAYA_BASE_URL: "http://audit:hunter2@127.0.0.1:8808" }).ok).toBe(false);
   });
 
-  it.fails("an API key with a line break is refused and never echoed", () => {
+  it("an API key with a line break is refused and never echoed", () => {
     expect(KEY_DIAG).not.toContain("AUDITSECRET");
   });
 });

@@ -75,16 +75,16 @@ function overlapUsed(acc: string, next: string): number {
   return 0;
 }
 
-describe("combineWindowAnswers: worst case for risk, best case for scope", () => {
+describe("combineWindowAnswers: the worst window decides every question", () => {
   const calm = answers({ in_scope: 0.7, clean: 0.8, high_risk: 0.2, escalate: 0.2 });
   const dirty = answers({ in_scope: 0.4, clean: 0.2, high_risk: 0.7, escalate: 0.6 });
 
-  it("takes injection_risk and seller_risk from the worst window, scope_fit from the best one", () => {
+  it("takes every question from its worst window, scope_fit included (the most in-scope window never decides)", () => {
     const merged = combineWindowAnswers([calm, dirty]);
     expect(merged.injection_risk).toEqual(dirty.injection_risk);
     expect(merged.seller_risk).toEqual(dirty.seller_risk);
     expect(merged.escalate_or_proceed).toEqual(dirty.escalate_or_proceed);
-    expect(merged.scope_fit).toEqual(calm.scope_fit);
+    expect(merged.scope_fit).toEqual(dirty.scope_fit);
   });
 
   it("returns a single window unchanged", () => {
@@ -107,7 +107,7 @@ describe("combineWindowAnswers: worst case for risk, best case for scope", () =>
         }
         const worstInj = Math.max(...list.map((a) => a.injection_risk.suspicious + a.injection_risk.injection));
         expect(merged.injection_risk.suspicious + merged.injection_risk.injection).toBeCloseTo(worstInj, 9);
-        expect(merged.scope_fit.in_scope).toBeCloseTo(Math.max(...list.map((a) => a.scope_fit.in_scope)), 9);
+        expect(merged.scope_fit.in_scope).toBeCloseTo(Math.min(...list.map((a) => a.scope_fit.in_scope)), 9);
         expect(merged.seller_risk.high_risk).toBeCloseTo(Math.max(...list.map((a) => a.seller_risk.high_risk)), 9);
       }),
     );

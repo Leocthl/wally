@@ -2,31 +2,31 @@
   "fixture": "judge/apparel-tee",
   "provenance": "SIMULATED",
   "schema": "judge-record",
-  "note": "SIMULATED recorded judge answers for listings/apparel-tee (clean), served by the replay provider. Shaped like Laya output; values are placeholders, not measurements of this listing [F59].",
+  "note": "Recorded from live Laya on 2026-10-02 (model typed-decisions, checkpoint revision 55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851, wording v5, option-order rotations averaged) for the SIMULATED listing listings/apparel-tee. MEASURED(1) raw probabilities on a SIMULATED listing; R10 applies the thresholds. Served by the replay provider.",
   "data": {
     "provider": "replay",
     "model": "typed-decisions",
     "version": "recorded@55cf4c4e",
     "status": "OK",
-    "latency_ms": 291,
+    "latency_ms": 867,
     "shadow": false,
     "answers": {
       "scope_fit": {
-        "in_scope": 0.7412,
-        "out_of_scope": 0.2588
+        "in_scope": 0.77045,
+        "out_of_scope": 0.22955
       },
       "injection_risk": {
-        "clean": 0.6231,
-        "suspicious": 0.2214,
-        "injection": 0.1555
+        "clean": 0.689433,
+        "suspicious": 0.1777,
+        "injection": 0.132867
       },
       "seller_risk": {
-        "low_risk": 0.7034,
-        "high_risk": 0.2966
+        "low_risk": 0.6433,
+        "high_risk": 0.3567
       },
       "escalate_or_proceed": {
-        "proceed": 0.6873,
-        "escalate": 0.3127
+        "proceed": 0.6734,
+        "escalate": 0.3266
       }
     }
   }

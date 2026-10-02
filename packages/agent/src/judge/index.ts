@@ -7,7 +7,7 @@ import type { JudgeProvider } from "@laisee/core/generated";
 
 export const JUDGE_PROVIDERS: readonly JudgeProvider[] = ["laya", "jev", "replay"];
 
-export { JUDGE_QUESTIONS, QUESTION_OPTIONS, type JudgeQuestion } from "./questions";
+export { JUDGE_QUESTIONS, QUESTION_OPTIONS, SHIPPED_WORDING_VARIANT, type JudgeQuestion, type JudgeQuestionDefs } from "./questions";
 export { SystemOneJudge, type SystemOneJudgeOptions } from "./system-one-judge";
 export { ReplayJudge, type ReplayJudgeOptions } from "./replay-judge";
 export { loadReplayRecordings, ReplayLoadError, type ReplayRecording } from "./replay-recordings";

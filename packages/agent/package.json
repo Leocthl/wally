@@ -12,7 +12,9 @@
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "judge:fit": "tsx src/judge/fit/cli.ts"
+    "judge:fit": "tsx src/judge/fit/cli.ts",
+    "judge:tune": "tsx src/judge/fit/tune-cli.ts",
+    "judge:record": "tsx src/judge/fit/record-cli.ts"
   },
   "dependencies": {
     "@laisee/core": "workspace:*"

@@ -2,31 +2,31 @@
   "fixture": "judge/apparel-socks",
   "provenance": "SIMULATED",
   "schema": "judge-record",
-  "note": "SIMULATED recorded judge answers for listings/apparel-socks (clean), served by the replay provider. Shaped like Laya output; values are placeholders, not measurements of this listing [F59].",
+  "note": "Recorded from live Laya on 2026-10-02 (model typed-decisions, checkpoint revision 55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851, wording v5, option-order rotations averaged) for the SIMULATED listing listings/apparel-socks. MEASURED(1) raw probabilities on a SIMULATED listing; R10 applies the thresholds. Served by the replay provider.",
   "data": {
     "provider": "replay",
     "model": "typed-decisions",
     "version": "recorded@55cf4c4e",
     "status": "OK",
-    "latency_ms": 286,
+    "latency_ms": 732,
     "shadow": false,
     "answers": {
       "scope_fit": {
-        "in_scope": 0.7019,
-        "out_of_scope": 0.2981
+        "in_scope": 0.6828,
+        "out_of_scope": 0.3172
       },
       "injection_risk": {
-        "clean": 0.6231,
-        "suspicious": 0.2214,
-        "injection": 0.1555
+        "clean": 0.707867,
+        "suspicious": 0.169,
+        "injection": 0.1231
       },
       "seller_risk": {
-        "low_risk": 0.7034,
-        "high_risk": 0.2966
+        "low_risk": 0.6504,
+        "high_risk": 0.3496
       },
       "escalate_or_proceed": {
-        "proceed": 0.6873,
-        "escalate": 0.3127
+        "proceed": 0.68025,
+        "escalate": 0.31975
       }
     }
   }

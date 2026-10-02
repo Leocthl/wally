@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeJudge } from "@laisee/core/testing";
 import { loadCorpus } from "../src/judge/fit/corpus";
 import { ServerUnreachableError, runFit } from "../src/judge/fit/fit";
@@ -10,6 +10,9 @@ import { runCorpus } from "../src/judge/fit/run";
 import { mandate } from "./support/inputs";
 import { docsLint } from "./support/docs-lint";
 import { startMockSystemOne, type MockSystemOne } from "./support/mock-system-one";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 let mock: MockSystemOne;
 let outDir: string;
@@ -43,9 +46,11 @@ describe("runCorpus", () => {
 });
 
 describe("runFit against the mock server", () => {
+  /** runFit pushes the whole corpus through the mock (164 cases since B-19), so it outgrows the 5 s default under load. */
+  const RUN_FIT_TIMEOUT_MS = 60_000;
   const base = { model: "typed-decisions", date: "2026-10-02", timeoutMs: 5_000, compareCanonical: true, compareWindows: true } as const;
 
-  it("writes a JSON and a markdown report that pass the doc-style checks", async () => {
+  it("writes a JSON and a markdown report that pass the doc-style checks", { timeout: RUN_FIT_TIMEOUT_MS }, async () => {
     const lines: string[] = [];
     const { jsonPath, markdownPath } = await runFit({ ...base, baseUrl: mock.baseUrl, outDir, log: (l) => lines.push(l) });
     expect(jsonPath.endsWith("judge-fit-2026-10-02.json")).toBe(true);
@@ -61,12 +66,12 @@ describe("runFit against the mock server", () => {
     expect(lines.length).toBeGreaterThan(3);
   });
 
-  it("skips the canonical pass on request", async () => {
+  it("skips the canonical pass on request", { timeout: RUN_FIT_TIMEOUT_MS }, async () => {
     const { report } = await runFit({ ...base, baseUrl: mock.baseUrl, outDir, compareCanonical: false });
     expect(report.rotation).toBeNull();
   });
 
-  it("judges the listings longer than one window in windows, and skips that pass on request", async () => {
+  it("judges the listings longer than one window in windows, and skips that pass on request", { timeout: RUN_FIT_TIMEOUT_MS }, async () => {
     const { report } = await runFit({ ...base, baseUrl: mock.baseUrl, outDir });
     const long = loadCorpus().filter((c) => c.listing.text.length > 2_000).map((c) => c.id);
     expect(report.windows?.rows.map((w) => w.id)).toEqual(long);
@@ -75,7 +80,7 @@ describe("runFit against the mock server", () => {
     expect(skipped.report.windows).toBeNull();
   });
 
-  it("warms up first and sends only requests the judge adapter would send", async () => {
+  it("warms up first and sends only requests the judge adapter would send", { timeout: RUN_FIT_TIMEOUT_MS }, async () => {
     await runFit({ ...base, baseUrl: mock.baseUrl, outDir, compareCanonical: false, compareWindows: false });
     const posts = mock.judgeRequests();
     expect(posts.length).toBe(1 + loadCorpus().length + 6);

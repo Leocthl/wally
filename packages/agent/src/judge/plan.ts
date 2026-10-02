@@ -1,6 +1,6 @@
 // Row plan: which wire questions one request carries. Default is k option-order rotations per question
 // (the Laya README recipe): each rotation is sent as an extra question and the answers are averaged back.
-import { JUDGE_QUESTION_DEFS, JUDGE_QUESTIONS, QUESTION_OPTIONS, type ChoiceQuestionDef, type JudgeQuestion } from "./questions";
+import { JUDGE_QUESTION_DEFS, JUDGE_QUESTIONS, QUESTION_OPTIONS, type ChoiceQuestionDef, type JudgeQuestion, type JudgeQuestionDefs } from "./questions";
 
 export interface QuestionRow {
   /** Question id on the wire, e.g. `injection_risk__r2`. */
@@ -36,10 +36,11 @@ export function planRows(rotations: boolean): readonly QuestionRow[] {
   return JUDGE_QUESTIONS.flatMap((q) => rowsFor(q, rotations));
 }
 
-export function toWireQuestions(rows: readonly QuestionRow[]): Readonly<Record<string, WireQuestion>> {
+/** `defs` defaults to the shipped wording; the B-19 experiment passes a variant. Labels never change. */
+export function toWireQuestions(rows: readonly QuestionRow[], defs: JudgeQuestionDefs = JUDGE_QUESTION_DEFS): Readonly<Record<string, WireQuestion>> {
   return Object.fromEntries(
     rows.map((row) => {
-      const def = JUDGE_QUESTION_DEFS[row.question];
+      const def = defs[row.question];
       const wire: WireQuestion = row.optionOrder === null ? { ...def } : { ...def, option_order: [...row.optionOrder] };
       return [row.requestId, wire];
     }),

@@ -20,13 +20,20 @@ function errorOf(env: Record<string, string | undefined>): string {
 }
 
 describe("parseJudgeEnv", () => {
-  it("defaults to the local Laya judge in shadow mode with the pinned model", () => {
+  it("defaults to the local Laya judge in enforce mode with the pinned model (fail closed, I5)", () => {
     expect(settingsOf({})).toEqual({
       provider: "laya",
-      mode: "shadow",
+      mode: "enforce",
       baseUrl: "http://127.0.0.1:8808",
       model: "typed-decisions",
     });
+  });
+
+  it("enforces when JUDGE_MODE is blank; shadow only when set explicitly", () => {
+    expect(settingsOf({ JUDGE_MODE: "" }).mode).toBe("enforce");
+    expect(settingsOf({ JUDGE_MODE: "  " }).mode).toBe("enforce");
+    expect(settingsOf({ JUDGE_PROVIDER: "replay" }).mode).toBe("enforce");
+    expect(settingsOf({ JUDGE_MODE: "shadow" }).mode).toBe("shadow");
   });
 
   it("reads LAYA_BASE_URL and LAYA_MODEL", () => {
@@ -88,6 +95,14 @@ describe("createJudgeFromEnv", () => {
     expect(createJudgeFromEnv({ LAYA_BASE_URL: mock.baseUrl, JUDGE_MODE: "shadow" })).toBeInstanceOf(ShadowJudge);
     expect(createJudgeFromEnv({ LAYA_BASE_URL: mock.baseUrl, JUDGE_MODE: "enforce" })).toBeInstanceOf(SystemOneJudge);
     expect(createJudgeFromEnv({ JUDGE_PROVIDER: "replay", JUDGE_MODE: "enforce" })).toBeInstanceOf(ReplayJudge);
+  });
+
+  it("never wraps in a ShadowJudge when JUDGE_MODE is unset: a forgotten variable must not switch R10 off", async () => {
+    const judge = createJudgeFromEnv({ LAYA_BASE_URL: mock.baseUrl });
+    expect(judge).toBeInstanceOf(SystemOneJudge);
+    expect(judge).not.toBeInstanceOf(ShadowJudge);
+    expect((await judge.assess(demoInput("apparel-tee"), { timeoutMs: 2000 })).shadow).toBe(false);
+    expect(createJudgeFromEnv({ JUDGE_PROVIDER: "replay" })).toBeInstanceOf(ReplayJudge);
   });
 
   it("throws a JudgeConfigError for bad configuration, at composition time", () => {

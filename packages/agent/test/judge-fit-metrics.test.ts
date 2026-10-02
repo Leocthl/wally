@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { gateById } from "../src/judge/fit/gates";
 import {
   SEARCH_GRID,
@@ -12,6 +12,9 @@ import {
   type Sample,
 } from "../src/judge/fit/metrics";
 import { row } from "./support/fit-data";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 const injection = gateById("injection_risk");
 const scope = gateById("scope_fit");

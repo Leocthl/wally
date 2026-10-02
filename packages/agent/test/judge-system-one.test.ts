@@ -166,9 +166,9 @@ describe("SystemOneJudge (jev)", () => {
     expect(JSON.stringify(seen)).not.toContain(KEY);
   });
 
-  it("accepts a response without a usage block (the hosted API shape is unverified)", async () => {
+  it("treats a response without a usage block as truncation unknown: ERROR, fail closed (I5)", async () => {
     mock.setBehavior({ kind: "json", body: wireResponse(planRows(true), BASE_DISTRIBUTIONS, { usage: undefined, model: "jev-1.13.0" }) });
-    expect((await jev().assess(input, { timeoutMs: TIMEOUT_MS })).status).toBe("OK");
+    expect((await jev().assess(input, { timeoutMs: TIMEOUT_MS })).status).toBe("ERROR");
   });
 
   it("still rejects a truncation flag when one is present", async () => {
