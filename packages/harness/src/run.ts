@@ -7,6 +7,7 @@ import type { JudgeSource } from "./judge/sources";
 import type { Recording, RecordingSource } from "./judge/recording";
 import type { MetaReader, RunMeta } from "./report/meta";
 import { buildResult, computeReport, type Computed, type Mode } from "./report/result";
+import { evaluateCorpus } from "./judge/corpus-eval";
 import { renderSummary } from "./report/markdown";
 import type { CartBuilder } from "./scenario/cart";
 import { generateScenarios } from "./scenario/generate";
@@ -64,6 +65,9 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     for (const system of systems) collected[system.id].push(await system.run(scenario));
     input.onProgress?.(i + 1, scenarios.length);
   }
+  const base = scenarios[0];
+  if (base === undefined) throw new RangeError("a run needs at least one scenario");
+  const corpus = await evaluateCorpus(input.source, base);
   const meta: RunMeta = input.meta.read();
   const runAt = input.clock.now();
   const recordingSource: RecordingSource = {
@@ -88,6 +92,7 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     outcomes: collected,
     systemDescriptions: Object.fromEntries(systems.map((s) => [s.id, s.description])) as Record<Baseline, string>,
     warmedUp: input.source.info.kind === "live",
+    corpus,
   };
   const computed = computeReport(resultInput);
   return {

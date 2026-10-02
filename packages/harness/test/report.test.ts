@@ -9,7 +9,7 @@ import { testRun } from "./support/run-fixture";
 
 const CHIP = /^(MEASURED|RECORDED)\(n=\d+, seed=\d+, commit=[0-9a-f]{7}\)$/;
 const RATE_KEY = /(^|_)(rate|pct|percent|percentage|share)(_|$)/i;
-const REPORTED = ["baselines", "judge_false_allow", "categories", "acceptance"] as const;
+const REPORTED = ["baselines", "judge_false_allow", "injection_corpus", "categories", "acceptance"] as const;
 
 interface Violation {
   readonly path: string;

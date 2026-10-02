@@ -2,6 +2,7 @@
 // MEASURED(...) only when the run was live; recorded runs say RECORDED(...). T-H3 lints this file.
 import { SCENARIO_COUNT } from "../config";
 import type { ComponentReport } from "../factory";
+import type { CorpusEval } from "../judge/corpus-eval";
 import type { JudgeSourceInfo, SourceOutcome } from "../judge/sources";
 import { baselineMetrics, categoryMetrics, judgeFalseAllow, type BaselineMetrics, type CategoryRow, type JudgeMetrics, type Pair } from "../metrics/metrics";
 import { labelAgreement } from "../metrics/agreement";
@@ -28,6 +29,7 @@ export interface ResultInput {
   readonly outcomes: Readonly<Record<Baseline, readonly RunOutcome[]>>;
   readonly systemDescriptions: Readonly<Record<Baseline, string>>;
   readonly warmedUp: boolean;
+  readonly corpus: CorpusEval;
 }
 
 type Chipped<T> = T & { readonly chip: string };
@@ -217,6 +219,15 @@ export function buildResult(input: ResultInput, c: Computed = computeReport(inpu
     definitions: { ...DEFINITIONS, system_descriptions: input.systemDescriptions },
     baselines: Object.fromEntries(BASELINES.map((b) => [b, baselineBlock(c.metrics[b], input.mode, chip)])),
     judge_false_allow: judgeBlock(c.judge, chip),
+    injection_corpus: {
+      items: input.corpus.items,
+      scope: "the judge alone, on every hand-written injection item embedded in one benign listing, against the mirrored F36 threshold; engine-independent",
+      false_allow_rate: ratioBlock(input.corpus.falseAllow, chip),
+      tuning_split: ratioBlock(input.corpus.tuning, chip),
+      heldout_split: ratioBlock(input.corpus.heldout, chip),
+      benign_flagged_rate: ratioBlock(input.corpus.benign, chip),
+      unavailable: input.corpus.unavailable,
+    },
     categories: categoryBlock(c.categories, chip),
     acceptance: c.acceptance.map((a) => ({ id: a.id, target: a.target, evaluated_on: a.evaluatedOn, result: ratioBlock(a.result, chip), pass: a.pass })),
     label_disagreements: c.disagreements,
