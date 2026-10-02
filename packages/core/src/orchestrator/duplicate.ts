@@ -1,6 +1,7 @@
 // Idempotent submit (docs/02 section 6). A cart that repeats a live one, same cart fingerprint in the same packet,
 // gets the earlier decision back instead of a second decision, card and charge. Live means: an APPROVE whose card is
-// ACTIVE or USED (a voided or expired card is dead, so the cart is decided afresh), or an ESCALATE that is still open.
+// ACTIVE or USED and still inside its lifetime (a voided or expired card is dead, so the cart is decided afresh), or an
+// ESCALATE that is still open. A repeat of the same cart after the card expired is a new purchase.
 // A DENY, an escalation that was answered or ran out, and an APPROVE whose mint never completed are decided again:
 // the packet, the clock or the listing may have changed since. Pure functions over the folded log.
 import { cartFingerprint } from "../engine/hash";
@@ -25,7 +26,10 @@ export function findLiveDuplicate(entries: readonly LogEntry[], fingerprint: str
     if (decision.outcome === "DENY" || resolved.has(decision.id) || cartFingerprint(decision.cart) !== fingerprint) continue;
     if (decision.outcome === "APPROVE") {
       const card = cards.find((c) => c.decision_id === decision.id);
-      if (card !== undefined && (card.state === "ACTIVE" || card.state === "USED")) return { decision, card, escalation: null };
+      // Live only while the card could still be in use: a repeat after the card's lifetime (F30) is a new purchase.
+      if (card !== undefined && (card.state === "ACTIVE" || card.state === "USED") && Date.parse(card.expires_at) > now.getTime()) {
+        return { decision, card, escalation: null };
+      }
       continue;
     }
     const open = escalationViewOf(decision, "OPEN");

@@ -35,7 +35,7 @@ const nope = async (): Promise<never> => {
 export function emptyClient(overrides: Partial<ApiClient> = {}): ApiClient {
   return {
     kind: "mock",
-    info: async () => ({ kind: "mock", judge: { provider: "replay", note: "test" }, planner: { provider: "replay", note: "test" }, replayed: true, realCapture: null }),
+    info: async () => ({ kind: "mock", judge: { provider: "replay", note: "test" }, planner: { provider: "replay", note: "test" }, replayed: true, realCapture: null, features: { ask: false, alternatives: false, compile: "rules" } }),
     snapshot: async () => EMPTY,
     seal: nope,
     runScenario: nope,
