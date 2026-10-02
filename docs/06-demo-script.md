@@ -3,7 +3,7 @@
 ## Roles
 - **Talker**: speaks, owns the clock, no keyboard; says **SIMULATED** for the rail, merchant stub, flagged seller and amounts [F20-F23].
 - **Driver**: runs Budget or the Presenter (Space or Right arrow steps, R resets).
-- **Rota**: one person at the booth throughout [F14] (D-27).
+- **Rota**: one person at the booth throughout [F14].
 
 ## Booth: 3-minute script [F45]
 | Time [F45] | Driver (Budget, Try asking) | Talker (words in 07) | Moment | HKT evidence [F19] |
@@ -54,7 +54,7 @@
 | Failure | Driver switch | Talker says |
 |---|---|---|
 | Laya down or slow | Needs your OK shows; restart and warm up, else `JUDGE_PROVIDER=replay` (labelled) | The checker is down, so Wally asks me. By design. |
-| Qwen down or no pick | `PLANNER_PROVIDER=rule`, else `replay` (labelled) | Wally could not pick, so nothing was decided. |
+| Qwen down or no pick | Restart with `PLANNER_PROVIDER=rule`, else `replay` (labelled) | Wally could not pick, so nothing was decided. |
 | Phones cannot join | Drive from the Mac | Same app, same rules. |
 | Server or UI bug | Reset; else the on-device page (real rules, recorded answers); else the video | Here is the recorded run. |
 
