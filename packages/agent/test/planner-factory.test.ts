@@ -4,7 +4,7 @@ import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated"
 import { PlannerConfigError } from "../src/planner/config";
 import { createPlanner, layaUrlFromEnv, plannerProviderFromEnv } from "../src/planner/factory";
 import { DEFAULT_PLANNER_PROVIDER, PLANNER_PROVIDERS } from "../src/planner";
-import { ALL_FIXTURE_LISTINGS, OPTS, ctxOf, fixtureListing } from "./support/planner-data";
+import { ALL_FIXTURE_LISTINGS, OPTS, ctxOf, fixtureListing } from "./support/planner/data";
 
 describe("plannerProviderFromEnv", () => {
   it("defaults to rule", () => {

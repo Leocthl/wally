@@ -1,7 +1,7 @@
 // Local Laya client: option-order rotation averaging and fail-closed handling, against the mock server.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createLayaClient, type ChoiceSpec } from "../src/planner/laya-client";
-import { startMockLaya, type MockLaya } from "./support/mock-laya";
+import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
 
 let mock: MockLaya;
 beforeAll(async () => {

@@ -5,8 +5,8 @@ import type { ListingRecord } from "@laisee/core/generated";
 import type { PlannerTraceStep, ProposeCartInput } from "@laisee/core/ports";
 import { validateProposeCartInput } from "@laisee/core/schema";
 import { createRulePlanner } from "../src/planner/rule-planner";
-import { startMockLaya, type MockLaya } from "./support/mock-laya";
-import { GRAPHIC_TEE_LISTING, OPTS, VARIANT_LISTING, ctxOf, fixtureListing, nonEmpty } from "./support/planner-data";
+import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
+import { GRAPHIC_TEE_LISTING, OPTS, VARIANT_LISTING, ctxOf, fixtureListing, nonEmpty } from "./support/planner/data";
 
 let mock: MockLaya;
 beforeAll(async () => {

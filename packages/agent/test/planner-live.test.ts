@@ -5,7 +5,7 @@ import type { PlannerTraceStep } from "@laisee/core/ports";
 import { validateProposeCartInput } from "@laisee/core/schema";
 import { DEFAULT_LAYA_URL } from "../src/planner/config";
 import { createRulePlanner } from "../src/planner/rule-planner";
-import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner-data";
+import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";
 
 const LAYA_URL = process.env["LAYA_URL"] ?? DEFAULT_LAYA_URL;
 

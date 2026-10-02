@@ -5,9 +5,9 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { FIXTURES_DIR, listFixtureFiles, loadFixture } from "@laisee/core/testing/fixtures";
 import { ALTERNATIVE_SUFFIX, createReplayPlanner } from "../src/planner/replay-planner";
-import { startMockLaya, type MockLaya } from "./support/mock-laya";
-import { OPTS, fixtureListing, ALL_FIXTURE_LISTINGS } from "./support/planner-data";
-import { SCENARIOS, fixtureText, recordScenario, scenarioContext } from "./support/planner-scenarios";
+import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
+import { OPTS, fixtureListing, ALL_FIXTURE_LISTINGS } from "./support/planner/data";
+import { SCENARIOS, fixtureText, recordScenario, scenarioContext } from "./support/planner/scenarios";
 
 let mock: MockLaya;
 beforeAll(async () => {

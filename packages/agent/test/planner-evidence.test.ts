@@ -4,7 +4,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { groupFamilies, candidatesFromListing } from "../src/planner/candidates";
 import { contentWords, hasEvidence } from "../src/planner/evidence";
-import { VARIANT_LISTING, fixtureListing } from "./support/planner-data";
+import { VARIANT_LISTING, fixtureListing } from "./support/planner/data";
 
 const family = (key: "tee" | "socks" | "jacket" | "hoodie" | "injected" | "earbuds", index = 0) => {
   const families = groupFamilies(candidatesFromListing(fixtureListing(key)));

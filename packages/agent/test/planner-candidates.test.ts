@@ -10,7 +10,7 @@ import {
   slugify,
   uniqueLabels,
 } from "../src/planner/candidates";
-import { GRAPHIC_TEE_LISTING, VARIANT_LISTING, fixtureListing } from "./support/planner-data";
+import { GRAPHIC_TEE_LISTING, VARIANT_LISTING, fixtureListing } from "./support/planner/data";
 
 describe("test listings are valid listing records", () => {
   it("validates the in-memory variant listings", () => {

@@ -9,7 +9,7 @@ import type { PlannerTraceStep } from "@laisee/core/ports";
 import { FIXTURES_DIR } from "@laisee/core/testing/fixtures";
 import { PlannerConfigError } from "../src/planner/config";
 import { createReplayPlanner, loadReplayRecords } from "../src/planner/replay-planner";
-import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner-data";
+import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";
 
 const tee = fixtureListing("tee");
 const socks = fixtureListing("socks");

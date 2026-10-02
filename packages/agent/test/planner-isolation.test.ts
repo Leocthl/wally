@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { createReplayPlanner } from "../src/planner/replay-planner";
 import { createRulePlanner } from "../src/planner/rule-planner";
-import { ALL_FIXTURE_LISTINGS } from "./support/planner-data";
+import { ALL_FIXTURE_LISTINGS } from "./support/planner/data";
 
 const DIR = fileURLToPath(new URL("../src/planner/", import.meta.url));
 const FILES = readdirSync(DIR).filter((f) => f.endsWith(".ts"));
