@@ -24,7 +24,7 @@
 
 ## Lanes
 ### A: policy + rail
-- **Tasks**: A-01 to A-35: rules tests first, credential, log, rail-sim, orchestrator, booth API.
+- **Tasks**: A-01 to A-35: rules tests first, credential, log, rail-sim, orchestrator, booth API, family budget (A-30).
 - **In**: schemas, fixtures, judge record from B, the real decline (D-03).
 - **Out**: `engine.decide`, `verifyMandateCredential`, `verifyChain`, `RailPort` (SIMULATED rail), the orchestrator for C, engine and rail-sim for D.
 - **Done**: CLAUDE.md, Definition of done, lane A.
@@ -48,8 +48,8 @@
 - **Done**: CLAUDE.md, Definition of done, lane D.
 
 ### M: mobile, second model, brand
-- **Tasks**: M-01 to M-11: Wally rename, Qwen service, local planner and compiler, design system, PWA shell, screens, on-device mode, key on the phone, LAN mode, device pass.
-- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode.
+- **Tasks**: M-01 to M-12: Wally rename, Qwen service, local planner and compiler, design system, PWA shell, screens, on-device mode, key on the phone, LAN mode, device pass, voice input.
+- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode; LAN mode and the Capacitor shells run (simulator and emulator, no physical device); `scripts/rename-scope.mjs` runs last, after every lane has merged.
 
 ### X: cross-lane
 - **Tasks**: X-01 to X-19: worktrees, CI, contracts, integration, T-E2E with booth smoke, freeze guard, credits.
@@ -99,7 +99,7 @@
 | P3 | D-01 to D-07 and D-12 first, then C (booth first) |
 | All | After M4 [F41]: P1 demo and rehearsals, P2 evidence map, P3 deck, video, submission |
 
-- Pre-cut A-30, B-13, D-19. Then apply D9 in order at each missed gate.
+- Pre-cut B-13, D-19. Then apply D9 in order at each missed gate.
 
 ## Sleep rota
 - One person off 4 h at a time [F41]. Windows do not overlap and do not span a gate or trigger check.
@@ -107,11 +107,10 @@
 - Before leaving: tick Done boxes in TASKS.md, add one hand-off line per open task.
 
 ## Cut order (D9)
-1. Teen chain (A-30)
-2. Screenshot intake (B-13)
-3. Reconciliation (D-19)
-4. Harness 200 to 100 scenarios [F37]
-5. Scameter to manual capture only (D-07)
+1. Screenshot intake (B-13)
+2. Reconciliation (D-19)
+3. Harness 200 to 100 scenarios [F37]
+4. Scameter to manual capture only (D-07)
 
-- did:key and the credential are not cut: HKT's workshop centres on DID-VC [F19]. Optional by design, never on the critical path: hosted Jev. The claude planner is removed.
+- The teen chain left the list: it shipped as the family budget (A-30, D17). did:key and the credential are not cut: HKT's workshop centres on DID-VC [F19]. Optional by design, never on the critical path: hosted Jev. The claude planner is removed.
 - Cut the next item when a gate is missed. Sleep is not on the list.
