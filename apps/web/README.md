@@ -11,7 +11,7 @@
 | `pnpm --filter @laisee/web dev` | Vite dev server on 127.0.0.1 |
 | `pnpm --filter @laisee/web build` | typecheck and production build |
 | `pnpm --filter @laisee/web test` | Vitest: components, mock, reducer, tokens |
-| `pnpm --filter @laisee/web exec playwright test` | smoke test on phone and desktop (builds, serves on 127.0.0.1:4517) |
+| `pnpm --filter @laisee/web e2e` | Playwright smoke test on phone and desktop (builds, serves on 127.0.0.1:4517, uses the cached Chromium) |
 
 ## Screens (hash routes)
 | Route | Screen |
