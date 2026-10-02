@@ -30,7 +30,7 @@
 |---|---|---|---|
 | HKT award | Problem-solution fit | 25% [F15] | one decision, one delegator, evidence E1-E5 |
 | HKT award | Technical execution, working prototype | 25% [F15] | real engine, signed log, verifier, harness; the planner replans after a stop |
-| HKT award | UX and desirability, especially Gen Z | 20% [F15] | mobile-first sealed-packet flow, EN + zh-HK |
+| HKT award | UX and desirability, especially Gen Z | 20% [F15] | phone-first app with Wally, EN + zh-HK, phones join the booth by QR |
 | HKT award | Security and trust design | 15% [F15] | delegation credential (DID-VC), policy engine, consent by escalation, hash-chained log, fail closed |
 | HKT award | Feasibility of integration with any payment means | 15% [F15] | single-use tokens on SUC semantics [F1]; RailPort portability in 09 |
 | Technical judges at the booth | 6 criteria, 5 marks each [F15] | 30 marks | a demo a judge can drive in 5 min [F14] |
