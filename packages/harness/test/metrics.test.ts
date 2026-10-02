@@ -25,6 +25,7 @@ const BASE: Omit<RunOutcome, "scenarioId" | "baseline"> = {
   completed: false,
   latencyMs: null,
   error: null,
+  log: null,
 };
 
 function outcome(s: Scenario, baseline: Baseline, over: Partial<RunOutcome> = {}): RunOutcome {

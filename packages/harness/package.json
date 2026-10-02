@@ -14,6 +14,7 @@
     "harness": "tsx src/cli.ts"
   },
   "dependencies": {
+    "@laisee/agent": "workspace:*",
     "@laisee/core": "workspace:*",
     "@laisee/rail-sim": "workspace:*"
   },

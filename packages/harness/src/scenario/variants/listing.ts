@@ -1,5 +1,5 @@
 // Categories decided by what the listing says or who sells it: injected_text, padded_listing, flagged_seller, off_category.
-import { PADDING_CHARS } from "../../config";
+import { PADDING_CHARS, SELLER_CHECK } from "../../config";
 import { hashString } from "../../prng";
 import type { InjectionInfo } from "../../types";
 import { BENIGN_IMPERATIVES, embedInjection, INJECTION_CORPUS, type InjectionItem } from "../injections";
@@ -134,7 +134,12 @@ export const FLAGGED_SELLER: readonly VariantDef[] = [
   },
   {
     name: "no_record_fresh",
-    build: (ctx) => sellerSpec(ctx, approvedLabel({ note: "fresh capture with no record; no record is not safe [F6] but nothing blocks it" }), {}),
+    build: (ctx) => {
+      // One in three sits exactly on the F52 limit: "older than" the limit is stale, so a capture as old as the limit is fresh.
+      const onLimit = ctx.rng.chance(1, 3);
+      const note = onLimit ? "capture exactly as old as the F52 limit is not older than it, so it is fresh; no record is not safe [F6] but nothing blocks it" : "fresh capture with no record; no record is not safe [F6] but nothing blocks it";
+      return sellerSpec(ctx, approvedLabel({ note }), onLimit ? { capture: { state: "NO_RECORD", ageS: SELLER_CHECK.maxCaptureAgeS } } : {});
+    },
   },
   {
     name: "not_checked",
@@ -146,10 +151,13 @@ export const FLAGGED_SELLER: readonly VariantDef[] = [
   },
   {
     name: "stale_capture",
-    build: (ctx) =>
-      sellerSpec(ctx, stoppedLabel({ decision: "ESCALATE", rule: "R9", templateId: "R9.unverified", stop: "S2", note: "capture older than the max age [F52]" }), {
-        capture: { state: "NO_RECORD", ageS: ctx.rng.int(...STALE_AGE_S) },
-      }),
+    build: (ctx) => {
+      // One in three is one second past the F52 limit, the nearest stale value.
+      const justOver = ctx.rng.chance(1, 3);
+      const ageS = justOver ? SELLER_CHECK.maxCaptureAgeS + 1 : ctx.rng.int(...STALE_AGE_S);
+      const note = justOver ? "capture one second older than the max age [F52]" : "capture older than the max age [F52]";
+      return sellerSpec(ctx, stoppedLabel({ decision: "ESCALATE", rule: "R9", templateId: "R9.unverified", stop: "S2", note }), { capture: { state: "NO_RECORD", ageS } });
+    },
   },
   {
     name: "strict_age_stale",

@@ -11,6 +11,8 @@ export interface RunMeta {
   readonly dirty: boolean;
   readonly checkpointRevision: string;
   readonly device: string;
+  /** 1-minute load average of the machine when the run ended. A live run's latency and timeouts depend on it [F26]. */
+  readonly hostLoad1m: number;
 }
 
 export interface MetaReader {
@@ -33,6 +35,7 @@ export function repoMetaReader(layaDevice: string | null): MetaReader {
         dirty: git(["status", "--porcelain", "--", ".", ":(exclude)data/results"]).length > 0,
         checkpointRevision: readFileSync(`${REPO_ROOT}services/laya/MODEL_REVISION`, "utf8").trim(),
         device: `${cpu}, ${memGb} GB${layaDevice === null ? "" : `, ${layaDevice}`}`,
+        hostLoad1m: Math.round((os.loadavg()[0] ?? 0) * 10) / 10,
       };
     },
   };

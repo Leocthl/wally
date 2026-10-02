@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { RunOutput } from "../src/run";
 import { testRun } from "./support/run-fixture";
+import { RUN_MS } from "./support/timeouts";
 
 const CHIP = /^(MEASURED|RECORDED)\(n=\d+, seed=\d+, commit=[0-9a-f]{7}\)$/;
 const RATE_KEY = /(^|_)(rate|pct|percent|percentage|share)(_|$)/i;
@@ -52,7 +53,7 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
   beforeAll(async () => {
     live = await testRun({ mode: "live", n: 100 });
     recorded = await testRun({ mode: "recorded", n: 100 });
-  });
+  }, RUN_MS);
 
   it("passes the lint on a live result and a recorded result", () => {
     expect(lintReportedNumbers(live.result)).toEqual([]);
@@ -88,13 +89,53 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
     const small = await testRun({ n: 40 });
     expect((small.result["run"] as { meets_scenario_minimum: boolean }).meets_scenario_minimum).toBe(false);
     expect((small.result["evidence"] as { reasons: string[] }).reasons.join(" ")).toContain("fewer scenarios");
-  });
+  }, RUN_MS);
 
   it("contains no PAN-like digit run and no CVV field (I8) in the JSON or the summary", () => {
     for (const text of [JSON.stringify(live.result), live.summary]) {
       expect(text).not.toMatch(/(?<![\w.])(?:\d[ -]?){13,19}(?![\w])/);
       expect(text.toLowerCase()).not.toMatch(/cvv\D{0,12}\d{3}/);
     }
+  });
+
+  it("states its scope: scenario counts, SIMULATED parts, and a log checked for integrity rather than consent", () => {
+    const scope = (live.result["scope"] as string[]).join(" ");
+    expect(scope).toContain("none of those scenarios did it");
+    expect(scope).toContain("SIMULATED");
+    expect(scope).toContain("chain integrity");
+    expect(scope).toContain("does not by itself show that the delegator consented");
+    expect(live.summary).toContain("## Scope: what these numbers say");
+  });
+
+  it("makes no claim the harness did not measure: no guarantee, no proof, no 'cannot overspend'", () => {
+    for (const text of [JSON.stringify(live.result), live.summary, JSON.stringify(recorded.result)]) {
+      expect(text).not.toMatch(/guarantee|\bproves?\b|impossible|cannot overspend|no overspend|never overspend/i);
+    }
+  });
+
+  it("explains each miss one scenario at a time: legitimate purchases blocked by gate, stop cases that got through", () => {
+    const breakdown = live.result["breakdown"] as { legitimate_blocked: Record<string, { count: number; by_gate: Record<string, number>; rows: unknown[] }>; stops_through: Record<string, { count: number; rows: unknown[] }> };
+    for (const b of ["B0", "B1", "B2"]) {
+      expect(breakdown.legitimate_blocked[b]?.rows).toHaveLength(breakdown.legitimate_blocked[b]?.count ?? -1);
+      expect(Object.values(breakdown.legitimate_blocked[b]?.by_gate ?? {}).reduce((a, n) => a + n, 0)).toBe(breakdown.legitimate_blocked[b]?.count);
+      expect(breakdown.stops_through[b]?.rows).toHaveLength(breakdown.stops_through[b]?.count ?? -1);
+    }
+    expect(live.summary).toContain("## Legitimate purchases blocked, by gate");
+    expect(live.summary).toContain("## Stop cases that got through");
+  });
+
+  it("reports the host load of a live run, because latency and timeouts depend on it, and none for a replay that has no recorded load", () => {
+    expect((live.result["run"] as { host_load_average_1m: unknown }).host_load_average_1m).toBe(1.5);
+    expect(live.summary).toContain("**Host load**: 1-minute load average 1.5 at the end of the run");
+    expect((recorded.result["run"] as { host_load_average_1m: unknown }).host_load_average_1m).toBeNull();
+    expect(recorded.summary).not.toContain("Host load");
+  });
+
+  it("counts the stop cases that got through for a model-free rule apart, and B2 has none", () => {
+    const through = (live.result["breakdown"] as { stops_through: Record<string, { count: number; model_free_count: number }> }).stops_through;
+    for (const b of ["B0", "B1", "B2"]) expect(through[b]?.model_free_count).toBeLessThanOrEqual(through[b]?.count ?? -1);
+    expect(through["B2"]?.model_free_count).toBe(0);
+    expect(live.summary).toMatch(/\*\*B2\*\*: \d+ of \d+ stop cases got through; 0 of them were for a model-free rule/);
   });
 
   it("round-trips through JSON without loss", () => {
@@ -136,7 +177,7 @@ describe("the summary passes scripts/docs-check.py", () => {
   it.skipIf(python.error !== undefined)("raises no problem for the generated files (unknown F-IDs, bare numbers, style, PAN-like runs)", async () => {
     const run = await testRun({ mode: "recorded", n: 100 });
     expect(check(run.summary, JSON.stringify(run.result, null, 2))).toEqual([]);
-  });
+  }, RUN_MS);
 
   it.skipIf(python.error !== undefined)("and the check does bite: a bare percentage and an unknown register ID are reported", () => {
     const problems = check("# Bad\n\n- overspend was 12.5% of runs\n- see [F999]\n", "{}");

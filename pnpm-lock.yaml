@@ -260,6 +260,9 @@ importers:
 
   packages/harness:
     dependencies:
+      '@laisee/agent':
+        specifier: workspace:*
+        version: link:../agent
       '@laisee/core':
         specifier: workspace:*
         version: link:../core

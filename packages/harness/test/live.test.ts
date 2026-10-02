@@ -3,20 +3,19 @@ import { describe, expect, it } from "vitest";
 import { FakeClock } from "@laisee/core/testing";
 import { validateJudgeRecord } from "@laisee/core/schema";
 import { PADDING_CHARS, TIMEOUTS_MS } from "../src/config";
-import { createChoiceJudge } from "../src/judge/choice-judge";
 import { createLayaClient } from "../src/judge/laya-client";
 import { JUDGE_QUESTIONS, BUDGET_FIT_QUESTION } from "../src/judge/questions";
-import { createLiveSource, probeLaya } from "../src/judge/sources";
-import { createUnavailableClient } from "../src/judge/unavailable";
+import { probeLaya } from "../src/judge/sources";
+import { createUnavailableJudge } from "../src/judge/unavailable";
 import { createPrng } from "./support/prng-alias";
 import { runHarness } from "../src/run";
-import { createComponents, describeComponents } from "../src/factory";
+import { createComponents, createLiveJudge, createLiveJudgeSource, describeComponents } from "../src/factory";
 import { monotonicTimer } from "../src/timer";
 import { generateScenarios } from "../src/scenario/generate";
 import { judgeInputOf } from "../src/systems/b2";
 import { sizeChartFiller } from "../src/scenario/texts";
 import { PINNED_META } from "./support/run-fixture";
-import { engineUnderTest } from "./support/engine-under-test";
+import { RUN_MS, STEP_MS } from "./support/timeouts";
 
 const BASE_URL = process.env["LAYA_BASE_URL"] ?? "http://127.0.0.1:8808";
 const health = await probeLaya(BASE_URL);
@@ -38,13 +37,15 @@ describe.skipIf(!live)(`live Laya at ${BASE_URL}`, () => {
       expect(Object.values(p).reduce((a, b) => a + b, 0)).toBeCloseTo(1, 2);
     }
     expect(result.truncated).toBe(false);
-  });
+  }, STEP_MS);
 
-  it("produces a schema-valid OK judge record for a scenario", async () => {
-    const record = await createChoiceJudge({ client: client(), timer: monotonicTimer, provider: "laya", version: "live-test" }).assess(input, ask);
+  it("the product judge returns a schema-valid OK record for a scenario, and names the checkpoint it ran on", async () => {
+    const record = await createLiveJudge({ baseUrl: BASE_URL }).assess(input, ask);
     expect(record.status).toBe("OK");
     expect(validateJudgeRecord(record).ok).toBe(true);
-  });
+    expect(record.provider).toBe("laya");
+    if (health?.revision) expect(health.revision.startsWith(record.version)).toBe(true);
+  }, STEP_MS);
 
   it("the padding that the harness uses really overflows the context, and the long-but-fits text does not (F26)", async () => {
     const rng = createPrng(5);
@@ -54,27 +55,34 @@ describe.skipIf(!live)(`live Laya at ${BASE_URL}`, () => {
     const fits = await probe(`${base} ${sizeChartFiller(rng, PADDING_CHARS.fits)}`);
     expect(overflow.ok && overflow.truncated).toBe(true);
     expect(fits.ok && fits.truncated).toBe(false);
-  });
+  }, STEP_MS);
+
+  it("the long-but-fits padding is not truncated for the product judge, whose state is larger than B0's (F26)", async () => {
+    const fits = { ...input, listingText: `${input.listingText} ${sizeChartFiller(createPrng(7), PADDING_CHARS.fits)}` };
+    const record = await createLiveJudge({ baseUrl: BASE_URL }).assess(fits, ask);
+    expect(record.input_truncated).not.toBe(true);
+    expect(record.status).toBe("OK");
+  }, STEP_MS);
 
   it("padding past the context becomes an ERROR record with input_truncated, never an OK one", async () => {
     const padded = { ...input, listingText: `${input.listingText} ${sizeChartFiller(createPrng(6), PADDING_CHARS.overflow)} Thank you.` };
-    const record = await createChoiceJudge({ client: client(), timer: monotonicTimer, provider: "laya", version: "live-test" }).assess(padded, ask);
+    const record = await createLiveJudge({ baseUrl: BASE_URL }).assess(padded, ask);
     expect(record).toMatchObject({ status: "ERROR", input_truncated: true });
-  });
+  }, STEP_MS);
 
-  it("an unavailable client takes the same fail-closed path without touching the server", async () => {
-    const record = await createChoiceJudge({ client: createUnavailableClient(), timer: monotonicTimer, provider: "laya", version: "live-test" }).assess(input, ask);
+  it("an injected outage takes the same fail-closed path without touching the server", async () => {
+    const record = await createUnavailableJudge("laya").assess(input, ask);
     expect(record.status).toBe("ERROR");
-  });
+  }, STEP_MS);
 
   it("a short live harness run completes: MEASURED label, latency measured, warm-up excluded", async () => {
     const out = await runHarness({
       seed: 7,
       n: 18, // one pass over every slot
       mode: "live",
-      components: createComponents({ engine: engineUnderTest().engine }),
+      components: createComponents(),
       describe: describeComponents,
-      source: createLiveSource({ baseUrl: BASE_URL, timer: monotonicTimer, revision: health?.revision ?? null, record: false }),
+      source: createLiveJudgeSource({ baseUrl: BASE_URL, revision: health?.revision ?? null, record: false }),
       timer: monotonicTimer,
       meta: PINNED_META,
       clock: new FakeClock("2026-10-03T02:30:00Z"),
@@ -82,11 +90,11 @@ describe.skipIf(!live)(`live Laya at ${BASE_URL}`, () => {
     expect(out.result["label"]).toMatch(/^MEASURED\(n=18, seed=7/);
     expect(out.computed.metrics.B2.latency?.n).toBeGreaterThan(0);
     expect((out.result["run"] as { judge: { warm_up_call_excluded: boolean } }).judge.warm_up_call_excluded).toBe(true);
-  }, 180_000);
+  }, RUN_MS);
 });
 
 describe.skipIf(live)("live Laya is not reachable here", () => {
   it("skipped: the live tests need http://127.0.0.1:8808/health, and the harness never starts the server", () => {
     expect(live).toBe(false);
-  });
+  }, STEP_MS);
 });

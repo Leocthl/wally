@@ -1,24 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { MintError, type Engine, type JudgePort, type RailPort } from "@laisee/core/ports";
+import { engine } from "@laisee/core/engine";
+import { createExecutor } from "@laisee/core/executor";
+import { MintError, type JudgePort, type RailPort } from "@laisee/core/ports";
 import { FakeJudge } from "@laisee/core/testing";
+import { MerchantStub } from "@laisee/rail-sim";
 import { createComponents } from "../src/factory";
-import { generateScenarios } from "../src/scenario/generate";
+import { CATEGORY_VARIANTS, generateScenarios } from "../src/scenario/generate";
 import { createSystems } from "../src/systems/create";
+import type { Components } from "../src/systems/types";
+import { governedWorlds } from "../src/worlds/governed";
 import { labelAgreement } from "../src/metrics/agreement";
 import type { Baseline, Scenario } from "../src/types";
 import { SCENARIO_COUNT } from "../src/config";
-import { engineUnderTest } from "./support/engine-under-test";
 import { downJudge, keywordJudge } from "./support/keyword-model";
+import { SWEEP_MS } from "./support/timeouts";
 
-const { engine, kind } = engineUnderTest();
+
 const judgeFor = (s: Scenario): JudgePort => (s.events.judgeFault === "down" ? downJudge() : keywordJudge());
 let tick = 0;
 const timer = (): number => (tick += 3);
 
-function systems(over: { engine?: Engine; judgeFor?: (s: Scenario) => JudgePort; createRail?: () => RailPort } = {}) {
-  const base = createComponents({ engine: over.engine ?? engine });
-  const components = over.createRail ? { ...base, createRail: over.createRail } : base;
-  return createSystems({ components, judgeFor: over.judgeFor ?? judgeFor, choiceFor: () => { throw new Error("B0 not used in this test"); }, timer, measureLatency: true });
+function systems(over: { components?: Components; judgeFor?: (s: Scenario) => JudgePort } = {}) {
+  return createSystems({ components: over.components ?? createComponents(), judgeFor: over.judgeFor ?? judgeFor, choiceFor: () => { throw new Error("B0 not used in this test"); }, timer, measureLatency: true });
 }
 
 const [, B1, B2] = (() => {
@@ -33,7 +36,7 @@ const pick = (category: string, variant: string): Scenario => {
   return s;
 };
 
-describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
+describe("B1 and B2 on the fixed seed set, real engine, rail, merchant and executor", () => {
   it("never mint above the allowed limit and never charge above it (D-28, I2)", async () => {
     for (const system of [B1, B2]) {
       for (const s of scenarios) {
@@ -42,7 +45,7 @@ describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
         expect(out.authorisedMinor, `${system!.id} ${s.id}`).toBeLessThanOrEqual(s.limits.allowedMinor);
       }
     }
-  });
+  }, SWEEP_MS);
 
   it("B2 agrees with every label when the judge answers as the labels assume", async () => {
     const misses: string[] = [];
@@ -52,7 +55,7 @@ describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
       if (!a.all) misses.push(`${s.id} ${s.variant}: ${a.reason}`);
     }
     expect(misses).toEqual([]);
-  });
+  }, SWEEP_MS);
 
   it("B1 agrees with the label everywhere the judge is not what stops the cart", async () => {
     const misses: string[] = [];
@@ -63,7 +66,7 @@ describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
       if (!a.all) misses.push(`${s.id} ${s.variant}: ${a.reason}`);
     }
     expect(misses).toEqual([]);
-  });
+  }, SWEEP_MS);
 
   it("B1 has no judge and no seller check: it approves injected and flagged carts that pass R1-R8", async () => {
     const injected = pick("injected_text", "inj_clean_cart");
@@ -79,14 +82,19 @@ describe(`B1 and B2 on the fixed seed set (engine: ${kind})`, () => {
 describe("label sweep: B2 agrees with every label across many seeds, so no rare parameter mix is mislabelled", () => {
   it("holds for seeds 100 to 111", async () => {
     const misses: string[] = [];
+    const seen = new Set<string>();
     for (let seed = 100; seed < 112; seed += 1) {
       for (const s of generateScenarios({ seed, n: 100 })) {
+        seen.add(`${s.category}/${s.variant}`);
         const a = labelAgreement(s, await B2!.run(s));
         if (!a.all) misses.push(`seed ${seed} ${s.id} ${s.variant}: ${a.reason}`);
       }
     }
     expect(misses).toEqual([]);
-  });
+    // The sweep means nothing for a variant it never ran: every variant of every category must be in it.
+    const every = Object.entries(CATEGORY_VARIANTS).flatMap(([category, variants]) => variants.map((v) => `${category}/${v.name}`));
+    expect(every.filter((v) => !seen.has(v))).toEqual([]);
+  }, SWEEP_MS);
 });
 
 describe("pipeline behaviour by category", () => {
@@ -160,8 +168,8 @@ describe("fail closed (I5)", () => {
   const clean = pick("within_budget", "plain");
 
   it("an engine that throws is a DENY with the error recorded, and mints nothing", async () => {
-    const throwing: Engine = { decide: () => { throw new Error("engine bug"); }, decideCheckout: () => null };
-    const out = await systems({ engine: throwing }).find((s) => s.id === "B2")!.run(clean);
+    const throwing = { ...engine, decide: () => { throw new Error("engine bug"); } };
+    const out = await systems({ components: createComponents({ engine: throwing }) }).find((s) => s.id === "B2")!.run(clean);
     expect(out.decision.outcome).toBe("DENY");
     expect(out.error).toContain("engine bug");
     expect(out.mints).toHaveLength(0);
@@ -174,7 +182,8 @@ describe("fail closed (I5)", () => {
       void: async () => { throw new Error("must not be called"); },
       expireDue: async () => [],
     };
-    const out = await systems({ createRail: () => refusing }).find((s) => s.id === "B2")!.run(clean);
+    const refusingWorlds = governedWorlds({ createRail: () => refusing, createMerchant: (rail) => new MerchantStub({ rail }), createExecutor });
+    const out = await systems({ components: createComponents({ governed: refusingWorlds }) }).find((s) => s.id === "B2")!.run(clean);
     expect(out.mintBlocked).toBe("OVER_CEILING");
     expect(out.authorisedCount).toBe(0);
   });
@@ -202,7 +211,7 @@ describe("outcome record", () => {
     const withLatency = await B2!.run(s);
     expect(withLatency.baseline satisfies Baseline).toBe("B2");
     expect(withLatency.latencyMs).not.toBeNull();
-    const off = createSystems({ components: createComponents({ engine }), judgeFor, choiceFor: () => { throw new Error("unused"); }, timer, measureLatency: false });
+    const off = createSystems({ components: createComponents(), judgeFor, choiceFor: () => { throw new Error("unused"); }, timer, measureLatency: false });
     expect((await off.find((x) => x.id === "B2")!.run(s)).latencyMs).toBeNull();
     expect(JSON.parse(JSON.stringify(withLatency))).toEqual(withLatency);
   });

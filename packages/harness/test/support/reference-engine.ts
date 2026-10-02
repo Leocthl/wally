@@ -1,15 +1,18 @@
-// TEST DOUBLE, not the engine. A small independent implementation of the R1-R10 semantics in docs/00 and docs/02 §7,
-// so the harness plumbing (labels, pipeline, metrics) can be tested before lane A's engine lands. It is never imported
-// from src/, never used to produce a result file, and the tests switch to @laisee/core/engine on their own the day
-// that engine stops being the always-DENY stub (see engine-under-test.ts).
+// TEST ONLY, not the engine. A small independent implementation of the R1-R10 semantics in docs/00 and docs/02 §7, written
+// from the docs and the register before lane A's engine existed. Its one job now is a differential cross-check
+// (test/differential.test.ts): two implementations of the same specification must agree on every generated scenario. It
+// carries its own copy of the register values on purpose, so a wrong value in @laisee/core/config shows up as a disagreement.
+// It is never imported from src/ and never produces a result file.
 import type { Cart, Decision, Mandate, PacketState, RuleId, RuleResult, TemplateId } from "@laisee/core/generated";
 import type { DecideContext, Engine, EscalationResolution, JudgeRecord } from "@laisee/core/ports";
-import { RAIL, SELLER_CHECK, VELOCITY } from "../../src/config";
 
 export const REFERENCE_ENGINE_VERSION = "harness-reference-double@test";
 
-// Thresholds F36 and F50, mirrored here only for this double.
+// Register values, typed again here on purpose: F36 and F50 thresholds, F1 ceiling and active cards, F32 velocity, F52 capture age.
 const T = { inj: 0.63, sellDeny: 0.55, sellEsc: 0.42, scope: 0.55, esc: 0.5 } as const;
+const RAIL = { ceilingMinor: 200_000, maxActive: 2 } as const;
+const VELOCITY = { maxMints: 3, windowS: 600 } as const;
+const SELLER_CHECK = { maxCaptureAgeS: 86_400 } as const;
 
 type Fail = { readonly verdict: "DENY" | "ESCALATE"; readonly template: TemplateId };
 

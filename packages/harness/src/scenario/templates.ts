@@ -14,8 +14,7 @@ export interface Template {
   readonly fixtureText: string | null;
 }
 
-/** A domain that no mandate in the harness allows and no scenario sells from. */
-export const LOOKALIKE_DOMAIN = "demo-lookalike.example";
+/** The capture row the flagged-seller fixture points at. */
 export const FLAGGED_CAPTURE_REF = "SIM-scameter-flagged-seller";
 
 function fromFixture(file: string): Template {

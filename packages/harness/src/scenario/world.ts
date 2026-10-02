@@ -11,12 +11,11 @@ import type {
 import { EXAMPLE_MANDATE, RAIL, SCENARIO_EPOCH, type Category } from "../config";
 import type { Rng } from "../prng";
 import type { InjectionInfo, Scenario, ScenarioEvents, ScenarioLabel } from "../types";
+import { AGENT_DID, DELEGATOR_DID } from "../keys";
 import { buildCart, type CartBuilder, type FxPricing } from "./cart";
 import { formatHkd } from "./money";
 import type { Template } from "./templates";
 
-export const DELEGATOR_DID = "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-export const AGENT_DID = "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
 const HOUR_MS = 3_600_000;
 const iso = (ms: number): string => new Date(ms).toISOString().replace(".000Z", "Z");
@@ -255,7 +254,6 @@ export function assemble(ctx: Ctx, spec: DraftSpec, build: CartBuilder = buildCa
     label: spec.label,
     now: iso(ctx.nowMs),
     mandate,
-    mandateProofValid: true,
     packet,
     listing,
     scameterCapture: capture,

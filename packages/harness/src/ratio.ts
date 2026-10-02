@@ -12,13 +12,6 @@ export function ratio(k: number, n: number): Ratio {
   return { k, n };
 }
 
-export function sumRatios(parts: readonly Ratio[]): Ratio {
-  return ratio(
-    parts.reduce((acc, r) => acc + r.k, 0),
-    parts.reduce((acc, r) => acc + r.n, 0),
-  );
-}
-
 /** "3/150 (2.0%)". k/n comes first; an empty denominator prints n/a instead of a number. */
 export function formatRatio(r: Ratio): string {
   if (r.n === 0) return `${r.k}/${r.n} (n/a)`;

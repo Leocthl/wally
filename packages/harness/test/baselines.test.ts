@@ -1,17 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { createComponents } from "../src/factory";
-import { RAIL, SCENARIO_COUNT } from "../src/config";
+import { SCENARIO_COUNT } from "../src/config";
 import { createUnavailableClient } from "../src/judge/unavailable";
 import { B0_QUESTION_IDS, trustedOutcome } from "../src/systems/b0";
 import { createSystems } from "../src/systems/create";
 import { generateScenarios } from "../src/scenario/generate";
 import type { Scenario } from "../src/types";
 import type { ChoiceClient } from "../src/judge/choice-client";
-import { engineUnderTest } from "./support/engine-under-test";
 import { fakeModelFor, truthFor, type FakeModel } from "./support/fake-model";
 import { keywordJudge } from "./support/keyword-model";
+import { RUN_MS } from "./support/timeouts";
 
-const { engine } = engineUnderTest();
 let tick = 0;
 const timer = (): number => (tick += 2);
 const scenarios = [7, 11].flatMap((seed) => generateScenarios({ seed, n: SCENARIO_COUNT.default }));
@@ -22,7 +21,7 @@ const find = (category: string, variant: string): Scenario => {
 };
 
 function b0With(choiceFor: (s: Scenario) => ChoiceClient) {
-  const all = createSystems({ components: createComponents({ engine }), judgeFor: () => keywordJudge(), choiceFor, timer, measureLatency: true });
+  const all = createSystems({ components: createComponents(), judgeFor: () => keywordJudge(), choiceFor, timer, measureLatency: true });
   const b0 = all.find((s) => s.id === "B0");
   if (!b0) throw new Error("B0 missing");
   return b0;
@@ -55,14 +54,14 @@ describe("B0, the model-only gate: structure", () => {
       const allProceed = B0_QUESTION_IDS.every((id) => truth[id] === { budget_fit: "within_budget", scope_fit: "in_scope", injection_risk: "clean", seller_risk: "low_risk", escalate_or_proceed: "proceed" }[id]);
       expect(out.decision.outcome === "APPROVE", s.id).toBe(allProceed);
     }
-  });
+  }, RUN_MS);
 
-  it("mints with the per-card ceiling, not a limit tied to the purchase, and names no rule", async () => {
+  it("pays with a card that has no limit, not one tied to the purchase, and names no rule", async () => {
     const approved = scenarios.filter((s) => truthFor(s)["escalate_or_proceed"] === "proceed").slice(0, 10);
     expect(approved.length).toBeGreaterThan(0);
     for (const s of approved) {
       const out = await b0With(() => fakeModelFor(s)).run(s);
-      expect(out.mints.every((m) => m.limitMinor === RAIL.ceilingMinor), s.id).toBe(true);
+      expect(out.mints.every((m) => m.limitMinor === null), s.id).toBe(true);
       expect(out.decision.rule).toBeNull();
     }
   });
@@ -72,6 +71,12 @@ describe("B0, the model-only gate: structure", () => {
     const out = await b0With(() => fakeModelFor(s)).run(s);
     expect(out.r12Void).toBe(false);
     expect(out.authorisedMinor).toBe(s.cart.total_minor + s.events.merchantDeltaMinor);
+  });
+
+  it("keeps no log: nothing was written down before the money moved", async () => {
+    const s = find("within_budget", "plain");
+    const out = await b0With(() => fakeModelFor(s)).run(s);
+    expect(out.log).toBeNull();
   });
 
   it("does not collapse a repeated cart: each submission is its own decision", async () => {
@@ -120,7 +125,7 @@ describe("all three baselines read the same recorded planner output and do not c
       return o;
     };
     const s = deepFreeze(structuredClone(find("duplicate", "double_submit")));
-    const all = createSystems({ components: createComponents({ engine }), judgeFor: () => keywordJudge(), choiceFor: (x) => fakeModelFor(x) as FakeModel, timer, measureLatency: false });
+    const all = createSystems({ components: createComponents(), judgeFor: () => keywordJudge(), choiceFor: (x) => fakeModelFor(x) as FakeModel, timer, measureLatency: false });
     for (const system of all) await expect(system.run(s)).resolves.toBeDefined();
   });
 });

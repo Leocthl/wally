@@ -4,8 +4,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCliArgs, UsageError, USAGE, type CliOptions } from "./cli-args";
-import { createComponents, createCartBuilder, describeComponents } from "./factory";
-import { createLiveSource, createRecordedSource, probeLaya, type JudgeSource } from "./judge/sources";
+import { createCartBuilder, createComponents, createLiveJudgeSource, describeComponents } from "./factory";
+import { createRecordedSource, probeLaya, type JudgeSource } from "./judge/sources";
 import { parseRecording } from "./judge/recording";
 import { repoMetaReader } from "./report/meta";
 import { runHarness, type RunOutput } from "./run";
@@ -29,14 +29,14 @@ async function chooseSource(opts: CliOptions, outDir: string): Promise<Chosen> {
   if (opts.judge === "recorded") {
     const path = resolve(opts.recordingPath ?? join(outDir, `harness-${opts.seed}-recording.json`));
     try {
-      return { source: createRecordedSource(parseRecording(JSON.parse(readFileSync(path, "utf8"))), monotonicTimer), device: null };
+      return { source: createRecordedSource(parseRecording(JSON.parse(readFileSync(path, "utf8")))), device: null };
     } catch (err) {
       return { error: `no usable recording at ${path} (${err instanceof Error ? err.message : String(err)}). Make one with: pnpm harness -- --seed ${opts.seed} --n ${opts.n} --judge live --record` };
     }
   }
   const health = await probeLaya(opts.layaUrl);
   if (health === null) return { skip: `Laya is not reachable at ${opts.layaUrl}/health. Start it with services/laya/serve.sh, or run --judge recorded. This run never starts or stops the server and never falls back to another judge; no result was written.` };
-  const source = createLiveSource({ baseUrl: opts.layaUrl, timer: monotonicTimer, revision: checkpointRevision(), record: opts.record });
+  const source = createLiveJudgeSource({ baseUrl: opts.layaUrl, revision: checkpointRevision(), record: opts.record, provisional: opts.provisional ?? undefined });
   return { source, device: health.device };
 }
 
