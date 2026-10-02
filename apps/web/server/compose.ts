@@ -20,7 +20,7 @@ import { scameterLookup, type Catalogue } from "../src/booth/backend/catalogue";
 import type { ModelCompile } from "../src/booth/backend/compileRules";
 import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
 import { buildInfo, featuresFor, type JudgeHealth, type PlannerChoice } from "../src/booth/backend/info";
-import { replayPlannerFactory } from "../src/booth/backend/planner";
+import { replayPlannerFactory, withRecordedFallback } from "../src/booth/backend/planner";
 import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
@@ -87,10 +87,16 @@ function replayRecords(settings: BoothSettings): readonly PlannerReplayRecord[] 
 }
 
 function plannerFactory(settings: BoothSettings, choice: PlannerChoice, table: ScenarioTable, records: readonly PlannerReplayRecord[]): PlannerFactory {
-  if (choice.provider === "rule") return (listings) => createPlanner({ provider: "rule", catalogue: listings, layaUrl: settings.layaUrl });
+  if (choice.provider === "rule") {
+    return withRecordedFallback((listings) => createPlanner({ provider: "rule", catalogue: listings, layaUrl: settings.layaUrl }), records, table);
+  }
   if (choice.provider === "local") {
-    return (listings) =>
-      createPlanner({ provider: "local", catalogue: listings, localUrl: settings.plannerUrl, localModel: settings.plannerModel, allowRemote: settings.plannerAllowRemote });
+    return withRecordedFallback(
+      (listings) =>
+        createPlanner({ provider: "local", catalogue: listings, localUrl: settings.plannerUrl, localModel: settings.plannerModel, allowRemote: settings.plannerAllowRemote }),
+      records,
+      table,
+    );
   }
   return replayPlannerFactory(records, table);
 }

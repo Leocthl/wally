@@ -30,3 +30,24 @@ export function replayPlannerFactory(records: readonly PlannerReplayRecord[], ta
     return createReplayPlanner({ records, catalogue: listings, ...(scenario === undefined ? {} : { scenario }) });
   };
 }
+
+/**
+ * A live planner (Qwen, or the Laya decision loop) that falls back to the scenario's recorded planner output when it makes
+ * no proposal. Only for the fixed booth buttons, whose listing sets are named in the table: they are fixtures, so a button
+ * must show the same stop every time. A free-text ask lists the whole shelf, which is not in the table, so it never falls
+ * back and "Wally could not tell which item you meant" stays true.
+ */
+export function withRecordedFallback(live: PlannerFactory, records: readonly PlannerReplayRecord[], table: ScenarioTable): PlannerFactory {
+  const byListings = recordByListings(table);
+  const replay = replayPlannerFactory(records, table);
+  return (listings) => {
+    const planner = live(listings);
+    if (!byListings.has(keyOf(listings.map((l) => l.id)))) return planner;
+    const recorded = replay(listings);
+    const alternatives = planner.alternatives?.bind(planner);
+    return {
+      propose: async (ctx, opts) => (await planner.propose(ctx, opts)) ?? recorded.propose(ctx, opts),
+      ...(alternatives === undefined ? {} : { alternatives }),
+    };
+  };
+}
