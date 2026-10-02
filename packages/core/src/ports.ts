@@ -52,11 +52,27 @@ export interface PlannerStop {
 /** PLANNER_PROVIDER: rule (default, deterministic parser), replay (recorded fixtures), claude (optional). */
 export type PlannerProvider = "rule" | "replay" | "claude";
 
+/** One typed planner decision (question asked of the judge model, its answer and probabilities). */
+export interface PlannerTraceStep {
+  readonly step: number;
+  readonly question: string;
+  readonly choice: string;
+  readonly probabilities: Readonly<Record<string, number>>;
+  /** Gap between the top two probabilities; a small margin makes the planner ask the shopper instead. */
+  readonly margin: number;
+}
+
+export interface PlannerOptions {
+  readonly timeoutMs: number;
+  /** Called once per typed decision so the caller can log why the planner chose what it chose. */
+  readonly onTrace?: (step: PlannerTraceStep) => void;
+}
+
 export interface PlannerPort {
-  /** null = no proposal (refusal, max_tokens, no tool call, invalid input, timeout). Never throws. */
-  propose(ctx: PlannerContext, opts: { timeoutMs: number }): Promise<ProposeCartInput | null>;
+  /** null = no proposal (refusal, abstention, invalid input, timeout). Never throws. */
+  propose(ctx: PlannerContext, opts: PlannerOptions): Promise<ProposeCartInput | null>;
   /** Optional: a cheaper pick from the same listing set after a budget stop (R3/R4). Still only a proposal. */
-  alternatives?(ctx: PlannerContext, stop: PlannerStop): Promise<ProposeCartInput | null>;
+  alternatives?(ctx: PlannerContext, stop: PlannerStop, opts: PlannerOptions): Promise<ProposeCartInput | null>;
 }
 
 // ---------- Judge (typed probabilistic gate; can only tighten, I3) ----------
@@ -169,6 +185,12 @@ export interface EscalationResolution {
 
 export type PacketState = Decision["packet"];
 
+/** Facts the engine cannot compute itself without I/O; the caller supplies them. */
+export interface DecideContext {
+  /** Result of verifying the mandate credential's proof (R1). Absent means invalid: fail closed (I5). */
+  readonly mandateProofValid?: boolean;
+}
+
 export interface Engine {
   /** Pure and total over schema-valid input; the only producer of a Decision. */
   decide(
@@ -178,6 +200,7 @@ export interface Engine {
     judge: JudgeRecord,
     now: Date,
     resolution?: EscalationResolution,
+    ctx?: DecideContext,
   ): Decision;
 }
 
