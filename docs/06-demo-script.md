@@ -9,7 +9,7 @@
 | Time [F45] | Driver (Budget, Try asking) | Talker (words in 07) | Moment | HKT evidence [F19] |
 |---|---|---|---|---|
 | 0:00-0:25 | Budget open, "Hi, I'm Wally" | Hook; rail SIMULATED | none | none |
-| 0:25-1:05 | Buy a cotton tee; Shop charges more; Use the card twice | Rules signed, R1 verified. Wally picks, logged. One-off card for HK$259, HK$541 left [F21]. Overshoot declined, exact charge authorised, replay declined | DM1, DM2 | signed credential, single-use token, blocked replay |
+| 0:25-1:05 | Shop charges more (one tap) | Rules signed, R1 verified. Wally picks, logged. One-off card for HK$259, HK$541 left [F21]. Overshoot declined, exact charge authorised, replay declined | DM1, DM2 | signed credential, single-use token, blocked replay |
 | 1:05-2:10 | A seller with scam reports; Shipping tips it over; A listing that gives orders | R9: no card. HK$550 over HK$541 [F22]: R3. The judge scores the injection; R10 stops it | DM3, DM4, DM5 | denied purchase; approve, reject, escalate |
 | 2:10-2:40 | Proof: Verify receipts, Try to tamper, Restore; Why trust Wally | One signed receipt per decision; one flipped byte fails. Model-only gate against ours [F69] | DM7, DM8 | audit timeline, verifier |
 | 2:40-3:00 | About | Limits and the ask | DM9 | rail feasibility |
@@ -18,7 +18,7 @@
 
 ## Hands-on station
 - **After 3:00** [F45] the judge drives; the Driver points, the Talker answers.
-- **Try asking**: every scenario is one tap.
+- **Try asking**: every scenario is one tap and buys what it needs first.
 - **Ask Wally**: type or speak a request (English, Chinese, Cantonese); the rules decide; a repeat of a live cart buys nothing.
 - **Try to trick Wally**: text reaches the judge only; expect Stopped before paying (`R10.injection`); padded text escalates [F26].
 - **See cheaper options** after the shipping stop: Wally replans, the new cart meets the judge and rules again.
