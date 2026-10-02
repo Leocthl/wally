@@ -58,6 +58,8 @@
 | Capacitor plugins (@capacitor/app, haptics, splash-screen, status-bar) | 8.1, 8.0, 8.0, 8.0 | MIT | Android back button, native haptics, splash and status bar in the shells | in use |
 | uqr | 0.1.3 | MIT | QR codes as SVG for the phone pairing links, rendered on the booth server (LAN mode), no dependencies | in use |
 | @capacitor/assets | 3.0 | MIT | dev tool: icon and splash sets for both shells | in use |
+| @number-flow/react (with number-flow) | 0.6.2 | MIT | rolling digits for the budget amount on Budget; plain text where the browser cannot draw it; no network | in use |
+| @axe-core/playwright (with axe-core) | 4.13 | MPL-2.0 | dev tool: accessibility checks of every screen in the Playwright run; not shipped in the app | in use |
 | sharp | 0.34 | Apache-2.0; its libvips binaries (npm packages @img/sharp-libvips-*) are LGPL-3.0-or-later | dev tool only, renders the icon masters; not shipped in the apps | in use |
 | esbuild | 0.28 | MIT | bundles the native bridge script | in use |
 | AndroidX (appcompat, core, core-splashscreen, webkit, activity, fragment, coordinatorlayout) and Android Gradle Plugin 8.13 | per Capacitor 8 | Apache-2.0 | Android shell, resolved by Gradle from Google and Maven Central | in use |
