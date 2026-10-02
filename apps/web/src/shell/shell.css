@@ -115,7 +115,10 @@
 .shell-about__label { font-weight: var(--weight-semibold); }
 .shell-about__block { display: grid; gap: var(--sp-2); }
 .shell-about__notes { padding: var(--sp-1) var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
-.shell-about__notes > summary { display: flex; align-items: center; min-height: var(--tap); font-weight: var(--weight-semibold); cursor: pointer; }
+.shell-about__notes > summary { display: flex; align-items: center; justify-content: space-between; min-height: var(--tap); font-weight: var(--weight-semibold); cursor: pointer; list-style: none; }
+.shell-about__notes > summary::-webkit-details-marker { display: none; }
+.shell-about__notes > summary::after { content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-right: var(--sp-1); border-right: 2px solid var(--c-ink-muted); border-bottom: 2px solid var(--c-ink-muted); transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease-out); }
+.shell-about__notes[open] > summary::after { transform: rotate(-135deg); }
 .shell-about__notes-lead { margin-bottom: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); }
 .shell-about__notes-list { display: grid; gap: var(--sp-1); margin: 0 0 var(--sp-3); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .shell-about__notes-list dt { font-weight: var(--weight-semibold); }

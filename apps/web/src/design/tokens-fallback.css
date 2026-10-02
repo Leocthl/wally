@@ -45,6 +45,7 @@
     --c-on-hero: #FFFFFF;
     --c-on-hero-muted: #EEF2FF;
     --c-hero-track: rgb(255 255 255 / 0.26);
+    --c-qr-plate: #FFFFFF;
     --c-ticket: #0E1A33;
     --c-on-ticket: #FFFFFF;
     --c-on-ticket-muted: #A7B3CF;
@@ -110,6 +111,7 @@
       --c-on-hero: #FFFFFF;
       --c-on-hero-muted: #D3DEFF;
       --c-hero-track: rgb(255 255 255 / 0.22);
+      --c-qr-plate: #FFFFFF;
       --c-ticket: #1E2A47;
       --c-on-ticket: #FFFFFF;
       --c-on-ticket-muted: #B9C4DE;
@@ -175,6 +177,7 @@
     --c-on-hero: #FFFFFF;
     --c-on-hero-muted: #D3DEFF;
     --c-hero-track: rgb(255 255 255 / 0.22);
+    --c-qr-plate: #FFFFFF;
     --c-ticket: #1E2A47;
     --c-on-ticket: #FFFFFF;
     --c-on-ticket-muted: #B9C4DE;

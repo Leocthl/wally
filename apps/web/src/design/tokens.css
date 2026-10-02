@@ -80,6 +80,7 @@
   --c-on-hero:       light-dark(#FFFFFF, #FFFFFF);
   --c-on-hero-muted: light-dark(#EEF2FF, #D3DEFF);
   --c-hero-track:    light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.22));
+  --c-qr-plate:         light-dark(#FFFFFF, #FFFFFF);   /* the plate behind a QR code: white in both modes, or a phone cannot read it */
   --c-ticket:           light-dark(#0E1A33, #1E2A47);
   --c-on-ticket:        light-dark(#FFFFFF, #FFFFFF);
   --c-on-ticket-muted:  light-dark(#A7B3CF, #B9C4DE);
