@@ -115,4 +115,4 @@ a.w-row__hit:active, button.w-row__hit:active { background: var(--c-surface-sunk
 .w-list--cards .w-row + .w-row { border-top: 1px solid var(--c-line); }
 
 /* A tag pinned to a card's top-right corner ("One-off card", "Approved"). */
-.w-card__corner { position: absolute; top: 0; right: 0; border-radius: 0 var(--r-lg) 0 var(--r-md); }
+.w-card .w-card__corner { position: absolute; top: 0; right: 0; border-radius: 0 var(--r-lg) 0 var(--r-md); }

@@ -14,7 +14,8 @@
 }
 .w-field__box:focus-within { border-color: var(--c-focus); box-shadow: 0 0 0 2px var(--c-focus); }
 .w-field--invalid .w-field__box { border-color: var(--c-stop-ink); }
-.w-field__input {
+/* Two classes, so the legacy input[type] rule in base.css cannot add a second border or padding. */
+.w-field__box > .w-field__input {
   flex: 1;
   min-width: 0;
   min-height: var(--tap);
@@ -30,7 +31,7 @@
 .w-field__adorn { display: inline-flex; align-items: center; flex: none; color: var(--c-ink-muted); }
 .w-field__adorn--end { gap: var(--sp-1); }
 .w-field__box--area { align-items: stretch; padding: var(--sp-2) var(--sp-3); }
-.w-field__input--area { resize: vertical; min-height: 6rem; padding: var(--sp-1); }
+.w-field__box > .w-field__input--area { resize: vertical; min-height: 6rem; padding: var(--sp-1); }
 .w-field__hint { font-size: var(--text-sm); color: var(--c-ink-muted); }
 .w-field__error { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-stop-ink); }
 

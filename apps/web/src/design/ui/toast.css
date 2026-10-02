@@ -39,5 +39,6 @@
   font-weight: var(--weight-bold);
   cursor: pointer;
 }
-.w-toast__close { color: var(--c-on-ticket-muted); }
+/* Two classes: the IconButton sheet may load later and would otherwise paint the icon navy on navy. */
+.w-toast .w-toast__close { color: var(--c-on-ticket-muted); }
 @keyframes w-toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }

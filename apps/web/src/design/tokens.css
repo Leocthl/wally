@@ -109,7 +109,10 @@
     "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
   --font-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
-  --font-zh: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", system-ui, sans-serif;
+  /* Latin faces first (they carry no CJK glyphs), so English inside a zh-HK block stays SF Pro, Segoe or Roboto and
+     Chinese falls through to the Hong Kong forms: PingFang HK, Noto Sans HK, Microsoft JhengHei. */
+  --font-zh: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "PingFang HK", "Noto Sans HK",
+    "Microsoft JhengHei", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --num: tabular-nums lining-nums;
   --text-xs: 0.75rem;   --text-sm: 0.875rem; --text-md: 1rem;      --text-lg: 1.125rem; --text-xl: 1.375rem;

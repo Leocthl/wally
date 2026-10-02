@@ -97,7 +97,7 @@ describe("tokens.css (cool wallet palette)", () => {
 
   it("has type, radius, spacing, safe-area, layer and motion scales in rem or tokens", () => {
     for (const t of ["--text-xs: 0.75rem", "--text-md: 1rem", "--text-5xl: 3.75rem", "--r-xl: 28px", "--r-pill: 999px", "--tap: 2.75rem", "--tap-lg: 3rem", "--safe-bottom: env(safe-area-inset-bottom, 0px)", "--z-toast: 60", "--ease-spring:", "--font-display: ui-rounded"]) expect(css).toContain(t);
-    expect(css).toMatch(/--font-zh: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei"/);
+    expect(css).toMatch(/--font-zh: -apple-system,[^;]*Roboto, "PingFang HK", "Noto Sans HK",\s*"Microsoft JhengHei"/);
   });
 
   it("zeroes every decorative duration under reduced motion and keeps the functional hold", () => {
