@@ -7,10 +7,15 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch makes an older run pointless: cancel it and save Actions minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
