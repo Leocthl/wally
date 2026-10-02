@@ -82,7 +82,8 @@ describe("approved", () => {
     expect(status).toHaveTextContent("Paid with a one-off card");
     expect(status).toHaveTextContent("HK$259");
     const card = screen.getByRole("article", { name: "One-off card" });
-    expect(card).toHaveTextContent("Works once, for HK$259 only");
+    expect(card).toHaveTextContent("HK$259");
+    expect(card).toHaveTextContent("Works once, for this amount only");
     expect(card).toHaveTextContent("Card ending 0001");
     expect(card).toHaveTextContent("SIMULATED");
     expect(screen.getByRole("meter", { name: "Budget left" })).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800");
@@ -210,14 +211,18 @@ describe("needs your OK", () => {
   it("shows the reason, the amount and a countdown; Approve continues to the approval", async () => {
     const m = await mountRun();
     await m.run("unverified");
-    expect(screen.getByRole("heading", { name: "Needs your OK" })).toBeInTheDocument();
-    expect(screen.getByText("Wally couldn't check this seller recently.")).toBeInTheDocument();
-    expect(screen.getByRole("timer")).toHaveTextContent("60 s left");
-    expect(screen.getByText("Your answer can't override a fixed rule.")).toBeInTheDocument();
-    expect(m.root().querySelector('[aria-live="polite"]')).toHaveTextContent("You have 60 seconds to answer.");
+    // The question rises as a sheet over a quiet card that holds the same heading.
+    expect(within(m.root()).getByRole("heading", { name: "Needs your OK" })).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "Needs your OK" });
+    expect(within(dialog).getByText("Wally couldn't check this seller recently.")).toBeInTheDocument();
+    expect(within(dialog).getByText(/Wally makes a one-off card for exactly HK\$259\./)).toBeInTheDocument();
+    expect(within(dialog).getByRole("timer")).toHaveTextContent("60 s left");
+    expect(within(dialog).getByText(/Your answer can't override a fixed rule\./)).toBeInTheDocument();
+    expect(within(dialog).getByText(/signed and saved as a receipt/)).toBeInTheDocument();
+    expect(dialog.querySelector('[aria-live="polite"]')).toHaveTextContent("You have 60 seconds to answer.");
     const spy = vi.spyOn(m.mock, "answerEscalation");
     await act(async () => {
-      await m.user.click(screen.getByRole("button", { name: "Approve" }));
+      await m.user.click(within(dialog).getByRole("button", { name: "Approve" }));
     });
     expect(spy).toHaveBeenCalledWith({ decisionId: expect.stringMatching(/^dec_/), choice: "APPROVE" });
     await screen.findByText("You said yes, so Wally went ahead.");
@@ -229,7 +234,7 @@ describe("needs your OK", () => {
     const m = await mountRun();
     await m.run("unverified");
     await act(async () => {
-      await m.user.click(screen.getByRole("button", { name: "No thanks" }));
+      await m.user.click(within(screen.getByRole("dialog", { name: "Needs your OK" })).getByRole("button", { name: "No thanks" }));
     });
     expect(await screen.findByRole("alert")).toHaveTextContent("You said no, so Wally stopped it.");
   });
@@ -266,7 +271,7 @@ describe("needs your OK", () => {
     await act(async () => {
       await m.mock.propose({ listingText: "A plain cotton tee. ".repeat(260) });
     });
-    expect(screen.getByText("Wally's checker is offline, so it asked you first.")).toBeInTheDocument();
+    expect(screen.getAllByText("Wally's checker is offline, so it asked you first.").length).toBeGreaterThan(0);
     expectPlainSurface(m);
   });
 });

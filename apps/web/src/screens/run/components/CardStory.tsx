@@ -1,7 +1,7 @@
 // The card's story at checkout, one row per rail answer (docs/06 DM2): charged more -> declined, limit held; exact
 // charge -> charged; used again -> declined; wrong shop -> declined; price changed -> approval cancelled; timeout ->
 // retried once, charged once. Icon + words, never colour alone. Every amount here is SIMULATED (the rail is).
-import { useId, type ReactElement } from "react";
+import { useId, useState, type ReactElement } from "react";
 import { formatHkd } from "../../../domain/money";
 import { SIMULATED } from "../../../domain/provenance";
 import type { LabelPair } from "../../../i18n/label";
@@ -52,6 +52,8 @@ function line(item: StoryItem, limitMinor: number): LabelPair {
 export function CardStory({ story, limitMinor }: { readonly story: readonly StoryItem[]; readonly limitMinor: number }): ReactElement | null {
   const { t } = useLocale();
   const id = useId();
+  // Rows already there when the story first showed stay still; a row that arrives later rises in.
+  const [first] = useState(() => new Set(story.map((s) => s.key)));
   if (story.length === 0) return null;
   return (
     <section className="run-story" aria-labelledby={id}>
@@ -61,7 +63,7 @@ export function CardStory({ story, limitMinor }: { readonly story: readonly Stor
       </div>
       <ol className="run-story__list">
         {story.map((item) => (
-          <li key={item.key} className="run-story__item" data-tone={item.tone} data-kind={item.kind}>
+          <li key={item.key} className={first.has(item.key) ? "run-story__item" : "run-story__item run-story__item--new"} data-tone={item.tone} data-kind={item.kind}>
             <span className="run-story__icon"><Icon name={ICON[item.kind]} size={18} /></span>
             <span className="run-story__text">{t(line(item, limitMinor))}</span>
           </li>

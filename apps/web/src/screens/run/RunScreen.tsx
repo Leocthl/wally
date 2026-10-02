@@ -23,7 +23,11 @@ import { currentRun, type BoothState } from "../../state/booth";
 import { knownDecisions } from "./model/chain";
 import { history, pinnedChain, selectScreen, type Pin, type Result, type ScreenModel } from "./model/screen";
 import { useDecisionParam } from "./useDecisionParam";
+import "../../design/ui/run-extra.css";
 import "./run.css";
+import "./run-card.css";
+import "./run-ok.css";
+import "./run-stop.css";
 
 const R = UI.run;
 const HISTORY_ROWS = 3;
@@ -206,7 +210,7 @@ function ResultView(p: ResultViewProps): ReactElement {
     case "approved":
       return <Approved result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} paying={p.paying} canPay={p.canPay} onPay={p.onPay} onWhy={p.onWhy} />;
     case "stopped":
-      return <Stopped result={result} fresh={p.fresh} headingRef={p.heading} onWhy={p.onWhy} onTopUp={p.onTopUp} onAsk={p.onAsk} {...(p.onCheaper ? { onCheaper: p.onCheaper } : {})} />;
+      return <Stopped result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} onWhy={p.onWhy} onTopUp={p.onTopUp} onAsk={p.onAsk} {...(p.onCheaper ? { onCheaper: p.onCheaper } : {})} />;
     case "needsOk":
       return <NeedsOk result={result} headingRef={p.heading} answering={p.answering} onAnswer={p.onAnswer} onWhy={p.onWhy} {...(p.now ? { now: p.now } : {})} />;
     case "noPick":

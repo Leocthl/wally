@@ -1,0 +1,12 @@
+/* New motion tokens for the Wally screens (lane B). Additive: nothing here renames or replaces a token in tokens.css.
+   Every duration is zeroed under reduced motion, like the tokens it sits beside. */
+:root {
+  --dur-tick: 1000ms;   /* a countdown moves once a second: linear and continuous, never stepped */
+  --dur-sheen: 900ms;   /* one light sweep across a card that was just made */
+  --dur-ceremony: 560ms; /* a result that lands once: stamp settle, signature stroke */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-tick: 0ms; --dur-sheen: 0ms; --dur-ceremony: 0ms; }
+}

@@ -1,0 +1,11 @@
+/* The approved screen: a small Wally header over the one-off card (the card has its own sheet, console/oneOffCard.css).
+   Tokens only; motion sits in the no-preference block. */
+.run-head { display: flex; align-items: center; gap: var(--sp-3); }
+.run-head__text { display: grid; gap: 0.125rem; min-width: 0; }
+.run-head__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); }
+.run-head__title:focus { outline: none; }
+.run-head__sub { color: var(--c-ink-muted); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.run-head__note { color: var(--c-ink-muted); font-size: var(--text-sm); }
+@media (prefers-reduced-motion: no-preference) {
+  .run-head--enter { animation: run-rise var(--dur-slow) var(--ease-out) both; }
+}

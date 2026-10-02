@@ -1,0 +1,29 @@
+/* "Stopped before paying": the two layouts that did not ship (Ghost card, Where it stopped), kept for the variant
+   harness (dev only). Tokens only. */
+/* 2. Ghost card */
+.sv-ghost__top { display: grid; justify-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-2) 0; text-align: center; }
+.sv-ghost__title { font-size: var(--text-2xl); }
+.sv-ghost__lead { max-width: 24rem; font-size: var(--text-lg); line-height: var(--lh-snug); }
+.sv-ghost__card { position: relative; display: grid; align-content: space-between; gap: var(--sp-2); min-height: 11rem; aspect-ratio: 1.586 / 1; padding: var(--sp-4) var(--sp-5); border: 2px dashed var(--c-line-strong); border-radius: var(--r-lg); color: var(--c-ink-muted); overflow: hidden; }
+.sv-ghost__label { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.sv-ghost__digits { font-family: var(--font-mono); font-size: var(--text-xl); letter-spacing: 0.16em; opacity: 0.55; }
+.sv-ghost__verdict { color: var(--c-ink); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); max-width: 70%; }
+.sv-ghost__budget { font-size: var(--text-sm); line-height: var(--lh-snug); }
+.sv-ghost__stamp { position: absolute; right: var(--sp-4); bottom: var(--sp-4); padding: 0.25rem 0.75rem; border: 2px solid var(--c-stop-ink); border-radius: var(--r-xs); color: var(--c-stop-ink); font-size: var(--text-sm); font-weight: var(--weight-heavy); letter-spacing: 0.14em; text-transform: uppercase; transform: rotate(-8deg); }
+
+/* 3. Where it stopped */
+.sv-steps__banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-3); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--c-stop-tint); }
+.sv-steps__hint { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); }
+.sv-steps__card { display: grid; gap: var(--sp-4); }
+.sv-steps__why { display: grid; justify-items: start; gap: var(--sp-2); }
+.sv-steps .w-step[data-status="stop"] .w-step__title { color: var(--c-stop-ink); }
+.sv-steps .w-step[data-status="stop"] .w-step__detail { color: var(--c-ink); font-size: var(--text-md); line-height: var(--lh-snug); }
+.sv-steps .w-step:last-child { padding-bottom: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sv-enter { animation: sv-rise var(--dur-slow) var(--ease-out) both; }
+  .sv-ghost__card--enter .sv-ghost__stamp { animation: sv-stamp var(--dur-base) var(--ease-stamp) both; animation-delay: calc(var(--dur-base) + var(--dur-press)); }
+  .sv-ghost__card--enter { animation: sv-rise var(--dur-slow) var(--ease-out) both; animation-delay: var(--dur-fast); }
+}
+@keyframes sv-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes sv-stamp { from { opacity: 0; transform: rotate(-14deg) scale(1.5); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
