@@ -50,13 +50,14 @@ function sealer(): (scenario: Scenario) => Sealed {
   };
 }
 
-async function auditStore(store: LogStore, logId: string, engineDid: string): Promise<LogAudit> {
+/** `liveFromSeq`: the first entry after the seeded history; the history's own APPROVEs are not decisions of the run. */
+async function auditStore(store: LogStore, logId: string, engineDid: string, liveFromSeq: number): Promise<LogAudit> {
   const entries = await store.read(logId);
   const head = await headCheckpoint(store, logId);
   const result = verifyChain(entries, { engine: [engineDid], delegator: DELEGATOR_DID }, head ?? undefined);
   return {
     entries: entries.length,
-    decisions: entries.filter((e) => e.kind === "DECISION").length,
+    decisions: entries.filter((e) => e.kind === "DECISION" && e.seq >= liveFromSeq).length,
     chainOk: result.ok,
     failure: result.ok ? null : `${result.reason} at seq ${result.failedSeq}`,
   };
@@ -98,7 +99,7 @@ export function orchestratedWorlds(parts: OrchestratedParts): (scenario: Scenari
         signEscalationAnswer({ decision_id: escalated.id, mandate_id: escalated.mandate_id, cart: escalated.cart, choice, answered_at: clock.now() }, delegator),
       revocation: () => signRevocation({ mandate_id: scenario.mandate.id, revoked_at: clock.now(), reason: "revoked by the simulated delegator" }, delegator),
       entries: async () => (await store.read(logId)).slice(prior),
-      audit: () => auditStore(store, logId, engine.did),
+      audit: () => auditStore(store, logId, engine.did, prior),
     };
   };
 }

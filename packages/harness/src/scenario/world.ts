@@ -156,6 +156,8 @@ function buildPacket(ctx: Ctx, spec: DraftSpec, mandate: Mandate): { readonly pa
     activeCardLimits: spec.activeCardLimits ?? [],
     mintAgesS: spec.mintAgesS ?? [],
     revoked: spec.packetStatus === "REVOKED",
+    ...(spec.perPurchase === undefined ? {} : { perPurchase: spec.perPurchase }),
+    endedAgoS: (ctx.nowMs - Date.parse(mandate.valid_until)) / 1000,
   });
   return { packet: packetFromHistory(mandate, history, ctx.nowMs), history };
 }

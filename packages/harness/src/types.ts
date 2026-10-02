@@ -72,7 +72,7 @@ export interface InjectionInfo {
  * the decision time. All of it is SIMULATED, and the cards in it are not known to the rail.
  */
 export type HistoryEvent =
-  /** A card minted long ago and charged in full: this is what has been spent. */
+  /** A card minted long ago and charged in full: this is what has been spent (several of these when the per-purchase terms need it). */
   | { readonly kind: "spent"; readonly cardId: string; readonly agoS: number; readonly amountMinor: number }
   /** A card minted and then voided: it counts as a mint in the rolling window and holds no money. */
   | { readonly kind: "released"; readonly cardId: string; readonly agoS: number; readonly limitMinor: number }

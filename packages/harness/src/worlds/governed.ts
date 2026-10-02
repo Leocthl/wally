@@ -63,13 +63,13 @@ async function attempt(append: () => Promise<unknown>): Promise<string | null> {
 }
 
 /** Reads the log back and verifies the chain, the signatures and the head checkpoint the way an offline verifier would. */
-async function auditLog(store: LogStore, logId: string, engineDid: string, delegatorDid: string): Promise<LogAudit> {
+async function auditLog(store: LogStore, logId: string, engineDid: string, delegatorDid: string, liveFromSeq: number): Promise<LogAudit> {
   const entries = await store.read(logId);
   const head = await headCheckpoint(store, logId);
   const result = verifyChain(entries, { engine: [engineDid], delegator: delegatorDid }, head ?? undefined);
   return {
     entries: entries.length,
-    decisions: entries.filter((e) => e.kind === "DECISION").length,
+    decisions: entries.filter((e) => e.kind === "DECISION" && e.seq >= liveFromSeq).length, // the seeded history has APPROVEs of its own
     chainOk: result.ok,
     failure: result.ok ? null : `${result.reason} at seq ${result.failedSeq}`,
   };
@@ -86,6 +86,7 @@ export function governedWorlds(parts: GovernedParts): (scenario: Scenario) => Pr
     const sealed = sealOnce(scenario);
     await appendEntry(store, engine, logId, "MANDATE_SEALED", sealed.credential, clock.now());
     await writeHistory({ store, engine, delegator: delegatorSigner(), logId }, scenario);
+    const prior = (await store.read(logId)).length;
     clock.set(new Date(nowMs));
     const rail = parts.createRail(scenario);
     const executor = parts.createExecutor({ merchant: parts.createMerchant(rail, scenario), rail, store, signer: engine, appendEntry, clock });
@@ -103,7 +104,7 @@ export function governedWorlds(parts: GovernedParts): (scenario: Scenario) => Pr
       },
       recordDecision: (decision) => attempt(() => appendEntry(store, engine, logId, "DECISION", decision, clock.now())),
       recordMint: (card) => attempt(() => appendEntry(store, engine, logId, "CARD_MINTED", card, clock.now())),
-      audit: () => auditLog(store, logId, engine.did, scenario.mandate.delegator),
+      audit: () => auditLog(store, logId, engine.did, scenario.mandate.delegator, prior),
     };
   };
 }
