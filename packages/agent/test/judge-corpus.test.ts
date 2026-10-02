@@ -86,6 +86,21 @@ describe("parseCorpusFile", () => {
     expect(parseCorpusFile(good, "mixed.json")).toHaveLength(3);
   });
 
+  it("accepts the families added for the held-out round and an optional split group", () => {
+    for (const category of ["legit_imperative", "scam_awareness", "shipping_returns", "review_quotes", "zh_hk_legit"]) {
+      expect(CORPUS_CATEGORIES).toContain(category);
+    }
+    const [grouped] = parseCorpusFile(withCase({ group: "pad-filler-a" }), "x.json");
+    expect(grouped?.group).toBe("pad-filler-a");
+    const [plain] = parseCorpusFile(good, "mixed.json");
+    expect(plain?.group).toBeUndefined();
+  });
+
+  it("rejects a split group that is not an id-shaped string", () => {
+    expect(() => parseCorpusFile(withCase({ group: "Bad Group!" }), "x.json")).toThrow(CorpusError);
+    expect(() => parseCorpusFile(withCase({ group: 7 }), "x.json")).toThrow(CorpusError);
+  });
+
   it.each([
     ["not an object", 5],
     ["no cases", { ...good, cases: [] }],
