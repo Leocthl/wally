@@ -5,6 +5,7 @@
 import type { CardRecord, Decision, LogEntry, MandateCredential, PacketState } from "../generated";
 import type { CardEvent } from "../ports";
 import { formatIssues, validateLogEntry } from "../schema";
+import { mandateIdFromCredentialId } from "../vc/mandate";
 
 export class PacketFoldError extends Error {
   readonly seq: number | null;
@@ -147,7 +148,7 @@ export function foldPacket(entries: readonly LogEntry[], now: Date): PacketState
   const remaining = Math.max(0, budget - s.committed - s.spent); // clamps only a corrupted, over-committed log
   const activeCards = [...s.cards].filter(([, c]) => c.state === "ACTIVE").map(([id, c]) => ({ id, limit_minor: c.limit, expires_at: c.expiresAt }));
   return {
-    mandate_id: vc.id,
+    mandate_id: mandateIdFromCredentialId(vc.id), // the credential id is a URN, the packet carries the mnd_ id
     log_id: entries[0]?.log_id ?? "",
     budget_minor: budget,
     committed_minor: s.committed,

@@ -4,7 +4,7 @@
 import { formatIssues, validateMandate, validateMandateCredential } from "@laisee/core/schema";
 import type { MandateCredential, Revocation } from "@laisee/core/generated";
 import type { Clock } from "@laisee/core/ports";
-import { mandateFromCredential } from "@laisee/core/vc";
+import { credentialIdForMandate, mandateFromCredential } from "@laisee/core/vc";
 import { PLACEHOLDER_SIGNATURE } from "@laisee/core/testing";
 import type {
   ApiClient,
@@ -113,7 +113,7 @@ export class MockApiClient implements ApiClient {
     const now = s.nowIso();
     const credential: MandateCredential = {
       ...M0_CREDENTIAL,
-      id: s.nextId("mnd"),
+      id: credentialIdForMandate(s.nextId("mnd")),
       validFrom: now,
       validUntil: req.validUntil,
       credentialSubject: { ...M0_CREDENTIAL.credentialSubject, intent_text: req.intentText, rules: req.rules },

@@ -22,7 +22,7 @@ import {
   at,
   packetWith,
 } from "./engine-helpers";
-import { CREDENTIAL, append, card, cardEvent, sealedLog } from "./packet-helpers";
+import { CREDENTIAL, MANDATE_ID, append, card, cardEvent, sealedLog } from "./packet-helpers";
 
 function decideValid(packet: PacketState, cart: Cart, judge: JudgeRecord, now: string): Decision {
   const d = engine.decide(M0, packet, cart, judge, at(now), undefined, PROOF_OK);
@@ -118,14 +118,14 @@ describe("stops at engine level", () => {
   it("T-S6: a velocity burst is DENY R7.velocity; an expired packet is DENY R2.expired [F32]", () => {
     const burst = packetWith(PACKET_INITIAL, { mint_times: ["2026-10-03T02:03:00Z", "2026-10-03T02:06:00Z", "2026-10-03T02:10:00Z"] });
     expect(decideValid(burst, CART_A4, JUDGE_SOCKS, now).explanation?.template_id).toBe("R7.velocity");
-    const expiredLog = append(sealedLog(), "PACKET_EXPIRED", { mandate_id: CREDENTIAL.id, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
+    const expiredLog = append(sealedLog(), "PACKET_EXPIRED", { mandate_id: MANDATE_ID, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
     const expired = foldPacket(expiredLog, at(now));
     expect(expired.status).toBe("EXPIRED");
     expect(decideValid(expired, CART_A4, JUDGE_SOCKS, now).explanation?.template_id).toBe("R2.expired");
   });
 
   it("T-S4 engine part: after MANDATE_REVOKED every cart is DENY R2.revoked", () => {
-    const revocation = { mandate_id: CREDENTIAL.id, revoked_at: "2026-10-03T02:10:00Z", signer: CREDENTIAL.issuer, signature: "A".repeat(86) };
+    const revocation = { mandate_id: MANDATE_ID, revoked_at: "2026-10-03T02:10:00Z", signer: CREDENTIAL.issuer, signature: "A".repeat(86) };
     const revoked = foldPacket(append(sealedLog(), "MANDATE_REVOKED", revocation, revocation.revoked_at), at(now));
     expect(decideValid(revoked, CART_A4, JUDGE_SOCKS, now)).toMatchObject({ outcome: "DENY", explanation: { template_id: "R2.revoked" } });
   });

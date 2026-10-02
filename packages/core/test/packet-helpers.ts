@@ -4,9 +4,12 @@ import type { CardRecord, Decision, LogEntry, LogEntryKind, LogPayloadByKind, Ma
 import type { CardEvent } from "../src/ports";
 import { placeholderEntry } from "../src/testing";
 import { loadFixture } from "../src/testing/fixtures";
+import { mandateIdFromCredentialId } from "../src/vc/mandate";
 
 export const LOG_ID = "log_demoM0";
 export const CREDENTIAL: MandateCredential = loadFixture("mandate/m0.credential.json", "mandate-credential");
+/** The domain mandate id (mnd_...): the credential id is a URN, log payloads and cards carry this one. */
+export const MANDATE_ID = mandateIdFromCredentialId(CREDENTIAL.id);
 export const DECISION_EXAMPLE = decisionSchema.examples[0] as unknown as Decision;
 
 /** New log array with one more entry at the next seq (never mutates the input). */
@@ -23,7 +26,7 @@ export function card(n: number, limit: number, mintedAt: string, ttlMs = 30 * 60
   return {
     id,
     decision_id: `dec_test${String(n).padStart(4, "0")}`,
-    mandate_id: CREDENTIAL.id,
+    mandate_id: MANDATE_ID,
     handle: `hdl_SIMULATEDtesthandle${n}`,
     last4: "0000",
     limit_minor: limit,

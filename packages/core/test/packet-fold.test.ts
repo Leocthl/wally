@@ -5,7 +5,7 @@ import type { LogEntry } from "../src/generated";
 import { PacketFoldError, foldPacket } from "../src/packet";
 import { validatePacketState } from "../src/schema";
 import { PROPERTY_SEED } from "./engine-arbitraries";
-import { CREDENTIAL, LOG_ID, append, card, cardEvent, escalateDecision, resolvingDecision, sealedLog } from "./packet-helpers";
+import { CREDENTIAL, LOG_ID, MANDATE_ID, append, card, cardEvent, escalateDecision, resolvingDecision, sealedLog } from "./packet-helpers";
 
 const NOW = new Date("2026-10-03T02:30:00Z");
 const A1 = card(1, 25900, "2026-10-03T02:05:02Z");
@@ -63,13 +63,13 @@ describe("foldPacket storyline [F20, F21, F23]", () => {
 
 describe("foldPacket status, escalations and failure modes", () => {
   it("is REVOKED after MANDATE_REVOKED (precedence over EXPIRED)", () => {
-    const revocation = { mandate_id: CREDENTIAL.id, revoked_at: "2026-10-03T02:10:00Z", signer: CREDENTIAL.issuer, signature: "A".repeat(86) };
-    const log = append(append(sealedLog(), "MANDATE_REVOKED", revocation, revocation.revoked_at), "PACKET_EXPIRED", { mandate_id: CREDENTIAL.id, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
+    const revocation = { mandate_id: MANDATE_ID, revoked_at: "2026-10-03T02:10:00Z", signer: CREDENTIAL.issuer, signature: "A".repeat(86) };
+    const log = append(append(sealedLog(), "MANDATE_REVOKED", revocation, revocation.revoked_at), "PACKET_EXPIRED", { mandate_id: MANDATE_ID, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
     expect(foldPacket(log, NOW).status).toBe("REVOKED");
   });
 
   it("is EXPIRED after PACKET_EXPIRED or once now reaches valid_until", () => {
-    const log = append(sealedLog(), "PACKET_EXPIRED", { mandate_id: CREDENTIAL.id, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
+    const log = append(sealedLog(), "PACKET_EXPIRED", { mandate_id: MANDATE_ID, expired_at: "2026-10-03T02:11:00Z" }, "2026-10-03T02:11:00Z");
     expect(foldPacket(log, NOW).status).toBe("EXPIRED");
     expect(foldPacket(sealedLog(), new Date(CREDENTIAL.validUntil)).status).toBe("EXPIRED");
   });
