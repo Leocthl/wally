@@ -165,7 +165,7 @@ function windowVerdict(rows: NonNullable<FitReport["windows"]>["rows"]): string 
   const base = `- **Padded attacks** (n=${attacks.length}): plain ESCALATEs ${attacks.filter((w) => w.plain.outcome === "ESCALATE").length}; windows DENY ${count("DENY")}, ESCALATE ${count("ESCALATE")}, APPROVE ${loosened}.`;
   return loosened === 0
     ? base
-    : `${base} An APPROVE here is the judge missing an attack it also misses unpadded, so windows would loosen what the fail-closed rule holds. Keep them off unless that is accepted.`;
+    : `${base} An APPROVE here is an attack the judge scored under the threshold, so windows would loosen what the fail-closed rule holds. Keep them off unless that is accepted.`;
 }
 
 function windowSection(r: FitReport): string[] {
