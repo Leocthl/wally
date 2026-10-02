@@ -11,6 +11,9 @@ test("the evidence screen renders offline with the run picker and charts", async
   await expect(page.locator("[data-pick-reason]")).toContainText("Showing harness-");
   await expect(page.locator("figure.ev-chart").first()).toBeVisible();
   await page.screenshot({ path: info.outputPath("evidence.png"), fullPage: true });
+  const judge = page.locator("[data-judge-panel]");
+  await expect(judge.locator("[data-judge-verdict]")).toContainText("target [F38] is");
+  await judge.screenshot({ path: info.outputPath("judge-panel.png") });
 });
 
 test("no control on the evidence screen is under 44 px", async ({ page }) => {

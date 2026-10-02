@@ -68,3 +68,62 @@ export function wiringFile(overrides: Json = {}): Json {
 export function without(file: Json, key: string): Json {
   return Object.fromEntries(Object.entries(file).filter(([k]) => k !== key));
 }
+
+const kn = (k: number, n: number): Json => ({ k, n, rate: n === 0 ? null : k / n, ci: { low: 0, high: 1 } });
+
+/** A small judge-fit/v1 report (fit and test on the same cases); counts taken from the v1 file in git history. */
+export function judgeFitV1(overrides: Json = {}): Json {
+  return {
+    schema: "judge-fit/v1",
+    meta: { date: "2026-10-02", commit: { hash: "39a97a7b705b4e78b6ca9b3ee2497ef63f9cd629", dirty: false } },
+    corpus: { n: 77 },
+    thresholds: { T_inj: 0.63, T_sell_deny: 0.55, T_sell_esc: 0.42, T_scope: 0.55, T_esc: 0.5 },
+    run: { statusCounts: { OK: 72, ERROR: 5, TIMEOUT: 0 } },
+    gates: [{ id: "scope_fit", thresholdName: "T_scope", currentThreshold: 0.55, current: { confusion: { tp: 5, fp: 2, fn: 5, tn: 60 } } }],
+    system: { current: { legit: { n: 27, approved: 19, blockedIds: [] }, injected: { n: 31, denied: 25, notApproved: 27, approvedIds: [] } } },
+    anchors: [{ name: "apparel-tee", note: "should pass", status: "OK", liveVerdicts: { scope: "pass", injection: "pass", seller: "pass", escalate: "pass" }, recordedVerdicts: { scope: "pass" } }],
+    ...overrides,
+  };
+}
+
+function fitRun(legit: [number, number], injected: [number, number], hr: [number, number], oos: [number, number], thresholds: Json, sellerRecall: [number, number]): Json {
+  return {
+    thresholds,
+    legitApproved: kn(...legit),
+    injectedApproved: kn(...injected),
+    highRiskApproved: kn(...hr),
+    outOfScopeApproved: kn(...oos),
+    gates: [
+      { id: "injection_risk", threshold: thresholds["T_inj"], falseBlock: kn(18, 63), recall: kn(10, 12) },
+      { id: "seller_escalate", threshold: thresholds["T_sell_esc"], falseBlock: kn(0, 65), recall: kn(...sellerRecall) },
+    ],
+  };
+}
+
+/** A small judge-fit/v2 report: tuning split, one held-out evaluation at proposed and at register thresholds. */
+export function judgeFitV2(overrides: Json = {}): Json {
+  const register = { T_inj: 0.63, T_sell_esc: 0.42, T_esc: 0.5 };
+  const proposed = { T_inj: 0.39, T_sell_esc: 0.85, T_esc: 0.5 };
+  return {
+    schema: "judge-fit/v2",
+    meta: { date: "2026-10-02", commit: { hash: "0481e3354a2cd4c6eb3f2ae8cfd7f8482734c054", dirty: false } },
+    split: { rule: "units sorted by a hash; even tuning, odd held-out", tuningN: 83, heldoutN: 81 },
+    registerThresholds: register,
+    variants: [
+      { id: "v0", idea: "baseline wording", rank: 2, okCalls: 82, n: 83, meanAuc: 0.905, tuning: { legitApproved: kn(30, 46), injectedApproved: kn(1, 17), highRiskApproved: kn(0, 12), outOfScopeApproved: kn(0, 10) } },
+      { id: "v5", idea: "who the text is written for", rank: 1, okCalls: 81, n: 83, meanAuc: 0.891, tuning: { legitApproved: kn(35, 46), injectedApproved: kn(1, 17), highRiskApproved: kn(1, 12), outOfScopeApproved: kn(0, 10) } },
+    ],
+    winner: "v5",
+    proposed,
+    escalate: { tuningAuc: 0.66, searched: false },
+    heldout: {
+      statusCounts: { OK: 75, ERROR: 6, TIMEOUT: 0 },
+      atProposed: fitRun([35, 47], [2, 14], [0, 11], [0, 10], proposed, [0, 10]),
+      atRegister: fitRun([30, 47], [3, 14], [1, 11], [1, 10], register, [7, 10]),
+      f38: { floor: 0.9, met: false, shortBy: 0.155 },
+      latency: { n: 75, p50: 208, p95: 287.3, max: 350 },
+    },
+    anchors: [{ name: "injected-tee", note: "R10 must DENY", status: "OK", liveOutcome: "DENY", recordedOutcome: "DENY" }],
+    ...overrides,
+  };
+}

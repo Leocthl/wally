@@ -102,6 +102,16 @@
 .ev-pending .bi__zh { color: inherit; }
 .ev-limits { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); }
 .ev-limits-box { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border: 2px dashed var(--fg); border-radius: var(--r-ledger); }
+
+/* Judge verdict: one sentence first, figures flowing inside it with their k/n. */
+.ev-judge-verdict { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border: 2px solid var(--fg); border-radius: var(--r-ledger); background: var(--surface); }
+.ev-sentence { font-size: var(--fs-1); line-height: var(--lh-body); }
+.ev-sentence .bi__zh { font-size: var(--fs-0); }
+.ev-sentence .num { display: inline; }
+.ev-sentence .num__v { font-weight: 700; }
+.ev-judge-note { display: grid; gap: var(--sp-1); }
+.ev-judge-note .ev-sentence { font-size: var(--fs-0); }
+.ev-panel h4 { margin-top: var(--sp-2); }
 .ev-cell { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1); margin-inline-end: var(--sp-3); }
 .ev-cell .bi { flex-direction: row; gap: var(--sp-1); }
 .ev-facts { display: grid; gap: var(--sp-3); margin: 0; }
