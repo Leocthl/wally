@@ -26,26 +26,31 @@
 - The full resolved list is saved with the Laya run in `services/laya/`; every other package there is a transitive dependency of the rows above.
 
 ## JavaScript and TypeScript
-| Package | Licence | Use | Status |
-|---|---|---|---|
-| TypeScript | Apache-2.0 | language | planned |
-| @noble/curves | MIT | Ed25519 | planned |
-| @noble/hashes | MIT | SHA-256 | planned |
-| @scure/base | MIT | base58btc | planned |
-| ajv, ajv-formats | MIT | JSON Schema validation | planned |
-| json-schema-to-typescript | MIT | types from schemas | planned |
-| vitest | MIT | tests | planned |
-| fast-check | MIT | property tests | planned |
-| React | MIT | UI | planned |
-| Vite | MIT | build | planned |
-| Hono | MIT | thin API | planned |
-| RFC 8785 JCS library | verify when added | canonical JSON | planned |
-| @anthropic-ai/sdk | MIT, verify when added | optional claude planner | optional |
+| Package | Version | Licence | Use | Status |
+|---|---|---|---|---|
+| @noble/curves | 2.4.0 | MIT | Ed25519 | in use |
+| @noble/hashes | 2.4.0 | MIT | SHA-256 | in use |
+| @scure/base | 2.4.0 | MIT | base58btc and multibase | in use |
+| canonicalize | 5.1.0 | Apache-2.0 | RFC 8785 JSON canonicalisation (the reference implementation) | in use |
+| ajv, ajv-formats | 8.x, 3.0 | MIT | JSON Schema validation | in use |
+| React, react-dom | 19.3 | MIT | UI | in use |
+| Hono, @hono/node-server | 4.13, 2.1 | MIT | thin API | in use |
+| TypeScript | 6.0 | Apache-2.0 | language | in use |
+| Vite, @vitejs/plugin-react | 8.3, 6.1 | MIT | build and dev server | in use |
+| Vitest, @vitest/coverage-v8 | 5.0 | MIT | tests and the coverage gate | in use |
+| fast-check | 4.10 | MIT | property tests | in use |
+| tsx | 4.23 | MIT | run TypeScript scripts (harness, judge fit) | in use |
+| json-schema-to-typescript | 16.0 | MIT | types from schemas | in use |
+| ESLint, typescript-eslint, @eslint/js, globals | 10.11, 8.71, 10.0, 17.13 | MIT | lint and import-boundary rules | in use |
+| Playwright Test | 1.63 | Apache-2.0 | browser smoke tests (browsers come from the local cache, none are shipped) | in use |
+| Testing Library (react, dom, jest-dom, user-event) | 16.3, 10.4, 7.0, 14.6 | MIT | component tests | in use |
+| jsdom | 30.1 | MIT | DOM for component tests | in use |
+| @types/node, @types/react, @types/react-dom | 22.20, 19.3, 19.3 | MIT | type definitions | in use |
 
 ## Fonts
 | Font | Author | Licence | Use |
 |---|---|---|---|
-| Noto Sans HK | Google | SIL Open Font License 1.1 | CJK UI text |
+| Noto Sans HK | Google | SIL Open Font License 1.1 | CJK UI text; planned, not bundled yet (the UI falls back to system fonts) |
 
 ## Not included
 - No third-party logos, brand assets or page content. Public sources are cited in `docs/facts-register.md`, not redistributed.

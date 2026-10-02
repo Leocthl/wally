@@ -178,7 +178,7 @@
 
 | Where | EN | zh-HK |
 |---|---|---|
-| Seal button | Seal packet | 封利是 |
+| Seal button | Seal budget | 鎖定預算 |
 | MINTED | One-off card, limit equals the cart total | 一次性卡，額度等於購物車總額 |
 | Rail badge | SIMULATED rail. No money moves. | 模擬發卡層，沒有款項轉移 |
 | Verifier fail | Chain broken at entry {seq} | 紀錄鏈於第 {seq} 筆中斷 |

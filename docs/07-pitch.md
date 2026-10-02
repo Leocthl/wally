@@ -3,7 +3,7 @@
 ## Talk track
 | Block | Booth [F45] | Finalist [F70] | Say |
 |---|---|---|---|
-| Hook | 0:00-0:25 | 0:00-1:00 | 12,505 online shopping scams in Hong Kong in 2025 [F4]; six in ten victims were 11 to 30 [F5c]. Now give them an AI agent with a wallet. A lai see is fixed, sealed, given once. We built it for AI, and it checks the shop before it pays. Finalist adds the gap: bank and issuer pilots, none found for prepaid wallets or teens [F7a, F7b]. |
+| Hook | 0:00-0:25 | 0:00-1:00 | 12,505 online shopping scams in Hong Kong in 2025 [F4]; six in ten victims were 11 to 30 [F5c]. Now give them an AI agent with a wallet. Meet Wally: a budget it cannot overspend, fixed and sealed like a lai see, and it checks the shop before it pays. Finalist adds the gap: bank and issuer pilots, none found for prepaid wallets or teens [F7a, F7b]. |
 | Seal + mint | 0:25-1:05 | 1:00-2:15 | You seal a packet, "HK$800, clothes, verified sellers" [F20], signed as a delegation credential. The agent can only ask. Laya, on this laptop, picks the item; every pick is logged. An approved cart gets a simulated single-use token for the exact total, shipping included [F1]. Charge more: declined. Charge twice: declined. |
 | Three stops | 1:05-2:10 | 2:15-3:30 | Seller flagged: the token never exists. Over budget by HK$9 once shipping lands [F22]: stopped by R3. Orders hidden in the listing: the judge scores them, the engine stops them. Try to trick it yourself. |
 | Proof | 2:10-2:40 | 3:30-4:15 | Every decision is signed. Flip one byte and verification fails. In n replayed scenarios a model-only gate overspent [X] percent. Ours: [Y]. |
@@ -17,7 +17,7 @@
 |---|---|---|
 | 1 | Scale | 12,505 cases in 2025 [F4]; six in ten victims aged 11-30 [F5c] |
 | 2 | Gap | No agent pilot found for prepaid wallets or teens [F7a, F7b] |
-| 3 | Thesis | Lai see for AI: fixed, sealed, given once |
+| 3 | Thesis | Wally: a sealed budget an AI cannot overspend |
 | 4 | Seal | Sentence → rule chips → signed credential (M0) |
 | 5 | Mint | Exact-total token; HK$800 → HK$541 left [F20, F21]; replay blocked |
 | 6 | Stops | R9 flagged seller, R3 over budget, R10 injected listing |

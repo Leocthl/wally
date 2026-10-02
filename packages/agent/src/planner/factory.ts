@@ -21,10 +21,10 @@ export function plannerProviderFromEnv(env: Env): PlannerProvider {
   return known;
 }
 
-/** Reads LAYA_URL (default the local server). The client refuses anything but a loopback host. */
+/** Reads LAYA_BASE_URL (the judge's name), then the older LAYA_URL; default the local server. The client refuses anything but a loopback host. */
 export function layaUrlFromEnv(env: Env): string {
-  const raw = env["LAYA_URL"]?.trim();
-  return raw === undefined || raw === "" ? DEFAULT_LAYA_URL : raw;
+  const raw = [env["LAYA_BASE_URL"], env["LAYA_URL"]].map((v) => v?.trim()).find((v) => v !== undefined && v !== "");
+  return raw ?? DEFAULT_LAYA_URL;
 }
 
 export interface CreatePlannerOptions {

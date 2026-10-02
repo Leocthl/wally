@@ -39,9 +39,9 @@ describe("planner sources (T-I4)", () => {
     expect(source(file).split("\n").length).toBeLessThanOrEqual(400);
   });
 
-  it("only the factory takes an env object, and only for PLANNER_PROVIDER and LAYA_URL", () => {
+  it("only the factory takes an env object, and only for PLANNER_PROVIDER, LAYA_BASE_URL and LAYA_URL", () => {
     const names = [...code("factory.ts").matchAll(/env\["([A-Z_]+)"\]/g)].map((m) => m[1]);
-    expect([...new Set(names)].sort()).toEqual(["LAYA_URL", "PLANNER_PROVIDER"]);
+    expect([...new Set(names)].sort()).toEqual(["LAYA_BASE_URL", "LAYA_URL", "PLANNER_PROVIDER"]);
   });
 });
 

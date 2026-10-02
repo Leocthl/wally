@@ -33,6 +33,12 @@ describe("layaUrlFromEnv", () => {
     expect(layaUrlFromEnv({})).toBe("http://127.0.0.1:8808");
     expect(layaUrlFromEnv({ LAYA_URL: "http://localhost:9000" })).toBe("http://localhost:9000");
   });
+
+  it("reads LAYA_BASE_URL, the name the judge and .env.example use, ahead of the legacy LAYA_URL", () => {
+    expect(layaUrlFromEnv({ LAYA_BASE_URL: "http://127.0.0.1:9001" })).toBe("http://127.0.0.1:9001");
+    expect(layaUrlFromEnv({ LAYA_BASE_URL: "http://127.0.0.1:9001", LAYA_URL: "http://localhost:9000" })).toBe("http://127.0.0.1:9001");
+    expect(layaUrlFromEnv({ LAYA_BASE_URL: "  ", LAYA_URL: "http://localhost:9000" })).toBe("http://localhost:9000");
+  });
 });
 
 describe("createPlanner", () => {
