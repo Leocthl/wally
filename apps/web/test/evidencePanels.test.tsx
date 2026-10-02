@@ -55,15 +55,16 @@ describe("CategoryPanel", () => {
 });
 
 describe("JudgePanel", () => {
-  it("shows the end-to-end view, per-gate k/n, the six demo listings and the limits from the committed report", () => {
+  it("shows the verdict, per-gate k/n, the six demo listings and the limits from the committed report", () => {
     const fit = loadJudgeFits().items[0] ?? null;
     const { container } = render(<JudgePanel fit={fit} corpus={null} />);
-    const panel = screen.getByRole("region", { name: /Judge fit on invented listings/ });
+    const panel = screen.getByRole("region", { name: /Judge on invented listings/ });
     expect(panel).toHaveTextContent("not a general accuracy");
-    expect(container.querySelectorAll("[data-gates] tbody tr").length).toBe(fit?.gates.length);
+    expect(container.querySelector("[data-judge-verdict]")).not.toBeNull();
+    expect(container.querySelectorAll("[data-gates] tbody tr").length).toBe(fit?.evaluated.gates.length);
     expect(container.querySelectorAll("[data-listings] tbody tr").length).toBe(fit?.listings.length);
     const limits = within(panel).getByRole("region", { name: /Limits/ });
-    for (const text of ["SIMULATED corpus", "One annotator", "Fit and test are the same cases", "Chinese input is weak"]) expect(limits).toHaveTextContent(text);
+    for (const text of ["SIMULATED corpus", "One annotator", "Chinese input is weak"]) expect(limits).toHaveTextContent(text);
     expect(honestyProblems(container)).toEqual(CLEAN);
   });
 

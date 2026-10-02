@@ -1,124 +1,84 @@
-// Judge panel from the judge-fit report: end to end at the thresholds in force, per gate k/n with intervals, the six demo
-// listings and the limits. SIMULATED corpus, one annotator: never presented as a general accuracy.
-import type { ReactElement } from "react";
+// Judge panel, in reading order: a one-line verdict computed from the file, before/after on the same held-out cases,
+// per gate with the seller note, the six demo listings, every wording variant, and the limits. SIMULATED corpus and one
+// annotator: never presented as a general accuracy. Reads judge-fit v1 and v2 (judgeFit.ts).
+import type { ReactElement, ReactNode } from "react";
 import { Bi } from "../../components/Bi";
 import { ASSUMED_CHIP, SIMULATED_CHIP } from "../chip";
-import type { JudgeFit } from "../judgeFitGuard";
+import type { JudgeFit } from "../judgeFit";
 import { J } from "../judgeStrings";
-import { formatInterval, formatPct } from "../stats";
+import { F38 } from "../select";
 import type { InjectionCorpus } from "../types";
 import { rateText } from "./Bars";
 import { EvChip, EvNum, EvScope } from "./EvNum";
+import { JudgeLimits } from "./JudgeLimits";
+import { BeforeAfter, countText, Gates, Listings, Variants } from "./JudgeTables";
 
-function Kn({ k, n, fit }: { readonly k: number; readonly n: number; readonly fit: JudgeFit }): ReactElement {
-  const pct = formatPct(k, n);
-  return <EvNum chip={fit.chip}>{pct === null ? `${k}/${n}` : `${k}/${n} · ${pct} · CI ${formatInterval(k, n) ?? ""}`}</EvNum>;
+/** A bilingual line with figures inside it; same DOM contract as Bi (EN first, zh-HK second with lang). */
+function Sentence({ en, zh, className }: { readonly en: ReactNode; readonly zh: ReactNode; readonly className?: string }): ReactElement {
+  return (
+    <p className={`bi ev-sentence ${className ?? ""}`.trim()}>
+      <span className="bi__en">{en}</span>
+      <span className="bi__zh" lang="zh-HK">{zh}</span>
+    </p>
+  );
 }
 
-function Gates({ fit }: { readonly fit: JudgeFit }): ReactElement {
+function Verdict({ fit }: { readonly fit: JudgeFit }): ReactElement {
+  const { legit, injected } = fit.evaluated.approvals;
+  const met = legit.n > 0 && legit.k * 100 >= legit.n * F38.minApprovedPct;
+  const fitted = fit.schema === "judge-fit/v2";
+  const [a, b] = fitted ? [J.verdictFittedA, J.verdictFittedB] : [J.verdictInForceA, J.verdictInForceB];
+  const n1 = <EvNum chip={fit.chip}>{countText(legit)}</EvNum>;
+  const n2 = <EvNum chip={fit.chip}>{countText(injected)}</EvNum>;
+  const target = <EvNum chip={ASSUMED_CHIP}>{F38.minApprovedPct}%</EvNum>;
+  const end = met ? J.met : J.notMet;
   return (
-    <div className="ev-panel__scroll">
-      <table data-gates>
-        <thead>
-          <tr>
-            <th scope="col"><Bi text={J.gate} /></th>
-            <th scope="col"><Bi text={J.recall} /></th>
-            <th scope="col"><Bi text={J.falseBlock} /></th>
-          </tr>
-        </thead>
-        <tbody>
-          {fit.gates.map((g) => (
-            <tr key={g.id} data-gate={g.id}>
-              <th scope="row">
-                <code data-ident>{g.id}</code>{" "}
-                {g.threshold !== null ? <><code data-ident>{g.thresholdName}</code> <EvNum chip={ASSUMED_CHIP}>{g.threshold.toFixed(2)}</EvNum></> : null}
-              </th>
-              <td data-col={J.recall.en}><Kn k={g.recall.k} n={g.recall.n} fit={fit} /></td>
-              <td data-col={J.falseBlock.en}><Kn k={g.falseBlock.k} n={g.falseBlock.n} fit={fit} /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="ev-judge-verdict" data-judge-verdict data-met={met}>
+      <Sentence en={<>{a.en} {n1} {b.en} {n2} {J.verdictC.en} {target} {J.verdictD.en} <strong>{end.en}</strong></>} zh={<>{a.zh} {n1}{b.zh} {n2}{J.verdictC.zh} {target} {J.verdictD.zh}<strong>{end.zh}</strong></>} />
+      {fitted ? null : <Bi as="p" text={J.sameCases} className="soft" />}
+      {fit.fileSaysF38Met !== null && fit.fileSaysF38Met !== met ? <Bi as="p" text={J.verdictDisagrees} className="ev-acc__short" /> : null}
     </div>
   );
 }
 
-const word = (v: string | undefined): ReactElement => (v === undefined ? <span className="soft">-</span> : v === "pass" ? <Bi text={J.verdictPass} /> : <strong data-ident>{v}</strong>);
-
-function Listings({ fit }: { readonly fit: JudgeFit }): ReactElement {
-  const questions = ["scope", "injection", "seller", "escalate"];
+function SellerNote({ fit }: { readonly fit: JudgeFit }): ReactElement | null {
+  const gates = fit.evaluated.gates.filter((g) => g.id.startsWith("seller"));
+  const gate = gates.find((g) => g.id === "seller_escalate") ?? gates[0];
+  const highRisk = fit.evaluated.approvals.highRisk;
+  if (gate === undefined || highRisk === null || fit.schema !== "judge-fit/v2") return null;
+  const r = <EvNum chip={fit.chip}>{countText(gate.recall)}</EvNum>;
+  const h = <EvNum chip={fit.chip}>{countText(highRisk)}</EvNum>;
   return (
-    <div className="ev-panel__scroll">
-      <table data-listings>
-        <thead>
-          <tr>
-            <th scope="col"><Bi text={J.listing} /></th>
-            <th scope="col"><Bi text={J.live} /></th>
-            <th scope="col"><Bi text={J.recorded} /></th>
-          </tr>
-        </thead>
-        <tbody>
-          {fit.listings.map((l) => (
-            <tr key={l.name} data-listing={l.name}>
-              <th scope="row"><code data-ident>{l.name}</code> <span className="soft" data-ident>{l.note}</span></th>
-              {[l.live, l.recorded].map((v, i) => (
-                <td key={i} data-col={i === 0 ? J.live.en : J.recorded.en}>{questions.map((q) => <span key={q} className="ev-cell"><code data-ident>{q}</code> {word(v[q])}</span>)}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="ev-judge-note" data-seller-note>
+      <Sentence en={<>{J.sellerA.en} {r} {J.sellerB.en} {h} {J.sellerC.en}</>} zh={<>{J.sellerA.zh} {r}{J.sellerB.zh} {h}{J.sellerC.zh}</>} />
+      {gate.recall.k === 0 && gate.recall.n > 0 ? <Bi as="p" text={J.sellerInert} /> : null}
     </div>
-  );
-}
-
-function Limits({ fit }: { readonly fit: JudgeFit }): ReactElement {
-  return (
-    <section className="ev-limits-box" aria-labelledby="ev-limits-title">
-      <h4 id="ev-limits-title"><Bi text={J.limitsTitle} /></h4>
-      <ul className="ev-limits">
-        {[J.limitCorpus, J.limitAnnotator, J.limitSplit, J.limitChinese, J.limitTruncation].map((t) => <li key={t.en}><Bi text={t} /></li>)}
-      </ul>
-      {fit.limits.length > 0 ? (
-        <>
-          <h4><Bi text={J.limitFile} /></h4>
-          <ul className="ev-limits">{fit.limits.map((t) => <li key={t} data-ident>{t}</li>)}</ul>
-        </>
-      ) : null}
-    </section>
   );
 }
 
 export function JudgePanel({ fit, corpus }: { readonly fit: JudgeFit | null; readonly corpus: InjectionCorpus | null }): ReactElement {
   if (fit === null) return <section className="ev-panel"><h3><Bi text={J.title} /></h3><Bi as="p" text={J.noFit} /></section>;
   return (
-    <section className="ev-panel" aria-labelledby="ev-judge-title" data-judge-panel>
+    <section className="ev-panel" aria-labelledby="ev-judge-title" data-judge-panel data-schema={fit.schema}>
       <h3 id="ev-judge-title"><Bi text={J.title} /> <EvChip chip={SIMULATED_CHIP} /></h3>
-      <p className="soft"><code data-ident>{fit.file}</code></p>
-      <Bi as="p" text={J.notAccuracy} className="ev-acc__short" />
+      <p className="soft"><code data-ident>{fit.file}</code> <code data-ident>{fit.schema}</code></p>
       <EvScope chips={[fit.chip]}>
-        <h4><Bi text={J.endToEnd} /></h4>
-        <dl className="ev-facts">
-          <div><dt><Bi text={J.legitApproved} /></dt><dd><Kn k={fit.legitApproved.k} n={fit.legitApproved.n} fit={fit} /></dd></div>
-          <div><dt><Bi text={J.injectedApproved} /></dt><dd><Kn k={fit.injectedApproved.k} n={fit.injectedApproved.n} fit={fit} /></dd></div>
-        </dl>
-        <p className="ev-chart__metric">
-          <Bi text={J.thresholds} />{" "}
-          {Object.entries(fit.thresholds).map(([k, v]) => <span key={k} className="ev-cell"><code data-ident>{k}</code> <EvNum chip={ASSUMED_CHIP}>{v.toFixed(2)}</EvNum></span>)}
-          <span data-ident>[F36, F50]</span>
-        </p>
+        <Verdict fit={fit} />
+        <Bi as="p" text={J.notAccuracy} className="ev-acc__short" />
+        <BeforeAfter fit={fit} />
         <h4><Bi text={J.gatesTitle} /></h4>
         <Gates fit={fit} />
+        <SellerNote fit={fit} />
       </EvScope>
       {corpus?.heldout ? (
         <p className="ev-chart__metric">
-          <Bi text={J.heldout} /> <EvNum chip={corpus.heldout.chip}>{rateText(corpus.heldout)}</EvNum>
-          {corpus.tuning ? <><Bi text={J.tuning} /> <EvNum chip={corpus.tuning.chip}>{rateText(corpus.tuning)}</EvNum></> : null}
+          <code data-ident>injection_corpus</code> <EvNum chip={corpus.heldout.chip}>{rateText(corpus.heldout)}</EvNum>
         </p>
       ) : null}
       <h4><Bi text={J.listingsTitle} /></h4>
       <Listings fit={fit} />
-      <Limits fit={fit} />
+      <Variants fit={fit} />
+      <JudgeLimits fit={fit} />
     </section>
   );
 }
