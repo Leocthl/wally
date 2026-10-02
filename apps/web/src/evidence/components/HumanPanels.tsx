@@ -1,7 +1,7 @@
 // E3 manual-route stopwatch and E5 OBSERVED captures, from data/evidence. Empty templates read "pending: not captured
 // yet" with no figure; rows appear as soon as the files hold them, each with its own OBSERVED or SIMULATED chip.
 import type { ReactElement } from "react";
-import { Bi } from "../../components/Bi";
+import { Tx } from "./Tx";
 import { formatHkDateTime } from "../../domain/time";
 import { measuredChip, SIMULATED_CHIP, type FileChip } from "../chip";
 import { meetsSample, spread, type Captures, type ManualRoute, type Route, type RouteRun } from "../humanGuard";
@@ -14,11 +14,11 @@ export const observedChip = (at: string, source: string): FileChip => ({ kind: "
 const secs = (v: number): string => (Number.isInteger(v) ? String(v) : v.toFixed(1));
 
 function Pending({ text = H.pending }: { readonly text?: typeof H.pending }): ReactElement {
-  return <p className="ev-pending" data-pending><Bi text={text} /></p>;
+  return <p className="ev-pending" data-pending><Tx text={text} /></p>;
 }
 
 function Value({ v, chip }: { readonly v: number | null; readonly chip: FileChip }): ReactElement {
-  return v === null ? <Bi text={H.noValue} className="soft" /> : <EvNum chip={chip}>{secs(v)}</EvNum>;
+  return v === null ? <Tx text={H.noValue} className="soft" /> : <EvNum chip={chip}>{secs(v)}</EvNum>;
 }
 
 function runChip(r: RouteRun): FileChip {
@@ -29,7 +29,7 @@ function runChip(r: RouteRun): FileChip {
 function Summary({ runs, pick, tagOf }: { readonly runs: readonly RouteRun[]; readonly pick: (r: RouteRun) => number | null; readonly tagOf: (r: RouteRun) => string }): ReactElement {
   const used = runs.filter((r) => r.tag === "OBSERVED" && pick(r) !== null);
   const s = spread(used.map((r) => pick(r) as number));
-  if (s === null) return <Bi text={H.noValue} className="soft" />;
+  if (s === null) return <Tx text={H.noValue} className="soft" />;
   const chip = used.some((r) => tagOf(r) === "SIMULATED") ? SIMULATED_CHIP : measuredChip(s.n);
   return <EvNum chip={chip}>{`${secs(s.median)} (${secs(s.min)} to ${secs(s.max)})`}</EvNum>;
 }
@@ -40,21 +40,21 @@ function RouteBlock({ route }: { readonly route: Route }): ReactElement {
       <h4><span data-ident>{route.id}</span> <span data-ident className="soft">{route.label}</span></h4>
       {route.runs.length === 0 ? <Pending /> : (
         <>
-          <Bi as="p" text={meetsSample(route) ? H.sampleMet : H.belowSample} className="ev-acc__short" />
+          <Tx as="p" text={meetsSample(route) ? H.sampleMet : H.belowSample} className="ev-acc__short" />
           <div className="ev-panel__scroll">
             <table>
-              <thead><tr><th scope="col"><Bi text={H.run} /></th><th scope="col"><Bi text={H.steps} /></th><th scope="col"><Bi text={H.decide} /></th><th scope="col"><Bi text={H.issue} /></th></tr></thead>
+              <thead><tr><th scope="col"><Tx text={H.run} /></th><th scope="col"><Tx text={H.steps} /></th><th scope="col"><Tx text={H.decide} /></th><th scope="col"><Tx text={H.issue} /></th></tr></thead>
               <tbody>
                 {route.runs.map((r) => (
                   <tr key={r.id} data-run={r.id}>
                     <th scope="row"><code data-ident>{r.id}</code> <span data-ident className="soft">{r.runner}</span></th>
-                    <td data-col={H.steps.en}>{r.steps === null ? <Bi text={H.noValue} className="soft" /> : <EvNum chip={runChip(r)}>{r.steps}</EvNum>}</td>
+                    <td data-col={H.steps.en}>{r.steps === null ? <Tx text={H.noValue} className="soft" /> : <EvNum chip={runChip(r)}>{r.steps}</EvNum>}</td>
                     <td data-col={H.decide.en}><Value v={r.decideS} chip={runChip(r)} /></td>
                     <td data-col={H.issue.en}><Value v={r.issueS} chip={r.issueTag === "SIMULATED" ? SIMULATED_CHIP : runChip(r)} /></td>
                   </tr>
                 ))}
                 <tr data-summary>
-                  <th scope="row"><Bi text={H.median} /></th>
+                  <th scope="row"><Tx text={H.median} /></th>
                   <td data-col={H.steps.en}><Summary runs={route.runs} pick={(r) => r.steps} tagOf={(r) => r.tag} /></td>
                   <td data-col={H.decide.en}><Summary runs={route.runs} pick={(r) => r.decideS} tagOf={(r) => r.tag} /></td>
                   <td data-col={H.issue.en}><Summary runs={route.runs} pick={(r) => r.issueS} tagOf={(r) => r.issueTag} /></td>
@@ -71,8 +71,8 @@ function RouteBlock({ route }: { readonly route: Route }): ReactElement {
 export function ManualRoutePanel({ parsed }: { readonly parsed: Parsed<ManualRoute> | null }): ReactElement {
   return (
     <section className="ev-panel" aria-labelledby="ev-manual-title" data-manual-panel>
-      <h3 id="ev-manual-title"><Bi text={H.manualTitle} /> <span data-ident>E3 [F80]</span></h3>
-      <Bi as="p" text={H.manualIntro} className="soft" />
+      <h3 id="ev-manual-title"><Tx text={H.manualTitle} /> <span data-ident>E3 [F80]</span></h3>
+      <Tx as="p" text={H.manualIntro} className="soft" />
       {parsed === null ? <Pending /> : !parsed.ok ? <Pending text={H.unreadable} /> : parsed.value.routes.map((r) => <RouteBlock key={r.id} route={r} />)}
     </section>
   );
@@ -84,11 +84,11 @@ function Decline({ captures }: { readonly captures: Captures }): ReactElement {
   const chip = observedChip(d.at, "data/real-card-test.md");
   return (
     <dl className="ev-facts" data-real-decline>
-      <div><dt><Bi text={H.declineCode} /></dt><dd><EvNum chip={chip}><code>{d.code}</code></EvNum></dd></div>
-      <div><dt><Bi text={H.declineMessage} /></dt><dd><EvNum chip={chip}><q>{d.message}</q></EvNum></dd></div>
-      <div><dt><Bi text={H.declineWhere} /></dt><dd data-ident>{d.where}</dd></div>
-      {d.secondsToDecline === null ? null : <div><dt><Bi text={H.declineSeconds} /></dt><dd><EvNum chip={measuredChip(1)}>{secs(d.secondsToDecline)}</EvNum></dd></div>}
-      {d.redactedFile ? <div><dt><Bi text={H.redacted} /></dt><dd><code data-ident>{d.redactedFile}</code></dd></div> : null}
+      <div><dt><Tx text={H.declineCode} /></dt><dd><EvNum chip={chip}><code>{d.code}</code></EvNum></dd></div>
+      <div><dt><Tx text={H.declineMessage} /></dt><dd><EvNum chip={chip}><q>{d.message}</q></EvNum></dd></div>
+      <div><dt><Tx text={H.declineWhere} /></dt><dd data-ident>{d.where}</dd></div>
+      {d.secondsToDecline === null ? null : <div><dt><Tx text={H.declineSeconds} /></dt><dd><EvNum chip={measuredChip(1)}>{secs(d.secondsToDecline)}</EvNum></dd></div>}
+      {d.redactedFile ? <div><dt><Tx text={H.redacted} /></dt><dd><code data-ident>{d.redactedFile}</code></dd></div> : null}
     </dl>
   );
 }
@@ -97,8 +97,8 @@ export function CapturesPanel({ parsed }: { readonly parsed: Parsed<Captures> | 
   const value = parsed?.ok ? parsed.value : null;
   return (
     <section className="ev-panel" aria-labelledby="ev-captures-title" data-captures-panel>
-      <h3 id="ev-captures-title"><Bi text={H.capturesTitle} /> <span data-ident>E5</span></h3>
-      <Bi as="p" text={H.capturesIntro} className="soft" />
+      <h3 id="ev-captures-title"><Tx text={H.capturesTitle} /> <span data-ident>E5</span></h3>
+      <Tx as="p" text={H.capturesIntro} className="soft" />
       {parsed !== null && !parsed.ok ? <Pending text={H.unreadable} /> : null}
       {value === null || value.captures.length === 0 ? (parsed === null || parsed.ok ? <Pending /> : null) : (
         <ul className="ev-captures">
@@ -111,7 +111,7 @@ export function CapturesPanel({ parsed }: { readonly parsed: Parsed<Captures> | 
           ))}
         </ul>
       )}
-      <h4><Bi text={H.declineTitle} /></h4>
+      <h4><Tx text={H.declineTitle} /></h4>
       {value === null ? <Pending text={H.declinePending} /> : <Decline captures={value} />}
     </section>
   );

@@ -1,6 +1,6 @@
 // Decision latency per baseline (p50, p95, n). Live runs only [F26]: a recorded run shows the file's own "not measured".
 import type { ReactElement } from "react";
-import { Bi } from "../../components/Bi";
+import { Tx } from "./Tx";
 import { BASELINE_NAMES } from "../metrics";
 import { compareMs } from "../select";
 import { E } from "../strings";
@@ -20,7 +20,7 @@ function Row({ b, l, max }: { readonly b: BaselineId; readonly l: Latency | null
   const width = (v: number): string => `${max > 0 ? (v / max) * 100 : 0}%`;
   return (
     <div className="ev-bar ev-bar--latency" data-baseline={b}>
-      <span className="ev-bar__name"><span data-ident className="ev-bar__id">{b}</span> <Bi text={BASELINE_NAMES[b]} /></span>
+      <span className="ev-bar__name"><span data-ident className="ev-bar__id">{b}</span> <Tx text={BASELINE_NAMES[b]} /></span>
       {l?.measured ? (
         <span className="ev-bar__track ev-bar__track--pair" aria-hidden="true">
           <span className="ev-bar__fill" style={{ inlineSize: width(l.p50) }} />
@@ -28,8 +28,8 @@ function Row({ b, l, max }: { readonly b: BaselineId; readonly l: Latency | null
         </span>
       ) : null}
       <span className="ev-bar__value">
-        {l === null ? <Bi text={E.notInFile} className="soft" /> : null}
-        {l !== null && !l.measured ? <><Bi text={E.latencyNotMeasured} className="soft" /> <q className="ev-quote" data-ident>{l.note}</q></> : null}
+        {l === null ? <Tx text={E.notInFile} className="soft" /> : null}
+        {l !== null && !l.measured ? <><Tx text={E.latencyNotMeasured} className="soft" /> <q className="ev-quote" data-ident>{l.note}</q></> : null}
         {l?.measured ? <EvNum chip={l.chip}><span data-ident>p50</span> {ms(l.p50)} · <span data-ident>p95</span> {ms(l.p95)} · n={l.n}</EvNum> : null}
       </span>
     </div>
@@ -47,8 +47,8 @@ export function LatencyChart({ run, wiring }: { readonly run: HarnessRun; readon
     <figure className="ev-chart" data-metric="latency">
       <figcaption className="ev-chart__head">
         <WiringStamp on={wiring} />
-        <h3 className="ev-chart__q"><Bi text={E.latencyQuestion} /></h3>
-        <p className="ev-chart__metric soft"><code data-ident>latency</code> <Bi text={E.latencyTitle} /></p>
+        <h3 className="ev-chart__q"><Tx text={E.latencyQuestion} /></h3>
+        <p className="ev-chart__metric soft"><code data-ident>latency</code> <Tx text={E.latencyTitle} /></p>
       </figcaption>
       <EvScope chips={chips}>
         <div className="ev-bars" role="img" aria-label={label}>

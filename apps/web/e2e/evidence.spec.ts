@@ -1,4 +1,4 @@
-// Evidence screen in a real browser (production build, offline): renders from the bundled result files, keeps every
+// "Why trust Wally?" (#/evidence) in a real browser (production build, offline): renders from the bundled result files, keeps every
 // control at 44 px, never scrolls sideways at 360 px, and the presenter's DM8 and DM9 beats render. Screenshots go to
 // the test output folder for a human look, never into the repo.
 import { expect, test } from "@playwright/test";
@@ -7,7 +7,8 @@ const TARGETS = "button, a[href], select, input, textarea, summary";
 
 test("the evidence screen renders offline with the run picker and charts", async ({ page }, info) => {
   await page.goto("/#/evidence");
-  await expect(page.getByRole("heading", { name: /^Evidence/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Why trust Wally?" })).toBeVisible();
+  await expect(page.locator("[data-headline-card]")).toBeVisible();
   await expect(page.locator("[data-pick-reason]")).toContainText("Showing harness-");
   await expect(page.locator("figure.ev-chart").first()).toBeVisible();
   await page.screenshot({ path: info.outputPath("evidence.png"), fullPage: true });

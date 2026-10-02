@@ -69,8 +69,10 @@ describe("presenter DM8 and DM9", () => {
 });
 
 describe("evidence stylesheet", () => {
-  it("puts stage numerals at --fs-6 or larger", () => {
-    expect(CSS).toMatch(/\.ev-big--stage \.ev-big__kn\s*\{\s*font-size:\s*var\(--fs-[67]\)/);
+  // Updated deliberately (lane b-proof): the Wally type scale's --text-5xl (3.75rem) replaces the legacy --fs-6 alias,
+  // which phase B removes; the floor stays "about 60 px on stage".
+  it("puts stage numerals at --text-5xl (or the legacy --fs-6) or larger", () => {
+    expect(CSS).toMatch(/\.ev-big--stage \.ev-big__kn\s*\{\s*font-size:\s*var\(--(fs-[67]|text-5xl)\)/);
   });
 
   it("uses tokens only: no literal colours", () => {
