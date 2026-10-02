@@ -42,6 +42,7 @@ export interface PipelineDeps {
   readonly audit?: boolean | undefined;
 }
 
+// SIMULATED scenario-clock step between the mint and the checkout. A harness constant, not a product threshold.
 const CHECKOUT_DELAY_MS = 60_000;
 
 interface Held {

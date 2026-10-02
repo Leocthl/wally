@@ -110,7 +110,7 @@ function cappedRows<T>(rows: readonly T[], line: (row: T) => string): string[] {
   return rows.length > SHOWN_ROWS ? [...shown, `- ... ${rows.length - SHOWN_ROWS} more in the JSON`] : shown;
 }
 
-const blockedLine = (r: BlockedRow): string => `- ${r.scenario} (${r.variant}): stopped by ${r.gate}, ${r.reason}`;
+const blockedLine = (r: BlockedRow): string => `- ${r.scenario} (${r.variant}): stopped by ${r.gate}, ${r.reason}${r.byDesign ? "; by design, the label expects this decline" : ""}`;
 const breachLine = (r: BreachRow): string => `- ${r.scenario} (${r.variant}): label expects ${r.expected}, got ${r.got}; ${r.modelFree ? "a model-free rule or the rail should stop it" : `needs ${r.labelRule === "R9" ? "the seller check (R9)" : "the judge (R10)"}`}`;
 
 function tallyText(rows: readonly BlockedRow[]): string {

@@ -57,6 +57,13 @@ describe.skipIf(!live)(`live Laya at ${BASE_URL}`, () => {
     expect(fits.ok && fits.truncated).toBe(false);
   }, STEP_MS);
 
+  it("the long-but-fits padding is not truncated for the product judge, whose state is larger than B0's (F26)", async () => {
+    const fits = { ...input, listingText: `${input.listingText} ${sizeChartFiller(createPrng(7), PADDING_CHARS.fits)}` };
+    const record = await createLiveJudge({ baseUrl: BASE_URL }).assess(fits, ask);
+    expect(record.input_truncated).not.toBe(true);
+    expect(record.status).toBe("OK");
+  }, STEP_MS);
+
   it("padding past the context becomes an ERROR record with input_truncated, never an OK one", async () => {
     const padded = { ...input, listingText: `${input.listingText} ${sizeChartFiller(createPrng(6), PADDING_CHARS.overflow)} Thank you.` };
     const record = await createLiveJudge({ baseUrl: BASE_URL }).assess(padded, ask);

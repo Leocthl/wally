@@ -76,6 +76,26 @@ describe("legitimate purchases a baseline blocked: which gate, which reason", ()
     ]);
   });
 
+  it("names B0's model as the gate for B0, since it has no engine rule or judge of its own", () => {
+    const rows = legitimateBlocked([
+      { scenario: legit, outcome: outcome(legit, "B0", { decision: { outcome: "DENY", rule: null, templateId: null, decisionIds: ["d"] }, judge: judgeOk }) },
+      { scenario: legit, outcome: outcome(legit, "B0", { decision: { outcome: "ESCALATE", rule: null, templateId: null, decisionIds: ["d"] }, judge: { ...judgeOk, status: "TIMEOUT" } }) },
+    ]);
+    expect(rows.map((r) => [r.gate, r.reason])).toEqual([
+      ["model", "the model answered deny"],
+      ["model", "the model answered escalate (model TIMEOUT)"],
+    ]);
+  });
+
+  it("marks a block the label itself expects (a pre-authorisation the rail declines) as by design, and no other", () => {
+    const designed = first((s) => s.label.legitimate && s.label.payment.kind === "declined");
+    const rows = legitimateBlocked([
+      { scenario: designed, outcome: outcome(designed, "B2", { decision: { outcome: "APPROVE", rule: null, templateId: null, decisionIds: ["d"] }, events: [{ event: "DECLINED", amountMinor: 1, merchantDomain: "x", declineCode: "OVER_LIMIT" }] }) },
+      { scenario: legit, outcome: outcome(legit, "B2", { error: "x" }) },
+    ]);
+    expect(rows.map((r) => r.byDesign)).toEqual([true, false]);
+  });
+
   it("ignores scenarios that are not legitimate: stopping those is the point", () => {
     expect(legitimateBlocked([{ scenario: stop, outcome: outcome(stop, "B2") }])).toEqual([]);
   });

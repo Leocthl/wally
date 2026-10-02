@@ -5,8 +5,8 @@ import type { Pair } from "../metrics/metrics";
 import type { RunOutcome } from "../systems/types";
 import type { Category } from "../types";
 
-/** Where a purchase was stopped: a deterministic engine rule, the judge (R10), the rail, the executor's re-quote, or a failure. */
-export type Gate = "engine rule" | "judge" | "rail" | "executor" | "error";
+/** Where a purchase was stopped: an engine rule, the judge (R10), B0's model, the rail, the executor's re-quote, or a failure. */
+export type Gate = "engine rule" | "judge" | "model" | "rail" | "executor" | "error";
 
 export interface BlockedRow {
   readonly scenario: string;
@@ -14,11 +14,17 @@ export interface BlockedRow {
   readonly variant: string;
   readonly gate: Gate;
   readonly reason: string;
+  /** The label itself expects this purchase not to complete (a merchant pre-authorisation the rail declines, [F2]). */
+  readonly byDesign: boolean;
 }
 
 const isStopped = (o: RunOutcome): boolean => o.decision.outcome !== "APPROVE";
 
 function stoppedAt(o: RunOutcome): { readonly gate: Gate; readonly reason: string } {
+  if (o.baseline === "B0") {
+    const status = o.judge !== null && o.judge.status !== "OK" ? ` (model ${o.judge.status})` : "";
+    return { gate: "model", reason: `the model answered ${o.decision.outcome.toLowerCase()}${status}` };
+  }
   const template = o.decision.templateId ?? o.decision.rule ?? "no reason recorded";
   if (o.decision.templateId?.startsWith("R10.") === true || o.decision.rule === "R10") {
     const status = o.judge !== null && o.judge.status !== "OK" ? ` (judge ${o.judge.status})` : "";
@@ -45,7 +51,7 @@ function gateOf(o: RunOutcome): { readonly gate: Gate; readonly reason: string }
 export function legitimateBlocked(pairs: readonly Pair[]): readonly BlockedRow[] {
   return pairs
     .filter((p) => p.scenario.label.legitimate && !p.outcome.completed)
-    .map((p) => ({ scenario: p.scenario.id, category: p.scenario.category, variant: p.scenario.variant, ...gateOf(p.outcome) }));
+    .map((p) => ({ scenario: p.scenario.id, category: p.scenario.category, variant: p.scenario.variant, ...gateOf(p.outcome), byDesign: p.scenario.label.payment.kind !== "authorised" }));
 }
 
 export function tallyGates(rows: readonly BlockedRow[]): Readonly<Record<string, number>> {
