@@ -1,0 +1,15 @@
+{
+  "fixture": "scenarios/planner/booth-unverified",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for the booth button Unverified seller (replay backend): the tee from the derived listing lst_vintageTee (data/scenarios/booth.json). The planner reads structured fields only, so the proposal matches attempt-1 with this listing's url. No trace probabilities recorded.",
+  "data": {
+    "scenario": "booth-unverified",
+    "listing_ids": ["lst_vintageTee"],
+    "proposal": {
+      "listing_url": "https://demo-vintage.example/p/tee",
+      "items": [{ "title": "Cotton tee (SIMULATED)", "qty": 1 }],
+      "note": "Plain tee inside the clothing packet."
+    }
+  }
+}

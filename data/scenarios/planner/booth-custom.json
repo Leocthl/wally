@@ -1,0 +1,15 @@
+{
+  "fixture": "scenarios/planner/booth-custom",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for Try to trick the agent (replay backend). The visitor writes only the description, which the planner never reads (I4), so its choice over the fixed structured fields of lst_visitorText is always the graphic tee. No trace probabilities recorded.",
+  "data": {
+    "scenario": "booth-custom",
+    "listing_ids": ["lst_visitorText"],
+    "proposal": {
+      "listing_url": "https://demo-outlet.example/p/visitor-listing",
+      "items": [{ "title": "Graphic tee (SIMULATED)", "qty": 1 }],
+      "note": "Graphic tee from the visitor's listing."
+    }
+  }
+}

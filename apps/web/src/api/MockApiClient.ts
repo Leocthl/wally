@@ -217,6 +217,8 @@ export class MockApiClient implements ApiClient {
           return this.#buy(spec("injected"), null);
         case "unverified":
           return this.#buy(spec("unverified"), null);
+        case "off_category":
+          return this.#buy(spec("earbuds"), null);
         case "pay":
           return this.#onCard(runId, "ACTIVE", "exact");
         case "overshoot":

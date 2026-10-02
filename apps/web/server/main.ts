@@ -1,11 +1,37 @@
-// Starts the API on 127.0.0.1 only. PORT from env (default 8787). Run: pnpm --filter @laisee/web api
+// Starts the booth server on 127.0.0.1 only (PORT, default 8787): the API, the SSE trace, the built UI at / and the
+// offline verifier page at /verifier/. Run: pnpm --filter @laisee/web api (or pnpm demo from the repo root).
+// This file is the startup logger: the only place the server writes to the console.
+import { resolve } from "node:path";
 import { serve } from "@hono/node-server";
-import { createApp } from "./app";
+import { BRAND } from "../src/brand";
+import { composeBooth } from "./compose";
+import { REPO_ROOT } from "./booth/settings";
+import type { Logger } from "./http/routes";
+import { registerStaticRoutes } from "./static";
 
-const DEFAULT_PORT = 8787;
-const port = Number.parseInt(process.env["PORT"] ?? `${DEFAULT_PORT}`, 10);
-if (!Number.isInteger(port) || port <= 0) throw new Error(`invalid PORT: ${process.env["PORT"] ?? ""}`);
+const logger: Logger = {
+  info: (message) => process.stdout.write(`${message}\n`),
+  error: (message) => process.stderr.write(`${message}\n`),
+};
 
-serve({ fetch: createApp().fetch, hostname: "127.0.0.1", port }, (info) => {
-  console.log(`laisee api on http://127.0.0.1:${info.port}`);
+const roots = { ui: resolve(REPO_ROOT, "apps/web/dist"), verifier: resolve(REPO_ROOT, "apps/verifier/dist") };
+
+async function main(): Promise<void> {
+  const booth = composeBooth({ env: process.env, logger, extraRoutes: (app) => registerStaticRoutes(app, roots) });
+  await booth.start();
+  const info = await booth.backend.info();
+  const server = serve({ fetch: booth.app.fetch, hostname: "127.0.0.1", port: booth.settings.port }, (addr) => {
+    logger.info(`${BRAND.name} booth on http://127.0.0.1:${addr.port}/#/booth (rail SIMULATED; verifier at /verifier/)`);
+    logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}`);
+  });
+  const stop = (): void => {
+    void booth.close().finally(() => server.close(() => process.exit(0)));
+  };
+  process.once("SIGINT", stop);
+  process.once("SIGTERM", stop);
+}
+
+main().catch((err: unknown) => {
+  logger.error(`${BRAND.name} booth failed to start: ${err instanceof Error ? err.message : String(err)}`);
+  process.exit(1);
 });

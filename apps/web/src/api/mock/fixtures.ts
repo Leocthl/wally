@@ -22,6 +22,7 @@ import plannerAttempt3b from "@fixtures/planner/attempt-3b.json";
 import plannerAttempt4 from "@fixtures/planner/attempt-4.json";
 import scameterApparel from "@fixtures/scameter/demo-apparel.json";
 import scameterFlagged from "@fixtures/scameter/flagged-seller.json";
+import scameterGadgets from "@fixtures/scameter/demo-gadgets.json";
 import scameterOutlet from "@fixtures/scameter/demo-outlet.json";
 import scameterStale from "@fixtures/scameter/stale.json";
 import scameterStreetwear from "@fixtures/scameter/demo-streetwear.json";
@@ -71,6 +72,7 @@ export const SCAMETER = {
   outlet: load("scameter-capture", scameterOutlet),
   flagged: load("scameter-capture", scameterFlagged),
   stale: load("scameter-capture", scameterStale),
+  gadgets: load("scameter-capture", scameterGadgets),
 } as const;
 
 /** Reference cart: its proposed_at minus scameter.captured_at is the usual capture age, reused to restamp captures. */

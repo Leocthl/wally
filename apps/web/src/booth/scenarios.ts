@@ -24,6 +24,8 @@ export const PICKER: readonly ScenarioMeta[] = [
   { id: "flagged", group: "stops", label: label("Flagged seller", "被標記的賣家"), hint: label("R9 stops it, the card never exists", "R9 攔截，卡從未產生") },
   { id: "overflow", group: "stops", label: label("Shipping overflow", "運費令總額超支"), hint: label("Shipping tips the total over what is left: R3", "運費令總額超出餘額：R3") },
   { id: "injected", group: "stops", label: label("Injected listing", "植入指令的商品頁"), hint: label("The listing gives orders: R10", "商品頁夾帶指令：R10") },
+  // NEEDS-REVIEW: zh-HK copy for off_category (label and hint) awaits a zh-HK reader.
+  { id: "off_category", group: "stops", label: label("Off-category item", "授權類別以外的商品"), hint: label("Earbuds from a clothes budget: R6, the card never exists", "用衣服預算買耳機：R6 攔截，卡從未產生") },
   { id: "unverified", group: "stops", label: label("Unverified seller", "未核實賣家"), hint: label("R9 asks you; unanswered, R11 stops it", "R9 詢問你；逾時未覆則由 R11 攔截") },
   { id: "overshoot", group: "rail", label: label("Shop charges more", "商戶多收"), hint: label("The rail declines, the limit holds", "發卡層拒絕，額度不變") },
   { id: "replay", group: "rail", label: label("Replay the card", "重用同一張卡"), hint: label("A used card is declined", "已用的卡會被拒絕") },

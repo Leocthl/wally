@@ -1,0 +1,15 @@
+{
+  "fixture": "scenarios/planner/booth-off-category",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for the booth button Off-category item [F29] (replay backend). The planner holds no mandate rules (I4), so it proposes the earbuds the shopper asked for; the engine stops the cart at R6. The fixture planner/off-category.json records a planner that abstained instead; the booth needs the proposal to show R6. No trace probabilities recorded.",
+  "data": {
+    "scenario": "booth-off-category",
+    "listing_ids": ["lst_offCatEarbuds"],
+    "proposal": {
+      "listing_url": "https://demo-gadgets.example/p/earbuds",
+      "items": [{ "title": "Wireless earbuds (SIMULATED)", "qty": 1 }],
+      "note": "Earbuds as asked."
+    }
+  }
+}
