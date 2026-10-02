@@ -129,7 +129,7 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
     [booth, result?.escalation?.decisionId],
   );
   // "See cheaper options" needs the booth to offer it (info.features.alternatives) and the client to implement it.
-  const suggest = booth.info?.features.alternatives === true ? booth.api.suggestAlternatives : undefined;
+  const suggest = booth.info?.features?.alternatives === true ? booth.api.suggestAlternatives : undefined;
   const decisionId = result?.chain?.current.id;
   const cheaper = suggest && decisionId ? () => void booth.exec(() => suggest.call(booth.api, { decisionId })) : undefined;
   // The "pay" button pays the newest open card, so Pay now is offered only on the screen of that card.

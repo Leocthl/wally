@@ -72,7 +72,7 @@ export function useAsker(): ((requestText: string) => void) | undefined {
   const { api, info, exec } = useBoothContext();
   const { locale } = useLocale();
   const ask = api.ask;
-  const available = info?.features.ask === true && typeof ask === "function";
+  const available = info?.features?.ask === true && typeof ask === "function";
   return useMemo(() => {
     if (!available || !ask) return undefined;
     return (requestText: string): void => {
