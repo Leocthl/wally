@@ -26,3 +26,4 @@ export {
 export type { DiagnosticReason, DiagnosticSink, JudgeDiagnostic } from "./diagnostics";
 export { DEFAULT_WINDOWING, combineWindowAnswers, splitListing, type WindowPlan, type WindowingOptions } from "./windows";
 export { isWarmable, type WarmUpOptions, type WarmUpResult, type WarmableJudge } from "./warm-up";
+export { loadCorpus, CORPUS_CATEGORIES, type CorpusCase, type CorpusCategory, type CorpusLabels } from "./fit/corpus";
