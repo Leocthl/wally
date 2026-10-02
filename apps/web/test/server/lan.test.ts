@@ -49,7 +49,7 @@ function build(lanOn: boolean, over: { readonly remoteAddress?: () => string | u
   });
 }
 
-const call = (app: Hono, url: string, init: RequestInit = {}, env: object = FROM_PHONE): Promise<Response> => app.request(url, init, env);
+const call = async (app: Hono, url: string, init: RequestInit = {}, env: object = FROM_PHONE): Promise<Response> => app.request(url, init, env);
 const json = (headers: Record<string, string> = {}): RequestInit => ({ method: "POST", headers: { "content-type": "application/json", ...headers }, body: "{}" });
 const errorCode = async (res: Response): Promise<string> => ((await res.json()) as { error: { code: string } }).error.code;
 

@@ -22,12 +22,15 @@ import type {
   Unsubscribe,
   VerifyOutcome,
 } from "../types";
+import { TOKEN_HEADER } from "./connection";
 import { ApiRequestError, errorFromBody } from "./errors";
 import { EventStream } from "./eventStream";
 
 export interface HttpApiClientOptions {
   /** Origin of the booth server, e.g. http://127.0.0.1:8787. Default: same origin as the page. */
   readonly baseUrl?: string;
+  /** LAN pairing token, sent as X-Wally-Token on every call and on the event stream. A page on the booth's own origin can rely on its cookie instead. */
+  readonly token?: string;
   readonly fetch?: typeof fetch;
   /** Longest wait for a request (a live run includes the planner [F33] and the judge [F34]). */
   readonly requestTimeoutMs?: number;
@@ -39,6 +42,15 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 60_000;
 const DEFAULT_EVENT_WAIT_MS = 3_000;
 const EVENT_SEQ_HEADER = "x-event-seq";
 
+/** The same fetch, with the pairing token added to every request's headers. */
+function withToken(inner: typeof fetch, token: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(init?.headers);
+    headers.set(TOKEN_HEADER, token);
+    return inner(input, { ...init, headers });
+  };
+}
+
 export class HttpApiClient implements ApiClient {
   readonly kind = "http" as const;
   readonly #base: string;
@@ -49,7 +61,8 @@ export class HttpApiClient implements ApiClient {
 
   constructor(opts: HttpApiClientOptions = {}) {
     this.#base = (opts.baseUrl ?? "").replace(/\/+$/, "");
-    this.#fetch = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
+    const plain = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
+    this.#fetch = opts.token === undefined ? plain : withToken(plain, opts.token);
     this.#timeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
     this.#eventWaitMs = opts.eventWaitMs ?? DEFAULT_EVENT_WAIT_MS;
     this.#stream = new EventStream({ url: `${this.#base}/api/events`, fetch: this.#fetch });
