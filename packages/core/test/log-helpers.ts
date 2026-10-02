@@ -2,9 +2,17 @@
 // escalation, a revoke and expiry) built with the real appendEntry and deterministic test keys.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { createSigner } from "../src/crypto";
+import { createSigner, toBase64url } from "../src/crypto";
 import type { CardRecord, Decision, LogEntry, LogEntryKind, LogPayloadByKind } from "../src/generated";
-import { appendEntry, signEscalationAnswer, signRevocation } from "../src/log";
+import {
+  appendEntry,
+  entryHash,
+  GENESIS_PREV_HASH,
+  logSigningMessage,
+  payloadHash,
+  signEscalationAnswer,
+  signRevocation,
+} from "../src/log";
 import type { Checkpoint, Signer } from "../src/ports";
 import { FakeClock, MemoryLogStore } from "../src/testing";
 import { loadFixture } from "../src/testing/fixtures";
@@ -145,4 +153,28 @@ export async function buildDemoLog(): Promise<DemoLog> {
 /** Deep copy of entries as plain JSON values (what a verifier parses from a file). */
 export function asJson(entries: readonly LogEntry[]): Record<string, unknown>[] {
   return entries.map((e) => JSON.parse(JSON.stringify(e)) as Record<string, unknown>);
+}
+
+/**
+ * A malicious operator holding the engine key: recomputes payload_hash, prev_hash, entry_hash and the
+ * engine signature for every entry in order, keeping log_id, seq, kind, ts and payload as given. Only
+ * delegator signatures, bindings and the external checkpoint can catch what this rewrites.
+ */
+export function resignChain(entries: readonly Record<string, unknown>[], engine: Signer): Record<string, unknown>[] {
+  let prev = GENESIS_PREV_HASH;
+  return entries.map((e) => {
+    const header = {
+      v: 1 as const,
+      log_id: e["log_id"] as string,
+      seq: e["seq"] as number,
+      kind: e["kind"] as LogEntryKind,
+      ts: e["ts"] as string,
+      prev_hash: prev,
+      payload_hash: payloadHash(e["payload"]),
+      signer: engine.did,
+    };
+    const hash = entryHash(header);
+    prev = hash;
+    return { ...header, payload: e["payload"], entry_hash: hash, signature: toBase64url(engine.sign(logSigningMessage(hash))) };
+  });
 }
