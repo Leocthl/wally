@@ -23,14 +23,17 @@ const noteSchema = (config: LocalPlannerConfig) => ({ type: "string", maxLength:
 
 /**
  * anyOf: one "propose" branch per listing (listing_url is a const, titles an enum of that listing's items, qty
- * 1..maxQty) plus one short abstain branch, so an abstention costs a few tokens and never names an item.
+ * 1..maxQty) plus one short abstain branch, so an abstention costs a few tokens and never names an item. The note
+ * comes first: the model states what the request asks for before it commits to an action (measured: with the
+ * action first, a listed hoodie was missed on a Cantonese request).
  */
 export function buildAnswerSchema(listings: readonly ListingRecord[], config: LocalPlannerConfig): Record<string, unknown> {
   const propose = listings.map((listing) => ({
     type: "object",
     additionalProperties: false,
-    required: ["action", "listing_url", "items", "note"],
+    required: ["note", "action", "listing_url", "items"],
     properties: {
+      note: noteSchema(config),
       action: { const: "propose" },
       listing_url: { const: listing.url },
       items: {
@@ -47,14 +50,13 @@ export function buildAnswerSchema(listings: readonly ListingRecord[], config: Lo
           },
         },
       },
-      note: noteSchema(config),
     },
   }));
   const abstain = {
     type: "object",
     additionalProperties: false,
-    required: ["action", "note"],
-    properties: { action: { enum: ["ask_shopper", "give_up"] }, note: noteSchema(config) },
+    required: ["note", "action"],
+    properties: { note: noteSchema(config), action: { enum: ["ask_shopper", "give_up"] } },
   };
   return { anyOf: [...propose, abstain] };
 }

@@ -10,7 +10,7 @@ import { PlannerConfigError } from "../config";
 import { buildAnswerSchema, parseAnswer, toProposal, totalMinor, type PlanAnswer } from "./answer";
 import { createChatClient, type ChatClient, type ChatTimings, type ChatUsage } from "./client";
 import { DEFAULT_LOCAL_MODEL, DEFAULT_LOCAL_PLANNER_URL, resolveLocalConfig, type LocalPlannerConfig } from "./config";
-import { factCheck } from "./facts";
+import { factCheck, tiedWithAnother } from "./facts";
 import { buildMessages, normaliseRequest } from "./prompt";
 import { emitStep, LOCAL_ALTERNATIVES_QUESTION, LOCAL_PLAN_QUESTION } from "./trace";
 
@@ -121,7 +121,8 @@ export function createLocalPlanRunner(options: LocalPlannerOptions): LocalPlanRu
     }
     emitStep(opts.onTrace, question, answer.items.map((i) => i.title).join(" + "), res.latencyMs);
     const listing = listings.find((l) => l.url === answer.listingUrl);
-    const mismatch = listing === undefined ? "listing missing" : factCheck(request, listing, answer.items);
+    const tied = answer.items.some((i) => tiedWithAnother(request, listings, i.title));
+    const mismatch = listing === undefined ? "listing missing" : tied ? "another listed item fits the request just as well" : factCheck(request, listing, answer.items);
     const overBudget = listing !== undefined && remainingMinor !== null && totalMinor(listing, answer.items) > remainingMinor;
     const proposal = mismatch === null && !overBudget ? toProposal(answer.listingUrl, answer.items, remainingMinor !== null) : null;
     if (proposal === null) return { ...base, proposal: null, outcome: "rejected", reason: mismatch ?? (overBudget ? "the order does not fit what is left" : "schema check failed"), answer };

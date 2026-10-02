@@ -102,6 +102,24 @@ describe("re-checks the untrusted answer", () => {
   });
 });
 
+describe("English tie guard", () => {
+  const graphic = { ...tee, id: "lst_graphicTee2", url: "https://demo-apparel.example/p/graphic-tee-2", items: [{ title: "Graphic tee (SIMULATED)", category: "apparel", unit_price_minor: 15000 }] } as typeof tee;
+  const runner = () => createLocalPlanRunner({ catalogue: [...CATALOGUE, graphic], baseUrl: mock.url });
+
+  it("asks the shopper when another listed product fits the English words just as well", async () => {
+    mock.set({ answer: proposeAnswer(tee.url, TEE) });
+    const out = await runner().propose(ctxOf("a tee please", [tee, graphic]), OPTS);
+    expect(out.proposal).toBeNull();
+    expect(out).toMatchObject({ outcome: "rejected", reason: "another listed item fits the request just as well" });
+  });
+
+  it("lets a distinguishing word through, and leaves a request with no English product word to the model", async () => {
+    mock.set({ answer: proposeAnswer(tee.url, TEE) });
+    expect((await runner().propose(ctxOf("a cotton tee please", [tee, graphic]), OPTS)).proposal?.items[0]?.title).toBe(TEE);
+    expect((await runner().propose(ctxOf("我要純棉T恤", [tee, graphic]), OPTS)).proposal?.items[0]?.title).toBe(TEE);
+  });
+});
+
 describe("fails closed and never throws", () => {
   const ctx = ctxOf("I want a cotton tee", [tee]);
 
