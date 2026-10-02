@@ -131,8 +131,9 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const catalogue = loadCatalogue(settings.fixturesDir, table);
   const judge = makeJudge(opts, settings);
   const choice = opts.planner ?? settledChoice(settings);
-  const records = choice.provider === "replay" ? replayRecords(settings) : [];
-  const planner = plannerFactory(settings, choice, table, records);
+  const recorded = replayRecords(settings); // the live planners fall back to these for the fixed booth buttons
+  const records = choice.provider === "replay" ? recorded : [];
+  const planner = plannerFactory(settings, choice, table, recorded);
   const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")));
   const store = opts.store ?? new FileLogStore(settings.logDir);
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
