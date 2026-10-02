@@ -49,12 +49,16 @@ describe("built page: one self-contained file", () => {
     expect(html).not.toMatch(/process\.env/);
   });
 
+  it("evaluates no code from strings (no eval, no new Function), so the CSP needs no 'unsafe-eval'", () => {
+    expect(html).not.toMatch(/\bnew\s+Function\b|(?<![\w$.])Function\s*\(|(?<![\w$.])eval\s*\(/);
+  });
+
   it("forbids network access in its CSP and allows only the hashed inline code", () => {
     const csp = cspOf(page);
     for (const directive of ["default-src 'none'", "connect-src 'none'", "img-src 'none'", "font-src 'none'", "form-action 'none'", "base-uri 'none'"]) {
       expect(csp).toContain(directive);
     }
-    expect(csp).not.toMatch(/unsafe-inline|https?:|\*/);
+    expect(csp).not.toMatch(/unsafe-inline|unsafe-eval|https?:|\*/);
     expect(csp).toContain(`'sha256-${sha256(page.querySelector("script")?.textContent ?? "")}'`);
     expect(csp).toContain(`style-src 'sha256-${sha256(page.querySelector("style")?.textContent ?? "")}'`);
   });

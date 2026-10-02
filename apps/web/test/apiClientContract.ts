@@ -23,7 +23,7 @@ export function apiClientContract(name: string, make: () => Promise<ContractTarg
     it("describes itself and says whether outputs are recorded", async () => {
       const { client } = await make();
       const info = await client.info();
-      expect(["mock", "http"]).toContain(info.kind);
+      expect(["mock", "http", "local"]).toContain(info.kind);
       expect(typeof info.replayed).toBe("boolean");
       expect(info.realCapture === null || typeof info.realCapture.declineCode === "string").toBe(true);
     });

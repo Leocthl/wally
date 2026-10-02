@@ -20,7 +20,7 @@ export interface FigureContext {
   readonly fallback: Prov;
 }
 
-export function figureContext(args: { readonly api: "mock" | "http"; readonly money: Prov; readonly judge: Prov }): FigureContext {
+export function figureContext(args: { readonly api: "mock" | "http" | "local"; readonly money: Prov; readonly judge: Prov }): FigureContext {
   return {
     money: args.money,
     judge: args.judge,

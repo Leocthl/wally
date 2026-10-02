@@ -1,19 +1,9 @@
-// Boundary validators compiled from schemas/ (draft 2020-12) with ajv in strict mode.
-// Every validateX returns a typed result and never throws on bad input.
-import Ajv2020 from "ajv/dist/2020";
-import type { ErrorObject, ValidateFunction } from "ajv";
-import addFormats from "ajv-formats";
-import cardRecordSchema from "../../../../schemas/card-record.schema.json" with { type: "json" };
-import cartSchema from "../../../../schemas/cart.schema.json" with { type: "json" };
-import decisionSchema from "../../../../schemas/decision.schema.json" with { type: "json" };
-import listingRecordSchema from "../../../../schemas/listing-record.schema.json" with { type: "json" };
-import logEntrySchema from "../../../../schemas/log-entry.schema.json" with { type: "json" };
-import mandateCredentialSchema from "../../../../schemas/mandate-credential.schema.json" with { type: "json" };
-import mandateSchema from "../../../../schemas/mandate.schema.json" with { type: "json" };
-import packetStateSchema from "../../../../schemas/packet-state.schema.json" with { type: "json" };
-import plannerReplaySchema from "../../../../schemas/planner-replay.schema.json" with { type: "json" };
-import proposeCartSchema from "../../../../schemas/propose-cart.schema.json" with { type: "json" };
-import scameterCaptureSchema from "../../../../schemas/scameter-capture.schema.json" with { type: "json" };
+// Boundary validators for schemas/ (draft 2020-12, ajv strict mode), compiled AHEAD OF TIME by scripts/gen-types.mjs
+// (ajv standalone) into ./compiled/validators.ts: nothing is compiled with new Function at run time, so a page with a
+// strict Content-Security-Policy (no 'unsafe-eval') can run them. A test compiles the same schemas with ajv at run
+// time and checks every verdict and error list agree. Every validateX returns a typed result and never throws on bad input.
+import type { ErrorObject } from "ajv";
+import * as compiled from "./compiled/validators";
 import type {
   CardEvent,
   CardRecord,
@@ -46,65 +36,35 @@ export type ValidationResult<T> =
 
 export type Validator<T> = (data: unknown) => ValidationResult<T>;
 
-const ALL_SCHEMAS = [
-  mandateSchema,
-  mandateCredentialSchema,
-  cartSchema,
-  decisionSchema,
-  logEntrySchema,
-  cardRecordSchema,
-  packetStateSchema,
-  listingRecordSchema,
-  scameterCaptureSchema,
-  proposeCartSchema,
-  plannerReplaySchema,
-] as const;
-
-function createAjv(): Ajv2020 {
-  const ajv = new Ajv2020({
-    strict: true,
-    strictRequired: true,
-    allowUnionTypes: true,
-    allErrors: true,
-  });
-  addFormats(ajv);
-  for (const schema of ALL_SCHEMAS) ajv.addSchema(schema);
-  return ajv;
-}
-
-const ajv = createAjv();
+/** A compiled ajv validator: true or false, with the errors of the last call on the function (ajv's contract). */
+type CompiledValidate = ((data: unknown) => boolean) & { readonly errors?: readonly ErrorObject[] | null };
 
 function toIssue(e: ErrorObject): ValidationIssue {
   return { path: e.instancePath || "/", keyword: e.keyword, message: e.message ?? "invalid" };
 }
 
-function compiled(ref: string): ValidateFunction {
-  const fn = ajv.getSchema(ref);
-  if (!fn) throw new Error(`schema not registered: ${ref}`);
-  return fn;
+function makeValidator<T>(fn: CompiledValidate): Validator<T> {
+  return (data: unknown) => (fn(data) ? { ok: true, value: data as T } : { ok: false, errors: (fn.errors ?? []).map(toIssue) });
 }
 
-function makeValidator<T>(ref: string): Validator<T> {
-  const fn = compiled(`${SCHEMA_ID_BASE}${ref}`);
-  return (data: unknown) =>
-    fn(data) ? { ok: true, value: data as T } : { ok: false, errors: (fn.errors ?? []).map(toIssue) };
-}
+// The generated module is untyped (@ts-nocheck); each export is an ajv standalone validate function.
+const v = compiled as unknown as Readonly<Record<keyof typeof compiled, CompiledValidate>>;
 
-export const validateMandate = makeValidator<Mandate>("mandate.schema.json");
-export const validateMandateCredential = makeValidator<MandateCredential>("mandate-credential.schema.json");
-export const validateCart = makeValidator<Cart>("cart.schema.json");
-export const validateDecision = makeValidator<Decision>("decision.schema.json");
-export const validateLogEntry = makeValidator<LogEntry>("log-entry.schema.json");
-export const validateCardRecord = makeValidator<CardRecord>("card-record.schema.json");
-export const validatePacketState = makeValidator<PacketState>("packet-state.schema.json");
-export const validateListingRecord = makeValidator<ListingRecord>("listing-record.schema.json");
-export const validateScameterCapture = makeValidator<ScameterCapture>("scameter-capture.schema.json");
-export const validateProposeCartInput = makeValidator<ProposeCartInput>("propose-cart.schema.json");
-export const validatePlannerReplayRecord = makeValidator<PlannerReplayRecord>("planner-replay.schema.json");
-export const validateJudgeRecord = makeValidator<JudgeRecord>("decision.schema.json#/$defs/JudgeRecord");
-export const validateEscalationAnswer = makeValidator<EscalationAnswer>("decision.schema.json#/$defs/EscalationAnswer");
-export const validateCardEvent = makeValidator<CardEvent>("log-entry.schema.json#/$defs/CardEvent");
-export const validateRevocation = makeValidator<Revocation>("mandate.schema.json#/$defs/Revocation");
+export const validateMandate = makeValidator<Mandate>(v.validateMandate);
+export const validateMandateCredential = makeValidator<MandateCredential>(v.validateMandateCredential);
+export const validateCart = makeValidator<Cart>(v.validateCart);
+export const validateDecision = makeValidator<Decision>(v.validateDecision);
+export const validateLogEntry = makeValidator<LogEntry>(v.validateLogEntry);
+export const validateCardRecord = makeValidator<CardRecord>(v.validateCardRecord);
+export const validatePacketState = makeValidator<PacketState>(v.validatePacketState);
+export const validateListingRecord = makeValidator<ListingRecord>(v.validateListingRecord);
+export const validateScameterCapture = makeValidator<ScameterCapture>(v.validateScameterCapture);
+export const validateProposeCartInput = makeValidator<ProposeCartInput>(v.validateProposeCartInput);
+export const validatePlannerReplayRecord = makeValidator<PlannerReplayRecord>(v.validatePlannerReplayRecord);
+export const validateJudgeRecord = makeValidator<JudgeRecord>(v.validateJudgeRecord);
+export const validateEscalationAnswer = makeValidator<EscalationAnswer>(v.validateEscalationAnswer);
+export const validateCardEvent = makeValidator<CardEvent>(v.validateCardEvent);
+export const validateRevocation = makeValidator<Revocation>(v.validateRevocation);
 
 /** Validators by short name; fixture envelopes name their schema with these keys. */
 export const VALIDATORS = {

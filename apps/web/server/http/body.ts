@@ -1,8 +1,9 @@
 // Reads a JSON request body with a hard byte cap, counting bytes as they arrive (a missing or false
 // Content-Length cannot get around it). Empty body = {}. Only a plain JSON object is accepted.
+import type { JsonObject } from "../../src/booth/backend/validate";
 import { BoothError, badRequest } from "./errors";
 
-export type JsonObject = Readonly<Record<string, unknown>>;
+export type { JsonObject } from "../../src/booth/backend/validate";
 
 function tooLarge(maxBytes: number): BoothError {
   return new BoothError(413, "PAYLOAD_TOO_LARGE", `request body is larger than ${maxBytes} bytes`);

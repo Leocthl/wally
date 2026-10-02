@@ -1,5 +1,6 @@
 // ApiClient: the one boundary between the UI and the engine side (docs/02 section 18, lane C brief).
-// MockApiClient replays the SIMULATED storyline offline; an HTTP + SSE client implements the same interface later.
+// HttpApiClient talks to the booth server (live mode); LocalApiClient runs the same real stack on the device with
+// recorded model answers (on-device mode); MockApiClient is a UI-test double.
 import type { CardRecord, Cart, CompiledRules, Decision, LogEntry, Mandate, PacketState } from "@laisee/core/generated";
 import type { CardEvent, Checkpoint, JudgeRecord, TemplateId, VerifyFailure, VerifyResult } from "@laisee/core/ports";
 
@@ -127,8 +128,11 @@ export interface RealCapture {
   readonly note: string;
 }
 
+/** mock: UI-test double. http: the booth server (live mode). local: the real stack on this device, recorded answers. */
+export type ApiKind = "mock" | "http" | "local";
+
 export interface ApiInfo {
-  readonly kind: "mock" | "http";
+  readonly kind: ApiKind;
   readonly judge: { readonly provider: "replay" | "laya" | "jev"; readonly note: string };
   readonly planner: { readonly provider: "rule" | "replay"; readonly note: string };
   /** true when outputs are recorded, not live: the booth shows a "replayed" label (docs/06 Fallbacks). */
@@ -147,7 +151,7 @@ export interface BoothSnapshot {
 }
 
 export interface ApiClient {
-  readonly kind: "mock" | "http";
+  readonly kind: ApiKind;
   info(): Promise<ApiInfo>;
   snapshot(): Promise<BoothSnapshot>;
   seal(req: SealRequest): Promise<SealResult>;
