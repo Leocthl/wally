@@ -45,7 +45,7 @@ export interface Run {
   readonly operation: OperationName;
 }
 
-export type FailureExtra = Pick<OperationFailure, "decision" | "mintError" | "executorReason">;
+export type FailureExtra = Pick<OperationFailure, "decision" | "mintError" | "executorReason" | "details">;
 
 export interface Reporter {
   emit(event: OrchestratorEvent): void;

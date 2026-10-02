@@ -11,6 +11,7 @@ import {
   type AskRequest,
   type CompileRulesRequest,
   type EscalationAnswerRequest,
+  type FamilySeal,
   type ProposeRequest,
   type ScenarioId,
   type SealRequest,
@@ -46,15 +47,25 @@ function text(body: JsonObject, key: string, min: number, max: number): string {
   return value;
 }
 
+/** { parent: "mum" } or nothing; any other shape is refused (a typo never turns into a plain budget). */
+function parseFamily(value: unknown): FamilySeal | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw badRequest("INVALID_FIELD", "family must be an object");
+  onlyKeys(value as JsonObject, ["parent"]);
+  if ((value as JsonObject)["parent"] !== "mum") throw badRequest("INVALID_FIELD", "family.parent must be mum");
+  return { parent: "mum" };
+}
+
 export function parseSealRequest(body: JsonObject): SealRequest {
-  onlyKeys(body, ["intentText", "rules", "validUntil"]);
+  onlyKeys(body, ["intentText", "rules", "validUntil", "family"]);
   const intentText = text(body, "intentText", 1, MAX_INTENT_CHARS);
   const rules = body["rules"];
   if (rules === null || typeof rules !== "object" || Array.isArray(rules)) throw badRequest("INVALID_FIELD", "rules must be an object");
   const validUntil = text(body, "validUntil", 1, 40);
   if (!TIMESTAMP_RE.test(validUntil) || Number.isNaN(Date.parse(validUntil))) throw badRequest("INVALID_FIELD", "validUntil must be RFC 3339 UTC");
+  const family = parseFamily(body["family"]);
   // rules is checked field by field when the credential is validated against its schema; here it is only an object.
-  return { intentText, rules: rules as CompiledRules, validUntil };
+  return { intentText, rules: rules as CompiledRules, validUntil, ...(family === undefined ? {} : { family }) };
 }
 
 export function parseProposeRequest(body: JsonObject, maxListingChars: number): ProposeRequest {

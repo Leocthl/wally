@@ -10,6 +10,7 @@ import type {
   CompileRulesRequest,
   EscalationAnswerRequest,
   ExportView,
+  FamilySummary,
   LogView,
   PublicKeysView,
   ProposeRequest,
@@ -42,6 +43,8 @@ export interface BoothBackend {
   restore(): Promise<LogView>;
   reset(): Promise<void>;
   exportLog(): Promise<ExportView>;
+  /** Mum's budget for a family seal; makes her (SIMULATED) credential on first use. Refused when features.family is off. */
+  family(): Promise<FamilySummary>;
   subscribe(listener: TraceListener): Unsubscribe;
 }
 

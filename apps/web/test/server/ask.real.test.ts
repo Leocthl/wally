@@ -73,7 +73,7 @@ describe.skipIf(!REAL)("Ask Wally on the real stack, local planner on a mock mod
     const info = (await (await booth.app.request(`${BASE}/api/info`)).json()) as { planner: { provider: string; note: string }; features: unknown; replayed: boolean };
     expect(info.planner.provider).toBe("local");
     expect(info.planner.note).toContain("Chosen by the operator (PLANNER_PROVIDER=local)");
-    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "model" });
+    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "model", family: true });
     expect(booth.planner).toMatchObject({ provider: "local", chosenBy: "env" });
   });
 
@@ -192,7 +192,7 @@ describe.skipIf(!REAL)("Ask Wally on the real stack, local planner on a mock mod
     const { booth } = await boot({ PLANNER_PROVIDER: "replay" });
     const info = (await (await booth.app.request(`${BASE}/api/info`)).json()) as { planner: { provider: string }; features: { ask: boolean; alternatives: boolean; compile: string } };
     expect(info.planner.provider).toBe("replay");
-    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "rules" }); // a recorded cheaper pick exists
+    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "rules", family: true }); // a recorded cheaper pick exists
     const result = (await (await post(booth, "/api/compile", { text: "HK$800 this month for clothes, verified sellers only", locale: "en" })).json()) as { source: string };
     expect(result.source).toBe("rules");
     expect(llama.requests()).toEqual([]); // the mock model was never called

@@ -3,6 +3,7 @@
 // never the delegator's private key: seal, revoke and escalation answers arrive signed and are verified here.
 // The log is the only state: the packet, cards and escalations are folded from it before every step.
 import type { InvalidCartCode, ScameterLookup } from "../cart/types";
+import type { AllocationLedger, FamilyField, FamilyValue, ParentSummary } from "../family";
 import type { CardRecord, Cart, Decision, ListingRecord, LogEntry, Mandate, PacketState } from "../generated";
 import type { Executor, ExecutorAnomaly, ExecutorErrorReason } from "../executor/types";
 import type {
@@ -76,6 +77,16 @@ export interface OrchestratorDeps {
    * must be signed by it; every stored log is verified against it and the engine key before a fold.
    */
   readonly delegatorDid: string;
+  /**
+   * The pinned parent did:key (optional). A credential that names a parent (credentialSubject.parent) is sealed only when
+   * the parent credential verifies against this key; without it such a seal is refused (INVALID_CREDENTIAL).
+   */
+  readonly parentDid?: string;
+  /**
+   * How much of each parent's budget is reserved for sealed children. Share one ledger between the orchestrators of one
+   * parent so their budgets add up; default: a ledger of this orchestrator's own.
+   */
+  readonly allocations?: AllocationLedger;
 }
 
 // ---------- Views (no card handle: it never leaves the orchestrator except inside log entries) ----------
@@ -164,6 +175,8 @@ export type OrchestratorErrorCode =
   | "ALREADY_SEALED"
   | "LOG_EXISTS"
   | "INVALID_CREDENTIAL"
+  /** A family seal: the budget asks for more than the parent allows (OperationFailure.details names the rule). */
+  | "EXCEEDS_PARENT"
   | "INVALID_REQUEST"
   | "INVALID_ANSWER"
   | "INVALID_REVOCATION"
@@ -197,6 +210,14 @@ export interface OperationFailure {
   readonly mintError?: MintErrorCode;
   /** CHECKOUT_FAILED: the executor's reason. */
   readonly executorReason?: ExecutorErrorReason;
+  /** EXCEEDS_PARENT: which rule the child widened, what it asked for and the most the parent allows. */
+  readonly details?: ExceedsParentDetails;
+}
+
+export interface ExceedsParentDetails {
+  readonly field: FamilyField;
+  readonly requested: FamilyValue;
+  readonly allowed: FamilyValue;
 }
 
 export interface SealSuccess {
@@ -205,6 +226,16 @@ export interface SealSuccess {
   readonly mandate: Mandate;
   readonly packet: PacketState;
   readonly head: Checkpoint;
+  /** A family seal: what the parent has left, this budget included. */
+  readonly parent?: ParentSummary;
+}
+
+export interface SealOptions extends OperationOptions {
+  /**
+   * The parent's full signed credential. Required when the credential names a parent, refused when it does not. It is
+   * verified at seal time and is not part of the child's log (the offline verifier checks the child only).
+   */
+  readonly parentCredential?: unknown;
 }
 
 export type SealResult = SealSuccess | OperationFailure;
@@ -339,7 +370,15 @@ export type RunOutcome = "APPROVE" | "DENY" | "ESCALATE" | "INFO" | "ERROR";
 export type CardEventCause = "checkout" | "void" | "expire";
 
 export type OrchestratorEvent =
-  | { readonly type: "mandate.sealed"; readonly runId: string; readonly mandate: Mandate; readonly packet: PacketState; readonly at: string }
+  | {
+      readonly type: "mandate.sealed";
+      readonly runId: string;
+      readonly mandate: Mandate;
+      readonly packet: PacketState;
+      readonly at: string;
+      /** A family seal: what the parent has left, this budget included. */
+      readonly parent?: ParentSummary;
+    }
   | { readonly type: "mandate.revoked"; readonly runId: string; readonly at: string; readonly voidedCardIds: readonly string[] }
   | { readonly type: "run.started"; readonly runId: string; readonly operation: OperationName; readonly at: string }
   | {
@@ -385,8 +424,12 @@ export type Unsubscribe = () => void;
 // ---------- The orchestrator ----------
 
 export interface Orchestrator {
-  /** Verify the credential (R1), append MANDATE_SEALED, publish the head checkpoint. Invalid proof: nothing logged. */
-  seal(credential: unknown): Promise<SealResult>;
+  /**
+   * Verify the credential (R1), append MANDATE_SEALED, publish the head checkpoint. Invalid proof: nothing logged. A
+   * credential that names a parent also needs `options.parentCredential`: it is verified against the pinned parent key,
+   * the link is checked, and the budget must be within the parent's (EXCEEDS_PARENT otherwise, nothing logged).
+   */
+  seal(credential: unknown, options?: SealOptions): Promise<SealResult>;
   /** Planner -> cart builder -> judge || fold -> decide -> DECISION -> mint -> CARD_MINTED (APPROVE only). */
   submit(request: SubmitRequest): Promise<SubmitResult>;
   /**

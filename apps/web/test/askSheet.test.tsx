@@ -24,7 +24,7 @@ class AskClient extends MockApiClient {
 
   override async info(): Promise<ApiInfo> {
     const base = await super.info();
-    return { ...base, kind: this.#kind, features: { ask: true, alternatives: false, compile: "rules", ...this.#features } };
+    return { ...base, kind: this.#kind, features: { ask: true, alternatives: false, compile: "rules", family: false, ...this.#features } };
   }
 
   /** Stands in for the planner: whatever is asked, Wally buys the tee. */
@@ -101,7 +101,7 @@ describe("Ask sheet: typed request", () => {
 
   it("does not show the field when the client has no ask method, even if the booth says it can", async () => {
     const plain = new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
-    vi.spyOn(plain, "info").mockResolvedValue({ ...(await plain.info()), features: { ask: true, alternatives: false, compile: "rules" } });
+    vi.spyOn(plain, "info").mockResolvedValue({ ...(await plain.info()), features: { ask: true, alternatives: false, compile: "rules", family: false } });
     const { sheet } = await openSheet(plain);
     expect(within(sheet).queryByRole("textbox", { name: /Tell Wally what you need/ })).toBeNull();
   });

@@ -185,6 +185,30 @@
       "card": "ACTIVE",
       "beats": ["retry"],
       "expect": { "outcome": "APPROVE", "templateId": null, "events": ["AUTHORISED"] }
+    },
+    "family_ok": {
+      "label": "Mum's budget",
+      "dm": "family",
+      "request": "a cotton tee",
+      "listings": ["lst_demoTee"],
+      "plannerReplay": "attempt-1",
+      "run": "buy",
+      "beats": ["exact"],
+      "family": { "sealMinor": 80000 },
+      "note": "Starts a fresh family session from any state: Mum seals HK$1,000 for clothes, Mei seals HK$800 under it (replacing the budget held now), then the tee is bought from that HK$800. SIMULATED.",
+      "expect": { "outcome": "APPROVE", "templateId": null, "events": ["AUTHORISED"] }
+    },
+    "family_over": {
+      "label": "Ask Mum for too much",
+      "dm": "family",
+      "request": "a cotton tee",
+      "listings": ["lst_demoTee"],
+      "plannerReplay": "attempt-1",
+      "run": "seal",
+      "beats": [],
+      "family": { "sealMinor": 150000 },
+      "note": "Mei tries to seal HK$1,500 under Mum's HK$1,000. Refused with EXCEEDS_PARENT before anything is logged: nothing is sealed and the budget held now, its log and the share it holds stay as they were. SIMULATED.",
+      "expect": { "outcome": "DENY", "templateId": null, "events": [], "code": "EXCEEDS_PARENT" }
     }
   }
 }

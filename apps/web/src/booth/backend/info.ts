@@ -14,9 +14,12 @@ export interface PlannerChoice {
   readonly detail: string;
 }
 
+/** The switch for the family budget: false hides it everywhere (the screens read features.family) and the backend refuses it. */
+export const FAMILY_ENABLED = true;
+
 /** What the booth can do for a planner: ask always works (recorded planners know their sample requests only). */
 export function featuresFor(provider: PlannerProviderName, hasAlternativeRecords: boolean): ApiFeatures {
-  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules" };
+  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules", family: FAMILY_ENABLED };
 }
 
 /** The settings the info reads (server/booth/settings.ts BoothSettings has more). */
@@ -80,7 +83,7 @@ export function buildInfo(input: InfoInput): ServerInfo {
     replayed: input.judgeProvider === "replay" || planner === "replay",
     realCapture: null,
     product: BRAND.name,
-    demoShortcut: `DEMO SHORTCUT: this ${BRAND.name} server holds the delegator's throwaway key and signs the seal, revocations and escalation answers on the shopper's behalf. A real deployment keeps that key on the shopper's device.`,
+    demoShortcut: `DEMO SHORTCUT: this ${BRAND.name} server holds the delegator's throwaway key and signs the seal, revocations and escalation answers on the shopper's behalf. A real deployment keeps that key on the shopper's device. For a family budget it also holds Mum's throwaway key (SIMULATED) and signs her ceiling.`,
     keys: input.keySource === "KEY_DIR" ? "Throwaway demo keys from KEY_DIR (pnpm keys:gen)." : "No keys in KEY_DIR: ephemeral in-memory demo keys, new on every start. Run pnpm keys:gen to keep them.",
     judgeHealth: input.health.state,
   };

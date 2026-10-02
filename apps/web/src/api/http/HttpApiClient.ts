@@ -12,6 +12,7 @@ import type {
   CompileRulesRequest,
   EscalationAnswerRequest,
   ExportView,
+  FamilySummary,
   LogView,
   ProposeRequest,
   RevokeResult,
@@ -126,6 +127,11 @@ export class HttpApiClient implements ApiClient {
   /** The stored log, keys and checkpoint for the offline verifier. A plain read: no run, no events. */
   exportLog(): Promise<ExportView> {
     return this.#get<ExportView>("/api/export");
+  }
+
+  /** Mum's budget for a family seal (GET, so it neither waits for events nor causes any). */
+  family(): Promise<FamilySummary> {
+    return this.#get<FamilySummary>("/api/family");
   }
 
   verify(): Promise<VerifyOutcome> {

@@ -28,6 +28,8 @@ export interface DescribeStepProps {
   readonly onNext: () => void;
   /** The sentence left some rules out: say so once, quietly. */
   readonly incomplete: boolean;
+  /** Words beside a field that show at once, such as a limit set by someone else (Mum's budget). */
+  readonly notes?: Partial<Record<FieldName, string>>;
 }
 
 export function DescribeStep(props: DescribeStepProps): ReactElement {
@@ -98,7 +100,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
       <section className="seal-rules-block" aria-labelledby="seal-rules-title">
         <h2 id="seal-rules-title" className="seal-h2">{t(UI["seal.rulesTitle"])}</h2>
         <p className="seal-lead">{t(UI["seal.rulesLead"])}</p>
-        <RulesEditor form={form} errors={errors} shown={shown} today={today} onChange={onForm} onTouch={onTouch} />
+        <RulesEditor form={form} errors={errors} shown={shown} today={today} onChange={onForm} onTouch={onTouch} {...(props.notes ? { notes: props.notes } : {})} />
       </section>
       <div className="seal-actions">
         <Button type="submit" size="lg" block iconEnd={<Icon name="chevronRight" size={20} />}>{t(UI["seal.next"])}</Button>

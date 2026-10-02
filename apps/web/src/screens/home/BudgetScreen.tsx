@@ -15,6 +15,7 @@ import { CardsSection } from "../console/CardsSection";
 import { ConsoleSection } from "../console/ConsoleSection";
 import { EscalationBanner } from "../console/EscalationBanner";
 import { BudgetHero } from "./BudgetHero";
+import { useFamilyRunner } from "./familyRun";
 import { RecentSection } from "./RecentSection";
 import { cardGroups, decisionTitle, openEscalations, recentDecisions } from "./selectors";
 import { TryAsking } from "./TryAsking";
@@ -72,7 +73,7 @@ export function BudgetScreen(): ReactElement {
   const { state, busy } = booth;
   const { t } = useLocale();
   const toast = useToast();
-  const run = useScenarioRunner();
+  const run = useFamilyRunner(useScenarioRunner());
   const focus = useRouteParam(PARAM.focus);
   const loaded = state.packet !== null && state.mandate !== null;
 
@@ -108,7 +109,7 @@ export function BudgetScreen(): ReactElement {
       <section className="home-block" aria-labelledby="home-try-title">
         <h2 id="home-try-title" className="home-block__title">{t(UI["home.tryAsking"])}</h2>
         <p className="home-block__lead">{t(UI["home.tryLead"])}</p>
-        <TryAsking onRun={run} busy={busy} />
+        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
         <div className="home-block__foot"><ResetDemo /></div>
       </section>
       <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />

@@ -86,7 +86,7 @@ export class MockApiClient implements ApiClient {
       kind: "mock",
       judge: { provider: "replay", note: "Recorded answers (SIMULATED). Typed text goes to a keyword stand-in, not to Laya." },
       planner: { provider: "replay", note: "Recorded proposals (SIMULATED). Typed text uses the rule planner." },
-      features: { ask: false, alternatives: false, compile: "rules" },
+      features: { ask: false, alternatives: false, compile: "rules", family: false },
       replayed: true,
       realCapture: null,
     };
@@ -246,6 +246,9 @@ export class MockApiClient implements ApiClient {
           const got = await this.#cardFor(runId, "ACTIVE");
           return { outcome: got.card ? ("INFO" as const) : got.outcome, note: "Hold Revoke to void the unused card." };
         }
+        case "family_ok":
+        case "family_over":
+          return { outcome: "INFO" as const, note: "Family budgets are not part of the offline mock (info().features.family is off)." };
       }
     });
   }

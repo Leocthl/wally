@@ -6,12 +6,15 @@ export type ApiErrorCode = "NETWORK" | "TIMEOUT" | "BAD_RESPONSE" | (string & {}
 export class ApiRequestError extends Error {
   readonly status: number;
   readonly code: ApiErrorCode;
+  /** The facts behind the code when the server sent them (EXCEEDS_PARENT: { field, requested, allowed }). */
+  readonly details?: Readonly<Record<string, unknown>>;
 
-  constructor(status: number, code: ApiErrorCode, message: string) {
+  constructor(status: number, code: ApiErrorCode, message: string, details?: Readonly<Record<string, unknown>>) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
     this.code = code;
+    if (details !== undefined) this.details = details;
   }
 }
 
@@ -23,7 +26,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function errorFromBody(status: number, body: unknown): ApiRequestError {
   const err = isRecord(body) ? body["error"] : undefined;
   if (isRecord(err) && typeof err["code"] === "string" && typeof err["message"] === "string") {
-    return new ApiRequestError(status, err["code"], err["message"]);
+    const details = err["details"];
+    return new ApiRequestError(status, err["code"], err["message"], isRecord(details) ? details : undefined);
   }
   return new ApiRequestError(status, `HTTP_${status}`, `The booth server answered ${status}.`);
 }

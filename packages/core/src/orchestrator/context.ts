@@ -3,6 +3,7 @@
 // have been delivered. Everything else is read from the log inside the queue.
 import type { Executor } from "../executor/types";
 import type { Exclusive } from "../executor/queue";
+import type { AllocationLedger } from "../family";
 import type { LogEntry, LogEntryKind, LogPayloadByKind, Mandate, MandateCredential, PacketState } from "../generated";
 import { checkpointOf } from "../log/checkpoint";
 import { foldLedger, foldPacket, type HeldApproval } from "../packet/fold";
@@ -38,6 +39,8 @@ export interface Ctx {
   /** The packet queue: every job that decides, appends, mints or voids runs through it, one at a time. */
   readonly queue: Exclusive;
   readonly memory: Memory;
+  /** Parent budgets reserved for sealed children (family seals only). */
+  readonly allocations: AllocationLedger;
 }
 
 export const PACKET_QUEUE_KEY = "packet";

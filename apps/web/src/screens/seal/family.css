@@ -1,0 +1,10 @@
+/* "Whose money?" in the Seal flow (family budget). Tokens only. */
+.seal-family { display: grid; gap: var(--sp-3); }
+.seal-family__title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
+.seal-family__seg { display: flex; width: 100%; }
+.seal-family__seg .w-seg__opt { flex: 1; }
+.seal-family__card { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: var(--sp-3); align-items: start; }
+.seal-family__icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--r-md); background: var(--c-info-tint); color: var(--c-info-ink); }
+.seal-family__text { display: grid; gap: var(--sp-1); min-width: 0; }
+.seal-family__ceiling { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+.seal-family__note { color: var(--c-ink-muted); font-size: var(--text-sm); }

@@ -76,6 +76,8 @@ export interface RigOptions {
   readonly config?: OrchestratorDeps["config"];
   readonly credential?: (keys: DemoKeys) => MandateCredential;
   readonly cartIds?: OrchestratorDeps["ids"]["cartId"];
+  /** More dependencies, such as the pinned parent key and a shared allocation ledger (family seals). */
+  readonly extra?: Partial<OrchestratorDeps>;
 }
 
 export const LOG_ID = "log_demoM0";
@@ -102,6 +104,7 @@ export function rig(options: RigOptions = {}): Rig {
     appendEntry,
     delegatorDid: keys.delegator.did,
     ...(options.config === undefined ? {} : { config: options.config }),
+    ...options.extra,
   });
   const events: OrchestratorEvent[] = [];
   orchestrator.subscribe((e) => events.push(e));

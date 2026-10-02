@@ -42,8 +42,8 @@ export interface RouteOptions {
 
 export const EVENT_SEQ_HEADER = "x-event-seq";
 
-function fail(c: Context, status: BoothErrorStatus, code: string, message: string): Response {
-  return c.json(errorBody(code, message), status);
+function fail(c: Context, status: BoothErrorStatus, code: string, message: string, details?: Readonly<Record<string, unknown>>): Response {
+  return c.json(errorBody(code, message, details), status);
 }
 
 /** Node's server sets Host from the request line; an in-process request (tests) may only have the URL. */
@@ -87,6 +87,8 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
   app.get("/api/snapshot", async (c) => reply(c, await be().snapshot()));
   app.get("/api/log", async (c) => reply(c, await be().getLog()));
   app.get("/api/export", async (c) => reply(c, await be().exportLog()));
+  // Mum's budget for a family seal: the ceiling and what is left. Read only; the first call makes Mum's (SIMULATED) credential.
+  app.get("/api/family", async (c) => reply(c, await be().family()));
   app.get("/api/events", () => hub.connect());
 
   app.post("/api/seal", async (c) => reply(c, await be().seal(parseSealRequest(await body(c)))));
@@ -131,7 +133,7 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
 
 /** Turns any thrown value into the JSON error shape; unexpected errors are logged here and answered without detail. */
 export function errorResponse(err: unknown, c: Context, logger: Logger): Response {
-  if (err instanceof BoothError) return fail(c, err.status, err.code, err.message);
+  if (err instanceof BoothError) return fail(c, err.status, err.code, err.message, err.details);
   logger.error(`api ${c.req.method} ${c.req.path} failed: ${err instanceof Error ? `${err.name}: ${err.message}` : "unknown error"}`);
   return fail(c, 500, "INTERNAL", "the server could not complete the request (fail closed: no card is minted on an error)");
 }
