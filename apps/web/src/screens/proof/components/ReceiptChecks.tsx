@@ -36,6 +36,8 @@ function statusOf(rule: Rule): Status {
   return rule.verdict === "ESCALATE" ? "ask" : "stop";
 }
 
+const ORDER: Readonly<Record<Status, number>> = { stop: 0, ask: 1, pass: 2 };
+
 const STATUS = {
   pass: { icon: "check", words: R.checkPass },
   stop: { icon: "hand", words: R.checkStop },
@@ -44,7 +46,8 @@ const STATUS = {
 
 export function ReceiptChecks({ decision, prov, api }: { readonly decision: Decision; readonly prov: Prov; readonly api: string }): ReactElement {
   const { t, locale } = useLocale();
-  const ran = decision.rules.filter((r) => r.result !== "SKIPPED");
+  // The check that stopped or paused the purchase comes first; rule order is kept inside each group.
+  const ran = decision.rules.filter((r) => r.result !== "SKIPPED").sort((a, b) => ORDER[statusOf(a)] - ORDER[statusOf(b)]);
   return (
     <section className="rc-section" aria-labelledby="rc-checks-title">
       <h3 id="rc-checks-title" className="rc-section__title">{t(R.checksTitle)}</h3>

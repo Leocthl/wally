@@ -67,6 +67,7 @@ describe("Receipts list", () => {
     expect(r3).toHaveTextContent("Fits the budget left");
     expect(r3).toHaveTextContent("Stopped here");
     expect(sheet.querySelector('[data-rule="R1"]')).toHaveTextContent("Passed");
+    expect(sheet.querySelector(".rc-check")?.getAttribute("data-rule")).toBe("R3");
     expect(within(sheet).getByRole("link", { name: /Open in Wally/ })).toHaveAttribute("href", `#/wally?d=${stop.payload.id}`);
     expect(window.location.hash).toBe(`#/receipts?d=${stop.payload.id}`);
     expect(sheet.querySelector('[data-disclosure="raw"]')).toHaveTextContent(stop.entry_hash);
@@ -105,6 +106,17 @@ describe("Receipts list", () => {
     expect(await screen.findByText("No receipts yet")).toBeInTheDocument();
     expect(screen.getByText(/its signed receipt shows up here/)).toBeInTheDocument();
     expect(document.querySelectorAll(".rc-row")).toHaveLength(0);
+  });
+
+  it("lists two hundred receipts and filters them without losing any", async () => {
+    const steps = Array.from({ length: 199 }, () => "flagged" as const);
+    const started = performance.now();
+    const { user } = await seeded(steps);
+    const ms = performance.now() - started;
+    expect(document.querySelectorAll(".rc-row")).toHaveLength(200);
+    await user.click(screen.getByRole("radio", { name: /Stopped/ }));
+    expect(document.querySelectorAll(".rc-row")).toHaveLength(199);
+    expect(ms).toBeLessThan(15_000);
   });
 
   it("speaks 繁 when chosen: title, chips and states, all marked zh-HK", async () => {
