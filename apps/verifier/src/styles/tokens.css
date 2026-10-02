@@ -1,63 +1,145 @@
-/* Copied from apps/web/src/design/tokens.css (docs/04 Tokens): LEDGER, STATE, SIMULATED chip, type, space and
-   motion only; the verifier may not import across apps. Keep the values in step with docs/04. */
+/* Wally "cool wallet" tokens, copied from apps/web/src/design/tokens.css (the verifier may not import across apps):
+   cool ground, white cards, vivid blue primary, green for a check that held, red ONLY for a failed check.
+   Same names and values as the app, so the two read alike. test/tokens.test.ts checks that the plain-value
+   fallback below matches every light-dark() pair and that the colour pairs the page uses pass WCAG AA (text
+   4.5:1, UI 3:1) in both modes. The pairs are one declaration per line; that test reads this file.
+
+   Palette (light / dark)                 Use
+   --c-bg            #F4F7FE / #0B1220    page ground
+   --c-surface       #FFFFFF / #131C30    cards
+   --c-surface-sunken #EBF0FA / #0F1728   fields, toggle track
+   --c-ink           #0E1A33 / #EAF0FF    text
+   --c-ink-muted     #4F5B78 / #A7B3CF    secondary text
+   --c-line-strong   #7A86A5 / #66759A    control borders (3:1)
+   --c-primary       #1A5CFF / #3366F5    the Verify button (white text)
+   --c-ok / --c-stop solid disc fills; -ink for text on a card or tint; -tint for the card behind */
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
 
 :root {
-  --ledger-bg:       light-dark(#F2F5F7, #0E141A);
-  --ledger-surface:  light-dark(#FFFFFF, #161E26);
-  --ledger-ink:      light-dark(#14202B, #E8EDF2);  /* on bg 15.1/15.7 */
-  --ledger-ink-soft: light-dark(#44515D, #A9B6C2);  /* 7.4/9.0 */
-  --line-strong:     light-dark(#6F7B86, #7A8896);  /* control borders 3.95/5.1 */
-  --hairline:        light-dark(#D6DCE2, #2B3641);  /* decorative only */
-  --focus:           light-dark(#1B4C9B, #9DBEFF);  /* ring on any surface 7.5/9.7 */
-  --minted:       light-dark(#14663A, #63D08F);
-  --minted-bg:    light-dark(#E2F3E7, #12301F);
-  --stopped:      light-dark(#B3261E, #FF8F85);
-  --stopped-bg:   light-dark(#FCE8E6, #3B1714);
-  --pending:      light-dark(#505C67, #A9B6C2);
-  --pending-bg:   light-dark(#E8ECEF, #222B34);
-  --sim:  light-dark(#FFFFFF, #14202B);  --sim-bg:  light-dark(#24303B, #E8EDF2);  /* 13.5/14.0 */
+  /* NEUTRALS */
+  --c-bg:             light-dark(#F4F7FE, #0B1220);
+  --c-surface:        light-dark(#FFFFFF, #131C30);
+  --c-surface-sunken: light-dark(#EBF0FA, #0F1728);
+  --c-ink:            light-dark(#0E1A33, #EAF0FF);
+  --c-ink-muted:      light-dark(#4F5B78, #A7B3CF);
+  --c-line:           light-dark(#E1E7F5, #25314B);  /* hairline, decorative only */
+  --c-line-strong:    light-dark(#7A86A5, #66759A);  /* control borders */
+  --c-focus:          light-dark(#1A5CFF, #93B4FF);
+  --c-shadow:         light-dark(rgb(14 26 51 / 0.08), rgb(0 0 0 / 0.45));
+  --c-shadow-strong:  light-dark(rgb(14 26 51 / 0.16), rgb(0 0 0 / 0.6));
+  --c-verdict-line:   light-dark(rgb(14 26 51 / 0.1), rgb(255 255 255 / 0.12));  /* rules inside a tinted card */
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-  --num: tabular-nums lining-nums;
-  --fs-s: 0.8125rem;  --fs-0: 1rem;      --fs-1: 1.25rem;   --fs-2: 1.5625rem;
-  --lh-tight: 1.15; --lh-body: 1.5; --lh-zh: 1.7;
-  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
-  --sp-5: 1.5rem;  --sp-6: 2rem;   --sp-7: 3rem;
-  --tap: 2.75rem;                                 /* 44px minimum target */
-  --r-ledger: 2px; --r-chip: 4px;
-  --dur-stop: 200ms;
-}
-@media (prefers-reduced-motion: reduce) {
-  :root { --dur-stop: 0ms; }
+  /* PRIMARY (vivid blue) */
+  --c-primary:         light-dark(#1A5CFF, #3366F5);
+  --c-primary-pressed: light-dark(#1249D6, #2A57D8);
+  --c-on-primary:      light-dark(#FFFFFF, #FFFFFF);
+  --c-primary-ink:     light-dark(#1450E6, #93B4FF);
+  --c-primary-tint:    light-dark(#E8EFFF, #18264A);
+
+  /* STATES */
+  --c-ok:        light-dark(#0B7D41, #34C77B);
+  --c-on-ok:     light-dark(#FFFFFF, #04210F);
+  --c-ok-ink:    light-dark(#0A6E38, #5EDB98);
+  --c-ok-tint:   light-dark(#E2F6EA, #0F2A1C);
+  --c-stop:      light-dark(#D92D20, #FF6B5E);
+  --c-on-stop:   light-dark(#FFFFFF, #2A0703);
+  --c-stop-ink:  light-dark(#B8251A, #FF8F84);
+  --c-stop-tint: light-dark(#FDECEA, #3A1714);
+
+  /* SIMULATED chip: dashed edge, caps, quiet */
+  --sim:      light-dark(#3A4766, #C9D2EA);
+  --sim-bg:   light-dark(#EEF1F7, #1C2640);
+  --sim-line: light-dark(#7F8BA8, #7686AA);
+
+  /* BRAND MARK: the app's blue-to-teal hero gradient, used on the small shield tile only */
+  --c-hero-from: light-dark(#1A5CFF, #2453DB);
+  --c-hero-to:   light-dark(#0A7396, #0B5470);
+  --c-on-hero:   light-dark(#FFFFFF, #FFFFFF);
 }
 
-/* Same pairs as tokens-fallback.css in apps/web: plain values where light-dark() is missing. */
+/* Same pairs as above in plain values, for browsers without light-dark(). */
 @supports not (color: light-dark(#000000, #ffffff)) {
   :root {
-    --ledger-bg: #F2F5F7; --ledger-surface: #FFFFFF; --ledger-ink: #14202B; --ledger-ink-soft: #44515D;
-    --line-strong: #6F7B86; --hairline: #D6DCE2; --focus: #1B4C9B;
-    --minted: #14663A; --minted-bg: #E2F3E7; --stopped: #B3261E; --stopped-bg: #FCE8E6;
-    --pending: #505C67; --pending-bg: #E8ECEF; --sim: #FFFFFF; --sim-bg: #24303B;
+    --c-bg: #F4F7FE; --c-surface: #FFFFFF; --c-surface-sunken: #EBF0FA; --c-ink: #0E1A33; --c-ink-muted: #4F5B78;
+    --c-line: #E1E7F5; --c-line-strong: #7A86A5; --c-focus: #1A5CFF;
+    --c-shadow: rgb(14 26 51 / 0.08); --c-shadow-strong: rgb(14 26 51 / 0.16); --c-verdict-line: rgb(14 26 51 / 0.1);
+    --c-primary: #1A5CFF; --c-primary-pressed: #1249D6; --c-on-primary: #FFFFFF; --c-primary-ink: #1450E6; --c-primary-tint: #E8EFFF;
+    --c-ok: #0B7D41; --c-on-ok: #FFFFFF; --c-ok-ink: #0A6E38; --c-ok-tint: #E2F6EA;
+    --c-stop: #D92D20; --c-on-stop: #FFFFFF; --c-stop-ink: #B8251A; --c-stop-tint: #FDECEA;
+    --sim: #3A4766; --sim-bg: #EEF1F7; --sim-line: #7F8BA8;
+    --c-hero-from: #1A5CFF; --c-hero-to: #0A7396; --c-on-hero: #FFFFFF;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ledger-bg: #0E141A; --ledger-surface: #161E26; --ledger-ink: #E8EDF2; --ledger-ink-soft: #A9B6C2;
-      --line-strong: #7A8896; --hairline: #2B3641; --focus: #9DBEFF;
-      --minted: #63D08F; --minted-bg: #12301F; --stopped: #FF8F85; --stopped-bg: #3B1714;
-      --pending: #A9B6C2; --pending-bg: #222B34; --sim: #14202B; --sim-bg: #E8EDF2;
+      --c-bg: #0B1220; --c-surface: #131C30; --c-surface-sunken: #0F1728; --c-ink: #EAF0FF; --c-ink-muted: #A7B3CF;
+      --c-line: #25314B; --c-line-strong: #66759A; --c-focus: #93B4FF;
+      --c-shadow: rgb(0 0 0 / 0.45); --c-shadow-strong: rgb(0 0 0 / 0.6); --c-verdict-line: rgb(255 255 255 / 0.12);
+      --c-primary: #3366F5; --c-primary-pressed: #2A57D8; --c-on-primary: #FFFFFF; --c-primary-ink: #93B4FF; --c-primary-tint: #18264A;
+      --c-ok: #34C77B; --c-on-ok: #04210F; --c-ok-ink: #5EDB98; --c-ok-tint: #0F2A1C;
+      --c-stop: #FF6B5E; --c-on-stop: #2A0703; --c-stop-ink: #FF8F84; --c-stop-tint: #3A1714;
+      --sim: #C9D2EA; --sim-bg: #1C2640; --sim-line: #7686AA;
+      --c-hero-from: #2453DB; --c-hero-to: #0B5470; --c-on-hero: #FFFFFF;
     }
   }
   :root[data-theme="dark"] {
-    --ledger-bg: #0E141A; --ledger-surface: #161E26; --ledger-ink: #E8EDF2; --ledger-ink-soft: #A9B6C2;
-    --line-strong: #7A8896; --hairline: #2B3641; --focus: #9DBEFF;
-    --minted: #63D08F; --minted-bg: #12301F; --stopped: #FF8F85; --stopped-bg: #3B1714;
-    --pending: #A9B6C2; --pending-bg: #222B34; --sim: #14202B; --sim-bg: #E8EDF2;
+    --c-bg: #0B1220; --c-surface: #131C30; --c-surface-sunken: #0F1728; --c-ink: #EAF0FF; --c-ink-muted: #A7B3CF;
+    --c-line: #25314B; --c-line-strong: #66759A; --c-focus: #93B4FF;
+    --c-shadow: rgb(0 0 0 / 0.45); --c-shadow-strong: rgb(0 0 0 / 0.6); --c-verdict-line: rgb(255 255 255 / 0.12);
+    --c-primary: #3366F5; --c-primary-pressed: #2A57D8; --c-on-primary: #FFFFFF; --c-primary-ink: #93B4FF; --c-primary-tint: #18264A;
+    --c-ok: #34C77B; --c-on-ok: #04210F; --c-ok-ink: #5EDB98; --c-ok-tint: #0F2A1C;
+    --c-stop: #FF6B5E; --c-on-stop: #2A0703; --c-stop-ink: #FF8F84; --c-stop-tint: #3A1714;
+    --sim: #C9D2EA; --sim-bg: #1C2640; --sim-line: #7686AA;
+    --c-hero-from: #2453DB; --c-hero-to: #0B5470; --c-on-hero: #FFFFFF;
   }
 }
 
-[data-register="ledger"] { --bg: var(--ledger-bg); --surface: var(--ledger-surface); --fg: var(--ledger-ink);
-  --fg-soft: var(--ledger-ink-soft); --accent: var(--ledger-ink); --radius: var(--r-ledger); --font-data: var(--font-mono); }
+/* Names the earlier LEDGER page used, now pointing at the new palette (nothing that reads them breaks). */
+:root {
+  --ledger-bg: var(--c-bg); --ledger-surface: var(--c-surface); --ledger-ink: var(--c-ink); --ledger-ink-soft: var(--c-ink-muted);
+  --line-strong: var(--c-line-strong); --hairline: var(--c-line); --focus: var(--c-focus);
+  --minted: var(--c-ok-ink); --minted-bg: var(--c-ok-tint); --stopped: var(--c-stop-ink); --stopped-bg: var(--c-stop-tint);
+  --pending: var(--c-ink-muted); --pending-bg: var(--c-surface-sunken);
+}
+
+/* TYPE: system faces only (the page is offline). Latin first, then the Hong Kong forms for Chinese. */
+:root {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
+  --font-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
+  --font-zh: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "PingFang HK", "Noto Sans HK",
+    "Microsoft JhengHei", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --num: tabular-nums lining-nums;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.125rem; --text-xl: 1.375rem; --text-2xl: 1.75rem;
+  --weight-semibold: 600; --weight-bold: 700; --weight-heavy: 800;
+  --lh-tight: 1.15; --lh-snug: 1.3; --lh-body: 1.5; --lh-zh: 1.7;
+  --track-tight: -0.02em; --track-caps: 0.06em;
+}
+
+/* SPACE, SHAPE, ELEVATION, SAFE AREA (viewport-fit=cover) */
+:root {
+  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem; --sp-5: 1.5rem; --sp-6: 2rem; --sp-7: 3rem;
+  --tap: 2.75rem;                                 /* 44px minimum target */
+  --tap-lg: 3rem;                                 /* 48px buttons */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
+  --shadow-1: 0 1px 2px var(--c-shadow), 0 1px 1px var(--c-shadow);
+  --shadow-2: 0 8px 24px -8px var(--c-shadow-strong), 0 2px 6px var(--c-shadow);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* MOTION: strong ease-out for entrances, a gentle spring for the status disc. Zeroed under reduced motion; the
+   global rule in motion.css also switches transitions and animations off. */
+:root {
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-press: 120ms; --dur-fast: 180ms; --dur-base: 260ms; --dur-pop: 320ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-pop: 0ms; }
+}

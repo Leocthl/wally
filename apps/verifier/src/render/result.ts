@@ -1,55 +1,50 @@
-// The verdict panel, rendered fresh for each result. PASS only for a clean read AND an ok report; everything
-// else is FAIL or NOT VERIFIED, by icon + text (never colour alone). Numbers shown are computed in the page.
+// The verdict card, rendered fresh for each result (so the entrance replays on every Verify). PASS only for a clean
+// read AND an ok report; everything else is FAIL or NOT VERIFIED, by shield icon + text (never colour alone).
+// Numbers shown are computed in the page.
 import type { Checkpoint, VerifyReport } from "@laisee/core/verify";
 import { bi, el } from "../dom";
 import { icon, type IconName } from "../icons";
 import type { InputError } from "../inputs";
 import { LIMITS } from "../limits";
+import { checkpointLine, crashedLine, earlierLine, entriesValue, fieldLead } from "../phrases";
 import { reasonText } from "../reasons";
 import type { RunResult } from "../run";
 import { brokenAt, S, type Bi } from "../strings";
 
 type Checked = Extract<RunResult, { kind: "checked" }>;
 
-const FIELD_NAMES = { log: "Log", keys: "Public keys", checkpoint: "Checkpoint" } as const;
-
+/** The round status disc: shield-check on green, shield-alert on red, a dashed shield for NOT VERIFIED. */
 function badge(name: IconName, text: Bi): HTMLElement {
-  return el("p", { class: "verdict__badge" }, [icon(name, 28), bi(text, "span", "verdict__word")]);
+  return el("p", { class: "verdict__badge" }, [el("span", { class: "verdict__disc" }, [icon(name, 30)]), bi(text, "span", "verdict__word")]);
 }
 
-function fact(label: string, value: string, mono = false): readonly HTMLElement[] {
-  return [el("dt", {}, [label]), el("dd", mono ? { class: "mono" } : {}, [value])];
-}
-
-function checkpointLine(head: Checkpoint, checkpoint: Checkpoint | undefined): string {
-  if (checkpoint === undefined) return "None given: truncation was not checked (a log cut short would still pass).";
-  const later = head.seq - checkpoint.seq;
-  return later > 0 ? `Matches seq ${checkpoint.seq}; the ${later} later entries are not covered by it.` : `Matches seq ${checkpoint.seq} (the head).`;
+/** A value that is text from the log (an id, a hash) is shown as is in both languages; a sentence is a Bi. */
+function fact(label: Bi, value: Bi | string, mono = false): HTMLElement {
+  return el("div", { class: "fact" }, [el("dt", {}, [bi(label)]), el("dd", mono ? { class: "mono" } : {}, [typeof value === "string" ? value : bi(value)])]);
 }
 
 function passed(result: Checked, head: Checkpoint): HTMLElement {
   const facts = el("dl", { class: "facts" }, [
-    ...fact("Entries", `${result.entryCount} (seq 0 to ${head.seq})`),
-    ...fact("Log", head.log_id, true),
-    ...fact("Head hash", `${head.entry_hash.slice(0, LIMITS.hashPrefix)}…`, true),
-    ...fact("Checkpoint", checkpointLine(head, result.checkpoint)),
+    fact(S.factEntries, entriesValue(result.entryCount, head.seq)),
+    fact(S.factLog, head.log_id, true),
+    fact(S.factHead, `${head.entry_hash.slice(0, LIMITS.hashPrefix)}…`, true),
+    fact(S.factCheckpoint, checkpointLine(head.seq, result.checkpoint?.seq)),
   ]);
   return el("div", { class: "verdict verdict--pass", "data-outcome": "pass", "data-head-seq": String(head.seq) }, [
     badge("pass", S.pass),
-    bi({ en: "Chain verified: hashes, order and every signature check out.", zh: "紀錄鏈已驗證：雜湊、次序及所有簽署均正確。" }, "p"), // NEEDS-REVIEW zh-HK
+    bi(S.passLede, "p", "verdict__lede"),
     facts,
   ]);
 }
 
 function failed(report: Extract<VerifyReport, { ok: false }>): HTMLElement {
   const { failedSeq, reason, detail } = report;
-  const earlier = failedSeq > 0 ? `Entries before seq ${failedSeq} verified; entries after it were not checked.` : "Nothing before this entry to trust.";
   return el("div", { class: "verdict verdict--fail", "data-outcome": "fail", "data-failed-seq": String(failedSeq), "data-reason": reason }, [
     badge("fail", S.fail),
     bi(brokenAt(failedSeq), "p", "verdict__headline"),
     el("p", { class: "verdict__reason" }, [el("code", { class: "code" }, [reason]), " ", bi(reasonText(reason))]),
-    el("p", { class: "verdict__detail" }, ["Detail: ", el("span", { class: "mono" }, [detail])]),
-    el("p", { class: "soft" }, [earlier]),
+    el("p", { class: "verdict__detail" }, [bi(S.detail), el("span", { class: "mono" }, [detail])]),
+    bi(earlierLine(failedSeq), "p", "soft"),
   ]);
 }
 
@@ -59,14 +54,15 @@ function notVerified(outcome: string, lines: readonly (string | HTMLElement)[]):
 }
 
 function inputErrors(errors: readonly InputError[]): HTMLElement {
-  return notVerified("input-error", errors.map((e) => el("span", {}, [el("strong", {}, [`${FIELD_NAMES[e.field]}: `]), e.message])));
+  return notVerified(
+    "input-error",
+    errors.map((e) => el("span", {}, [el("strong", {}, [bi(fieldLead(e.field))]), bi({ en: e.message, zh: e.zh })])),
+  );
 }
 
 export function renderResult(result: RunResult | null): HTMLElement {
-  if (result === null) return el("div", { class: "verdict verdict--idle", "data-outcome": "idle" }, [badge("pending", S.notVerified), bi(S.idle, "p")]);
+  if (result === null) return el("div", { class: "verdict verdict--idle", "data-outcome": "idle" }, [badge("pending", S.notVerified), bi(S.idle, "p", "verdict__lede")]);
   if (result.kind === "input-error") return inputErrors(result.errors);
-  if (result.kind === "crashed") {
-    return notVerified("crashed", [`The verifier stopped with an error (${result.message}). Treat this log as not verified.`]);
-  }
+  if (result.kind === "crashed") return notVerified("crashed", [bi(crashedLine(result.message))]);
   return result.report.ok ? passed(result, result.report.head) : failed(result.report);
 }

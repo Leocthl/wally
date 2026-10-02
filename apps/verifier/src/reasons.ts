@@ -1,4 +1,6 @@
 // Plain words for each verifyChain failure code (docs/02 section 11 steps 1-9). The code is always shown too.
+// Nouns follow the Wally app (budget, rules, card made); apps/web/src/i18n/ui.ts proof.reasons says the same in fewer
+// words for some codes (the codes and their meanings are the same).
 import type { VerifyFailure } from "@laisee/core/verify";
 import type { Bi } from "./strings";
 
@@ -28,8 +30,8 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
     zh: "引擎簽署未能以已列出的引擎公鑰驗證。", // NEEDS-REVIEW zh-HK
   },
   PAYLOAD_SIGNATURE: {
-    en: "A delegator signature (mandate credential, revocation or escalation answer) does not verify, or names another mandate.",
-    zh: "委託人簽署（授權憑證、撤銷或升級回覆）未能驗證，或屬於另一份授權。", // NEEDS-REVIEW zh-HK
+    en: "A delegator signature (budget rules, a cancellation or your OK) does not verify, or names another budget.",
+    zh: "委託人簽署（預算規則、取消預算或你的確認）未能驗證，或屬於另一個預算。", // NEEDS-REVIEW zh-HK
   },
   TRUNCATED: {
     en: "The log does not reach or match the head checkpoint: it was cut short or rewritten.",
@@ -40,7 +42,7 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
     zh: "公鑰無法作為信任依據：沒有委託人公鑰，或委託人公鑰同時列為引擎公鑰。未有進行任何檢查。", // NEEDS-REVIEW zh-HK
   },
   NO_DECISION: {
-    en: "A card was minted or charged without an approval for it earlier in this log.",
+    en: "A card was made or charged without an approval for it earlier in this log.",
     zh: "此紀錄中沒有較早的批准，卻發出或扣款了一張卡。", // NEEDS-REVIEW zh-HK
   },
   DUPLICATE: {
@@ -56,8 +58,8 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
     zh: "金額不符：上限、每次購買上限、扣款或總額超出已批准或封存的數目。", // NEEDS-REVIEW zh-HK
   },
   AFTER_REVOKE: {
-    en: "A purchase was approved or a card minted outside the mandate's validity, or after it was revoked or expired.",
-    zh: "在授權有效期以外，或授權已撤銷或到期後，仍批准購買或發出了卡。", // NEEDS-REVIEW zh-HK
+    en: "A purchase was approved or a card made outside the budget's validity, or after the budget was cancelled or ended.",
+    zh: "在預算有效期以外，或預算已取消或到期後，仍批准購買或發出了卡。", // NEEDS-REVIEW zh-HK
   },
 };
 

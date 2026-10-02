@@ -2,6 +2,9 @@
 import { mountVerifier } from "./app";
 import "./styles/tokens.css";
 import "./styles/verifier.css";
+import "./styles/verdict.css";
+import "./styles/timeline.css";
+import "./styles/motion.css";
 
 const root = document.getElementById("app");
 if (root !== null) mountVerifier(root);

@@ -1,20 +1,29 @@
 // Inline SVG state icons, decorative (aria-hidden): state is always icon + text (docs/04 State semantics).
-// Same shapes as apps/web: check in a rounded square (pass), octagon (fail), dashed square (not verified).
+// The shield language of the Wally app (apps/web/src/ui/icons.tsx, 24 units) redrawn on this page's 20-unit grid:
+// shield with a check (pass), shield with an alert mark (fail), dashed shield (not verified). Small row marks:
+// tick, cross and a dashed ring. Strokes are currentColor; CSS may thicken them per use.
 const NS = "http://www.w3.org/2000/svg";
 
-export type IconName = "pass" | "fail" | "pending" | "dot";
+export type IconName = "pass" | "fail" | "pending" | "dot" | "tick" | "cross" | "ring";
 
-const SHAPES: Readonly<Record<IconName, readonly (readonly [string, Readonly<Record<string, string>>])[]>> = {
+type Shape = readonly [string, Readonly<Record<string, string>>];
+
+const SHIELD = "M10 2.5l6.25 2.5v4.67c0 3.67-2.58 6.83-6.25 7.83-3.67-1-6.25-4.17-6.25-7.83V5z";
+
+const SHAPES: Readonly<Record<IconName, readonly Shape[]>> = {
   pass: [
-    ["rect", { x: "2.5", y: "2.5", width: "15", height: "15", rx: "4" }],
-    ["path", { d: "M6.5 10.5l2.5 2.5 4.5-5.5" }],
+    ["path", { d: SHIELD }],
+    ["path", { d: "M7.33 10.17l1.83 1.83 3.58-3.83" }],
   ],
   fail: [
-    ["path", { d: "M7 2.5h6l4.5 4.5v6L13 17.5H7L2.5 13V7z" }],
-    ["path", { d: "M7.5 7.5l5 5M12.5 7.5l-5 5" }],
+    ["path", { d: SHIELD }],
+    ["path", { d: "M10 6.67v3.75M10 13.33h.01" }],
   ],
-  pending: [["rect", { x: "2.5", y: "2.5", width: "15", height: "15", rx: "1.5", "stroke-dasharray": "3 3" }]],
+  pending: [["path", { d: SHIELD, "stroke-dasharray": "2.6 2.6" }]],
   dot: [["circle", { cx: "10", cy: "10", r: "2.5" }]],
+  tick: [["path", { d: "M5 10.5l3.3 3.3L15 6.7" }]],
+  cross: [["path", { d: "M6 6l8 8M14 6l-8 8" }]],
+  ring: [["circle", { cx: "10", cy: "10", r: "6.5", "stroke-dasharray": "2 3.1" }]],
 };
 
 function svgNode(tag: string, attrs: Readonly<Record<string, string>>): SVGElement {

@@ -2,7 +2,7 @@
   "name": "@laisee/verifier",
   "version": "0.0.0",
   "private": true,
-  "description": "Offline log verifier: one self-contained index.html (lane C). Imports only @laisee/core/verify and types",
+  "description": "Offline receipt verifier: one self-contained index.html (lane C). Imports only @laisee/core/verify and types",
   "type": "module",
   "scripts": {
     "dev": "vite",

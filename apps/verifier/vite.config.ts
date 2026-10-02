@@ -13,7 +13,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    lib: { entry: "src/main.ts", formats: ["iife"], name: "LaiSeeVerifier", fileName: () => "verifier.js", cssFileName: "verifier" },
+    lib: { entry: "src/main.ts", formats: ["iife"], name: "WallyVerifier", fileName: () => "verifier.js", cssFileName: "verifier" },
   },
   test: {
     name: "verifier",

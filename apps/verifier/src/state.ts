@@ -3,6 +3,7 @@
 import { DEMO } from "./demo";
 import type { Field } from "./inputs";
 import { runVerification, type RunResult } from "./run";
+import type { Bi } from "./strings";
 import { tamperLog, type TamperChange } from "./tamper";
 
 export type Source = "empty" | "demo" | "typed" | "tampered" | `file:${string}`;
@@ -23,7 +24,7 @@ export interface PageState {
   readonly checkpoint: FieldState;
   readonly tamper: TamperState | null;
   readonly result: RunResult | null;
-  readonly notice: string | null;
+  readonly notice: Bi | null;
 }
 
 const EMPTY: FieldState = { text: "", source: "empty" };
@@ -52,7 +53,7 @@ export function verify(state: PageState): PageState {
 export function tamper(state: PageState): PageState {
   if (state.tamper !== null) return state;
   const tampered = tamperLog(state.log.text);
-  if (!tampered.ok) return { ...state, notice: tampered.message };
+  if (!tampered.ok) return { ...state, notice: { en: tampered.message, zh: tampered.messageZh } };
   const next: PageState = { ...state, log: { text: tampered.text, source: "tampered" }, tamper: { original: state.log, change: tampered.change } };
   return { ...next, result: check(next), notice: null };
 }
@@ -63,6 +64,6 @@ export function restore(state: PageState): PageState {
   return { ...next, result: check(next), notice: null };
 }
 
-export function withNotice(state: PageState, notice: string): PageState {
+export function withNotice(state: PageState, notice: Bi): PageState {
   return { ...state, notice };
 }

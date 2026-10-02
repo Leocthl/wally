@@ -11,6 +11,8 @@ export interface TamperChange {
   /** Dotted path in the entry, e.g. payload.approved_limit_minor. */
   readonly field: string;
   readonly what: string;
+  /** The same description in zh-HK. */
+  readonly whatZh: string;
   readonly before: string;
   readonly after: string;
   /** 1-based line and column of the changed character; offset is its index in the whole text. */
@@ -21,23 +23,31 @@ export interface TamperChange {
   readonly toChar: string;
 }
 
-export type TamperResult = { readonly ok: true; readonly text: string; readonly change: TamperChange } | { readonly ok: false; readonly message: string };
+export type TamperResult =
+  | { readonly ok: true; readonly text: string; readonly change: TamperChange }
+  | { readonly ok: false; readonly message: string; readonly messageZh: string };
 
 interface Target {
   readonly kind: string | null;
   readonly path: readonly [string] | readonly [string, string];
   readonly what: string;
+  readonly whatZh: string;
 }
 
+// NEEDS-REVIEW zh-HK on every whatZh (docs/04, C-12).
 const TARGETS: readonly Target[] = [
-  { kind: "DECISION", path: ["payload", "approved_limit_minor"], what: "approved limit (minor units)" },
-  { kind: "CARD_MINTED", path: ["payload", "limit_minor"], what: "card limit (minor units)" },
-  { kind: "CARD_EVENT", path: ["payload", "amount_minor"], what: "charged amount (minor units)" },
-  { kind: null, path: ["ts"], what: "entry time" },
+  { kind: "DECISION", path: ["payload", "approved_limit_minor"], what: "approved limit (minor units)", whatZh: "已批准上限，最小貨幣單位" },
+  { kind: "CARD_MINTED", path: ["payload", "limit_minor"], what: "card limit (minor units)", whatZh: "卡的上限，最小貨幣單位" },
+  { kind: "CARD_EVENT", path: ["payload", "amount_minor"], what: "charged amount (minor units)", whatZh: "扣款金額，最小貨幣單位" },
+  { kind: null, path: ["ts"], what: "entry time", whatZh: "紀錄時間" },
 ];
 
-const MARK = "\u0000laisee-tamper-mark\u0000";
-const NOTHING: TamperResult = { ok: false, message: "Nothing to tamper with: no readable entry with an amount or a time." };
+const MARK = "\u0000wally-tamper-mark\u0000";
+const NOTHING: TamperResult = {
+  ok: false,
+  message: "Nothing to tamper with: no readable entry with an amount or a time.",
+  messageZh: "沒有可竄改的內容：找不到含金額或時間的可讀紀錄。", // NEEDS-REVIEW zh-HK
+};
 
 function withValue(entry: Readonly<Record<string, unknown>>, path: Target["path"], value: unknown): Record<string, unknown> {
   if (path.length === 1) return { ...entry, [path[0]]: value };
@@ -89,6 +99,7 @@ function locate(text: string, lines: readonly string[], index: number, entry: Re
     kind: ownString(entry, "kind") ?? "?",
     field: target.path.join("."),
     what: target.what,
+    whatZh: target.whatZh,
     before: point.before,
     after,
     line: index + 1,
