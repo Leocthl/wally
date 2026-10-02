@@ -1,2 +1,148 @@
-// Stand-in so lane b-shell can route to this path before lane b-proof lands. b-proof REPLACES this file's contents.
-export { LogPanel as ReceiptsScreen } from "../LogPanel";
+// #/receipts: the signed log as a friendly list, newest first and grouped by Hong Kong day, with filter chips and a
+// detail sheet per receipt. #/receipts?d=<decisionId> opens that decision's sheet. Reads the stored log (never a
+// tampered copy); every amount and time sits under one SIMULATED chip unless its cart says otherwise.
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import type { LogEntry } from "../../api/types";
+import { ChipScope } from "../../components/ChipScope";
+import { NumText } from "../../components/Num";
+import { SIMULATED } from "../../domain/provenance";
+import { useBoothContext } from "../../hooks/useBooth";
+import { UI } from "../../i18n/ui";
+import { EmptyState } from "../../ui/EmptyState";
+import { useLocale, type Locale } from "../../ui/locale";
+import { TopBar } from "../../ui/Nav";
+import { List, Skeleton } from "../../ui/Surface";
+import { FilterChips, type FilterOption } from "./components/FilterChips";
+import { ReceiptRow } from "./components/ReceiptRow";
+import { ReceiptSheet } from "./components/ReceiptSheet";
+import {
+  countByFilter,
+  dayLabel,
+  decisionFromHash,
+  groupByDay,
+  matchesFilter,
+  newestFirst,
+  receiptForDecision,
+  RECEIPT_FILTERS,
+  toReceipts,
+  type DayGroup,
+  type Receipt,
+  type ReceiptFilter,
+} from "./receipts";
+import "./proof.css";
+
+const R = UI.receipts;
+const FILTER_LABEL = { all: R.all, approved: R.approved, stopped: R.stopped, needsOk: R.needsOk, cards: R.cards } as const;
+
+/** Receipts keep their identity across renders: the log is append-only, so an entry's receipt never changes. */
+function useStableReceipts(entries: readonly LogEntry[]): readonly Receipt[] {
+  const cache = useRef(new WeakMap<LogEntry, Receipt>());
+  return useMemo(() => {
+    const fresh = toReceipts(entries);
+    return entries.map((entry, i) => {
+      const known = cache.current.get(entry);
+      if (known) return known;
+      const made = fresh[i] as Receipt;
+      cache.current.set(entry, made);
+      return made;
+    });
+  }, [entries]);
+}
+
+function replaceHash(hash: string): void {
+  if (window.location.hash !== hash) window.history.replaceState(window.history.state, "", hash);
+}
+
+function DayTitle({ group, locale, now }: { readonly group: DayGroup; readonly locale: Locale; readonly now: Date }): ReactElement {
+  const { t } = useLocale();
+  const label = dayLabel(group.key, now);
+  if (label.kind === "unknown") return <span className="mono" data-ident>{group.key}</span>;
+  if (label.kind !== "date") return <>{t(label.kind === "today" ? R.today : R.yesterday)}</>;
+  const text =new Intl.DateTimeFormat(locale === "zh-HK" ? "zh-HK" : "en-HK", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Hong_Kong" }).format(label.date);
+  return <NumText text={text} prov={SIMULATED} chip="scope" kind="time" />;
+}
+
+function useDeepLink(receipts: readonly Receipt[], open: (seq: number) => void): { readonly clear: () => void } {
+  const [wanted, setWanted] = useState<string | null>(() => decisionFromHash(window.location.hash));
+  useEffect(() => {
+    const onHash = (): void => setWanted(decisionFromHash(window.location.hash));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  useEffect(() => {
+    if (wanted === null) return;
+    const found = receiptForDecision(receipts, wanted);
+    if (found) open(found.seq);
+  }, [wanted, receipts, open]);
+  return { clear: useCallback(() => setWanted(null), []) };
+}
+
+export function ReceiptsScreen(): ReactElement {
+  const { state, busy, api } = useBoothContext();
+  const { t, locale } = useLocale();
+  const entries = state.log.entries;
+  const receipts = useStableReceipts(entries);
+  const ordered = useMemo(() => newestFirst(receipts), [receipts]);
+  const counts = useMemo(() => countByFilter(receipts), [receipts]);
+  const [filter, setFilter] = useState<ReceiptFilter>("all");
+  const groups = useMemo(() => groupByDay(ordered.filter((r) => matchesFilter(r, filter))), [ordered, filter]);
+  const options = useMemo<readonly FilterOption[]>(() => RECEIPT_FILTERS.map((id) => ({ id, label: FILTER_LABEL[id], count: counts[id] })), [counts]);
+
+  const [openSeq, setOpenSeq] = useState<number | null>(null);
+  const [shownSeq, setShownSeq] = useState<number | null>(null);
+  const latest = useRef(receipts);
+  latest.current = receipts;
+  const open = useCallback((seq: number) => {
+    setOpenSeq(seq);
+    setShownSeq(seq);
+    const id = latest.current.find((r) => r.seq === seq)?.decisionId;
+    if (id) replaceHash(`#/receipts?d=${encodeURIComponent(id)}`);
+  }, []);
+  const deepLink = useDeepLink(receipts, open);
+  const close = useCallback(() => {
+    setOpenSeq(null);
+    deepLink.clear();
+    if (decisionFromHash(window.location.hash) !== null) replaceHash("#/receipts");
+  }, [deepLink]);
+  const openDecision = useCallback((id: string) => {
+    const found = receiptForDecision(latest.current, id);
+    if (found) open(found.seq);
+  }, [open]);
+
+  const shown = shownSeq === null ? null : (receipts.find((r) => r.seq === shownSeq) ?? null);
+  const shownEntry = shownSeq === null ? null : (entries.find((e) => e.seq === shownSeq) ?? null);
+  const now = new Date();
+
+  return (
+    <div className="rc-screen" lang={locale} data-screen="receipts">
+      <TopBar large title={t(R.title)} />
+      {entries.length === 0 ? (
+        busy ? (
+          <div className="rc-loading" aria-busy="true" aria-label={t(R.loading)}><Skeleton lines={4} height="3.5rem" radius="md" /></div>
+        ) : (
+          <EmptyState title={t(R.emptyTitle)} body={t(R.emptyBody)} wally="idle" />
+        )
+      ) : (
+        <>
+          <p className="rc-lead">{t(R.lead)}</p>
+          <FilterChips options={options} value={filter} onChange={setFilter} label={t(R.filterLabel)} />
+          {groups.length === 0 ? (
+            <EmptyState title={t(R.emptyFilter)} wally="idle" size={88} action={<button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={() => setFilter("all")}><span className="w-btn__label">{t(R.showAll)}</span></button>} />
+          ) : (
+            groups.map((g) => (
+              <section key={g.key} className="rc-day" aria-labelledby={`rc-day-${g.key}`}>
+                <ChipScope provs={[SIMULATED]} className="rc-day__scope" chipsClassName="rc-day__chips">
+                  <h2 id={`rc-day-${g.key}`} className="rc-day__title"><DayTitle group={g} locale={locale} now={now} /></h2>
+                  <List inset className="rc-list">
+                    {g.receipts.map((r) => <ReceiptRow key={r.seq} receipt={r} onOpen={open} />)}
+                  </List>
+                </ChipScope>
+              </section>
+            ))
+          )}
+        </>
+      )}
+      <ReceiptSheet open={openSeq !== null} receipt={shown} entry={shownEntry} onClose={close} onOpenDecision={openDecision} api={api.kind} />
+    </div>
+  );
+}
