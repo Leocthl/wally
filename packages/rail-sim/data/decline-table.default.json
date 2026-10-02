@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "label": "SIMULATED default decline table. Wording and timing are invented, not observed. Replace the entries with the one real decline from data/real-card-test.md once it exists [F40]; only OVER_LIMIT is calibrated by that test, the other codes stay SIMULATED [F1].",
+  "declines": {
+    "OVER_LIMIT": {
+      "wording": "SIMULATED decline: the amount is above the limit set on this card.",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    },
+    "CARD_USED": {
+      "wording": "SIMULATED decline: this single use card has already been used.",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    },
+    "CARD_VOIDED": {
+      "wording": "SIMULATED decline: this card was cancelled before it was used.",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    },
+    "CARD_EXPIRED": {
+      "wording": "SIMULATED decline: this card has expired.",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    },
+    "UNKNOWN_HANDLE": {
+      "wording": "SIMULATED decline: this card is not recognised.",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    },
+    "MERCHANT_MISMATCH": {
+      "wording": "SIMULATED decline: this card is locked to a different merchant. The merchant lock is a simulated feature; the real card has none [F1].",
+      "timing": "immediate",
+      "shows_at": "checkout_page",
+      "hold": "none",
+      "provenance": "SIMULATED"
+    }
+  }
+}
