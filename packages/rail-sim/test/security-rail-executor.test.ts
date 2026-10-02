@@ -4,7 +4,7 @@
 import { engine } from "@laisee/core/engine";
 import { createExecutor } from "@laisee/core/executor";
 import type { Cart, LogEntry } from "@laisee/core/generated";
-import { foldPacket } from "@laisee/core/packet";
+import { PacketFoldError, foldPacket } from "@laisee/core/packet";
 import type { AppendEntry, MerchantPort, Signer } from "@laisee/core/ports";
 import { FakeClock, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "@laisee/core/testing";
 import { loadFixture } from "@laisee/core/testing/fixtures";
@@ -58,6 +58,8 @@ const REVOKED_RUN = await (async () => {
 })();
 
 // A2-04 (I2): an APPROVE that is not minted yet reserves nothing; a later decision sees the full budget.
+// (lane s-fix-core) The second mint may now be refused by the rail, because the second decision is a DENY: the setup
+// records that instead of throwing, so the hostile sequence (second cart, then the delayed first mint) still runs.
 const OVERCOMMIT_RUN = await (async () => {
   const s = await setup(2);
   const x = cart(50_000, "crt_seqX000001");
@@ -67,11 +69,30 @@ const OVERCOMMIT_RUN = await (async () => {
   s.clock.advance(1_000);
   const dy = engine.decide(M0, await s.fold(), y, JUDGE, s.clock.now(), undefined, PROOF);
   await s.log("DECISION", dy);
-  await s.log("CARD_MINTED", await s.mintFor(dy, y));
+  const secondMinted = await s.mintFor(dy, y).then(
+    async (card) => (await s.log("CARD_MINTED", card), true),
+    () => false,
+  );
   s.clock.advance(1_000);
   await s.log("CARD_MINTED", await s.mintFor(dx, x)); // the delayed or retried first mint
   const p = await s.fold();
-  return { outcomes: [dx.outcome, dy.outcome], budget: p.budget_minor, committed: p.committed_minor, spent: p.spent_minor };
+  return { outcomes: [dx.outcome, dy.outcome], secondMinted, budget: p.budget_minor, committed: p.committed_minor, spent: p.spent_minor };
+})();
+
+// A2-04 variant (lane s-fix-core): a racing writer decides the second cart on a fold taken before the first APPROVE was
+// logged, so both are APPROVE. The fold must refuse the over-committed log (fail closed), never clamp it to zero.
+const STALE_FOLD_RUN = await (async () => {
+  const s = await setup(5);
+  const before = await s.fold();
+  const dx = engine.decide(M0, before, cart(50_000, "crt_staleX00001"), JUDGE, s.clock.now(), undefined, PROOF);
+  const dy = engine.decide(M0, before, cart(50_000, "crt_staleY00001"), JUDGE, s.clock.now(), undefined, PROOF);
+  await s.log("DECISION", dx);
+  await s.log("DECISION", dy);
+  const folded = await s.fold().then(
+    () => "folded",
+    (err: unknown) => (err instanceof PacketFoldError ? "refused" : "error"),
+  );
+  return { outcomes: [dx.outcome, dy.outcome], folded };
 })();
 
 // A2-05 (I2): the executor logs the merchant's copy of the charge; a merchant that under-reports frees budget.
@@ -119,7 +140,8 @@ const LOCK_RUN = await (async () => {
 describe("setup reached the intended states", () => {
   it("records what each hostile run did", () => {
     expect(REVOKED_RUN.status).toBe("REVOKED");
-    expect(OVERCOMMIT_RUN.outcomes).toEqual(["APPROVE", "APPROVE"]);
+    expect(OVERCOMMIT_RUN.outcomes[0]).toBe("APPROVE"); // before the fix the second was an APPROVE too
+    expect(STALE_FOLD_RUN.outcomes).toEqual(["APPROVE", "APPROVE"]);
     expect([LYING_MERCHANT_RUN.first, LYING_MERCHANT_RUN.second]).toEqual(["AUTHORISED", "AUTHORISED"]);
     expect(LOCK_RUN.minted === true || LOCK_RUN.minted === false).toBe(true);
   });
@@ -131,9 +153,17 @@ describe("KNOWN DEFECT S-RAIL-1 (I6): an approval is minted and charged after th
   });
 });
 
-describe("KNOWN DEFECT S-RAIL-2 (I2): unminted approvals reserve nothing, so the packet over-commits", () => {
-  it.fails("committed + spent never exceeds the budget", () => {
+// FIXED (lane s-fix-core): an APPROVE holds its limit in the fold until its card is logged, so the second cart is
+// decided against HK$300 left (DENY R3) and the rail refuses to mint it; a log that still over-commits is refused.
+describe("S-RAIL-2 (fixed, I2): unminted approvals hold their limit, so the packet cannot over-commit", () => {
+  it("committed + spent never exceeds the budget", () => {
     expect(OVERCOMMIT_RUN.committed + OVERCOMMIT_RUN.spent).toBeLessThanOrEqual(OVERCOMMIT_RUN.budget);
+    expect(OVERCOMMIT_RUN.outcomes[1]).toBe("DENY");
+    expect(OVERCOMMIT_RUN.secondMinted).toBe(false);
+  });
+
+  it("two approvals decided on one stale fold make a log the fold refuses (PacketFoldError), never a clamped packet", () => {
+    expect(STALE_FOLD_RUN.folded).toBe("refused");
   });
 });
 

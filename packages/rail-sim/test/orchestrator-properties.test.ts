@@ -15,7 +15,7 @@ import { verifyChain } from "@laisee/core/verify";
 import { MerchantStub, RailSim, seededRandom, sequentialIds, type MerchantMode } from "../src";
 import { HOODIE, INJECTED, JACKET, P_A1, P_A2, P_A3, P_A3B, P_A4, SEAL_AT, SOCKS, TEE, credential, keys } from "./orchestrator-helpers";
 
-const PROPERTY_SEED = 20_261_004;
+const PROPERTY_SEED = Number(process.env["FAST_CHECK_SEED"] ?? 20_261_004); // FAST_CHECK_SEED explores other seeds locally
 const LOG_ID = "log_demoM0";
 const VALID_FOR_MS = 2 * 60 * 60_000; // SIMULATED short packet so some sequences pass validUntil (S6)
 

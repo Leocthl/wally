@@ -90,6 +90,26 @@ describe("H4: an approval not minted yet cannot be over-committed", () => {
     const packet = (await r.orchestrator.snapshot()).packet;
     expect((packet?.committed_minor ?? 0) + (packet?.spent_minor ?? 0)).toBeLessThanOrEqual(packet?.budget_minor ?? 0);
   });
+
+  it("an APPROVE for the whole remaining budget still mints: its own hold makes the packet EXHAUSTED, not stopped", async () => {
+    const r = await sealed();
+    const whole: ListingRecord = { ...LISTING_TEE, items: [{ ...LISTING_TEE.items[0], unit_price_minor: 80000 }] } as ListingRecord;
+    const result = await buyTee(r, [whole]);
+    expect(result).toMatchObject({ ok: true, outcome: "APPROVE", card: { limit_minor: 80000 } });
+    expect((await r.orchestrator.snapshot()).packet).toMatchObject({ committed_minor: 80000, remaining_minor: 0, status: "EXHAUSTED" });
+  });
+
+  it("an APPROVE that holds no budget any more (a card is already logged for it) is not minted again", async () => {
+    const store = new HookedStore();
+    const r = await sealed({ store });
+    store.after = async (entry) => {
+      if (entry.kind !== "DECISION" || entry.payload.outcome !== "APPROVE") return;
+      const card = await (r.rail as FakeRail).mint({ decision: entry.payload, ttlMs: 60_000, now: r.clock.now(), merchantLock: entry.payload.cart.merchant.domain });
+      await appendEntry(store, r.keys.engine, LOG_ID, "CARD_MINTED", card, r.clock.now()); // another writer got there first
+    };
+    expect(await buyTee(r)).toMatchObject({ ok: false, code: "MINT_ABORTED" });
+    expect((r.rail as FakeRail).cards).toHaveLength(1);
+  });
 });
 
 describe("mint guards", () => {

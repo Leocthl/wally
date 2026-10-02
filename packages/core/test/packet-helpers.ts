@@ -59,3 +59,12 @@ export function escalateDecision(id: string, expiresAt: string): Decision {
 export function resolvingDecision(id: string, resolves: string): Decision {
   return { ...DECISION_EXAMPLE, id, resolves };
 }
+
+/** A schema-valid APPROVE with this id and limit; card(n) belongs to approveDecision(`dec_test000n`). */
+export function approveDecision(id: string, limit: number, resolves?: string): Decision {
+  const { explanation: _explanation, ...rest } = DECISION_EXAMPLE;
+  return { ...rest, id, outcome: "APPROVE", approved_limit_minor: limit, ...(resolves === undefined ? {} : { resolves }) };
+}
+
+/** card(n)'s decision id. */
+export const decisionIdOf = (n: number): string => `dec_test${String(n).padStart(4, "0")}`;

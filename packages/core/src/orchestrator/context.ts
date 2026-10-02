@@ -5,7 +5,7 @@ import type { Executor } from "../executor/types";
 import type { Exclusive } from "../executor/queue";
 import type { LogEntry, LogEntryKind, LogPayloadByKind, Mandate, MandateCredential, PacketState } from "../generated";
 import { checkpointOf } from "../log/checkpoint";
-import { foldPacket } from "../packet/fold";
+import { foldLedger, foldPacket, type HeldApproval } from "../packet/fold";
 import type { Checkpoint } from "../ports";
 import { verifyChain } from "../verify/chain";
 import { mandateFromCredential } from "../vc/mandate";
@@ -68,6 +68,8 @@ export interface LogState {
   /** verifyMandateCredential over the credential in the log (R1 input). */
   readonly proofValid: boolean;
   readonly packet: PacketState;
+  /** APPROVE decisions whose card is not logged yet; only these may be minted (their limit is held in the packet). */
+  readonly held: readonly HeldApproval[];
 }
 
 async function readRaw(ctx: Ctx, logId: string): Promise<readonly LogEntry[]> {
@@ -98,9 +100,9 @@ export async function readLogState(ctx: Ctx, logId: string, at: Date): Promise<L
   const credential = credentialOf(entries);
   if (credential === null) throw new StepError("LOG_UNAVAILABLE", "the log has no MANDATE_SEALED at seq 0");
   try {
-    const packet = foldPacket(entries, at);
+    const { packet, held } = foldLedger(entries, at);
     const proofValid = verifyMandateCredential(credential).valid;
-    return { entries, credential, mandate: mandateFromCredential(credential), proofValid, packet };
+    return { entries, credential, mandate: mandateFromCredential(credential), proofValid, packet, held };
   } catch (err) {
     throw new StepError("LOG_UNAVAILABLE", `the log could not be folded: ${describe(err)}`);
   }

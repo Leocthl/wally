@@ -6,8 +6,8 @@ import type { DecideContext, EscalationAnswer, EscalationResolution } from "../s
 import { CART_A1, M0, PACKET_INITIAL, cartWithTotal } from "./engine-helpers";
 import { escalateDecision } from "./packet-helpers";
 
-/** Fixed fast-check seed so CI runs are reproducible (explored with random seeds during development). */
-export const PROPERTY_SEED = 20_261_004;
+/** Fixed fast-check seed so CI runs are reproducible; FAST_CHECK_SEED overrides it to explore other seeds locally. */
+export const PROPERTY_SEED = Number(process.env["FAST_CHECK_SEED"] ?? 20_261_004);
 export const OPEN_ID = "dec_openEscalation01";
 const T0 = Date.parse("2026-10-03T02:00:00Z");
 const DAY_MS = 86_400_000;
