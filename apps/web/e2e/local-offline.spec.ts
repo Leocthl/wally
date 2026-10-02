@@ -1,7 +1,7 @@
 // On-device mode in a real browser with the network BLOCKED: every request that is not this origin is aborted, and
 // so is any /api call. The page runs the real stack with recorded answers; the presenter storyline gives HK$259
-// minted, HK$541 left, HK$550 stopped by R3, R9 and R10 stops, HK$120 minted [F20-F23]; the Log view verifies the real
-// signed chain (PASS) and fails the tampered copy at the changed entry, with all checks run (signatures included).
+// minted, HK$541 left, HK$550 stopped by the budget rule, seller and listing stops, HK$120 minted [F20-F23]; Proof verifies the real
+// signed chain (PASS) and fails the tampered copy at the changed receipt, with all checks run (signatures included).
 import { expect, test, type Page } from "@playwright/test";
 
 interface Watch {
@@ -28,58 +28,52 @@ async function blockNetwork(page: Page, origin: string): Promise<Watch> {
   return watch;
 }
 
-async function openTab(page: Page, name: "Packet" | "Run" | "Log"): Promise<void> {
-  const tab = page.getByRole("tab", { name: new RegExp(`^${name}`) });
-  if (await tab.isVisible()) await tab.click();
-}
-
+/** Try asking lives on Budget; a press moves to Wally, where the result shows. */
 async function press(page: Page, scenario: string): Promise<void> {
-  await openTab(page, "Run");
-  await page.locator(`[data-scenario="${scenario}"]`).click();
+  if ((await page.locator(`main [data-scenario="${scenario}"]:visible`).count()) === 0) await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Budget", exact: true }).click();
+  await page.locator(`main [data-scenario="${scenario}"]`).click();
+  await expect(page).toHaveURL(/#\/wally/);
 }
 
 const meter = (page: Page) => page.getByRole("meter");
-const banner = (page: Page, text: string) => page.getByRole("alert").filter({ hasText: text });
+const wally = (page: Page) => page.locator('[data-screen="wally"]');
+const stop = (page: Page, text: string | RegExp) => wally(page).getByRole("alert").filter({ hasText: text });
 
-test("offline, ?api=local: the storyline on the real stack, then Verify PASS and Tamper FAIL at the changed entry", async ({ page, baseURL }) => {
+test("offline, ?api=local: the storyline on the real stack, then Verify PASS and Try to tamper FAIL at the changed receipt", async ({ page, baseURL }) => {
   const watch = await blockNetwork(page, new URL(baseURL ?? "http://127.0.0.1").origin);
-  await page.goto("/?api=local#/booth");
+  await page.goto("/?api=local#/budget");
   await expect(page.locator('[data-api-mode="local"]')).toContainText("On-device mode: recorded answers, nothing leaves your phone");
   await expect(meter(page)).toHaveAttribute("aria-valuetext", /HK\$800 left of HK\$800, SIMULATED/);
 
   await press(page, "normal");
-  await expect(page.locator('[data-event="AUTHORISED"]')).toBeVisible();
+  await expect(wally(page).locator('[data-kind="exact"]')).toContainText("Charged the exact HK$259.");
+  await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
-  await openTab(page, "Packet");
-  await expect(page.locator('#panel-packet [data-card-state="USED"]').first()).toContainText("HK$259");
+  await expect(page.locator('.console-ticket, [data-card-state="USED"]').first()).toBeVisible();
 
   await press(page, "flagged");
-  await expect(banner(page, "STOPPED R9")).toContainText("Seller flagged");
+  await expect(stop(page, "This seller is flagged as a possible scam.")).toBeVisible();
   await press(page, "overflow");
-  await expect(banner(page, "STOPPED R3")).toContainText("Total HK$550");
-  await expect(banner(page, "STOPPED R3")).toContainText("HK$541");
+  await expect(stop(page, "It costs HK$550 with shipping, but only HK$541 is left in your budget.")).toBeVisible();
   await press(page, "injected");
-  await expect(banner(page, "STOPPED R10")).toContainText("Injection risk");
+  await expect(stop(page, "The listing tried to give Wally orders.")).toBeVisible();
   await press(page, "small");
-  await expect(page.locator('[data-event="AUTHORISED"]')).toBeVisible();
+  await expect(wally(page).locator('[data-kind="exact"]')).toContainText("Charged the exact HK$120.");
+  await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", /HK\$421 left of HK\$800/);
-  await openTab(page, "Packet");
-  await expect(page.locator('#panel-packet [data-card-state="USED"]')).toHaveCount(2);
-  await expect(page.locator("#panel-packet [data-card-state]").filter({ hasText: "HK$120" })).toHaveCount(1);
 
-  await openTab(page, "Log");
-  const status = page.locator(".verify-bar__result");
-  await page.getByRole("button", { name: /^Verify/ }).click();
-  await expect(status).toContainText("Chain intact");
-  await expect(status).not.toContainText("Not checked");
-  await page.getByRole("button", { name: /^Tamper/ }).click();
-  await page.getByRole("button", { name: /^Verify/ }).click();
-  await expect(status).toContainText("Chain broken at entry 1");
-  await expect(status).toContainText("PAYLOAD_HASH");
-  await expect(page.getByLabel("Decision log").getByText(/CHANGED/)).toHaveCount(1);
-  await page.getByRole("button", { name: /^Restore/ }).click();
-  await page.getByRole("button", { name: /^Verify/ }).click();
-  await expect(status).toContainText("Chain intact");
+  await page.getByRole("link", { name: "Proof", exact: true }).click();
+  const card = page.locator(".pf-card");
+  await page.getByRole("button", { name: "Verify receipts" }).click();
+  await expect(card).toHaveAttribute("data-status", "pass");
+  await expect(card).toContainText("Checked on this device.");
+  await expect(card).not.toContainText("Not checked in this mode");
+  await page.getByRole("button", { name: "Try to tamper" }).click();
+  await expect(card).toHaveAttribute("data-status", "fail");
+  await expect(card).toContainText(/Broken at receipt #\d/);
+  await expect(card.locator("[data-reason]")).toContainText("PAYLOAD_HASH");
+  await page.getByRole("button", { name: "Restore" }).click();
+  await expect(card).toHaveAttribute("data-status", "pass");
 
   expect(watch.outside).toEqual([]);
   expect(watch.api).toEqual([]);
@@ -91,7 +85,7 @@ test("offline, a VITE_API=local build without ?api: on-device at once, no /api p
   await page.goto("/#/booth");
   await expect(page.locator('[data-api-mode="local"]')).toBeVisible();
   await press(page, "flagged");
-  await expect(banner(page, "STOPPED R9")).toBeVisible();
+  await expect(stop(page, "This seller is flagged as a possible scam.")).toBeVisible();
   expect(watch.outside).toEqual([]);
   expect(watch.api).toEqual([]);
   expect(watch.errors).toEqual([]);

@@ -1,15 +1,10 @@
 // Receipts (#/receipts) and Proof (#/proof) in a real browser on the offline client: rows grouped by day, a receipt's
-// sheet, the ?d= deep link, and Verify, Try to tamper (fails at the changed receipt), Restore (passes again). These are
-// the new shell's routes (lane b-shell); before that shell is merged the routes are not wired and the tests skip.
+// sheet, the ?d= deep link, and Verify, Try to tamper (fails at the changed receipt), Restore (passes again).
 import { expect, test, type Page } from "@playwright/test";
 
 async function open(page: Page, hash: string, screen: "receipts" | "proof"): Promise<void> {
-  await page.goto(`/${hash}`);
-  // The app is up once its main landmark renders; the screen then appears only where the shell routes it.
-  await page.locator("main").first().waitFor();
-  await page.waitForTimeout(500);
-  const wired = await page.locator(`[data-screen="${screen}"]`).count();
-  test.skip(wired === 0, `#/${screen} is not routed yet (needs the lane b-shell App)`);
+  await page.goto(`/?api=mock${hash}`);
+  await expect(page.locator(`[data-screen="${screen}"]`)).toBeVisible();
 }
 
 async function noSidewaysScroll(page: Page): Promise<void> {
@@ -18,18 +13,32 @@ async function noSidewaysScroll(page: Page): Promise<void> {
 }
 
 test("Receipts: rows by day, filters, a sheet, and the deep link", async ({ page }, info) => {
+  // One purchase first, from Try asking (a hash change keeps the on-device state).
+  await page.goto("/?api=mock#/budget");
+  await page.locator('main [data-scenario="normal"]').click();
+  await expect(page).toHaveURL(/#\/wally/);
   await open(page, "#/receipts", "receipts");
   await expect(page.locator(".rc-row").first()).toBeVisible();
   await expect(page.locator(".rc-day__title").first()).toBeVisible();
   await noSidewaysScroll(page);
-  await page.locator(".rc-row button").first().click();
+  await page.getByRole("radio", { name: /Approved/ }).click();
+  const approved = page.locator('.rc-row__meta[data-state="approved"]').first();
+  await expect(approved).toBeVisible();
+  await approved.click();
   const sheet = page.getByRole("dialog");
   await expect(sheet).toBeVisible();
   await page.screenshot({ path: info.outputPath("receipt-sheet.png") });
+  const open_in_wally = sheet.getByRole("link", { name: /Open in Wally/ });
+  const href = (await open_in_wally.getAttribute("href")) ?? "";
+  expect(href).toMatch(/^#\/wally\?d=dec_/);
   await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
-  await page.getByRole("radio", { name: /Approved/ }).click();
-  await expect(page.locator('.rc-row__meta[data-state="approved"]').first()).toBeVisible();
+  // The deep link opens that receipt's sheet.
+  await page.goto(`/?api=mock#/receipts?d=${href.split("d=")[1] ?? ""}`);
+  await expect(page.getByRole("dialog")).toBeVisible();
+  // The old ?decision= name still works and is rewritten.
+  await page.goto(`/?api=mock#/receipts?decision=${href.split("d=")[1] ?? ""}`);
+  await expect(page).toHaveURL(/#\/receipts\?d=dec_/);
 });
 
 test("Proof: verify, try to tamper, restore", async ({ page }, info) => {
