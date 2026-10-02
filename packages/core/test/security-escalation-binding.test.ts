@@ -16,7 +16,7 @@ import { buildLog, demoCredential, demoKeys, type DemoStep } from "./log-helpers
 import { append, sealedLog } from "./packet-helpers";
 
 const T0 = "2026-10-03T02:12:00Z";
-const NOT_CHECKED = { state: "NOT_CHECKED", capture_ref: null, captured_at: null, searched: [] } as const;
+const NOT_CHECKED: Cart["scameter"] = { state: "NOT_CHECKED", capture_ref: null, captured_at: null, searched: [] };
 const CART_SHOWN: Cart = { ...CART_A1, scameter: NOT_CHECKED };
 /** A different cart: other merchant, other item, 2.3x the price, still inside the HK$800 budget. */
 const CART_SWAPPED: Cart = {
