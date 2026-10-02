@@ -13,6 +13,12 @@
     "paths": {
       "@fixtures/*": [
         "../../data/fixtures/*"
+      ],
+      "@results/*": [
+        "../../data/results/*"
+      ],
+      "@evidence-data/*": [
+        "../../data/evidence/*"
       ]
     }
   },

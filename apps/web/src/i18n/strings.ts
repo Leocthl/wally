@@ -16,6 +16,7 @@ export const S = {
   navPacket: label("Packet", "利是"),
   navLog: label("Log", "紀錄"),
   navPresenter: label("Presenter", "講者模式"),
+  navEvidence: label("Evidence", "證據"), // NEEDS-REVIEW zh-HK
 
   sealButton: label("Seal packet", "封利是"),
   sealed: label("Packet sealed", "利是已封"),

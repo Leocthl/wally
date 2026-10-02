@@ -8,6 +8,7 @@ import { BoothProvider, useBoothContext } from "./hooks/useBooth";
 import { ROUTES, useRoute, type Route } from "./hooks/useRoute";
 import { S } from "./i18n/strings";
 import { BoothScreen } from "./screens/BoothScreen";
+import { EvidenceScreen } from "./screens/EvidenceScreen";
 import { LogPanel } from "./screens/LogPanel";
 import { PacketPanel } from "./screens/PacketPanel";
 import { PresenterScreen } from "./screens/PresenterScreen";
@@ -18,6 +19,7 @@ const NAV: readonly { readonly route: Route; readonly title: typeof S.navBooth }
   { route: "booth", title: S.navBooth },
   { route: "seal", title: S.navSeal },
   { route: "presenter", title: S.navPresenter },
+  { route: "evidence", title: S.navEvidence },
 ];
 
 function Screen({ route }: { readonly route: Route }): ReactElement {
@@ -34,6 +36,8 @@ function Screen({ route }: { readonly route: Route }): ReactElement {
       return <PresenterScreen />;
     case "booth":
       return <BoothScreen />;
+    case "evidence":
+      return <EvidenceScreen />;
   }
 }
 
