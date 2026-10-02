@@ -26,6 +26,10 @@
     "src",
     "server",
     "test",
-    "vite.config.ts"
+    "build",
+    "e2e/pages",
+    "vite.config.ts",
+    "vite.pages.config.ts",
+    "playwright.pages.config.ts"
   ]
 }
