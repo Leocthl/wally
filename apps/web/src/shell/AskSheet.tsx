@@ -1,7 +1,7 @@
 // The Ask sheet, opened by the raised tab button on every screen: the natural-language request (when the booth can take
 // one: api.ask), "Try to trick Wally" (the text goes to api.propose as an untrusted listing description), and Try
 // asking shortcuts.
-import { useId, useState, type FormEvent, type ReactElement } from "react";
+import { useId, useMemo, useState, type FormEvent, type ReactElement } from "react";
 import type { ScenarioId } from "../api/types";
 import { BRAND } from "../brand";
 import { LISTING_TEXT_HARD_CAP } from "../booth/scenarios";
@@ -13,7 +13,10 @@ import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
 import { Sheet } from "../ui/Overlay";
 import { TryAsking } from "../screens/home/TryAsking";
+import { noteAsk } from "../screens/run/askEcho";
 import { useAsker, useProposer, useScenarioRunner } from "./actions";
+import { useVoiceInput } from "./voice/useVoiceInput";
+import { VoiceButton, VoiceStatusLine } from "./voice/VoiceButton";
 
 /** The planner's request cap [F56]. The server checks it again after NFKC; the field just stops typing there. */
 const ASK_MAX_CHARS = 1_000;
@@ -59,6 +62,7 @@ function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly 
   const { t } = useLocale();
   const { info } = useBoothContext();
   const [text, setText] = useState("");
+  const voice = useVoiceInput({ value: text, onText: setText, maxLength: ASK_MAX_CHARS });
   const trimmed = text.trim();
   const submit = (e: FormEvent): void => {
     e.preventDefault();
@@ -80,8 +84,9 @@ function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly 
         maxLength={ASK_MAX_CHARS}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        trailing={<IconButton type="submit" variant="primary" label={t(UI["shell.askSend"])} icon={<Icon name="arrowUp" />} disabled={busy || trimmed.length === 0} />}
+        trailing={<><VoiceButton voice={voice} /><IconButton type="submit" variant="primary" label={t(UI["shell.askSend"])} icon={<Icon name="arrowUp" />} disabled={busy || trimmed.length === 0} /></>}
       />
+      <VoiceStatusLine voice={voice} />
     </form>
   );
 }
@@ -99,7 +104,18 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
   const run = useScenarioRunner();
   const propose = useProposer();
   const asker = useAsker();
-  const ask = onAsk ?? asker;
+  const sender = onAsk ?? asker;
+  // Wally's screen echoes the words while Wally shops: note them first (memory only, see screens/run/askEcho.ts).
+  const ask = useMemo<AskWally | undefined>(
+    () =>
+      sender
+        ? (request) => {
+            noteAsk(request);
+            return sender(request);
+          }
+        : undefined,
+    [sender],
+  );
   const pick = (id: ScenarioId): void => {
     onClose();
     run(id);

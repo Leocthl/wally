@@ -1,0 +1,43 @@
+/* Voice input in the Ask sheet: the mic button, the pulse ring behind it while it listens, and the status line under the field. */
+
+/* The ring sits on the wrapper, behind the button, so the button's own fill stays clean. Only transform and opacity move. */
+.voice-wrap { position: relative; isolation: isolate; display: inline-grid; place-items: center; flex: none; }
+.voice-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: var(--c-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+/* Listening at rest, which is also all that reduced motion shows: a still halo. */
+.voice-wrap[data-listening="true"]::before { opacity: 0.24; transform: scale(1.22); }
+/* Listening with motion allowed: a calm ring breathes outward and fades. */
+@media (prefers-reduced-motion: no-preference) {
+  .voice-wrap[data-listening="true"]::before { animation: voice-ring var(--dur-idle) var(--ease-out) infinite; }
+}
+@keyframes voice-ring {
+  from { opacity: 0.32; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.4); }
+}
+
+/* The button is the secondary variant (it has no hover rule to stay painted after a tap on a touch screen), set quiet:
+   no fill, border or shadow at rest, tinted while it listens so Send stays the one solid button. */
+.w-icon-btn.voice-btn { background: transparent; border-color: transparent; box-shadow: none; }
+.w-icon-btn.voice-btn:not(.voice-btn--on):active { background: var(--c-surface-sunken); }
+.w-icon-btn.voice-btn.voice-btn--on { background: var(--c-primary-tint); color: var(--c-primary-ink); }
+@media (hover: hover) and (pointer: fine) {
+  .w-icon-btn.voice-btn:not(.voice-btn--on):hover { background: var(--c-surface-sunken); }
+}
+
+/* The status line: always in the page (a live region), empty and flat at rest, lined up with the pill's text. */
+.voice-status { margin: 0; padding: var(--sp-2) var(--sp-5) 0; font-size: var(--text-sm); color: var(--c-ink-muted); }
+.voice-status:empty { padding: 0; }
+.voice-status--on { color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+
+/* The mic takes room from the example text in the pill: cut it with an ellipsis, not in the middle of "HK$150". */
+.shell-askfield input,
+.shell-askfield input::placeholder { text-overflow: ellipsis; }
