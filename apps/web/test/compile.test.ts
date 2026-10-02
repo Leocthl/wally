@@ -49,6 +49,14 @@ describe("compileMandate", () => {
     expect(issues.length).toBeGreaterThan(0);
   });
 
+  it("words the amount errors with the budget in both languages, never with the packet", () => {
+    const missing = compileMandate("buy me some clothes", NOW).chips.find((c) => c.kind === "budget")?.error;
+    expect(missing).toEqual({ en: "No HK$ amount found. Write the budget, for example HK$800.", zh: "找不到港幣金額。請寫明預算金額，例如 HK$800。" });
+    const zero = compileMandate("HK$0 this month for clothes", NOW).chips.find((c) => c.kind === "budget")?.error;
+    expect(zero).toEqual({ en: "The budget must be more than zero.", zh: "預算金額必須大於零。" });
+    for (const line of [missing, zero].flatMap((e) => (e ? [e.en, e.zh] : []))) expect(line).not.toMatch(/packet|mandate|利是|授權/i);
+  });
+
   it("marks an unknown category invalid", () => {
     const { chips } = compileMandate("HK$800 this month for spaceships", NOW);
     expect(chips.find((c) => c.kind === "category")?.valid).toBe(false);

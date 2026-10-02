@@ -460,7 +460,7 @@ export const UI = {
     stateDeclined: label("Charge declined", "扣款被拒"), // NEEDS-REVIEW
     stateVoided: label("Card cancelled", "卡已取消"), // NEEDS-REVIEW
     stateCardExpired: label("Card expired", "卡已過期"), // NEEDS-REVIEW
-    stateRevoked: label("Rules revoked", "規則已撤銷"), // NEEDS-REVIEW
+    stateRevoked: label("Budget cancelled", "預算已取消"), // NEEDS-REVIEW
     stateExpired: label("Budget ended", "預算已完結"), // NEEDS-REVIEW
     titleSealed: label("Budget sealed", "預算已鎖定"), // NEEDS-REVIEW
     titleCardFor: label("One-off card for {shop}", "{shop} 的一次性卡"), // NEEDS-REVIEW
@@ -468,7 +468,7 @@ export const UI = {
     titleDeclined: label("Charge declined at {shop}", "{shop} 扣款被拒"), // NEEDS-REVIEW
     titleVoided: label("One-off card cancelled", "一次性卡已取消"), // NEEDS-REVIEW
     titleCardExpired: label("One-off card expired unused", "一次性卡未用已過期"), // NEEDS-REVIEW
-    titleRevoked: label("You revoked your rules", "你已撤銷規則"), // NEEDS-REVIEW
+    titleRevoked: label("You cancelled your budget", "你已取消預算"), // NEEDS-REVIEW
     titleExpired: label("Your budget ended", "你的預算已完結"), // NEEDS-REVIEW
     moreItems: label("and {n} more", "及另外 {n} 件"), // NEEDS-REVIEW
     declineOverLimit: label("The shop asked for more than the card allows. The limit held.", "商戶要求的金額超出卡額，上限守住了。"), // NEEDS-REVIEW
@@ -602,7 +602,8 @@ export const UI = {
     deck: label("Slides carry this beat.", "此環節由投影片展示。"), // NEEDS-REVIEW
   },
 
-  // Lane b-proof: #/proof. The reason lines copy the offline verifier page's wording (apps/verifier/src/reasons.ts).
+  // Lane b-proof: #/proof. The reason lines follow the offline verifier page's wording (apps/verifier/src/reasons.ts),
+  // in this app's words (budget, one-off card) where that page still says mandate and mint.
   proof: {
     title: label("Proof", "證明"), // NEEDS-REVIEW
     lead: label("Check that no receipt changed after it was signed.", "檢查收據簽署後有沒有被改動。"), // NEEDS-REVIEW
@@ -658,7 +659,7 @@ export const UI = {
     howChainTitle: label("A chain of receipts", "一條收據鏈"), // NEEDS-REVIEW
     howChainBody: label("Each receipt carries the fingerprint (hash) of the one before it. Change one byte anywhere and every fingerprint after it stops matching. Edits, reordering and missing receipts all show.", "每張收據都帶有上一張的指紋（雜湊）。任何地方改動一個位元組，之後的指紋全部對不上。改動、調換次序或缺少收據都會被發現。"), // NEEDS-REVIEW
     howSignTitle: label("Signatures", "簽署"), // NEEDS-REVIEW
-    howSignBody: label("The rules engine signs every receipt with its key. Your rules, revokes and OKs carry your signature. A receipt nobody signed fails.", "規則引擎用自己的金鑰簽署每張收據；你的規則、撤銷及確認都帶有你的簽署。沒有簽署的收據不會通過。"), // NEEDS-REVIEW
+    howSignBody: label("The rules engine signs every receipt with its key. Your rules, cancellations and OKs carry your signature. A receipt nobody signed fails.", "規則引擎用自己的金鑰簽署每張收據；你的規則、取消及確認都帶有你的簽署。沒有簽署的收據不會通過。"), // NEEDS-REVIEW
     howKeysTitle: label("Who holds which key", "誰持有哪條金鑰"), // NEEDS-REVIEW
     howKeysBody: label("The engine key signs receipts. Your key signs your rules. Only public keys are needed to check.", "引擎金鑰簽署收據；你的金鑰簽署你的規則。檢查只需要公鑰。"), // NEEDS-REVIEW
     howCheckpointTitle: label("The saved checkpoint", "已儲存的檢查點"), // NEEDS-REVIEW
@@ -680,7 +681,7 @@ export const UI = {
       DUPLICATE: label("nothing used twice", "沒有重複使用"), // NEEDS-REVIEW
       CONSENT: label("your OKs", "你的確認"), // NEEDS-REVIEW
       OVERSPEND: label("money adds up", "金額相符"), // NEEDS-REVIEW
-      AFTER_REVOKE: label("nothing after a revoke", "撤銷後沒有發卡"), // NEEDS-REVIEW
+      AFTER_REVOKE: label("nothing after a cancel", "取消後沒有發卡"), // NEEDS-REVIEW
     },
     reasons: {
       SCHEMA: label("This entry is not in the log format: an unreadable line, a wrong field, or an entry in the wrong place.", "此紀錄不符合格式：無法讀取、欄位錯誤或位置不對。"), // NEEDS-REVIEW
@@ -689,14 +690,14 @@ export const UI = {
       PAYLOAD_HASH: label("The content of this entry changed after it was written.", "此紀錄的內容於寫入後被改動。"), // NEEDS-REVIEW
       ENTRY_HASH: label("The header of this entry (time, kind, ids or hashes) changed after it was written.", "此紀錄的標頭（時間、類別、編號或雜湊）於寫入後被改動。"), // NEEDS-REVIEW
       SIGNATURE: label("The engine signature does not verify against a listed engine key.", "引擎簽署未能以已列出的引擎公鑰驗證。"), // NEEDS-REVIEW
-      PAYLOAD_SIGNATURE: label("A delegator signature (mandate credential, revocation or escalation answer) does not verify, or names another mandate.", "委託人簽署（授權憑證、撤銷或升級回覆）未能驗證，或屬於另一份授權。"), // NEEDS-REVIEW
+      PAYLOAD_SIGNATURE: label("A delegator signature (budget rules, a cancellation or your OK) does not verify, or names another budget.", "委託人簽署（預算規則、取消預算或你的確認）未能驗證，或屬於另一個預算。"), // NEEDS-REVIEW
       TRUNCATED: label("The log does not reach or match the head checkpoint: it was cut short or rewritten.", "紀錄與最新檢查點不符：已被截短或改寫。"), // NEEDS-REVIEW
       KEYS: label("The public keys cannot anchor trust: no delegator key, or the delegator key is also an engine key. Nothing was checked.", "公鑰無法作為信任依據：沒有委託人公鑰，或委託人公鑰同時列為引擎公鑰。未有進行任何檢查。"), // NEEDS-REVIEW
-      NO_DECISION: label("A card was minted or charged without an approval for it earlier in this log.", "此紀錄中沒有較早的批准，卻發出或扣款了一張卡。"), // NEEDS-REVIEW
+      NO_DECISION: label("A card was made or charged without an approval for it earlier in this log.", "此紀錄中沒有較早的批准，卻發出或扣款了一張卡。"), // NEEDS-REVIEW
       DUPLICATE: label("Something that may happen once happened twice: a decision id, a card for one approval, or one consent used again.", "只可發生一次的事發生了兩次：決定編號、同一批准的卡，或同一同意被再用。"), // NEEDS-REVIEW
       CONSENT: label("An approval claims the delegator's consent, but there is no signed, in-time yes from the delegator for this exact cart.", "此批准聲稱已得委託人同意，但沒有委託人就這個購物車及時簽署的同意。"), // NEEDS-REVIEW
       OVERSPEND: label("The money does not add up: a limit, a charge or the total goes past what was approved or sealed.", "金額不符：上限、扣款或總額超出已批准或封存的數目。"), // NEEDS-REVIEW
-      AFTER_REVOKE: label("A card was minted after the mandate was revoked or expired.", "授權已撤銷或到期後仍發出了卡。"), // NEEDS-REVIEW
+      AFTER_REVOKE: label("A card was made after the budget was cancelled or ended.", "預算已取消或到期後仍發出了卡。"), // NEEDS-REVIEW
     },
   },
 
