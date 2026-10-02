@@ -146,6 +146,12 @@ describe("alternatives records", () => {
     expect((await named.alternatives?.(ctx, R3_STOP, OPTS))?.listing_url).toBe(socks.url);
   });
 
+  it("never throws for a missing stop or options", async () => {
+    await expect(planner.alternatives?.(ctx, undefined as never, OPTS)).resolves.toBeNull();
+    await expect(planner.propose(ctx, undefined as never)).resolves.toBeNull();
+    await expect(planner.propose(undefined as never, OPTS)).resolves.toBeNull();
+  });
+
   it("returns null for a stop that is not a budget stop or has no record", async () => {
     expect(await planner.alternatives?.(ctx, { templateId: "R9.flagged", remainingMinor: 54100 }, OPTS)).toBeNull();
     expect(await createReplayPlanner({ records: [first], catalogue: [jacket, socks] }).alternatives?.(ctx, R3_STOP, OPTS)).toBeNull();

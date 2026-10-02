@@ -14,6 +14,8 @@ describe("parseSizes", () => {
     ["XXL", ["xxl"]],
     ["2XL tee", ["xxl"]],
     ["size 42 sneakers", ["42"]],
+    ["sneakers in size 7", ["7"]],
+    ["size 8.5", ["8.5"]],
     ["small", ["s"]],
   ])("reads sizes in %j", (text, expected) => {
     expect(parseSizes(text)).toEqual(expected);
@@ -35,7 +37,7 @@ describe("parseSizes", () => {
       fc.property(fc.string({ maxLength: 200 }), (text) => {
         const sizes = parseSizes(text);
         expect(new Set(sizes).size).toBe(sizes.length);
-        for (const s of sizes) expect(s).toMatch(/^(xxs|xs|s|m|l|xl|xxl|xxxl|\d{2}(\.5)?)$/);
+        for (const s of sizes) expect(s).toMatch(/^(xxs|xs|s|m|l|xl|xxl|xxxl|\d{1,2}(\.5)?)$/);
       }),
     );
   });
@@ -83,6 +85,8 @@ describe("parseQuantity", () => {
     "HK$ 800 cotton tee",
     "cotton tee under 500",
     "size 38 cotton tee",
+    "800 HKD cotton tee",
+    "500 hk$ for a cotton tee",
     "the white one in large",
   ])("defaults to none for %j (a budget, a size or no number)", (text) => {
     expect(parseQuantity(text, TEE)).toEqual({ kind: "none" });

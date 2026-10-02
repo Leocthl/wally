@@ -75,7 +75,7 @@ export function variantLabel(v: PlannerCandidate): string {
 }
 
 export function variantQuestion(request: string, variants: readonly PlannerCandidate[]): Question<PlannerCandidate> {
-  const labels = uniqueLabels(variants.map(variantLabel));
+  const labels = uniqueLabels(variants.map(variantLabel), [NONE_LABEL]);
   const options = variants.map((value, i) => ({ label: labels[i] ?? slugify(value.title), value }));
   return {
     options,

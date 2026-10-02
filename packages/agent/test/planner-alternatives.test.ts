@@ -128,6 +128,15 @@ describe("fails closed", () => {
     expect((await alternatives("ankle socks", R3_STOP)).out).toBeNull();
   });
 
+  it("never throws, even for a missing stop or options", async () => {
+    const planner = createRulePlanner({ catalogue: STORE, layaUrl: mock.url });
+    const ctx = ctxOf("ankle socks", STORE);
+    await expect(planner.alternatives?.(ctx, undefined as never, OPTS)).resolves.toBeNull();
+    await expect(planner.alternatives?.(ctx, R3_STOP, undefined as never)).resolves.toBeNull();
+    await expect(planner.propose(ctx, undefined as never)).resolves.toBeNull();
+    await expect(planner.propose(undefined as never, OPTS)).resolves.toBeNull();
+  });
+
   it("returns null for empty candidates", async () => {
     const planner = createRulePlanner({ catalogue: STORE, layaUrl: mock.url });
     expect(await planner.alternatives?.({ intentText: "ankle socks", listings: [] }, R3_STOP, OPTS)).toBeNull();

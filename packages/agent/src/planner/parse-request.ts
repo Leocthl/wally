@@ -40,7 +40,7 @@ interface SizeRule {
 }
 
 const SIZE_RULES: readonly SizeRule[] = [
-  { pattern: /\b(?:size|sz)\s*[:-]?\s*(xxxl|xxl|xl|xxs|xs|[sml]|\d{2}(?:\.5)?|small|medium|large)(?![a-z0-9])/gi, group: 1 },
+  { pattern: /\b(?:size|sz)\s*[:-]?\s*(xxxl|xxl|xl|xxs|xs|[sml]|\d{1,2}(?:\.5)?|small|medium|large)(?![a-z0-9])/gi, group: 1 },
   { pattern: /\b(?:eu|uk|us)\s*(\d{2}(?:\.5)?)\b/gi, group: 1 },
   { pattern: /\b(?:extra|x)[\s-]+large\b/gi, group: 0, fixed: "xl" },
   { pattern: /\b(xxxl|3xl|xxl|2xl|xl|xxs|xs)\b/gi, group: 1 },
@@ -121,8 +121,9 @@ function toNumber(raw: string): number {
 function quantityMatches(masked: string, nouns: readonly string[]): readonly number[] {
   const heads = [...UNIT_WORDS.map(escapeRegExp), ...nouns.filter((n) => n.length > 0).flatMap(nounForms)].join("|");
   const guard = "(?<![\\w$.#-])(?<!\\$\\s)(?<!size\\s{0,2})";
+  const notMoney = "(?!\\s*(?:hk\\$|hkd|usd|rmb|cny|dollars?|bucks|\\$))";
   const withNoun = new RegExp(
-    `${guard}(${NUMBER_PATTERN})\\s+(?:of\\s+)?(?:(?:the|these|those|my|your)\\s+)?(?:[a-z'-]+\\s+){0,2}?(?:${heads})(?![a-z])`,
+    `${guard}(${NUMBER_PATTERN})${notMoney}\\s+(?:of\\s+)?(?:(?:the|these|those|my|your)\\s+)?(?:[a-z'-]+\\s+){0,2}?(?:${heads})(?![a-z])`,
     "g",
   );
   const times = /(?<![\w$.#])(\d{1,3})\s*[x×](?![a-z0-9])/g;

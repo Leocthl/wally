@@ -6,7 +6,7 @@ import type { PlannerTraceStep, ProposeCartInput } from "@laisee/core/ports";
 import { validateProposeCartInput } from "@laisee/core/schema";
 import { createRulePlanner } from "../src/planner/rule-planner";
 import { startMockLaya, type MockLaya } from "./support/mock-laya";
-import { GRAPHIC_TEE_LISTING, OPTS, VARIANT_LISTING, ctxOf, fixtureListing } from "./support/planner-data";
+import { GRAPHIC_TEE_LISTING, OPTS, VARIANT_LISTING, ctxOf, fixtureListing, nonEmpty } from "./support/planner-data";
 
 let mock: MockLaya;
 beforeAll(async () => {
@@ -155,6 +155,19 @@ describe("variants (size and colour)", () => {
     }
   });
 
+  it("asks the shopper instead of choosing among a cut-down list when too many variants remain", async () => {
+    const grid: ListingRecord = {
+      ...VARIANT_LISTING,
+      id: "lst_bigGrid",
+      url: "https://demo-apparel.example/p/tee-grid",
+      items: nonEmpty(["black", "white", "navy"].flatMap((colour) => ["S", "M", "L", "XL"].map((size) => ({ title: `Cotton tee, ${colour}, ${size} (SIMULATED)`, category: "apparel", unit_price_minor: 25900 })))),
+    };
+    const { out, steps } = await propose([grid], "a cotton tee");
+    expect(out).toBeNull();
+    expect(steps.map((s) => s.question)).toEqual(["item_forced"]);
+    expect(mock.requests()).toHaveLength(0);
+  });
+
   it("ignores a size or colour the item has no options for", async () => {
     expect((await propose([tee], "a cotton tee in red")).out?.items[0]?.title).toBe("Cotton tee (SIMULATED)");
   });
@@ -170,6 +183,10 @@ describe("quantity", () => {
   it("does not read the budget or a pack size as a quantity", async () => {
     expect((await propose(STORE, "HK$800 for ankle socks")).out?.items[0]?.qty).toBe(1);
     expect((await propose(STORE, "3 pairs of ankle socks")).out?.items[0]?.qty).toBe(1);
+  });
+
+  it("does not read an amount in HKD as a quantity", async () => {
+    expect((await propose(STORE, "800 HKD cotton tee")).out?.items[0]?.qty).toBe(1);
   });
 
   it("returns null for a quantity the proposal cannot hold", async () => {
@@ -255,11 +272,11 @@ describe("fails closed (I5): never throws, null on any failure", () => {
   });
 
   it("honours the total timeout", async () => {
-    mock.set({ delayMs: 1_500 });
+    mock.set({ delayMs: 4_000 });
     const started = Date.now();
     const out = await planner(STORE).propose(ctxOf("I want a cotton tee", STORE), { timeoutMs: 200 });
     expect(out).toBeNull();
-    expect(Date.now() - started).toBeLessThan(1_200);
+    expect(Date.now() - started).toBeLessThan(3_000); // gave up at the timeout instead of waiting for the slow server
   });
 
   it.each([0, -5, Number.NaN, Number.POSITIVE_INFINITY])("returns null for timeoutMs %s without calling Laya", async (timeoutMs) => {

@@ -79,7 +79,8 @@ export async function decideVariant(ctx: DecisionContext, family: ItemFamily): P
     ctx.tracer.emitForced("variant_forced", variantLabel(first));
     return { kind: "chosen", value: { candidate: first, note: "the variant matches the request" } };
   }
-  const picked = await ask(ctx, variantQuestion(ctx.request, matching.slice(0, ctx.config.maxOptions)));
+  if (matching.length > ctx.config.maxOptions) return abstain("too many variants left to choose between");
+  const picked = await ask(ctx, variantQuestion(ctx.request, matching));
   return picked.kind === "chosen" ? { kind: "chosen", value: { candidate: picked.value, note: "the variant matches the request" } } : picked;
 }
 

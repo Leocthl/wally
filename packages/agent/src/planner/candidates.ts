@@ -113,7 +113,8 @@ function nextFree(slug: string, taken: readonly string[]): string {
   return numbered.find((candidate) => !taken.includes(candidate)) ?? `${slug}_${taken.length + 2}`;
 }
 
-/** Makes labels unique within one question by numbering repeats: tee, tee_2, tee_3. */
-export function uniqueLabels(slugs: readonly string[]): readonly string[] {
-  return slugs.reduce<readonly string[]>((taken, slug) => [...taken, nextFree(slug, taken)], []);
+/** Makes labels unique within one question by numbering repeats: tee, tee_2, tee_3. `reserved` labels are never used. */
+export function uniqueLabels(slugs: readonly string[], reserved: readonly string[] = []): readonly string[] {
+  const labels = slugs.reduce<readonly string[]>((taken, slug) => [...taken, nextFree(slug, [...reserved, ...taken])], []);
+  return labels;
 }

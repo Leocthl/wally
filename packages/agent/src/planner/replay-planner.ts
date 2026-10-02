@@ -113,7 +113,12 @@ export function createReplayPlanner(options: ReplayPlannerOptions): PlannerPort 
 
   return {
     propose: (ctx, opts) => replay(ctx, opts, false),
-    alternatives: (ctx: PlannerContext, stop: PlannerStop, opts: PlannerOptions) =>
-      BUDGET_STOPS.has(stop.templateId) ? replay(ctx, opts, true) : Promise.resolve(null),
+    alternatives: (ctx: PlannerContext, stop: PlannerStop, opts: PlannerOptions) => {
+      try {
+        return BUDGET_STOPS.has(stop.templateId) ? replay(ctx, opts, true) : Promise.resolve(null);
+      } catch {
+        return Promise.resolve(null); // never throws
+      }
+    },
   };
 }

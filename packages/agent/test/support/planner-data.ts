@@ -50,6 +50,13 @@ export const GRAPHIC_TEE_LISTING: ListingRecord = {
   text: "Graphic tee (SIMULATED). Heavyweight cotton.",
 };
 
+/** A non-empty tuple, the shape ListingRecord.items needs. */
+export function nonEmpty<T>(items: readonly T[]): [T, ...T[]] {
+  const [first, ...rest] = items;
+  if (first === undefined) throw new Error("expected at least one item");
+  return [first, ...rest];
+}
+
 export function ctxOf(intentText: string, records: readonly ListingRecord[]): PlannerContext {
   return { intentText, listings: records.map((r) => ({ url: r.url, text: r.text })) };
 }

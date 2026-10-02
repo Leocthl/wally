@@ -115,6 +115,10 @@ describe("labels", () => {
     expect(slugify("")).toBe("item");
   });
 
+  it("keeps reserved labels free for the none option", () => {
+    expect(uniqueLabels(["none_of_these", "tee"], ["none_of_these"])).toEqual(["none_of_these_2", "tee"]);
+  });
+
   it("makes labels unique, valid and stable", () => {
     expect(uniqueLabels(["tee", "tee", "hoodie", "tee"])).toEqual(["tee", "tee_2", "hoodie", "tee_3"]);
     fc.assert(

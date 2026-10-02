@@ -67,8 +67,12 @@ export function createRulePlanner(options: RulePlannerOptions): PlannerPort {
   return {
     propose: (ctx, opts) => run(ctx, opts, null),
     alternatives: (ctx: PlannerContext, stop: PlannerStop, opts: PlannerOptions) => {
-      const budgetStop = BUDGET_STOPS.has(stop.templateId) && Number.isInteger(stop.remainingMinor) && stop.remainingMinor >= 0;
-      return budgetStop ? run(ctx, opts, stop.remainingMinor) : Promise.resolve(null);
+      try {
+        const budgetStop = BUDGET_STOPS.has(stop.templateId) && Number.isInteger(stop.remainingMinor) && stop.remainingMinor >= 0;
+        return budgetStop ? run(ctx, opts, stop.remainingMinor) : Promise.resolve(null);
+      } catch {
+        return Promise.resolve(null); // never throws
+      }
     },
   };
 }
