@@ -1,6 +1,6 @@
 // Checks on what the merchant and rail hand back, before anything is logged.
 import type { CardRecord, Cart, Decision } from "../generated";
-import type { CardEvent, MerchantQuote } from "../ports";
+import type { CardEvent } from "../ports";
 import { formatIssues, validateCardEvent, validateCardRecord, validateDecision } from "../schema";
 import { LOG_ID_PATTERN } from "./config";
 import type { ExecutorAnomaly } from "./types";
@@ -57,8 +57,4 @@ export function anomaliesOf(event: CardEvent, ctx: EventContext): readonly Execu
   if ((event.amount_minor ?? 0) > ctx.approvedTotalMinor) found.push("AMOUNT_ABOVE_APPROVED");
   if (event.merchant_domain !== ctx.cart.merchant.domain) found.push("MERCHANT_DOMAIN_MISMATCH");
   return found;
-}
-
-export function sameQuoteTotal(quote: MerchantQuote, approvedTotalMinor: number): boolean {
-  return quote.total_minor === approvedTotalMinor;
 }
