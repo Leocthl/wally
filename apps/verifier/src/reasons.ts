@@ -35,6 +35,10 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
     en: "The log does not reach or match the head checkpoint: it was cut short or rewritten.",
     zh: "紀錄與最新檢查點不符：已被截短或改寫。", // NEEDS-REVIEW zh-HK
   },
+  KEYS: {
+    en: "The public keys cannot anchor trust: no delegator key, or the delegator key is also an engine key. Nothing was checked.",
+    zh: "公鑰無法作為信任依據：沒有委託人公鑰，或委託人公鑰同時列為引擎公鑰。未有進行任何檢查。", // NEEDS-REVIEW zh-HK
+  },
 };
 
 export function reasonText(reason: VerifyFailure): Bi {

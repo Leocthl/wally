@@ -1,7 +1,8 @@
-// verifyChain (docs/02 section 11), pure and browser-safe. Per entry, in order: 1 SCHEMA, 2 SEQ,
-// 3 PREV_HASH, 4 PAYLOAD_HASH, 5 ENTRY_HASH, 6 SIGNATURE, then structure (SCHEMA: seq 0 is the only
-// MANDATE_SEALED, one log_id per log) and 7 PAYLOAD_SIGNATURE; after the last entry, 8 TRUNCATED against
-// the external checkpoint. Returns the first failing seq (line index) and reason. Never throws.
+// verifyChain (docs/02 section 11), pure and browser-safe. First the trust anchors (KEYS: a pinned delegator
+// did:key that is not also an engine key). Per entry, in order: 1 SCHEMA, 2 SEQ, 3 PREV_HASH, 4 PAYLOAD_HASH,
+// 5 ENTRY_HASH, 6 SIGNATURE, then structure (SCHEMA: seq 0 is the only MANDATE_SEALED, one log_id per log)
+// and 7 PAYLOAD_SIGNATURE; after the last entry, 8 TRUNCATED against the external checkpoint. Returns the
+// first failing seq (line index) and reason. Never throws.
 import { fromBase64url } from "../crypto/bytes";
 import { parseDidKey } from "../crypto/did-key";
 import { verifyEd25519 } from "../crypto/ed25519";
@@ -12,6 +13,7 @@ import { entryHash, GENESIS_PREV_HASH, logSigningMessage, payloadHash } from "..
 import type { Checkpoint, VerifyChain } from "../ports";
 import { formatIssues, validateLogEntry } from "../schema";
 import { checkDelegated, checkSeal, type Delegated, type Sealed } from "./delegated";
+import { publicKeysProblem } from "./keys";
 import { fail, type PublicKeys, type VerifyReport } from "./report";
 
 type Integrity = { readonly ok: true; readonly entry: LogEntry } | { readonly ok: false; readonly report: VerifyReport };
@@ -68,6 +70,9 @@ function structure(entry: LogEntry, index: number, sealed: Sealed | null): Verif
 }
 
 export function verifyChain(entries: readonly unknown[], publicKeys: PublicKeys, headCheckpoint?: Checkpoint): VerifyReport {
+  const keysProblem = publicKeysProblem(publicKeys);
+  if (keysProblem !== null) return fail(0, "KEYS", keysProblem); // refuse to run, never skip the delegator check
+  if (!Array.isArray(entries)) return fail(0, "SCHEMA", "entries must be a list of log lines");
   if (entries.length === 0) return fail(0, "TRUNCATED", "log is empty: seq 0 (MANDATE_SEALED) is missing");
   const engine = new Set(publicKeys.engine);
   const verified: LogEntry[] = [];

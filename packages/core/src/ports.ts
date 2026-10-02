@@ -215,7 +215,8 @@ export type VerifyFailure =
   | "ENTRY_HASH"
   | "SIGNATURE"
   | "PAYLOAD_SIGNATURE"
-  | "TRUNCATED";
+  | "TRUNCATED"
+  | "KEYS";
 export type VerifyResult =
   | { readonly ok: true; readonly head: Checkpoint }
   | { readonly ok: false; readonly failedSeq: number; readonly reason: VerifyFailure };

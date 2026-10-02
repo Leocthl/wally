@@ -110,6 +110,13 @@ describe("keys", () => {
     const k = keysJson();
     expectFail(run(LOG, JSON.stringify({ ...k, engine: [k.agent] })), 0, "SIGNATURE");
   });
+
+  it("a delegator key also listed as an engine key is refused before any check (separate roles)", () => {
+    const k = keysJson();
+    const result = run(LOG, JSON.stringify({ ...k, engine: [...k.engine, k.delegator] }));
+    expectInputError(result, "keys");
+    if (result.kind === "input-error") expect(result.errors[0]?.message).toContain("separate roles");
+  });
 });
 
 describe("bad input never passes and never throws", () => {

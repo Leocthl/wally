@@ -75,6 +75,6 @@ describe("small-order issuer key (identity point)", () => {
     const universal = `z${base58.encode(concat(identity, new Uint8Array(32)))}`;
     const forged = { ...unsigned, proof: { ...template.proof, verificationMethod: `${did}#${did.slice(8)}`, proofValue: universal } };
     expect(ed25519.verify(concat(identity, new Uint8Array(32)), new Uint8Array(64), identity, { zip215: true })).toBe(true);
-    expect(verifyMandateCredential(forged)).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    expect(verifyMandateCredential(forged, { expectedIssuer: did })).toMatchObject({ valid: false, reason: "SIGNATURE" });
   });
 });

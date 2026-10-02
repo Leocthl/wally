@@ -465,10 +465,10 @@ export interface CompiledRules {
   };
 }
 /**
- * W3C Data Integrity proof, eddsa-jcs-2022. `@context` is optional here; when present it must equal the document's.
+ * W3C Data Integrity proof, eddsa-jcs-2022. `@context` is required and equals the document's (Create Proof step 2); the verifier hashes the proof exactly as carried.
  */
 export interface DataIntegrityProof {
-  "@context"?: Contexts;
+  "@context": Contexts;
   type: "DataIntegrityProof";
   cryptosuite: "eddsa-jcs-2022";
   created: Timestamp;
@@ -702,7 +702,7 @@ export interface ListingRecord {
   provenance: "OBSERVED" | "SIMULATED";
 }
 /**
- * AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof: unsecuredDocument = credential without `proof`; proofConfig = `proof` without `proofValue`, plus the document's `@context`; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key and checks that proof.verificationMethod starts with issuer + '#'. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential (id = vc.id without the urn:laisee:mandate: prefix).
+ * AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof (W3C vc-di-eddsa 3.3): unsecuredDocument = credential without `proof`; the proof carries the document's `@context` (Create Proof step 2); proofConfig = `proof` without `proofValue`, exactly as carried; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key, which must equal the pinned delegator key (did:key is self-certifying), and checks that proof.verificationMethod is issuer + '#' + the issuer key. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential (id = vc.id without the urn:laisee:mandate: prefix).
  */
 export interface MandateCredential {
   "@context": Contexts;

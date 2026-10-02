@@ -69,8 +69,20 @@ describe("verifyLogText", () => {
 
 describe("parsePublicKeys", () => {
   it("accepts the keys:gen file shape", () => {
-    const file = { note: "SIMULATED demo keys", engine: [...KEYS.engine], delegator: KEYS.delegator, agent: KEYS.delegator };
+    const file = { note: "SIMULATED demo keys", engine: [...KEYS.engine], delegator: KEYS.delegator, agent: demo.keys.agentDid };
     expect(parsePublicKeys(file)).toEqual({ ok: true, value: { engine: KEYS.engine, delegator: KEYS.delegator } });
+  });
+
+  it("keeps roles separate: no key may be both delegator and engine", () => {
+    const overlapping: unknown[] = [
+      { engine: [KEYS.delegator], delegator: KEYS.delegator },
+      { engine: [...KEYS.engine, KEYS.delegator], delegator: KEYS.delegator },
+    ];
+    for (const value of overlapping) {
+      const result = parsePublicKeys(value);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.errors[0]?.message).toContain("separate roles");
+    }
   });
 
   it("rejects missing, malformed or extra fields", () => {

@@ -120,6 +120,25 @@ describe("verifyChain: keys and signatures", () => {
   it("a wrong expected delegator fails PAYLOAD_SIGNATURE at seq 0", () => {
     expect(verifyChain(fresh(), { ...KEYS, delegator: OTHER.did })).toMatchObject({ failedSeq: 0, reason: "PAYLOAD_SIGNATURE" });
   });
+
+  it("refuses to run (KEYS) without a usable pinned delegator or with the delegator also listed as an engine key", () => {
+    const loose = verifyChain as (entries: readonly unknown[], keys: unknown) => ReturnType<typeof verifyChain>;
+    const bad: unknown[] = [
+      undefined,
+      null,
+      "keys",
+      { engine: KEYS.engine },
+      { ...KEYS, delegator: "" },
+      { ...KEYS, delegator: "did:key:z6MkNope" },
+      { ...KEYS, delegator: 7 },
+      { delegator: KEYS.delegator },
+      { ...KEYS, engine: "x" },
+      { ...KEYS, engine: [KEYS.engine[0], 3] },
+      { ...KEYS, engine: [...KEYS.engine, KEYS.delegator] },
+    ];
+    for (const keys of bad) expect(loose(fresh(), keys)).toMatchObject({ ok: false, failedSeq: 0, reason: "KEYS" });
+    expect(loose([], { engine: KEYS.engine })).toMatchObject({ reason: "KEYS" });
+  });
 });
 
 describe("verifyChain: delegator material (step 7)", () => {

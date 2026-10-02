@@ -6,5 +6,10 @@ export { parsePublicKeys } from "./keys";
 export type { PublicKeys, VerifyReport } from "./report";
 export { checkpointOf, parseCheckpoint } from "../log/checkpoint";
 export { verifyEscalationAnswer, verifyRevocation, type DelegatorCheck } from "../log/delegator";
-export { verifyMandateCredential, type CredentialCheck, type CredentialFailure } from "../vc/proof";
+export {
+  verifyMandateCredential,
+  type CredentialCheck,
+  type CredentialFailure,
+  type VerifyCredentialOptions,
+} from "../vc/proof";
 export type { Checkpoint, VerifyFailure, VerifyResult } from "../ports";
