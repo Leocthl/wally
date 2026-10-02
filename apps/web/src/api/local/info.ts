@@ -38,7 +38,7 @@ export function localInfo(hasAlternativeRecords: boolean): LocalInfo {
     replayed: true,
     realCapture: null,
     product: BRAND.name,
-    demoShortcut: `DEMO SHORTCUT: in on-device mode this ${BRAND.name} page holds every key, the delegator's included, and signs the seal, revocations and escalation answers itself. A real deployment keeps the delegator key apart (src/api/local/KEYS.md).`,
+    demoShortcut: `DEMO SHORTCUT: in on-device mode this ${BRAND.name} page holds every key, the delegator's included, and signs the seal, revocations and escalation answers itself. A real deployment keeps the delegator key apart (src/api/local/KEYS.md). For a family budget the page also makes Mum's throwaway key (SIMULATED) and signs her ceiling.`,
     keys: "Ephemeral in-memory demo keys, new every time the page loads.",
   };
 }

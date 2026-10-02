@@ -83,7 +83,7 @@ export function buildInfo(input: InfoInput): ServerInfo {
     replayed: input.judgeProvider === "replay" || planner === "replay",
     realCapture: null,
     product: BRAND.name,
-    demoShortcut: `DEMO SHORTCUT: this ${BRAND.name} server holds the delegator's throwaway key and signs the seal, revocations and escalation answers on the shopper's behalf. A real deployment keeps that key on the shopper's device.`,
+    demoShortcut: `DEMO SHORTCUT: this ${BRAND.name} server holds the delegator's throwaway key and signs the seal, revocations and escalation answers on the shopper's behalf. A real deployment keeps that key on the shopper's device. For a family budget it also holds Mum's throwaway key (SIMULATED) and signs her ceiling.`,
     keys: input.keySource === "KEY_DIR" ? "Throwaway demo keys from KEY_DIR (pnpm keys:gen)." : "No keys in KEY_DIR: ephemeral in-memory demo keys, new on every start. Run pnpm keys:gen to keep them.",
     judgeHealth: input.health.state,
   };

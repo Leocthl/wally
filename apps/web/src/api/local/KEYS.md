@@ -4,6 +4,7 @@
 - **Every key in the page**: `LocalApiClient` makes throwaway engine and delegator keys in memory on each load and reset (`src/booth/backend/keys.ts`); the page signs the seal, revocations and escalation answers itself.
 - **Said plainly**: `ApiInfo.demoShortcut` and the info notes say the page holds every key and the answers are recorded.
 - **Nothing kept**: no key is stored; closing the tab ends the mandate.
+- **Mum (family budget)**: a SIMULATED parent key, made in memory the first time a family budget is used and dropped on reset; the page signs her ceiling credential. It is checked at seal time and is not in the child's log, so the offline verifier cannot check that link.
 
 ## Target split
 - **Engine key** stays with the operator (the Node server, or the page in on-device mode). It signs log entries only.

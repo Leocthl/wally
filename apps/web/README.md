@@ -25,12 +25,13 @@
 ## Booth server
 | Route | Does |
 |---|---|
-| `GET /api/info`, `/api/snapshot`, `/api/log`, `/api/export`, `/api/health` | state; export = JSONL log, public keys in use, checkpoint for the verifier page |
+| `GET /api/info`, `/api/snapshot`, `/api/log`, `/api/export`, `/api/health` | state; export = JSONL log, public keys in use, checkpoint for the verifier page, and for a budget from Mum's her credential (`parentCredential`, saved as `parent-credential.json`) |
+| `GET /api/family` | Mum's ceiling and what she has left (family budget, `info.features.family`); `POST /api/seal` with `family: { parent: "mum" }` seals inside it or answers 422 `EXCEEDS_PARENT` with `details` `{ field, requested, allowed }` |
 | `POST /api/seal`, `/api/scenario/:id`, `/api/propose`, `/api/revoke`, `/api/escalation/answer` | pipeline runs (`data/scenarios/booth.json`) |
 | `POST /api/verify`, `/api/tamper`, `/api/restore`, `/api/reset` | log demo and reset |
 | `GET /api/events` | SSE trace; ready comment, ids, keep-alive every 15 s, no replay |
 
-- **Guards**: loopback Host; loopback Origin, no cross-site fetch and `application/json` on POST; body and listing-text caps; errors are JSON `{ error: { code, message } }`.
+- **Guards**: loopback Host; loopback Origin, no cross-site fetch and `application/json` on POST; body and listing-text caps; errors are JSON `{ error: { code, message, details? } }`.
 - **DEMO SHORTCUT**: the server holds the delegator's throwaway key and signs seal, revoke and escalation answers for the shopper. A real deployment keeps that key on the shopper's device. `/api/info` says so.
 - **Laya down**: the server still starts; the judge answers ERROR and the engine escalates (R10.unavailable). `JUDGE_PROVIDER=replay` and `PLANNER_PROVIDER=replay` are labelled operator switches.
 

@@ -1,7 +1,7 @@
 // Family budget in a real browser on the on-device stack (?api=local): the "Whose money?" choice, Mum's ceiling as a calm
 // card, the capped amount, a budget sealed under Mum's with its tag, the refusal when a budget asks for too much (nothing
 // sealed, the budget held stays), and the purchase from the family budget. A budget of my own is unchanged.
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page, isMobile }) => {
   if (isMobile) await page.setViewportSize({ width: 390, height: 844 });
@@ -9,8 +9,8 @@ test.beforeEach(async ({ page, isMobile }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Top up your budget" })).toBeVisible();
 });
 
-const meter = (page: import("@playwright/test").Page) => page.getByRole("meter");
-const tags = (page: import("@playwright/test").Page) => page.getByRole("list", { name: "Rules Wally must follow" });
+const meter = (page: Page) => page.getByRole("meter");
+const tags = (page: Page) => page.getByRole("list", { name: "Rules Wally must follow" });
 
 test("Mum's budget: the ceiling, the cap, the sealed budget with its tag, the refusal and the purchase", async ({ page }) => {
   const choice = page.getByRole("radiogroup", { name: "Whose money?" });
