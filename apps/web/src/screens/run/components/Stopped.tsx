@@ -51,6 +51,8 @@ export function Stopped({ result, fresh, headingRef, onWhy, onTopUp, onAsk, onCh
   const chip = ruleChip(decision);
   const budget = isBudgetStop(decision);
   const cancelled = result.card !== undefined;
+  // A story that only says why the card was cancelled repeats the hero; show it when it adds earlier attempts.
+  const story = result.story.every((s) => s.kind === "drift" || s.kind === "void") ? [] : result.story;
   return (
     <div className="run-stack" data-run-state="stopped">
       <Hero tone="stop" wally="stopped" title={t(R.stoppedTitle)} headingRef={headingRef} role="alert" fresh={fresh}>
@@ -65,7 +67,7 @@ export function Stopped({ result, fresh, headingRef, onWhy, onTopUp, onAsk, onCh
         <Icon name="card" size={22} />
         <span>{t(cancelled ? R.cardCancelled : R.noCard)}</span>
       </Card>
-      <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? decision.cart.total_minor} />
+      <CardStory story={story} limitMinor={result.card?.limit_minor ?? decision.cart.total_minor} />
       <div className="run-actions">
         {onCheaper && budget ? <Button size="lg" block onClick={onCheaper}>{t(R.cheaper)}</Button> : null}
         {budget ? (

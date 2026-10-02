@@ -18,6 +18,7 @@ import { plainReason } from "../model/reason";
 import type { Result } from "../model/screen";
 
 const R = UI.run;
+const MS_PER_S = 1000;
 
 export interface NeedsOkProps {
   readonly result: Result;
@@ -47,7 +48,7 @@ export function NeedsOk({ result, headingRef, answering, onAnswer, onWhy, now }:
   const chain = result.chain;
   const esc = result.escalation;
   const left = useSecondsLeft(esc?.state === "OPEN" ? esc.expiresAt : undefined, now);
-  const windowS = esc ? Math.max(1, Math.round((Date.parse(esc.expiresAt) - Date.parse(esc.openedAt)) / 1000)) : 0;
+  const windowS = esc ? Math.max(1, Math.round((Date.parse(esc.expiresAt) - Date.parse(esc.openedAt)) / MS_PER_S)) : 0;
   const announcement = useAnnouncement(left, windowS);
   if (!chain) return null;
   const cart = chain.current.cart;
@@ -58,7 +59,7 @@ export function NeedsOk({ result, headingRef, answering, onAnswer, onWhy, now }:
     <div className="run-stack" data-run-state="needsOk">
       <Card tone="warn" padding="lg" className="run-ask">
         <div className="run-ask__head">
-          <Wally state="thinking" size={64} decorative />
+          <Wally state={chain.current.explanation?.template_id === "R10.unavailable" ? "offline" : "thinking"} size={64} decorative />
           <h2 className="run-ask__title" tabIndex={-1} ref={headingRef}>{t(R.needsOkTitle)}</h2>
         </div>
         <p className="run-ask__reason">{t(plainReason(chain.current))}</p>

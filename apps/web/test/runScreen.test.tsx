@@ -175,7 +175,7 @@ describe("stopped before paying", () => {
     await m.run("drift");
     expect(screen.getByRole("alert")).toHaveTextContent("The price changed at checkout, so Wally cancelled the card.");
     expect(screen.getByText("The card was cancelled. Nothing more can be charged.")).toBeInTheDocument();
-    expect(screen.getByText("The price changed at checkout. The approval was cancelled.")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "At checkout" })).toBeNull();
   });
 
   it("renders in 繁 with lang=zh-HK", async () => {
@@ -227,6 +227,21 @@ describe("needs your OK", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Nobody answered in time, so Wally stopped it.");
     expect(m.mock).toBeDefined();
     expect(await openEscalation(m)).toMatch(/^dec_/);
+  });
+
+  it("yes, but a fixed rule still stops it: the screen says your answer could not override the rule", async () => {
+    const m = await mountRun();
+    await m.run("unverified");
+    const asked = await openEscalation(m);
+    for (const id of ["normal", "normal", "small"] as const) await m.run(id);
+    await act(async () => {
+      await m.mock.answerEscalation({ decisionId: asked, choice: "APPROVE" });
+      window.location.hash = `#/wally?d=${asked}`;
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("You said yes, but a fixed rule still stops this.");
+    expect(alert).toHaveTextContent("It costs HK$259 with shipping, but only HK$162 is left in your budget.");
   });
 
   it("checker offline: asks you first, in plain words (R10.unavailable)", async () => {

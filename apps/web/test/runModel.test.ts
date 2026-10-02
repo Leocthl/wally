@@ -150,6 +150,18 @@ describe("needs your OK", () => {
     expect(plainReason(r.chain?.current as Decision)).toEqual(R.nobodyAnswered);
   });
 
+  it("yes, but the budget ran out meanwhile: a fixed rule still stops it, and the result says so", async () => {
+    const rec = await play("unverified");
+    const asked = await openEscalationId(rec);
+    for (const id of ["normal", "normal", "small"] as const) await rec.api.runScenario(id);
+    await rec.api.answerEscalation({ decisionId: asked, choice: "APPROVE" });
+    const r = resultOf({ ...rec.state(), runs: [] }, asked);
+    expect(r.kind).toBe("stopped");
+    expect(r.answer).toBe("yesButRule");
+    expect(r.card).toBeUndefined();
+    expect(plainReason(r.chain?.current as Decision).en).toBe("It costs HK$259 with shipping, but only HK$162 is left in your budget.");
+  });
+
   it("judge unavailable: Wally's checker is offline, so it asks you first (R10.unavailable)", async () => {
     const rec = await recorder();
     await rec.api.propose({ listingText: "A plain cotton tee. ".repeat(260) });
