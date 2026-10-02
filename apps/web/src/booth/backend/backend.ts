@@ -36,7 +36,7 @@ import type { Catalogue } from "./catalogue";
 import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
 import { mapEvent, RunTracker } from "./events";
-import { createFamilyKit, familySummary, FAMILY_PARENT, PARENT_EXPORT_NOTE, type FamilyKit } from "./family";
+import { createFamilyKit, familySealRequest, familySummary, PARENT_EXPORT_NOTE, refusedStep, type FamilyKit } from "./family";
 import { ScenarioRunner } from "./runner";
 import type { ScenarioEntry, ScenarioTable } from "./scenarioTable";
 import { openSession, type Session, type SessionDeps } from "./session";
@@ -254,14 +254,12 @@ export class OrchestratorBackend implements BoothBackend {
    */
   async #familyScenario(entry: ScenarioEntry, sealMinor: number): Promise<RunSummary> {
     if (entry.run !== "seal") this.#family = null;
-    const preset = this.#d.presetSeal(this.#deps.clock.now());
-    const req: SealRequest = { ...preset, rules: { ...preset.rules, budget: { amount_minor: sealMinor, currency: "HKD" } }, family: { parent: FAMILY_PARENT } };
     let refused: Step | undefined;
     try {
-      await this.#open(req, false);
+      await this.#open(familySealRequest(this.#d.presetSeal(this.#deps.clock.now()), sealMinor), false);
     } catch (err) {
       if (!(err instanceof BoothError)) throw err;
-      refused = { outcome: err.code === "EXCEEDS_PARENT" ? "DENY" : "ERROR", code: err.code, note: err.message };
+      refused = refusedStep(err);
     }
     const session = this.#require();
     await this.#tickNow(session);
@@ -411,7 +409,7 @@ export class OrchestratorBackend implements BoothBackend {
           engine: [session.engineDid],
           delegator: session.delegatorDid,
           agent: session.agentDid,
-          ...(kit === null ? {} : { parent: kit.signer.did }),
+          ...(kit === null ? {} : { parent: kit.parentDid }),
         },
         checkpoint: snap.head,
         ...(kit === null ? {} : { parentCredential: kit.credential, parentNote: PARENT_EXPORT_NOTE }),

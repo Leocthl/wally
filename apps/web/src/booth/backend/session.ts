@@ -11,7 +11,8 @@ import { credentialIdForMandate, CredentialSignError, signMandateCredential, typ
 import { MerchantStub, RailSim, type RandomSource } from "@laisee/rail-sim";
 import type { SealRequest } from "../../api/types";
 import { BoothError } from "./errors";
-import { exceedsMessage, type FamilyKit } from "./family";
+import type { FamilyKit } from "./family";
+import { exceedsMessage } from "./familyWords";
 import { throwawayAgentDid } from "./keys";
 
 export const VC_CONTEXT: MandateCredential["@context"] = ["https://www.w3.org/ns/credentials/v2", "https://laisee.local/contexts/delegation/v1"];
@@ -99,7 +100,7 @@ export async function openSession(deps: SessionDeps, req: SealRequest, kit: Fami
     scameter: deps.scameter,
     appendEntry: deps.appendEntry,
     delegatorDid: deps.delegator.did,
-    ...(kit === null ? {} : { parentDid: kit.signer.did, allocations: kit.ledger }),
+    ...(kit === null ? {} : { parentDid: kit.parentDid, allocations: kit.ledger }),
   });
   let held: readonly OrchestratorEvent[] = [];
   let sink: ((event: OrchestratorEvent) => void) | null = null;

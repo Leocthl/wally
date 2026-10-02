@@ -106,7 +106,7 @@ export function useFamilySeal(amountText: string): FamilySeal {
   const { api, info, state } = useBoothContext();
   const { t } = useLocale();
   const mode = useRouteParam(PARAM.mode);
-  const available = info?.features.family === true && typeof api.family === "function";
+  const available = info?.features?.family === true && typeof api.family === "function";
   const [source, setSource] = useState<Source>(() => (mode !== "welcome" && state.mandate?.parent !== undefined ? "mum" : "own"));
   const [summary, setSummary] = useState<FamilySummary | null>(null);
   const [failed, setFailed] = useState(false);

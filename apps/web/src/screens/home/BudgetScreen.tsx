@@ -109,7 +109,7 @@ export function BudgetScreen(): ReactElement {
       <section className="home-block" aria-labelledby="home-try-title">
         <h2 id="home-try-title" className="home-block__title">{t(UI["home.tryAsking"])}</h2>
         <p className="home-block__lead">{t(UI["home.tryLead"])}</p>
-        <TryAsking onRun={run} busy={busy} family={booth.info?.features.family === true} />
+        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
         <div className="home-block__foot"><ResetDemo /></div>
       </section>
       <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />

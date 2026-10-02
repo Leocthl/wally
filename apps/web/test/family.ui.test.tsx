@@ -103,6 +103,24 @@ describe("when the booth has no family budget", () => {
   });
 });
 
+describe("a booth that does not say what it can do (an older server)", () => {
+  class OldServer extends FamilyMock {
+    override async info(): Promise<ApiInfo> {
+      const { features: _gone, ...rest } = await super.info();
+      return rest as unknown as ApiInfo;
+    }
+  }
+
+  it("shows Budget and Seal as before, with no family anything and no crash", async () => {
+    await boot(new OldServer(), "#/budget");
+    expect(await screen.findByRole("meter")).toBeInTheDocument();
+    expect(document.querySelector('[data-scenario="family_ok"]')).toBeNull();
+    await go("#/seal?mode=topup");
+    expect(await screen.findByRole("heading", { level: 1, name: "Top up your budget" })).toBeInTheDocument();
+    expect(choice()).toBeNull();
+  });
+});
+
 describe("Whose money? in Seal", () => {
   it("starts on my own budget with no card, and changes nothing about the request", async () => {
     const api = new FamilyMock();
