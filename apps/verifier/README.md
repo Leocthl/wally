@@ -25,7 +25,7 @@
 ## What it checks (docs/02 section 11, via `verifyLogText`)
 - Keys first (KEYS): a pinned delegator key that is not also an engine key, or nothing is checked.
 - Steps 1 to 8: schema and canonical JSON per line, seq order, prev_hash chain, payload hash, entry hash, engine signature against the listed engine keys, the seq 0 mandate credential pinned to the delegator, delegator signatures (escalation answers bound to the escalated decision, mandate and cart), and the checkpoint (TRUNCATED).
-- Step 9, consent and money: every card follows a logged APPROVE at its limit, once (NO_DECISION, DUPLICATE); an APPROVE that resolves an escalation rests on the delegator's in-time yes for that same cart, once (CONSENT); charges stay within card limits and the sealed budget (OVERSPEND); no card after a revoke or expiry (AFTER_REVOKE).
+- Step 9, consent and money against the signed credential: every card follows a logged APPROVE at its limit, once (NO_DECISION, DUPLICATE); an APPROVE above the ask-above amount or resolving an escalation rests on the delegator's in-time yes for that same cart, once (CONSENT); per-purchase caps, card limits and the sealed budget hold (OVERSPEND); no approval or card outside the validity dates or after a revoke or expiry marker (AFTER_REVOKE).
 
 ## What it does not check
 - **Re-fold and re-render**: PacketState snapshots inside decisions and rendered explanations are not recomputed; nor are the engine's rule results.
