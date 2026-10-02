@@ -1,4 +1,4 @@
-// Plain words for each verifyChain failure code (docs/02 section 11 steps 1-8). The code is always shown too.
+// Plain words for each verifyChain failure code (docs/02 section 11 steps 1-9). The code is always shown too.
 import type { VerifyFailure } from "@laisee/core/verify";
 import type { Bi } from "./strings";
 
@@ -38,6 +38,26 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
   KEYS: {
     en: "The public keys cannot anchor trust: no delegator key, or the delegator key is also an engine key. Nothing was checked.",
     zh: "公鑰無法作為信任依據：沒有委託人公鑰，或委託人公鑰同時列為引擎公鑰。未有進行任何檢查。", // NEEDS-REVIEW zh-HK
+  },
+  NO_DECISION: {
+    en: "A card was minted or charged without an approval for it earlier in this log.",
+    zh: "此紀錄中沒有較早的批准，卻發出或扣款了一張卡。", // NEEDS-REVIEW zh-HK
+  },
+  DUPLICATE: {
+    en: "Something that may happen once happened twice: a decision id, a card for one approval, or one consent used again.",
+    zh: "只可發生一次的事發生了兩次：決定編號、同一批准的卡，或同一同意被再用。", // NEEDS-REVIEW zh-HK
+  },
+  CONSENT: {
+    en: "An approval claims the delegator's consent, but there is no signed, in-time yes from the delegator for this exact cart.",
+    zh: "此批准聲稱已得委託人同意，但沒有委託人就這個購物車及時簽署的同意。", // NEEDS-REVIEW zh-HK
+  },
+  OVERSPEND: {
+    en: "The money does not add up: a limit, a charge or the total goes past what was approved or sealed.",
+    zh: "金額不符：上限、扣款或總額超出已批准或封存的數目。", // NEEDS-REVIEW zh-HK
+  },
+  AFTER_REVOKE: {
+    en: "A card was minted after the mandate was revoked or expired.",
+    zh: "授權已撤銷或到期後仍發出了卡。", // NEEDS-REVIEW zh-HK
   },
 };
 

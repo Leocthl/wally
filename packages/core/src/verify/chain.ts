@@ -1,8 +1,9 @@
 // verifyChain (docs/02 section 11), pure and browser-safe. First the trust anchors (KEYS: a pinned delegator
 // did:key that is not also an engine key). Per entry, in order: 1 SCHEMA, 2 SEQ, 3 PREV_HASH, 4 PAYLOAD_HASH,
-// 5 ENTRY_HASH, 6 SIGNATURE, then structure (SCHEMA: seq 0 is the only MANDATE_SEALED, one log_id per log)
-// and 7 PAYLOAD_SIGNATURE; after the last entry, 8 TRUNCATED against the external checkpoint. Returns the
-// first failing seq (line index) and reason. Never throws.
+// 5 ENTRY_HASH, 6 SIGNATURE, then structure (SCHEMA: seq 0 is the only MANDATE_SEALED, one log_id per log),
+// 7 PAYLOAD_SIGNATURE and 9 semantics (consent and money: NO_DECISION, DUPLICATE, CONSENT, OVERSPEND,
+// AFTER_REVOKE); after the last entry, 8 TRUNCATED against the external checkpoint. Returns the first failing
+// seq (line index) and reason. Never throws.
 import { fromBase64url } from "../crypto/bytes";
 import { parseDidKey } from "../crypto/did-key";
 import { verifyEd25519 } from "../crypto/ed25519";
@@ -11,12 +12,23 @@ import type { LogEntry } from "../generated";
 import { checkpointOf, parseCheckpoint } from "../log/checkpoint";
 import { entryHash, GENESIS_PREV_HASH, logSigningMessage, payloadHash } from "../log/hashing";
 import type { Checkpoint, VerifyChain } from "../ports";
-import { formatIssues, validateLogEntry } from "../schema";
-import { checkDelegated, checkSeal, type Delegated, type Sealed } from "./delegated";
+import { checkDelegated, checkSeal, type Sealed } from "./delegated";
+import { briefIssues, validateLogEntryFast } from "./fast-schema";
 import { publicKeysProblem } from "./keys";
 import { fail, type PublicKeys, type VerifyReport } from "./report";
+import { checkSemantics, initialSemantics, type Semantics } from "./semantics";
 
 type Integrity = { readonly ok: true; readonly entry: LogEntry } | { readonly ok: false; readonly report: VerifyReport };
+
+/** What the walk knows after the entries checked so far. */
+interface Walk {
+  readonly prevHash: string;
+  readonly last: LogEntry | null;
+  readonly sealed: Sealed | null;
+  readonly semantics: Semantics | null;
+}
+
+type Step = { readonly ok: true; readonly walk: Walk } | { readonly ok: false; readonly report: VerifyReport };
 
 function engineSignatureValid(entry: LogEntry): boolean {
   const publicKey = parseDidKey(entry.signer);
@@ -38,8 +50,8 @@ function safeHash(compute: () => string): string {
 
 /** Steps 1-6 for the entry at `index`, given the previous entry_hash. */
 function checkIntegrity(raw: unknown, index: number, prevHash: string, engine: ReadonlySet<string>): Integrity {
-  const parsed = validateLogEntry(raw);
-  if (!parsed.ok) return { ok: false, report: fail(index, "SCHEMA", formatIssues(parsed.errors)) };
+  const parsed = validateLogEntryFast(raw);
+  if (!parsed.ok) return { ok: false, report: fail(index, "SCHEMA", briefIssues(parsed.errors)) };
   const entry = parsed.value;
   const no = (reason: Parameters<typeof fail>[1], detail: string): Integrity => ({ ok: false, report: fail(index, reason, detail) });
   if (entry.seq !== index) return no("SEQ", `line ${index} holds seq ${entry.seq}`);
@@ -53,7 +65,7 @@ function checkIntegrity(raw: unknown, index: number, prevHash: string, engine: R
 
 function checkHead(entries: readonly LogEntry[], logId: string, checkpoint: Checkpoint): VerifyReport | null {
   const parsed = parseCheckpoint(checkpoint);
-  if (!parsed.ok) return fail(0, "TRUNCATED", `checkpoint is malformed: ${formatIssues(parsed.errors)}`);
+  if (!parsed.ok) return fail(0, "TRUNCATED", `checkpoint is malformed: ${briefIssues(parsed.errors)}`);
   const cp = parsed.value;
   if (cp.log_id !== logId) return fail(0, "TRUNCATED", `checkpoint is for ${cp.log_id}, not ${logId}`);
   const at = entries[cp.seq];
@@ -69,26 +81,35 @@ function structure(entry: LogEntry, index: number, sealed: Sealed | null): Verif
   return null;
 }
 
+/** Steps 1-7 and 9 for one entry. */
+function checkEntry(raw: unknown, index: number, walk: Walk, keys: { readonly engine: ReadonlySet<string>; readonly delegator: string }): Step {
+  const integrity = checkIntegrity(raw, index, walk.prevHash, keys.engine);
+  if (!integrity.ok) return integrity;
+  const { entry } = integrity;
+  const broken = structure(entry, index, walk.sealed);
+  if (broken) return { ok: false, report: broken };
+  const delegated = walk.sealed === null ? checkSeal(entry, keys.delegator) : checkDelegated(entry, walk.sealed);
+  if (!delegated.ok) return { ok: false, report: fail(index, "PAYLOAD_SIGNATURE", delegated.detail) };
+  const semantic = checkSemantics(entry, walk.semantics ?? initialSemantics(delegated.sealed.budgetMinor));
+  if (!semantic.ok) return { ok: false, report: fail(index, semantic.reason, semantic.detail) };
+  return { ok: true, walk: { prevHash: entry.entry_hash, last: entry, sealed: delegated.sealed, semantics: semantic.state } };
+}
+
 export function verifyChain(entries: readonly unknown[], publicKeys: PublicKeys, headCheckpoint?: Checkpoint): VerifyReport {
   const keysProblem = publicKeysProblem(publicKeys);
   if (keysProblem !== null) return fail(0, "KEYS", keysProblem); // refuse to run, never skip the delegator check
   if (!Array.isArray(entries)) return fail(0, "SCHEMA", "entries must be a list of log lines");
   if (entries.length === 0) return fail(0, "TRUNCATED", "log is empty: seq 0 (MANDATE_SEALED) is missing");
-  const engine = new Set(publicKeys.engine);
-  const verified: LogEntry[] = [];
-  let sealed: Sealed | null = null;
+  const keys = { engine: new Set(publicKeys.engine), delegator: publicKeys.delegator };
+  const verified: LogEntry[] = []; // local to this call: the walk's own record of checked entries
+  let walk: Walk = { prevHash: GENESIS_PREV_HASH, last: null, sealed: null, semantics: null };
   for (const [index, raw] of entries.entries()) {
-    const integrity = checkIntegrity(raw, index, verified.at(-1)?.entry_hash ?? GENESIS_PREV_HASH, engine);
-    if (!integrity.ok) return integrity.report;
-    const { entry } = integrity;
-    const broken = structure(entry, index, sealed);
-    if (broken) return broken;
-    const delegated: Delegated = sealed === null ? checkSeal(entry, publicKeys.delegator) : checkDelegated(entry, sealed);
-    if (!delegated.ok) return fail(index, "PAYLOAD_SIGNATURE", delegated.detail);
-    sealed = delegated.sealed;
-    verified.push(entry);
+    const step = checkEntry(raw, index, walk, keys);
+    if (!step.ok) return step.report;
+    walk = step.walk;
+    verified.push(walk.last as LogEntry);
   }
-  const last = verified.at(-1) as LogEntry;
+  const last = walk.last as LogEntry;
   const truncated = headCheckpoint === undefined ? null : checkHead(verified, last.log_id, headCheckpoint);
   return truncated ?? { ok: true, head: checkpointOf(last) };
 }

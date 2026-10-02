@@ -1,7 +1,8 @@
 // Audit (lane s-audit): binding of a delegator's escalation answer. The answer signed only
 // {decision_id, choice, answered_at, signer}; nothing tied the decision that consumes it to the cart the
 // delegator was shown, and nothing stopped one answer from being consumed twice in the verifier.
-// Lane s-fix-crypto: answers are laisee.resolve.v2 (mandate_id and cart_sha256 signed).
+// Lane s-fix-crypto: answers are laisee.resolve.v2 (mandate_id and cart_sha256 signed) and the verifier's
+// semantics pass (step 9) refuses the four hostile logs below (S-ESC-2). The engine side (S-ESC-1) is lane e-orch's.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -137,25 +138,29 @@ const DENIED_LOG = await (async () => {
   ]);
 })();
 
-describe("KNOWN DEFECT S-ESC-2: the verifier accepts a consent applied to another cart or consumed twice", () => {
+describe("S-ESC-2 (fixed): the verifier refuses a consent applied to another cart or consumed twice", () => {
   it("setup: both hostile logs were written by the real appendEntry (engine key) with a real delegator answer", () => {
     expect(SWAPPED_LOG.log.entries).toHaveLength(3);
     expect(REUSED_LOG.log.entries).toHaveLength(4);
   });
 
-  it.fails("rejects a resolving APPROVE whose cart differs from the escalated decision's cart", () => {
+  it("rejects a resolving APPROVE whose cart differs from the escalated decision's cart", () => {
     expect(verifyChain(SWAPPED_LOG.log.entries, SWAPPED_LOG.log.keys.publicKeys).ok).toBe(false);
+    expect(verifyChain(SWAPPED_LOG.log.entries, SWAPPED_LOG.log.keys.publicKeys)).toMatchObject({ failedSeq: 2, reason: "CONSENT" });
   });
 
-  it.fails("rejects a second decision that consumes the same answer (two mints from one consent)", () => {
+  it("rejects a second decision that consumes the same answer (two mints from one consent)", () => {
     expect(verifyChain(REUSED_LOG.log.entries, REUSED_LOG.log.keys.publicKeys).ok).toBe(false);
+    expect(verifyChain(REUSED_LOG.log.entries, REUSED_LOG.log.keys.publicKeys)).toMatchObject({ failedSeq: 3, reason: "DUPLICATE" });
   });
 
-  it.fails("rejects an APPROVE that resolves an ESCALATE without any delegator answer", () => {
+  it("rejects an APPROVE that resolves an ESCALATE without any delegator answer", () => {
     expect(verifyChain(NO_ANSWER_LOG.log.entries, NO_ANSWER_LOG.log.keys.publicKeys).ok).toBe(false);
+    expect(verifyChain(NO_ANSWER_LOG.log.entries, NO_ANSWER_LOG.log.keys.publicKeys)).toMatchObject({ failedSeq: 2, reason: "CONSENT" });
   });
 
-  it.fails("rejects an APPROVE backed by the delegator's DENY answer", () => {
+  it("rejects an APPROVE backed by the delegator's DENY answer", () => {
     expect(verifyChain(DENIED_LOG.log.entries, DENIED_LOG.log.keys.publicKeys).ok).toBe(false);
+    expect(verifyChain(DENIED_LOG.log.entries, DENIED_LOG.log.keys.publicKeys)).toMatchObject({ failedSeq: 2, reason: "CONSENT" });
   });
 });

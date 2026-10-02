@@ -216,7 +216,12 @@ export type VerifyFailure =
   | "SIGNATURE"
   | "PAYLOAD_SIGNATURE"
   | "TRUNCATED"
-  | "KEYS";
+  | "KEYS"
+  | "NO_DECISION"
+  | "DUPLICATE"
+  | "CONSENT"
+  | "OVERSPEND"
+  | "AFTER_REVOKE";
 export type VerifyResult =
   | { readonly ok: true; readonly head: Checkpoint }
   | { readonly ok: false; readonly failedSeq: number; readonly reason: VerifyFailure };

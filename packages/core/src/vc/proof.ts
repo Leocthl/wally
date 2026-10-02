@@ -7,13 +7,16 @@
 import { concat, fromMultibase58btc, toMultibase58btc } from "../crypto/bytes";
 import { parseDidKey, verificationMethodId } from "../crypto/did-key";
 import { ED25519_SIGNATURE_BYTES, verifyEd25519 } from "../crypto/ed25519";
-import { errorMessage } from "../crypto/errors";
+import { clipMessage, errorMessage } from "../crypto/errors";
 import { jcsSha256 } from "../crypto/jcs";
 import type { MandateCredential } from "../generated";
 import type { Signer } from "../ports";
 import { formatIssues, validateMandateCredential } from "../schema";
 
 export const CRYPTOSUITE = "eddsa-jcs-2022";
+/** Schema issues and characters kept in a failure detail (display limits, not policy). */
+const MAX_ISSUES = 3;
+const MAX_DETAIL_CHARS = 400;
 
 export type UnsignedMandateCredential = Omit<MandateCredential, "proof">;
 type Proof = MandateCredential["proof"];
@@ -118,7 +121,7 @@ export function verifyMandateCredential(input: unknown, opts: VerifyCredentialOp
   const expectedIssuer = pinnedIssuer(opts);
   if (expectedIssuer === null) return fail("ISSUER_UNPINNED", "no pinned delegator did:key: a did:key credential cannot vouch for itself");
   const parsed = validateMandateCredential(input);
-  if (!parsed.ok) return fail("SCHEMA", formatIssues(parsed.errors));
+  if (!parsed.ok) return fail("SCHEMA", clipMessage(formatIssues(parsed.errors.slice(0, MAX_ISSUES)), MAX_DETAIL_CHARS));
   const vc = parsed.value;
   if (vc.issuer !== expectedIssuer) return fail("WRONG_ISSUER", "issuer is not the pinned delegator");
   const publicKey = parseDidKey(vc.issuer);
