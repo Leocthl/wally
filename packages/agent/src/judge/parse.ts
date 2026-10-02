@@ -1,7 +1,7 @@
 // Strict parser for a SystemOne (Laya or Jev) response. Anything unexpected is a failure, never a guess:
 // the adapter turns every failure into status ERROR, which R10 escalates (I5).
 import type { JudgeAnswers } from "@laisee/core/generated";
-import { PROBABILITY_SUM_TOLERANCE } from "./config";
+import { MAX_NAME_CHARS, PROBABILITY_SUM_TOLERANCE } from "./config";
 import { averageDistributions, type Distribution } from "./average";
 import { isRecord } from "./guards";
 import type { QuestionRow } from "./plan";
@@ -124,7 +124,7 @@ function toAnswers(d: Readonly<Record<JudgeQuestion, Distribution>>): JudgeAnswe
   };
 }
 
-const stringOrNull = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
+const stringOrNull = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v.slice(0, MAX_NAME_CHARS) : null);
 
 /** Validates the whole response against the row plan and returns rotation-averaged answers in canonical order. */
 export function parseSystemOneResponse(body: unknown, rows: readonly QuestionRow[], opts: ParseOptions): ParseResult {

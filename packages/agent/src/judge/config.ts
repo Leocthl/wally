@@ -45,3 +45,6 @@ export const DEFAULT_WINDOW_CHARS = 2_000;
 export const DEFAULT_WINDOW_OVERLAP_CHARS = 250;
 /** A listing needing more windows than this is not judged (ERROR, input_truncated). The listing record caps text at 4,000 characters. */
 export const DEFAULT_MAX_WINDOWS = 4;
+
+/** Model and version strings read from a server are clipped to this length before they reach a record. ASSUMED, no register row yet. */
+export const MAX_NAME_CHARS = 80;

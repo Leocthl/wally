@@ -303,6 +303,11 @@ describe("SystemOneJudge fail-closed behaviour", () => {
     expect(mock.judgeRequests()).toHaveLength(0);
   });
 
+  it("treats a huge timeout as a long one, not as 1 ms", async () => {
+    const record = await laya().assess(input, { timeoutMs: 3_000_000_000 });
+    expect(record.status).toBe("OK");
+  });
+
   it("never throws when the transport throws", async () => {
     const judge = laya({ fetchImpl: () => { throw new Error("boom"); } });
     expect((await judge.assess(input, { timeoutMs: TIMEOUT_MS })).status).toBe("ERROR");

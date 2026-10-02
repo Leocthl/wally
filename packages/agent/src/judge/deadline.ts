@@ -9,6 +9,9 @@ export interface Deadline {
   readonly dispose: () => void;
 }
 
+/** setTimeout reads anything above the 32-bit range as 1 ms; clamp so a huge timeout stays a long one. */
+const MAX_TIMER_MS = 2_147_483_647;
+
 export function createDeadline(timeoutMs: number, external?: AbortSignal): Deadline {
   const controller = new AbortController();
   let fired = false;
@@ -16,7 +19,7 @@ export function createDeadline(timeoutMs: number, external?: AbortSignal): Deadl
   const timer = setTimeout(() => {
     fired = true;
     controller.abort();
-  }, timeoutMs);
+  }, Math.min(timeoutMs, MAX_TIMER_MS));
   if (external?.aborted === true) controller.abort();
   else external?.addEventListener("abort", onExternalAbort, { once: true });
   return {

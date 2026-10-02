@@ -61,6 +61,13 @@ describe("parseSystemOneResponse: valid responses", () => {
     expect(result.ok && result.value.routingModel).toBe("typed-decisions");
   });
 
+  it("clips model names from the server so a record stays small", () => {
+    const long = "m".repeat(5_000);
+    const result = parseSystemOneResponse(wireResponse(rows, BASE_DISTRIBUTIONS, { model: long, routingModel: long }), rows, strict);
+    expect(result.ok && result.value.model?.length).toBe(80);
+    expect(result.ok && result.value.routingModel?.length).toBe(80);
+  });
+
   it("ignores extra answers and extra top-level fields", () => {
     const response = { ...wireResponse(rows), extra: 1, answers: { ...wireResponse(rows).answers, unrelated: answerFor({ a: 1 }) } };
     expect(parseSystemOneResponse(response, rows, strict).ok).toBe(true);
