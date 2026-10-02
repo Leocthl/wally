@@ -1,16 +1,16 @@
 # TASKS
 
 ## Top 10 do-first
-1. **A-31, A-26, A-23 to A-25, A-28** Cart builder and orchestrator (lane e-orch), then X-10, X-14, A-35: API server, `demo:reset`, booth scenarios.
-2. **C-09** Offline verifier page (lane e-verifier); **B-19, B-20** judge corpus split and threshold fit (lane e-tune).
-3. **X-01** Create the remote and make the repo public; needs the team's explicit yes. Until then every tick means "merged to `main`, green locally"; CI runs once the remote exists.
-4. **D-09 to D-11, D-22, D-23** Harness on the real components, then the live n=150 runs after the judge is tuned and the orchestrator lands.
-5. **C-15, C-16, C-17** Booth screen wired to the real API (the mock stays for tests).
-6. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39].
-7. **X-11, X-17** T-E2E and the booth smoke with network off and Laya stopped.
-8. **D-15, D-16, D-18, D-25** Deck, demo script run, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
-9. **A-27, A-29** Property tests T-I1 to T-I8 across the pipeline; coverage gate is wired (F44).
-10. **S-audit** Security and spec-conformance review of crypto, log, rail and judge before the repo goes public.
+1. **A-31, A-26, A-23 to A-25, A-28** Cart builder and orchestrator (lane e-orch), then **X-10, X-14, A-35**: API server, `demo:reset`, booth scenarios (lane e-server).
+2. **M-05, M-06** Wally design system and PWA shell (lane m-design), then **M-07** mobile-first screens from its primitives.
+3. **M-02 to M-04** Local Qwen (planner and sentence-to-rules), Laya stays the judge (lane m-qwen). **B-19, B-20** judge tuning (lane e-tune). **C-10** Evidence screen (lane e-evidence).
+4. **M-08 to M-10** Local mode (real engine in the browser), phone-held key, LAN mode with a pairing QR.
+5. **D-09 to D-11, D-22, D-23** Harness on the real components, then live n=150 runs after tuning and the orchestrator land.
+6. **X-01** Remote and public repo: needs the team's explicit yes. Until then a tick means "merged to `main`, green locally".
+7. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
+8. **X-11, X-17** T-E2E and the booth smoke with network off and Laya stopped.
+9. **D-15, D-16, D-18, D-25** Deck, demo script run, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
+10. **M-01** Rename to Wally everywhere after all lanes merge; security audit findings (lane s-audit) fixed before the repo goes public.
 
 ## Backlog
 - Milestones [F41]: M1 H6 (Sat 02:45), M2 H12 (Sat 08:45), M3 H20 (Sat 16:45), M4 H28 (Sun 00:45), M5 H34 (Sun 06:45, feature freeze), M6 Sun 07:00-12:00 (rehearsals, video, submission). Hard freeze Sun 13:00 HKT: no repo changes after it [F16]. Est is wall-clock hours with a Claude Code session on the task. Owner `[TEAM]` is a name to fill in. Tick Done when merged to `main` with CI green.
@@ -113,7 +113,7 @@
 | C-06 | `StopBanner` built from rule templates and recorded inputs (A-16): colour, icon and text | [TEAM] | 1h | A-16, C-05 | M3 | [ ] |
 | C-07 | Packet console: `RevokeButton` (hold to confirm), escalation countdown (amber) | [TEAM] | 1.5h | C-04, A-24 | M3 | [ ] |
 | C-08 | `LogTimeline` screen | [TEAM] | 1.5h | A-18, C-02 | M3 | [ ] |
-| C-09 | `apps/verifier` offline page with `VerifierPanel`: paste log, public keys, head checkpoint; pass or first failing seq; Tamper button flips one byte of a copy; no network calls (T-V1) | [TEAM] | 2h | A-19 | M3 | [ ] |
+| C-09 | `apps/verifier` offline page with `VerifierPanel`: paste log, public keys, head checkpoint; pass or first failing seq; Tamper button flips one byte of a copy; no network calls (T-V1) | [TEAM] | 2h | A-19 | M3 | [x] |
 | C-10 | Evidence screen (04 §Screens): `EvidenceCharts` from harness results (B0, B1, B2), manual-route table (E3), OBSERVED captures (E5), the one real decline | [TEAM] | 2.5h | D-11, D-12 | M4 | [ ] |
 | C-11 | Presenter mode: big-screen layout; the finalist stage reuses the booth app | [TEAM] | 1h | C-05 | M4 | [ ] |
 | C-12 | zh-HK second-line copy, reviewed by a zh-HK reader | [TEAM] | 0.75h | C-03 | M4 | [ ] |
@@ -125,6 +125,21 @@
 | C-18 | `CredentialPanel`: the sealed AgentDelegationCredential (issuer did:key, validity, rules, proof) with the R1 result; on Seal and Booth | [TEAM] | 1h | C-03, A-32 | M3 | [ ] |
 | C-19 | Bilingual pass for booth strings, scenario labels and stop banners: zh-HK second line, read by a zh-HK reader | [TEAM] | 0.75h | C-12, C-16 | M4 | [ ] |
 | C-20 | Kiosk polish: full screen on the booth laptop, idle reset, fonts bundled offline, no dead ends, every error state recovers through Reset | [TEAM] | 1h | C-15 | M4 | [ ] |
+
+### Lane M: mobile, second model, brand
+| ID | Task | Owner | Est | Deps | Milestone | Done |
+|---|---|---|---|---|---|---|
+| M-01 | Rename to Wally: user-facing strings through one brand constant now; one scripted rename of the `@laisee/*` scope, README, CLAUDE.md, docs and schema ids after all lanes merge | [TEAM] | 1h | all lanes merged | M3 | [ ] |
+| M-02 | Qwen install: `services/qwen/` (setup, serve, stop, smoke), llama-server on 127.0.0.1:8809, pinned GGUF revision and sha, FINDINGS | [TEAM] | 1.5h | none | M2 | [ ] |
+| M-03 | Local planner (`PLANNER_PROVIDER=local`): grammar-constrained proposal, English, Chinese and Cantonese requests, alternatives, never throws, logged trace | [TEAM] | 2h | M-02 | M2 | [ ] |
+| M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile | [TEAM] | 1.5h | M-02 | M2 | [ ] |
+| M-05 | Design system phase A: cool-wallet tokens, Wally character, primitives, style guide route | [TEAM] | 2h | none | M2 | [ ] |
+| M-06 | PWA shell: manifest, icons, service worker, install prompt, offline fallback | [TEAM] | 1.5h | M-05 | M2 | [ ] |
+| M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [ ] |
+| M-08 | Local mode: real engine, orchestrator, RailSim and signers in the browser with recorded model answers; static public build | [TEAM] | 3h | e-orch merged, M-07 | M3 | [ ] |
+| M-09 | Delegator key on the phone: generate and sign seal, revoke and escalation answers on the device; the server only verifies | [TEAM] | 2h | M-08 | M4 | [ ] |
+| M-10 | LAN mode: server `--lan` with a pairing token, Host and Origin checks and a QR on the booth screen so phones drive the Mac | [TEAM] | 2h | e-server merged | M4 | [ ] |
+| M-11 | Device pass: iOS Simulator Safari checks, safe areas, install flow, Android emulation; optional Capacitor wrappers (stretch) | [TEAM] | 2h | M-07 | M4 | [ ] |
 
 ### Lane D: evidence + pitch
 | ID | Task | Owner | Est | Deps | Milestone | Done |

@@ -5,7 +5,7 @@
 
 ## Lane A: policy + rail
 ```
-You are Lane A (policy + rail) on Lai See Agent, a sealed-budget mandate engine for AI shopping agents. The rail is SIMULATED; say so wherever it appears. Work in the git worktree .worktrees/a on branch lane/a and commit there; Lane X merges at each gate.
+You are Lane A (policy + rail) on Wally, a sealed-budget mandate engine for AI shopping agents. The rail is SIMULATED; say so wherever it appears. Work in the git worktree .worktrees/a on branch lane/a and commit there; Lane X merges at each gate.
 
 Read first, in this order:
 1. CLAUDE.md
@@ -51,7 +51,7 @@ Report back in this shape: Done (task IDs); Tests (IDs green or red, core covera
 
 ## Lane B: agent + judge
 ```
-You are Lane B (agent + judge) on Lai See Agent, a sealed-budget mandate engine for AI shopping agents. You build the planner backends, the judge adapters and the local Laya service. The rail is SIMULATED, and the planner never touches it. Work in the git worktree .worktrees/b on branch lane/b and commit there; Lane X merges at each gate.
+You are Lane B (agent + judge) on Wally, a sealed-budget mandate engine for AI shopping agents. You build the planner backends, the judge adapters and the local Laya service. The rail is SIMULATED, and the planner never touches it. Work in the git worktree .worktrees/b on branch lane/b and commit there; Lane X merges at each gate.
 
 No API key is needed and Laya is the only model. Laya, a third-party open-source typed model, runs on this Mac (127.0.0.1:8808). It is the judge, and it drives the planner: a decision loop inside a deterministic harness (not a generative LLM). replay is the CI default and booth fallback. Read the claude-api skill only before you write the optional claude planner (only if a key ever appears). There is no LLM judge.
 
@@ -113,7 +113,7 @@ Report back in this shape: Done (task IDs); Tests (IDs green or red); Observed (
 
 ## Lane C: UI + verifier
 ```
-You are Lane C (UI + verifier) on Lai See Agent, a sealed-budget mandate engine for AI shopping agents. You build apps/web (incl. the Booth screen a judge drives during the 5-minute visit [F14]) and apps/verifier. The rail is SIMULATED; show that on every screen that shows the rail. Work in the git worktree .worktrees/c on branch lane/c and commit there; Lane X merges at each gate.
+You are Lane C (UI + verifier) on Wally, a sealed-budget mandate engine for AI shopping agents. You build apps/web (incl. the Booth screen a judge drives during the 5-minute visit [F14]) and apps/verifier. The rail is SIMULATED; show that on every screen that shows the rail. Work in the git worktree .worktrees/c on branch lane/c and commit there; Lane X merges at each gate.
 
 Read first, in this order:
 1. CLAUDE.md
@@ -158,7 +158,7 @@ Report back in this shape: Done (task IDs); Tests (IDs green or red); Needs (API
 
 ## Lane D: evidence + pitch
 ```
-You are Lane D (evidence + pitch) on Lai See Agent, a sealed-budget mandate engine for AI shopping agents. You own the replay harness, the evidence captures, the pitch material and the submission package. The rail is SIMULATED; the only real rail data is the one decline in D-03. Work in the git worktree .worktrees/d on branch lane/d and commit there; Lane X merges at each gate.
+You are Lane D (evidence + pitch) on Wally, a sealed-budget mandate engine for AI shopping agents. You own the replay harness, the evidence captures, the pitch material and the submission package. The rail is SIMULATED; the only real rail data is the one decline in D-03. Work in the git worktree .worktrees/d on branch lane/d and commit there; Lane X merges at each gate.
 
 Read first, in this order:
 1. CLAUDE.md
@@ -198,7 +198,7 @@ Report back in this shape: Done (task IDs); Tests (IDs green or red); Measured (
 
 ## Integration (lane X)
 ```
-You are Lane X (integration) on Lai See Agent, a sealed-budget mandate engine for AI shopping agents. You own contracts, CI, worktrees, merges, the end-to-end test and the freeze guard. You write no feature logic. The rail is SIMULATED.
+You are Lane X (integration) on Wally, a sealed-budget mandate engine for AI shopping agents. You own contracts, CI, worktrees, merges, the end-to-end test and the freeze guard. You write no feature logic. The rail is SIMULATED.
 
 Read first, in this order:
 1. CLAUDE.md

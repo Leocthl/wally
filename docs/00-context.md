@@ -7,7 +7,7 @@
 - **Format**: every team gets a booth; judges watch or try the demo, 5 min per team (3 pitch + 2 Q&A). Only the top 8 pitch on stage, 5 + 2 [F14]
 - **Submit**: pitch deck, public GitHub link, prototype video (3 min) or live link, declaration of problem statement and extra awards [F18]
 - **Unknown**: HKT sandbox, API or mentor access [F17]
-- **Product**: Lai See Agent (利是 Agent), a sealed-budget mandate engine for AI shopping agents. Not affiliated with HKT, Tap & Go or Mastercard
+- **Product**: Wally, a sealed-budget mandate engine for AI shopping agents. Not affiliated with HKT, Tap & Go or Mastercard
 
 ## Statement digest
 | ID | Requirement (binding; the evidence paragraph is the scoring sheet) |
@@ -42,7 +42,7 @@
 ## Decisions
 | ID | Decision | Alternative recorded in |
 |---|---|---|
-| D1 | Mandate engine on HKT rails + four upgrades (D6). Title "Lai See Agent"; red-packet metaphor is branding only, the technical plan must not depend on it | none |
+| D1 | Mandate engine on HKT rails + four upgrades (D6). Title "Lai See Agent", renamed Wally (D14); the technical plan never depended on the metaphor | none |
 | D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Option: teen on Plus(ii) [F2] with a parent-sealed packet (parent → teen → agent, caps compose: agent <= teen packet <= parent funding). Minors are not the headline | ADR-0005 |
 | D3 | Chain: signed mandate → planner (Laya-driven, untrusted) → judge (Laya, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
 | D4 | Invariants I1-I8 (below). Explanations render from rule templates + recorded inputs, never LLM prose | ADR-0002 |
@@ -55,6 +55,9 @@
 | D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
 | D12 | Laya-only, local-first, no API keys to run the demo: judge = Laya on 127.0.0.1; planner = PlannerPort with a `rule` backend (structured parser + Laya typed item choice) and `replay` backend; `claude` stays an optional backend; no generative LLM [F27] | ADR-0008 |
 | D13 | Booth first: the demo is built for a judge who drives it for 5 min [F14]; the finalist pitch reuses it. Single-use token semantics include a blocked replay and a SIMULATED merchant lock [F19] | 06, 07 |
+| D14 | Name: Wally (user decision 2026-10-02). No red-packet theming: cool-wallet look (light fintech UI, blue primary, teal accent, a wallet character), red or orange only for stop and error. No HKT, Tap & Go or Mastercard logos; the look may be aligned to Tap & Go's design language once the team supplies references | none |
+| D15 | A second local model is allowed (supersedes D12): a local Qwen plans natural-language requests (English, Chinese, Cantonese) and compiles the sentence into rule chips; Laya stays the judge; rules, the rail limit and Laya's gate stay in charge; `rule` and `replay` planners remain the fallbacks. There is still no LLM judge | ADR-0008 |
+| D16 | Mobile first: a PWA-ready web app first (manifest, service worker, install prompt, safe areas), phones are the main target; a local mode runs the real engine in the browser with recorded model answers; iOS and Android wrappers only if time allows | 03 |
 
 ## Canonical IDs
 - **One name per thing.** Use these exactly. Do not rename or renumber.
@@ -193,7 +196,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 - [ ] **Optional**: SenseTime Raccoon award needs a declaration and real use of Raccoon [F15]; decide before the submission form closes
 - [ ] **Rail is SIMULATED**; the judges accept this when labelled and calibrated on one real decline
 - [ ] **Demo stops** are S2, S1, S3 live; thresholds [F36] and the HK$800 storyline [F20-F23] are the lead's defaults
-- [ ] **Name** "Lai See Agent" is acceptable to all
+- [x] **Name** Wally (D14)
 
 ## Non-goals
 - **No** rewards or cashback optimisation, multi-merchant comparison, agent-to-agent negotiation (our scope choice, not a statement rule)
@@ -233,5 +236,6 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Log / Verifier** | Signed hash-chained decision log / offline page that checks it |
 | **Delegator** | The person who seals the packet |
 | **Operator** | Whoever runs the engine (us); the log must be checkable without trusting them |
-| **Lai see (利是)** | HK red packet: fixed amount, sealed, given once |
+| **Wally** | The product, and the friendly wallet character in the app |
+| **Lai see (利是)** | HK red packet: fixed amount, sealed, given once. Pitch analogy only, no longer branding (D14) |
 | **Provenance chip** | UI tag showing OBSERVED / SIMULATED / MEASURED / ASSUMED beside every number |
