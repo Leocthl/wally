@@ -1,0 +1,63 @@
+/* Copied from apps/web/src/design/tokens.css (docs/04 Tokens): LEDGER, STATE, SIMULATED chip, type, space and
+   motion only; the verifier may not import across apps. Keep the values in step with docs/04. */
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+:root {
+  --ledger-bg:       light-dark(#F2F5F7, #0E141A);
+  --ledger-surface:  light-dark(#FFFFFF, #161E26);
+  --ledger-ink:      light-dark(#14202B, #E8EDF2);  /* on bg 15.1/15.7 */
+  --ledger-ink-soft: light-dark(#44515D, #A9B6C2);  /* 7.4/9.0 */
+  --line-strong:     light-dark(#6F7B86, #7A8896);  /* control borders 3.95/5.1 */
+  --hairline:        light-dark(#D6DCE2, #2B3641);  /* decorative only */
+  --focus:           light-dark(#1B4C9B, #9DBEFF);  /* ring on any surface 7.5/9.7 */
+  --minted:       light-dark(#14663A, #63D08F);
+  --minted-bg:    light-dark(#E2F3E7, #12301F);
+  --stopped:      light-dark(#B3261E, #FF8F85);
+  --stopped-bg:   light-dark(#FCE8E6, #3B1714);
+  --pending:      light-dark(#505C67, #A9B6C2);
+  --pending-bg:   light-dark(#E8ECEF, #222B34);
+  --sim:  light-dark(#FFFFFF, #14202B);  --sim-bg:  light-dark(#24303B, #E8EDF2);  /* 13.5/14.0 */
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --num: tabular-nums lining-nums;
+  --fs-s: 0.8125rem;  --fs-0: 1rem;      --fs-1: 1.25rem;   --fs-2: 1.5625rem;
+  --lh-tight: 1.15; --lh-body: 1.5; --lh-zh: 1.7;
+  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
+  --sp-5: 1.5rem;  --sp-6: 2rem;   --sp-7: 3rem;
+  --tap: 2.75rem;                                 /* 44px minimum target */
+  --r-ledger: 2px; --r-chip: 4px;
+  --dur-stop: 200ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-stop: 0ms; }
+}
+
+/* Same pairs as tokens-fallback.css in apps/web: plain values where light-dark() is missing. */
+@supports not (color: light-dark(#000000, #ffffff)) {
+  :root {
+    --ledger-bg: #F2F5F7; --ledger-surface: #FFFFFF; --ledger-ink: #14202B; --ledger-ink-soft: #44515D;
+    --line-strong: #6F7B86; --hairline: #D6DCE2; --focus: #1B4C9B;
+    --minted: #14663A; --minted-bg: #E2F3E7; --stopped: #B3261E; --stopped-bg: #FCE8E6;
+    --pending: #505C67; --pending-bg: #E8ECEF; --sim: #FFFFFF; --sim-bg: #24303B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ledger-bg: #0E141A; --ledger-surface: #161E26; --ledger-ink: #E8EDF2; --ledger-ink-soft: #A9B6C2;
+      --line-strong: #7A8896; --hairline: #2B3641; --focus: #9DBEFF;
+      --minted: #63D08F; --minted-bg: #12301F; --stopped: #FF8F85; --stopped-bg: #3B1714;
+      --pending: #A9B6C2; --pending-bg: #222B34; --sim: #14202B; --sim-bg: #E8EDF2;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ledger-bg: #0E141A; --ledger-surface: #161E26; --ledger-ink: #E8EDF2; --ledger-ink-soft: #A9B6C2;
+    --line-strong: #7A8896; --hairline: #2B3641; --focus: #9DBEFF;
+    --minted: #63D08F; --minted-bg: #12301F; --stopped: #FF8F85; --stopped-bg: #3B1714;
+    --pending: #A9B6C2; --pending-bg: #222B34; --sim: #14202B; --sim-bg: #E8EDF2;
+  }
+}
+
+[data-register="ledger"] { --bg: var(--ledger-bg); --surface: var(--ledger-surface); --fg: var(--ledger-ink);
+  --fg-soft: var(--ledger-ink-soft); --accent: var(--ledger-ink); --radius: var(--r-ledger); --font-data: var(--font-mono); }

@@ -1,0 +1,8 @@
+{
+  "note": "SIMULATED golden demo log keys for tests only (derived from public labels in packages/core/test). Not the booth keys.",
+  "engine": [
+    "did:key:z6MkoBULoCUaXdv3Hvptfr6xKCBhsxk2hap6MryDiBHJQ6Du"
+  ],
+  "delegator": "did:key:z6Mkh1Mr9LegBjW9QXNVCLt2qFWrDQLFeUU8czVryE9YyreK",
+  "agent": "did:key:z6MkoN2xYvYukbSVHZGrtap7z9SbRPjaDJrYqAZL1xjH6Y4x"
+}
