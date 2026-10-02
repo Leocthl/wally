@@ -1,74 +1,68 @@
 # Wally
 
-- A sealed-budget mandate engine for AI shopping agents. The card rail is **SIMULATED**. Not affiliated with HKT, Tap & Go or Mastercard.
-- **Status**: built during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
+- A sealed-budget wallet for AI shopping agents. The card rail is **SIMULATED**. Not affiliated with HKT, Tap & Go or Mastercard.
+- **Built** during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
 
-## What and why
-- **What**: a shopper seals a packet, for example "HK$800 this month, clothes, verified sellers" (illustrative, SIMULATED [F20]), signed as a W3C VC 2.0 delegation credential. An agent proposes carts, deterministic rules decide, and only an approved cart gets a single-use token for the exact total.
-- **Why**: online shopping scams are the most prevalent type of deception in the Hong Kong police review [F4]. The agent-payment pilots we found run through banks and issuers; none we found cover prepaid wallets or teens [F7a, F7b].
-- **Enforced in code**: signed credential, decrementing packet, expiry, revocation, seller check, single-use token with a blocked replay, and a typed judge that can only tighten a decision. No limit lives in a prompt.
-- **Stops**: an over-budget cart (shipping included), a flagged or unverified seller, injected listing text, a revoked or expired mandate, an unanswered escalation.
-- **Checkable**: every decision is a signed, hash-chained log entry that an offline page verifies: tamper, order and (with a checkpoint) truncation, plus consent and money for what is logged.
+## What it does
+- **Seal**: write a sentence, for example "HK$800 this month, clothes, verified sellers" (illustrative, SIMULATED [F20]). Wally suggests rules, you edit them and sign them as a W3C VC 2.0 delegation credential.
+- **Shop**: type or speak a request. A planner proposes a cart, a judge reads the listing as data, and deterministic rules decide. Only an approved cart gets a one-off card for the exact total.
+- **Stops**: over budget (shipping included), a flagged or unverified seller, orders hidden in a listing, a cancelled or ended budget, an unanswered Needs your OK.
+- **Proof**: every decision is a signed, hash-chained receipt. An offline page checks tamper, order, truncation (with a checkpoint), consent and money for what is logged.
+- **Family budget** (optional): a parent's budget caps a child's; a wider ask is refused.
+- **Why**: online shopping scams are the most prevalent type of deception in the Hong Kong police review [F4]; the agent-payment pilots we found run through banks and issuers [F7a, F7b].
 
 ## Real vs simulated
 | Part | Status |
 |---|---|
 | Policy engine, credential, signed log, offline verifier | Real code |
-| Judge | Laya, a third-party open-source typed model, running on the demo laptop; listing text never leaves it [F11c] |
-| Planner | Chosen at start: `local` Qwen3.5 on the laptop if it answers [F27], else `rule` (a Laya decision loop in a deterministic harness, typed and logged), else `replay` (recorded). No generative model gates a decision |
-| On-device mode | The real engine, log and SIMULATED rail run in the page with recorded planner and judge answers; typed text escalates; the page holds every key |
-| Card rail (Single Use Card semantics [F1]), merchant lock | SIMULATED |
-| Merchants and the flagged-seller fixture | SIMULATED |
-| One real card decline, shop-readiness probe | Human-run captures, when done [F39, F40] |
-| Every number | Tagged OBSERVED, SIMULATED, MEASURED or ASSUMED in the [facts register](docs/facts-register.md) |
+| Judge | Laya, third-party and open source, on the booth Mac [F11c] |
+| Planner and sentence reader | Qwen3.5, third-party and open source, on the booth Mac [F27]; else the Laya loop, else recorded answers. No model gates a decision |
+| On-device mode | The real engine in the page with recorded model answers; the page holds every key |
+| Card rail (Single Use Card semantics [F1]), merchants, flagged seller | SIMULATED |
+| Real-card decline, shop probe | Human-run captures, not done yet [F39, F40] |
+| Every number | Tagged in the [facts register](docs/facts-register.md) |
 
-- **Limits**: the models read no raw pages and do no arithmetic: listings arrive as structured records and all arithmetic is code. The engine rules and the rail limit use no model. Known gaps are in [CLAUDE.md](CLAUDE.md).
-- **Shortcut**: the demo web API holds the delegator's throwaway key, and on-device mode makes every key in the page; a real deployment keeps the delegator key on the shopper's device.
-
-## Submission
-- **Deck**: pending
-- **3-minute video**: pending
-- **Live demo**: at the booth; it runs with no network and no API key
-- **Declaration**: HKT problem statement
-
-## Quickstart
-- No API key is needed; the models run locally from `services/`. Node 22.12 or newer and pnpm.
-
+## Run it three ways
+- No API key. Node 22.12 or newer and pnpm. Model weights are fetched once and not committed.
+1. **Booth Mac** (live judge and planner):
 ```sh
 pnpm install
-services/laya/setup.sh && services/laya/serve.sh   # judge, once; weights are not committed
-pnpm demo                                          # preflight, build, API and UI on http://127.0.0.1:8787
+services/laya/setup.sh && services/laya/serve.sh     # judge
+services/qwen/setup.sh && services/qwen/serve.sh     # planner, optional
+pnpm demo                                            # http://127.0.0.1:8787
 ```
-- Without Laya the booth still runs and every decision escalates (`R10.unavailable`). `?api=local` runs the page alone. Start `services/qwen/serve.sh` as well and the booth uses Qwen as planner. Checks: `pnpm typecheck && pnpm lint && pnpm test`.
+2. **On-device** (no server, no models): `pnpm --filter @laisee/web dev`, then open `http://127.0.0.1:5173/?api=local`. The page also falls back to this when no booth answers.
+3. **Phones**: `pnpm demo:lan`, then scan the QR in About or Presenter on the same Wi-Fi. Or build the native shells: `apps/mobile/README.md`.
+- Without Laya the booth still runs and every judged decision escalates. `PLANNER_PROVIDER=rule` pins the Laya planner (default `auto`).
 
-## Repo map
-```
-apps/web            PWA (incl. the booth screen), booth server, on-device mode
-apps/verifier       offline log verifier page
-packages/core       schemas to types, packet math, rules R1-R12, engine, credential, crypto, log, verifier, cart, executor, orchestrator
-packages/rail-sim   SIMULATED rail and merchant stub
-packages/agent      planners, sentence compiler, judge adapters
-packages/harness    replay harness
-services/laya       local Laya server scripts (model weights are not committed)
-services/qwen       local Qwen server scripts (model weights are not committed)
-schemas/            JSON schemas
-data/               fixtures and capture templates
-docs/               planning docs
-```
+## Commands
+| Command | Does |
+|---|---|
+| `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm coverage` | CI steps; `pnpm gen:types` after a schema change |
+| `pnpm demo:reset` | new demo keys, empty logs, back to the sealed budget |
+| `pnpm harness -- --seed 7 --n 150 --judge live` | replay harness, B0 B1 B2 |
+| `pnpm verifier`, `pnpm verify-log <log> <keys>` | offline verifier page, log check |
+| `python3 scripts/docs-check.py` | doc caps, F-IDs, style |
+
+## Honest status
+- **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); the full pipeline stopped all 84 stop cases, a model-only gate let 43 through, rules without the judge 28; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
+- **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
+- **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68].
+- **Tests**: about 3,600; core coverage about 96%; CI green on GitHub for every pushed commit [F91].
+- **Shortcuts**: the booth server holds the delegator's demo key, and Mum's for a family budget. The offline page cannot check the parent link.
+- **Not done**: manual-route stopwatch; native zh-HK read; a physical-phone test. LAN is plain http with one shared token [F92]. Voice uses the browser's speech service.
 
 ## Docs
-- [00 Context](docs/00-context.md): event, decisions, canonical IDs · [Facts register](docs/facts-register.md): every number and its provenance
-- [01 Product brief](docs/01-product-brief.md) · [02 Architecture](docs/02-architecture.md) · [03 Implementation plan](docs/03-implementation-plan.md)
-- [04 Design language](docs/04-design-language.md) · [05 Evidence plan](docs/05-evidence-plan.md) · [06 Demo script](docs/06-demo-script.md) · [07 Pitch](docs/07-pitch.md)
-- [08 Risk register](docs/08-risk-register.md) · [09 HKT delegation API ask](docs/09-hkt-delegation-api-ask.md): proposal, not an HKT commitment · [10 Test plan](docs/10-test-plan.md)
+- [00 Context](docs/00-context.md): event, decisions, IDs · [Facts register](docs/facts-register.md): every number
+- [01 Brief](docs/01-product-brief.md) · [02 Architecture](docs/02-architecture.md) · [03 Plan](docs/03-implementation-plan.md) · [04 Design](docs/04-design-language.md)
+- [05 Evidence](docs/05-evidence-plan.md) · [06 Demo](docs/06-demo-script.md) · [07 Pitch](docs/07-pitch.md) · [08 Risks](docs/08-risk-register.md)
+- [09 HKT ask](docs/09-hkt-delegation-api-ask.md): a proposal, not an HKT commitment · [10 Tests](docs/10-test-plan.md) · [CLAUDE.md](CLAUDE.md)
 
 ## Credits
-- **Laya** (judge, and the `rule` planner's typed choices) by Convai Innovations, Apache-2.0, run locally and unmodified [F11c].
-- **Qwen3.5** (planner and sentence compiler) by the Qwen team, Alibaba Cloud, Apache-2.0; GGUF quants by bartowski; served by llama.cpp (MIT) [F27].
-- **Libraries**: @noble/curves, @noble/hashes, @scure/base, canonicalize, ajv, json-schema-to-typescript, vitest, fast-check, Playwright, React, Vite, Hono. Licences and the full list: [THIRD_PARTY.md](THIRD_PARTY.md).
+- **Laya** (judge) by Convai Innovations, Apache-2.0, run locally and unmodified [F11c].
+- **Qwen3.5** (planner, sentence reader) by the Qwen team, Alibaba Cloud, Apache-2.0; GGUF quants by bartowski; served by llama.cpp (MIT) [F27].
+- **Libraries**: React, Vite, Hono, Capacitor, NumberFlow, uqr, @noble/curves, @noble/hashes, @scure/base, canonicalize, ajv, Vitest, fast-check, Playwright, axe-core. Licences and the full list: [THIRD_PARTY.md](THIRD_PARTY.md).
 - **AI coding assistants** were used, as the event rules allow; the team can explain every module [F16].
 
 ## Licence
-`TBD`
-
-Built for HacKU 2026, FinTech track. Not affiliated with HKT, Tap & Go or Mastercard. No logos or brand assets used.
+Not chosen yet. Built for HacKU 2026. No logos or brand assets used.

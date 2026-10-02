@@ -654,7 +654,7 @@ export interface DelegationSubject {
   parent?: ParentLink;
 }
 /**
- * Teen chain only (cut first, D9). Points at the parent-sealed mandate; caps compose: agent <= teen packet <= parent funding. mandate_sha256 = SHA-256 of JCS of the full parent credential, proof included.
+ * Family budget (D17): a child budget under a parent budget, one level only. Points at the parent-sealed mandate; the child must stay within the parent's: budget after the other children's shares, categories, merchants, seller check, per-purchase terms, velocity and end date (EXCEEDS_PARENT otherwise). mandate_sha256 = SHA-256 of JCS of the full parent credential, proof included. The parent credential is checked when the child is sealed and is not part of the child's log.
  */
 export interface ParentLink {
   mandate_id: MandateId;

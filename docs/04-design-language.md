@@ -1,196 +1,88 @@
-# 04 Design language: Sealed packet, honest receipt
+# 04 Design language: Wally
 
-## Registers
-| | PACKET | LEDGER |
-|---|---|---|
-| For | mandate creation, the delegator's view | recorded decisions, logs, verifier, evidence |
-| Feel | warm paper, tactile, vermilion and brass, EN then zh-HK | cool neutral, hairlines, monospace data, tabular numerals |
+## Look
+- **Cool wallet** (D14): light fintech UI, blue primary, teal accent, a wallet character. Red and orange mean stop or error only; amber means Needs your OK only. Colour never works alone: icon and words too.
+- **Guards**: no HKT, Tap & Go or Mastercard logos or lookalikes; one gradient, on the budget card and the one-off card; no glass (`backdrop-filter`); no emoji. About carries "Prototype. Not affiliated with HKT, Tap & Go or Mastercard."
+- **Warm palette**: `data-palette="warm"` swaps blue for orange to compare with local wallet apps. Not shipped.
 
-- **Rule**: the delegator holds the packet, the system writes the receipt; registers change only at a component edge, via `data-register`.
-
-## Provenance chips
-- **No bare number.** Every figure renders through `Num` (value + `ProvChip`); one chip may sit in a column header. Vendor figures are never MEASURED [F11c]; our Laya latency is [F26]. UNKNOWN shows text, no number.
-
-| Chip | Text | Look | Maps from register status |
-|---|---|---|---|
-| OBSERVED | `OBSERVED(<date time UTC+8>, <source>)` | teal, filled dot | OBSERVED |
-| SIMULATED | `SIMULATED` | inverse fill, hatched edge, largest chip | SIMULATED |
-| MEASURED | `MEASURED(n=<count>)` | blue, tick | MEASURED |
-| ASSUMED | `ASSUMED` | brown-grey, dashed edge | ASSUMED; READ-BY-CLAUDE and VENDOR-REPORTED with a suffix |
-
-## State semantics
-| State | Colour | Icon | Text |
-|---|---|---|---|
-| MINTED | green `--minted` | check in rounded square | `MINTED`, limit, TTL |
-| STOPPED | red `--stopped` | octagon | `STOPPED <rule ID>` |
-| ESCALATED | amber `--escalated` | hourglass | `ESCALATED <rule ID>`, countdown to R11 [F31] |
-| PENDING | grey `--pending` | dashed square | `PENDING` |
-
-- **Colour never alone.** Brass has no state; amber is only ESCALATED.
-
-## StopBanner
-- Full width, `role="alert"`, text = rule template + recorded inputs (01 §Stop catalogue), e.g. "Stopped by R3. Total HK$550 is over the HK$541 left." [F22, F21]; EN and zh-HK lines.
-
-## Components
-| Component | Register | Props | Behaviour |
-|---|---|---|---|
-| MandateEditor | PACKET | `value, compiled: RuleChip[], onSeal` | Sentence beside editable rule chips; Seal disabled while a chip is invalid |
-| PacketMeter | PACKET | `packet: PacketState` | Remaining bar; drops on mint, restores on VOIDED or EXPIRED |
-| CartCard | PACKET | `cart: Cart` | Lines, shipping, fees, FX, total (the figure R3 compares) |
-| DecisionCard | LEDGER | `decision: Decision, judge?: JudgeRecord` | Rule ID, inputs, comparator, judge and planner probabilities, outcome; template text only |
-| StopBanner | LEDGER | `decision, templateId` | §StopBanner |
-| CardTicket | PACKET | `card: CardRecord` | Masked last4, limit, TTL, state, merchant lock; SIMULATED stamp |
-| RevokeButton | PACKET | `onRevoke` | Hold `--dur-hold`; early release cancels; keyboard holds Space or Enter |
-| LogTimeline | LEDGER | `entries: LogEntry[]` | Mono rows: seq, kind, outcome, rule IDs, hash prefix |
-| VerifierPanel | LEDGER | `entries, keys, head` | Pass, or first failing seq; Tamper flips one byte of a copy |
-| CredentialPanel | LEDGER | `vc, r1` | Issuer did:key, validity, rules, proof; R1 result chip |
-| ScenarioPicker | LEDGER | `scenarios, onRun, onReset` | Preset buttons, "Try to trick the agent" box, Reset (§Booth) |
-| BudgetStopActions | PACKET | `decision` | On R3 or R4: "See alternatives", "Top up packet" (§Booth) |
-| EvidenceCharts | LEDGER | `harness: HarnessResult, manual: ManualRoute` | B0, B1, B2 bars with n; no value without a chip |
-| PresenterBar | LEDGER | `step, mode, onStep, onReset, onMode` | Step DM1 to DM9, Reset, SIMULATED/REAL toggle (06) |
-
-- Types from `schemas/`. `RuleChip`, `HarnessResult`, `ManualRoute`, `ProvChip`, `Num` are UI names owned by lane C.
-
-## Screens
-| Screen | Register | Content |
-|---|---|---|
-| Seal | PACKET | MandateEditor, PacketMeter preview, CredentialPanel after Seal |
-| Run | LEDGER, PACKET header | Lanes planner, judge, engine, rail; CartCard in, DecisionCard out, StopBanner above; latency MEASURED(n=1) |
-| Packet console | PACKET | PacketMeter, CardTickets, open escalation, RevokeButton |
-| Log + verifier | LEDGER | LogTimeline, VerifierPanel, Tamper button |
-| Evidence | LEDGER | EvidenceCharts, manual-route table (E3), OBSERVED captures (E5), the one real decline |
-| Booth | both | §Booth; also the finalist stage in presenter mode |
-| Presenter | both | Run two thirds, PacketMeter one third; numerals `--fs-6` up; PresenterBar bottom; rail badge top right |
-| Phone | PACKET first | One column, 360 px; tabs Packet, Run, Log; Seal and Revoke in thumb reach |
-
-## Booth
-- **For** a judge's 5-minute visit [F14]: no login; M0 sealed on load; one tap per scenario; Reset always visible.
-- **Layout** (landscape): ScenarioPicker left; live trace centre (planner choice, judge probabilities, rule, rail event); packet, token, credential and log right, with Verify and Tamper.
-- **Scenarios**: normal purchase, flagged seller, shipping overflow, injected listing, off-category [F29], revoke, replay, wrong merchant, price drift, rail timeout.
-- **Free text**: "Try to trick the agent" fills the listing description; only the judge reads it. Title, price and shipping stay structured.
-- **Budget stops** (R3, R4): "See alternatives" re-runs the pipeline; "Top up packet" opens Seal for a new signed mandate; an answer never overrides a hard rule.
-- **Failure**: Laya down shows an ESCALATED banner, never a blank screen.
-- **Language**: zh-HK in UI copy only; listings stay English (Laya [F26]).
+## Where it lives
+| What | Path under `apps/web/src/` |
+|---|---|
+| Tokens | `design/tokens.css`; `tokens-warm.css` (optional); `tokens-fallback.css` (generated for browsers without `light-dark()`) |
+| Contrast pairs, motion mirrors | `design/contrastPairs.ts`, `design/motion.ts`, both under test |
+| Base and primitives | `design/base.css`, `ui/*.tsx`, `design/ui/*.css` |
+| Wally | `wally/` |
+| Words | `i18n/*.ts`, one `label(en, zh)` per string |
+| Style guide | `#/styleguide`: palette with ratios, type, every primitive |
 
 ## Tokens
-- **Fonts**: system sans; self-hosted Noto Sans HK subset for CJK, `lang="zh-HK"` on every Chinese run; mono for logs and hashes; figures use `--num`.
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--c-bg` | #F4F7FE | #0B1220 | background |
+| `--c-surface` | #FFFFFF | #131C30 | cards, sheets |
+| `--c-ink` | #0E1A33 | #EAF0FF | text |
+| `--c-ink-muted` | #4F5B78 | #A7B3CF | secondary text |
+| `--c-primary` | #1A5CFF | #3366F5 | actions, budget card |
+| `--c-accent` | #19C3A6 | #2FD3B6 | teal highlight |
+| `--c-ok` | #0B7D41 | #34C77B | approved, card made |
+| `--c-warn` | #F2B21B | #F5BE3C | Needs your OK |
+| `--c-stop` | #D92D20 | #FF6B5E | Stopped, errors |
+| `--c-info` | #2563EB | #5B8CFF | notices |
 
-```css
-/* tokens.css. Ratios in comments are light/dark, from the contrast script.
-   light-dark() needs a current browser: test the demo laptop and phone. */
-:root { color-scheme: light dark; }
-:root[data-theme="light"] { color-scheme: light; }
-:root[data-theme="dark"]  { color-scheme: dark; }
-
-:root {
-  /* PACKET */
-  --paper:        light-dark(#FBF4E8, #1C1410);
-  --paper-raised: light-dark(#FFFBF3, #2A1E18);
-  --ink:          light-dark(#2A1C16, #F6EBDC);  /* on paper 15.1/15.4 */
-  --ink-soft:     light-dark(#5E4838, #CDB9A5);  /* 7.8/9.6 */
-  --vermilion:    light-dark(#A32F18, #EE7A5C);  /* text and UI on paper 6.5/6.5 */
-  --on-vermilion: light-dark(#FFF6E8, #2A0F08);  /* on --vermilion 6.6/6.5 */
-  --brass-text:   light-dark(#6F5309, #E0BD62);  /* 6.6/10.0 */
-  --brass-line:   light-dark(#8F6E14, #C9A24B);  /* UI on paper 4.4/7.6 */
-  --brass-fill:   light-dark(#C9A24B, #8F6E14);  /* decorative, never under text */
-  --meter-track:  light-dark(#EADBC0, #3A2B22);  /* --vermilion on track 5.2/4.9 */
-
-  /* LEDGER */
-  --ledger-bg:       light-dark(#F2F5F7, #0E141A);
-  --ledger-surface:  light-dark(#FFFFFF, #161E26);
-  --ledger-ink:      light-dark(#14202B, #E8EDF2);  /* on bg 15.1/15.7 */
-  --ledger-ink-soft: light-dark(#44515D, #A9B6C2);  /* 7.4/9.0 */
-  --line-strong:     light-dark(#6F7B86, #7A8896);  /* control borders 3.95/5.1 */
-  --hairline:        light-dark(#D6DCE2, #2B3641);  /* decorative only */
-  --chart-b0:        light-dark(#44515D, #A9B6C2);  /* hatched; 8.1/8.1 on surface */
-  --chart-b1:        light-dark(#1B4C9B, #9DBEFF);  /* 8.2/9.0 */
-  --chart-b2:        light-dark(#14202B, #E8EDF2);  /* 16.5/14.3 */
-  --focus:           light-dark(#1B4C9B, #9DBEFF);  /* ring on any surface 7.5/9.7 */
-
-  /* STATE: text and icon on own tint and on all four surfaces, 5.5 or better */
-  --minted:       light-dark(#14663A, #63D08F);
-  --minted-bg:    light-dark(#E2F3E7, #12301F);
-  --stopped:      light-dark(#B3261E, #FF8F85);
-  --stopped-bg:   light-dark(#FCE8E6, #3B1714);
-  --on-stop:      light-dark(#FFFFFF, #2B0A07);   /* banner text on --stopped 6.5/8.3 */
-  --escalated:    light-dark(#8A5200, #F4B650);
-  --escalated-bg: light-dark(#FFEFCF, #3A2A0C);
-  --pending:      light-dark(#505C67, #A9B6C2);
-  --pending-bg:   light-dark(#E8ECEF, #222B34);
-
-  /* PROVENANCE chips: text on own tint, 6.8 or better */
-  --obs:  light-dark(#0B5963, #6FD0DB);  --obs-bg:  light-dark(#DDF1F3, #0F3036);
-  --meas: light-dark(#1B4C9B, #9DBEFF);  --meas-bg: light-dark(#E4ECFB, #172B52);
-  --asm:  light-dark(#5A4726, #DCC79A);  --asm-bg:  light-dark(#F1EBDB, #352B17);
-  --sim:  light-dark(#FFFFFF, #14202B);  --sim-bg:  light-dark(#24303B, #E8EDF2);  /* 13.5/14.0 */
-
-  /* Type: 1.25 scale; fs-5 to fs-7 are numerals and presenter sizes */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-  --num: tabular-nums lining-nums;                /* font-variant-numeric */
-  --fs-s: 0.8125rem;  --fs-0: 1rem;      --fs-1: 1.25rem;   --fs-2: 1.5625rem;
-  --fs-3: 1.9375rem;  --fs-4: 2.4375rem; --fs-5: 3.0625rem; --fs-6: 3.8125rem; --fs-7: 4.75rem;
-  --lh-tight: 1.15; --lh-body: 1.5; --lh-zh: 1.7;
-
-  /* Space, shape */
-  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
-  --sp-5: 1.5rem;  --sp-6: 2rem;   --sp-7: 3rem;    --sp-8: 4rem;
-  --tap: 2.75rem;                                 /* 44px minimum target */
-  --r-packet: 14px; --r-ledger: 2px; --r-chip: 4px;
-  --shadow-packet: 0 1px 0 rgb(0 0 0 / .06), 0 8px 18px -10px rgb(42 28 22 / .35);
-
-  /* Motion */
-  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-stamp: cubic-bezier(0.2, 0.9, 0.3, 1.15);
-  --dur-seal: 420ms; --dur-mint: 320ms; --dur-stop: 200ms; --dur-expire: 800ms;
-  --dur-hold: 1200ms;                             /* functional, kept under reduced motion */
-}
-@media (prefers-reduced-motion: reduce) {
-  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; }
-}
-
-[data-register="packet"] { --bg: var(--paper); --surface: var(--paper-raised); --fg: var(--ink);
-  --fg-soft: var(--ink-soft); --accent: var(--vermilion); --radius: var(--r-packet); --font-data: var(--font-sans); }
-[data-register="ledger"] { --bg: var(--ledger-bg); --surface: var(--ledger-surface); --fg: var(--ledger-ink);
-  --fg-soft: var(--ledger-ink-soft); --accent: var(--ledger-ink); --radius: var(--r-ledger); --font-data: var(--font-mono); }
-```
-
-## Accessibility
-- **Checked** (WCAG 2.x, light and dark, four surfaces): text 4.5:1, UI 3:1 or better; ratios in token comments; hairlines and `--brass-fill` carry no meaning.
-- **Targets** at least `--tap` (44 px), 8 px apart; **focus** ring 3 px `--focus`; inputs 16 px.
-- **Live regions**: StopBanner `role="alert"`, MINTED `role="status"`, countdown announced at start and end only.
-- **Reduced motion**: durations 0 ms; state keeps colour, icon, text; hold fills in steps.
-- 200% zoom holds; no hover-only content.
-- [ ] Lane C adds a token test with the same floors.
+- **Roles** each have `--c-X`, `--c-on-X`, `--c-X-ink`, `--c-X-tint`. Provenance chips: `--sim`, `--obs`, `--meas`, `--asm` with `-bg`. Budget card gradient `--c-hero-from` to `--c-hero-to` (light #1A5CFF to #0A7396); one-off card `--c-ticket`; Wally `--wally-*`.
+- **Type**: system fonts only (the booth is offline). `--font-display` (ui-rounded) for figures, `--font-zh` (PingFang HK, Noto Sans HK, JhengHei; `lang="zh-HK"` on Chinese runs), `--font-mono`. Scale `--text-xs` 0.75 rem to `--text-5xl` 3.75 rem; weights 400 to 800; `--num` tabular numerals; line heights 1.15 to 1.5, zh-HK 1.7.
+- **Space and shape**: `--sp-1` to `--sp-8` (0.25 to 4 rem), `--gutter` 1 rem, `--column` 30 rem; targets `--tap` 44, `--tap-lg` 48, `--tap-xl` 56 px; radii `--r-xs` 6 to `--r-xl` 28 px and pill; `--safe-*` for notches.
+- **Elevation**: `--shadow-1` rest, `--shadow-2` raised, `--shadow-3` sheet; layers `--z-*` from 10 (sticky) to 60 (toast).
 
 ## Motion
-| Event | Motion |
-|---|---|
-| Seal | square chop presses 1.06 to 1, flap closes (`--dur-seal`, `--ease-stamp`) |
-| Mint | meter bar shortens by the minted amount, CardTicket fades in 8 px (`--dur-mint`) |
-| Stop | banner height expands once, meter holds still (`--dur-stop`) |
-| Expire | linear bar drains, ticket greys (`--dur-expire`) |
+- **Durations** (ms): `--dur-press` 120, `--dur-fast` 180, `--dur-base` 260, `--dur-slow` 420, `--dur-sheet` 340, `--dur-exit` 220, `--dur-settle` 380, `--dur-roll` 560, `--dur-stagger` 40, `--dur-ceremony` 900; per event `--dur-seal` 420, `--dur-mint` 320, `--dur-stop` 200, `--dur-expire` 800; `--dur-hold` 1,200.
+- **Easings**: `--ease-out`, `--ease-in-out`, `--ease-spring`, `--ease-stamp`, `--ease-drawer`; `--ease-settle` and `--ease-pop` are real springs where CSS `linear()` exists.
+- **Rules**: every duration is 0 under reduced motion except the hold, which fills in steps. Tests scan every sheet: no raw colours or durations, loops only in `no-preference`, inputs at 16 px, no glass. Hover styles only on hover pointers. Leaving is quicker than arriving. Nothing animates on the first paint of a list. Haptics where the device has them, off under reduced motion; no sound.
 
-- One motion per event; no loops, confetti or sound.
+## Wally
+- **Character**: a rounded wallet with a darker flap, a clasp, a teal card peeking out and a face. States: idle, thinking, approved (sparks), stopped (brows, shield), offline. Sizes 24 (tab), 48 (row), 96 to 160 (result); below 40 px a mini drawing keeps the face legible. Each state has a spoken name. The same art draws the app icon.
+- **Hero** (Budget): Wally and a speech bubble above the budget card. The bubble is the mood: ready, shopping inside the rules, needs your OK, all used, cancelled, ended.
 
-## Microcopy
-- **Rules**: plain English, zh-HK second line; name the rule ID and the next step; glossary terms only; no "AI magic" or chat voice; all wording from templates, never generated text.
+## Components
+- **Primitives** (`ui/`): Button, Tag, Card, List, ProgressBar, Ring, TextField, Switch, TopBar, BottomTabBar with a raised Ask button, Segmented, Sheet (follows the finger), Dialog, Steps, Toast, RollingMoney (NumberFlow, budget amount only).
+- **Figures** go through `Num` with a provenance chip; no bare numbers, tests count them.
+- **Ask sheet**: a typed field, "Try to trick Wally" (listing text, read as data), Try asking shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
+- **Libraries**: NumberFlow rolls the budget amount only. motion, base-ui and Sonner were rejected: CSS covers every motion and the primitives already trap focus.
+- **Screens**: Budget (hero, rule tags, one-off cards, Recent, Try asking, Manage this budget); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
 
-| Where | EN | zh-HK |
+## Vocabulary
+| Engine | The app says | zh-HK (draft) |
 |---|---|---|
-| Seal button | Seal budget | 鎖定預算 |
-| MINTED | One-off card, limit equals the cart total | 一次性卡，額度等於購物車總額 |
-| Rail badge | SIMULATED rail. No money moves. | 模擬發卡層，沒有款項轉移 |
-| Verifier fail | Chain broken at entry {seq} | 紀錄鏈於第 {seq} 筆中斷 |
+| packet | budget | 預算 |
+| mandate | rules | 規則 |
+| seal | Seal budget | 鎖定預算 |
+| mint | one-off card | 一次性卡 |
+| stop (DENY) | Stopped before paying | 付款前已攔截 |
+| escalation | Needs your OK | 需要你確認 |
+| revoke | Cancel this budget | 取消預算 |
+| log, verifier | Receipts, Proof | 收據, 證明 |
+| planner, judge | Wally picks, Wally reads the listing | Wally 揀貨, Wally 睇商品資料 |
 
-- Open (C-12, C-19): native zh-HK read; zh-HK template lines owed.
+- Rule IDs appear only in "Details for nerds". Reasons come from templates, never model text.
 
-## Deck
-- 16:9, **one idea per slide**, numerals `--fs-6` or larger with chips; PACKET for the story, LEDGER for proof; no stock imagery, clip-art or logos.
+## Accessibility
+- **Contrast**: `contrastPairs.ts` lists every allowed pair; a test checks each in light and dark (text 4.5:1, UI 3:1).
+- **Scans**: axe on every screen and sheet at 390, 360 and 430 px wide, light and dark; no serious or critical finding.
+- **Touch**: targets at least 44 px; focus ring 3 px `--c-focus`; text inputs 16 px; stop banners `role="alert"`; countdown announced at start and end.
 
-## Branding guard
-- **Accent**: brownish `--vermilion` with `--brass-line`; no signal red or orange-yellow; brass is outline only.
-- **Motif**: envelope with flap, square chop seal (封); no two overlapping circles.
-- **Excluded**: HKT, Tap & Go or Mastercard logos and lookalikes; purple gradients; glassmorphism; emoji.
-- **Footer** on every screen and slide: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard."
-- [ ] Before the freeze [F41], compare the palette with the sponsor's and card network's public pages.
+## Variants
+- **Picker**: dev server only (`#/styleguide/variants/...`, keys 1 to 3, R replays); not in the production bundle.
+
+| Screen | Shipped | Over | Why |
+|---|---|---|---|
+| Budget hero | Greeting | Ring, Action first | the gap was character and status, not data |
+| Seal moment | Lock | Hold, Signature | the padlock is the picture of sealed |
+| Stopped before paying | Quiet guard | Ghost card, Where it stopped | reason first, a calm path, "no card was made" |
+| One-off card | Wallet card | Ticket stub, Live card | the card is the hero, Pay now right under it |
+| Needs your OK | Consent sheet | Hold to approve, Permission slip | says what yes does; a hold slows every demo |
+
+## Not done
+- zh-HK lines are drafts marked NEEDS-REVIEW; no native read yet (C-12, C-19).
+- Noto Sans HK is not bundled. No Tap & Go reference screenshots were supplied; the palette comparison with sponsor pages is owed before the freeze [F41].
+- Not run on a physical phone. Voice needs the browser's online speech service, so it is outside the offline claim.
+- Legacy token aliases (`--paper`, `--vermilion`) remain for old stylesheets.

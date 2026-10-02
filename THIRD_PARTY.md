@@ -62,13 +62,18 @@
 | @axe-core/playwright (with axe-core) | 4.13 | MPL-2.0 | dev tool: accessibility checks of every screen in the Playwright run; not shipped in the app | in use |
 | sharp | 0.34 | Apache-2.0; its libvips binaries (npm packages @img/sharp-libvips-*) are LGPL-3.0-or-later | dev tool only, renders the icon masters; not shipped in the apps | in use |
 | esbuild | 0.28 | MIT | bundles the native bridge script | in use |
+| pnpm | 12.3 | MIT | package manager and workspace tool, not shipped | in use |
 | AndroidX (appcompat, core, core-splashscreen, webkit, activity, fragment, coordinatorlayout) and Android Gradle Plugin 8.13 | per Capacitor 8 | Apache-2.0 | Android shell, resolved by Gradle from Google and Maven Central | in use |
 | capacitor-swift-pm (Capacitor and Cordova xcframeworks for iOS) | 8.5 | MIT, Apache-2.0 (Cordova) | iOS shell, resolved by SwiftPM | in use |
+| Gradle wrapper (`gradlew` scripts and `gradle-wrapper.jar`, Gradle 8.14.3), committed under `apps/mobile/android/` | 8.14 | Apache-2.0 | builds the Android shell | in use |
 
 ## Fonts
 | Font | Author | Licence | Use |
 |---|---|---|---|
-| Noto Sans HK | Google | SIL Open Font License 1.1 | CJK UI text; planned, not bundled yet (the UI falls back to system fonts) |
+| Noto Sans HK | Google | SIL Open Font License 1.1 | named in the CSS font stack as a fallback for Chinese text when the device has it; no font file is bundled |
+
+- The UI uses system font stacks only (the booth is offline). PingFang HK (Apple) and Microsoft JhengHei are system fonts named in the stack and never shipped.
 
 ## Not included
 - No third-party logos, brand assets or page content. Public sources are cited in `docs/facts-register.md`, not redistributed.
+- No third-party icon set, illustration or sound: the line icons, the Wally character and the app icons are drawn in this repo (`apps/web/src/ui/icons.tsx`, `apps/web/src/wally/`).

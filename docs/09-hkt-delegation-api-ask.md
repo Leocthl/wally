@@ -19,11 +19,11 @@
 ## Rail portability
 | `RailPort` contract | Mastercard SUC today [F1] | FPS | UnionPay |
 |---|---|---|---|
-| `mint` with limit, expiry | by hand; ceiling and validity as [F1]; no API found | to verify with HKT | to verify with HKT |
-| One use, replay declined | credentials end after one payment [F1] | to verify with HKT | to verify with HKT |
-| `merchant_lock`, `purpose` | not found [F1]; asked above | to verify with HKT | to verify with HKT |
-| Idempotent `authorise` | not found | to verify with HKT | to verify with HKT |
-| `void` before use, events | not found; no cancel after payment [F2] | to verify with HKT | to verify with HKT |
+| `mint` with limit, expiry | by hand; ceiling and validity as [F1]; no API found | ask HKT | ask HKT |
+| One use, replay declined | credentials end after one payment [F1] | ask HKT | ask HKT |
+| `merchant_lock`, `purpose` | not found [F1]; asked above | ask HKT | ask HKT |
+| Idempotent `authorise` | not found | ask HKT | ask HKT |
+| `void` before use, events | not found; no cancel after payment [F2] | ask HKT | ask HKT |
 
 - The engine, credential and log stay the same on any rail; only the `RailPort` adapter changes. HKT's workshop names all three rails [F19].
 
@@ -33,11 +33,11 @@
 - **Loss allocation**: a written rule, including who pays the dispute fee [F3.dispute_fee]; our v0 in [01](01-product-brief.md).
 
 ## Pilot scope
-- **Prepaid** first: Pro holders (18+ [F2.pro]) aged 21-30 [F24]; teens on Plus(ii) [F2.plus2] last, with parent consent; sandbox first.
+- **Prepaid** first: Pro holders (18+ [F2.pro]) aged 21-30 [F24]; teens on Plus(ii) [F2.plus2] last, through a parent's budget (the family budget, 01); sandbox first.
 
 ## Success metrics
-- **Targets (ASSUMED)**: 0 over-limit mints in deterministic scenarios, at least 90% of legitimate scenarios approved [F38]; p95 decision latency at or under 3,000 ms [F35]; MEASURED values beside them.
-- **Our results**: overspend of a model-only gate [X] against the full pipeline [Y], MEASURED(n) with seed and commit; filled after M3 (D-11).
+- **Targets (ASSUMED)**: 0 over-limit mints in deterministic scenarios, at least 90% of legitimate scenarios approved [F38]; p95 decision latency at or under 3,000 ms [F35].
+- **Our results**, 150 SIMULATED scenarios, seed 7, commit da2c814 [F69]: 0/120 over-limit mints; 61/66 legitimate approved (92.4%); p95 388.9 ms. A model-only gate overspent 9/150 (6.0%) and let 43/84 stop cases through; the full pipeline 0/150 and 0/84. The sandbox would repeat this on real rails.
 
 ## Fit with the agent-ID pilot
 - The Agentic ID pilot (HKT Payment and Red Date, 2026-08-27) uses DIDs and verifiable credentials [F8]. Our mandate is already a VC 2.0 AgentDelegationCredential with did:key identities [F19]; a delegate record could carry such an ID. No claim about the pilot's results.

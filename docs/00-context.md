@@ -30,7 +30,7 @@
 |---|---|---|---|
 | HKT award | Problem-solution fit | 25% [F15] | one decision, one delegator, evidence E1-E5 |
 | HKT award | Technical execution, working prototype | 25% [F15] | real engine, signed log, verifier, harness; the planner replans after a stop |
-| HKT award | UX and desirability, especially Gen Z | 20% [F15] | mobile-first sealed-packet flow, EN + zh-HK |
+| HKT award | UX and desirability, especially Gen Z | 20% [F15] | phone-first app with Wally, EN + zh-HK, phones join the booth by QR |
 | HKT award | Security and trust design | 15% [F15] | delegation credential (DID-VC), policy engine, consent by escalation, hash-chained log, fail closed |
 | HKT award | Feasibility of integration with any payment means | 15% [F15] | single-use tokens on SUC semantics [F1]; RailPort portability in 09 |
 | Technical judges at the booth | 6 criteria, 5 marks each [F15] | 30 marks | a demo a judge can drive in 5 min [F14] |
@@ -43,21 +43,22 @@
 | ID | Decision | Alternative recorded in |
 |---|---|---|
 | D1 | Mandate engine on HKT rails + four upgrades (D6). Title "Lai See Agent", renamed Wally (D14); the technical plan never depended on the metaphor | none |
-| D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Option: teen on Plus(ii) [F2] with a parent-sealed packet (parent → teen → agent, caps compose: agent <= teen packet <= parent funding). Minors are not the headline | ADR-0005 |
+| D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Optional family budget (D17): a parent's budget caps a child's, so agent <= child budget <= parent budget. Minors are not the headline | ADR-0005 |
 | D3 | Chain: signed mandate → planner (untrusted: Laya loop, local Qwen or replay) → judge (Laya, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
 | D4 | Invariants I1-I8 (below). Explanations render from rule templates + recorded inputs, never LLM prose | ADR-0002 |
 | D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); recorded replay for CI and as the booth fallback; `enforce` is the default mode, `shadow` only records; report only latency and cost we measure | ADR-0001 |
 | D6 | Upgrades: U1 decrementing sealed packet; U2 mint-on-approval; U3 seller-risk gate before minting; U4 rail simulator calibrated on one real decline + 10-shop readiness probe | ADR-0003 |
 | D7 | No issuing API found [F1]: rail is SIMULATED and labelled so everywhere. A processed payment cannot be cancelled [F2]: demo revocation before mint or before first use; after payment use dispute + loss rule | ADR-0003 |
 | D8 | Contingency only: if the H10 trigger fires [F41], switch to Track 4 "overnight desk that escalates" | 08 |
-| D9 | Cut order, first to go: teen chain, screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is no longer cut: HKT's workshop centres on DID-VC [F19] | 03 |
+| D9 | Cut order, first to go: screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is not cut: HKT's workshop centres on DID-VC [F19]. The teen chain left the list: it is the family budget (D17) | 03 |
 | D10 | First-2-hour kill tests: real-card decline [F40]; shop probe [F39]; ask an HKT mentor whether a delegate SUC API is planned [F17] | 03, 05 |
 | D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
 | D12 | Superseded by D15 for the planner. Still in force: local-first, no API keys to run the demo, judge = Laya on 127.0.0.1. Was: planner = `rule` (structured parser + Laya typed item choice) and `replay` only, `claude` optional, no second model [F27] | ADR-0008 |
 | D13 | Booth first: the demo is built for a judge who drives it for 5 min [F14]; the finalist pitch reuses it. Single-use token semantics include a blocked replay and a SIMULATED merchant lock [F19] | 06, 07 |
 | D14 | Name: Wally (user decision 2026-10-02). No red-packet theming: cool-wallet look (light fintech UI, blue primary, teal accent, a wallet character), red or orange only for stop and error. No HKT, Tap & Go or Mastercard logos; the look may be aligned to Tap & Go's design language once the team supplies references | none |
 | D15 | A second local model is allowed (supersedes D12): Qwen3.5-9B (4B selectable) on llama.cpp, 127.0.0.1 only [F27, F63], plans natural-language requests (English, Chinese, Cantonese) and compiles the sentence into suggested rule chips the shopper confirms. Laya stays the judge; Qwen never gates a decision; rules, the rail limit and Laya's gate stay in charge; `rule` and `replay` planners remain the fallbacks. There is still no LLM judge. The `claude` provider is removed | ADR-0008, ADR-0009 |
-| D16 | Mobile first: a PWA-first web app (manifest, service worker that never caches `/api`, install prompt, safe areas), phones are the main target; on-device mode runs the real engine in the browser with recorded model answers; iOS and Android wrappers only if time allows | 03 |
+| D16 | Mobile first: a PWA-first web app (manifest, service worker that never caches `/api`, install prompt, safe areas), phones are the main target; on-device mode runs the real engine in the browser with recorded model answers; Capacitor wrappers for iOS and Android (`apps/mobile`) are built and checked on a simulator and an emulator, not on a physical device | 03 |
+| D17 | LAN, family and voice restored to scope after the early finish. LAN mode (`pnpm demo:lan`): phones on the booth Wi-Fi drive the live booth with a pairing token and a QR code. Family budget, optional: a parent's budget (Mum) caps a child's, a wider child is refused `EXCEEDS_PARENT`, and the offline verifier cannot check the parent chain. Voice input in the Ask sheet through the browser's speech service. Each stays optional and labelled | ADR-0005, 02 §15, 08 |
 
 ## Canonical IDs
 - **One name per thing.** Use these exactly. Do not rename or renumber.
@@ -138,7 +139,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ```
 - **Ports in `core`**: `PlannerPort`, `JudgePort`, `RailPort`, `MerchantPort`, `LogStore`, `Clock`, plus a `Signer`. `agent` and `rail-sim` implement them, `apps/web` composes. No package cycles. Exact signatures: 02 §18.
 - **Packet accounting**: an APPROVE holds its limit (inside `committed_minor`) until its card is logged, a later decision resolves it, or the packet is revoked or expires. Then the card commits its limit; `VOIDED`/`EXPIRED` release it; `AUTHORISED` settles the charged amount and releases the difference.
-- **Orchestrator**: one per packet; `seal`, `submit`, `suggestAlternatives`, `checkout`, `answerEscalation`, `revoke`, `tick`, `snapshot`, `subscribe`; one serialised queue; the log is the only state. A repeat of a live cart returns the earlier decision unless `allowRepeat`. A failure returns `{ ok: false, code }` and fails closed (I5). The delegator did:key is pinned at construction.
+- **Orchestrator**: one per packet; `seal` (with `parentCredential` for a family budget), `submit`, `suggestAlternatives`, `checkout`, `answerEscalation`, `revoke`, `tick`, `snapshot`, `subscribe`; one serialised queue; the log is the only state. A repeat of a live cart returns the earlier decision unless `allowRepeat`. A failure returns `{ ok: false, code }` and fails closed (I5). The delegator did:key is pinned at construction.
 - **Judge starts as soon as the cart is built**, in parallel with the fold. The engine is the only producer of a Decision.
 
 ### Packages and lanes
@@ -148,7 +149,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | B | agent + judge | `packages/agent` (planner `rule`/`local`/`replay`, sentence compiler, judge adapters laya/jev + replay, shadow mode), `services/laya` (local judge), `services/qwen` (local planner model) |
 | C | UI + verifier | `apps/web` (UI + thin API), `apps/verifier` (offline page) |
 | D | evidence + pitch | `packages/harness`, `data/`, `docs/05`-`07`, `docs/09` |
-| M | mobile, second model, brand | PWA shell and design system in `apps/web`, on-device mode, `services/qwen` with the local planner and compiler |
+| M | mobile, second model, brand | PWA shell and design system in `apps/web`, on-device mode, LAN mode, Capacitor shells in `apps/mobile`, `services/qwen` with the local planner and compiler |
 | X | cross-lane | `schemas/`, fixtures in `data/fixtures/`, CI |
 
 ### Canonical demo (storyboard in 01, choreography in 06)
@@ -166,6 +167,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | DMR1 | Reserve: revoke before first use, hold to confirm (S4) | DIR5 |
 | DMR2 | Reserve: escalation expires unanswered (S5) | DIR6 |
 
+- **Hands-on beats** (no DM ID): Ask Wally typed or spoken; See cheaper options after DM4; Needs your OK (DMR2); Cancel this budget (DMR1); Mum's budget and a refused ask [F93]; a phone joining by QR over the LAN (D17). Choreography in 06.
 - **Run-of-show [F42]**: hook + thesis; mandate → buy (DM1-DM2); three stops (DM3-DM5); proof + numbers (DM6-DM8); where it breaks (DM9); path to HKT.
 - **Flagged-seller fixture is SIMULATED.** No real individual's phone, FPS ID or page name enters the repo. Real Scameter lookups appear only as redacted, timestamped captures.
 
@@ -204,7 +206,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ## Non-goals
 - **No** rewards or cashback optimisation, multi-merchant comparison, agent-to-agent negotiation (our scope choice, not a statement rule)
 - **No** real card issuing, no PAN/CVV handling by software, no live money movement
-- **No** minors as the headline; teen chain is an extension that is cut first
+- **No** minors as the headline; the family budget (a parent's ceiling over a child's budget) is optional
 - **No** legal advice; the loss rule is a proposal under the T&C [F2]
 
 ## Positioning
@@ -243,3 +245,8 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Wally** | The product, and the friendly wallet character in the app |
 | **Lai see (利是)** | HK red packet: fixed amount, sealed, given once. Pitch analogy only, no longer branding (D14) |
 | **Provenance chip** | UI tag showing OBSERVED / SIMULATED / MEASURED / ASSUMED beside every number |
+| **App words** | Budget (packet), rules (the compiled mandate), one-off card (a mint), Stopped before paying (a stop), Needs your OK (an escalation), Cancel this budget (revoke), Receipts (log), Proof (verifier). Docs for the team keep the engine terms; table in [04](04-design-language.md) |
+| **Family budget** | Optional parent link: a child budget sealed under a parent's (Mum's) credential and never wider, else `EXCEEDS_PARENT`. Mum's key is a demo shortcut held by the booth backend |
+| **Pairing token** | LAN mode secret, 128 random bits, new at every server start [F92] |
+| **On-device mode** | The page runs the real engine, log and rail-sim with recorded model answers; no server, no network |
+| **Ask Wally** | A typed or spoken shopping request: the planner reads it, the rules decide |

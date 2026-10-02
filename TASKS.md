@@ -1,16 +1,16 @@
 # TASKS
 
 ## Top 10 do-first
-1. **M-07, C-03** Mobile-first screens (rebuild in progress): fill the Seal flow's `suggestRules` slot from `POST /api/compile`, and call `POST /api/ask` and `POST /api/alternatives` from the Ask sheet and "See cheaper options". Then **M-09, M-10** key on the phone, LAN mode with a pairing QR.
-2. **X-11, X-17** T-E2E and the booth smoke with network off and Laya stopped.
-3. **Known gaps**: the harness `duplicate` category submits with `allowRepeat`, which opts out of idempotent submit; remaining audit items; the judge wording freeze, after which D-11 is re-recorded on a quiet host.
-4. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
-5. **X-01** Remote and public repo: needs the team's explicit yes. Until then a tick means "merged to `main`, green locally". **X-18** freeze guard.
-6. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
-7. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
-8. **D-26, D-27, X-19** Freeze procedure, booth kit, credits check.
-9. **M-01** Rename to Wally everywhere after all lanes merge; audit findings fixed before the repo goes public.
-10. **A-21, B-09, B-12, C-xx** Calibration after D-03, Scameter loader, latency logging, remaining UI tasks.
+1. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
+2. **X-01, X-18** Public repo: a private remote exists (pushed through 78d0257, CI green); making it public needs the team's explicit yes and a licence; then the freeze guard. Audit findings are fixed before it goes public.
+3. **M-12** Voice input and the result-screen polish sit on `lane/ui-polish-b`; merge to `main`, then re-run the suite and the axe scan.
+4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
+5. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
+6. **D-26, D-27, X-19** Freeze procedure, booth kit, credits check.
+7. **M-01** After every lane has merged: `node scripts/rename-scope.mjs --dry-run`, apply, then `pnpm install && pnpm test`.
+8. **C-12, C-19** Native zh-HK read of the NEEDS-REVIEW strings.
+9. **A-21, B-09, B-12** Calibration after D-03, Scameter loader, latency logging.
+10. **M-09** Delegator key on the phone (stretch; design in `apps/web/src/api/local/KEYS.md`).
 
 ## Backlog
 - Milestones [F41]: M1 H6 (Sat 02:45), M2 H12 (Sat 08:45), M3 H20 (Sat 16:45), M4 H28 (Sun 00:45), M5 H34 (Sun 06:45, feature freeze), M6 Sun 07:00-12:00 (rehearsals, video, submission). Hard freeze Sun 13:00 HKT: no repo changes after it [F16]. Est is wall-clock hours with a Claude Code session on the task. Owner `[TEAM]` is a name to fill in. Tick Done when merged to `main` with CI green.
@@ -27,14 +27,14 @@
 | X-07 | Fixtures in `data/fixtures/`: mandate M0, packet [F20], attempts [F21-F23], flagged seller, injected listing; each labelled SIMULATED, no real person's identifiers | foundation agent | 1.5h | X-05 | M1 | [x] |
 | X-08 | `.env.example` listing the names in 02 §Env config; `.gitignore` for `.env`, `.keys/`, `.data/`, `data/raw/`, model weights; secret patterns in docs-check | foundation agent | 0.25h | X-02 | M1 | [x] |
 | X-09 | Lock scope and roles; write owners into this file; contract-change rule (a schema or port change needs the X owner and a channel note) | [TEAM] | 0.5h | none | M1 | [ ] |
-| X-10 | Integrate: compose orchestrator, judge adapters and rail-sim in `apps/web`; merge lane branches at each gate. Composition is merged (`apps/web/server`, planner `auto`, `/api/ask`, `/api/alternatives`, `/api/compile`); the Seal screen does not call the compile route yet | [TEAM] | 2h | A-26, B-14, B-15, C-02 | M2 | [x] |
-| X-11 | T-E2E: scripted DM1-DM7 on the SIMULATED rail; asserts SIMULATED chips and verifier failure after tamper; includes the booth smoke (X-17) | [TEAM] | 3h | X-10, C-09, X-14 | M4 | [ ] |
+| X-10 | Integrate: compose orchestrator, judge adapters and rail-sim in `apps/web`; merge lane branches at each gate. Composition is merged (`apps/web/server`, planner `auto`, `/api/ask`, `/api/alternatives`, `/api/compile`); the Seal screen reads sentences through `/api/compile` | [TEAM] | 2h | A-26, B-14, B-15, C-02 | M2 | [x] |
+| X-11 | T-E2E: scripted DM1-DM7 on the SIMULATED rail; asserts SIMULATED chips and verifier failure after tamper; includes the booth smoke (X-17). Covered by the booth server tests (`booth.real.test.ts`) and Playwright `e2e/local-offline.spec.ts` with the network blocked; the Playwright specs run locally, not in CI. | [TEAM] | 3h | X-10, C-09, X-14 | M4 | [x] |
 | X-12 | Fill CLAUDE.md commands (typecheck, lint, test, docs-check, keys:gen, demo:reset, Laya service) and README quickstart once the scaffold exists | [TEAM] | 0.25h | X-03 | M1 | [x] |
 | X-13 | Gate keeper: run each gate and trigger check (H2, H6, H10, H12 [F41]); record pass or miss with time in this file | [TEAM] | 1h | none | M1-M5 | [ ] |
 | X-14 | `pnpm demo:reset` per 06 §Reset: packet to HK$800 [F20], zero cards, log and escalations cleared, fixtures reloaded, demo keys regenerated, PresenterBar at step 0 in SIMULATED; booth Reset calls the same path; never touches `data/` captures | [TEAM] | 1h | A-26, X-07, C-02 | M4 | [x] |
 | X-15 | Lane worktrees: `git worktree add .worktrees/<name> -b lane/<name>` for a, b, c, d; each lane commits on its branch; merge to `main` at gates in the order X, A, B, C, D | [TEAM] | 0.25h | X-01 | M1 | [x] |
-| X-16 | Integrate V2: `SystemOneJudge` (laya default), planner backend (`rule` default, `replay` fallback), credential seal and rail token features wired in `apps/web`; env names per 02 §Env config; a stopped Laya server falls back without a crash | [TEAM] | 1.5h | X-10, A-32, A-33, B-14, B-15 | M3 | [ ] |
-| X-17 | Booth smoke inside T-E2E: every scenario button (04 §Booth) runs with network off and no API key; Laya stopped gives judge ERROR, then ESCALATE `R10.unavailable`; Reset returns to step 0 | [TEAM] | 1.5h | X-11, C-16 | M4 | [ ] |
+| X-16 | Integrate V2: `SystemOneJudge` (laya default), planner backend (`rule` default, `replay` fallback), credential seal and rail token features wired in `apps/web`; env names per 02 §Env config; a stopped Laya server falls back without a crash | [TEAM] | 1.5h | X-10, A-32, A-33, B-14, B-15 | M3 | [x] |
+| X-17 | Booth smoke inside T-E2E: every scenario button (04 §Booth) runs with network off and no API key; Laya stopped gives judge ERROR, then ESCALATE `R10.unavailable`; Reset returns to step 0. See X-11. | [TEAM] | 1.5h | X-11, C-16 | M4 | [x] |
 | X-18 | Freeze guard: pre-push hook and CI check that refuse pushes after Sun 13:00 HKT [F16]; run with the 03 §Freeze checklist (D-26) | [TEAM] | 0.5h | X-03 | M5 | [ ] |
 | X-19 | Credits keeper: every dependency or model added appears in `THIRD_PARTY.md` and README Credits with its licence [F16]; CI lists packages missing from it | [TEAM] | 0.5h | X-02 | M5 | [ ] |
 
@@ -69,8 +69,8 @@
 | A-26 | Orchestrator per pipeline contract v0: per-packet queue serialising decide, append, mint, revoke and checkout; judge in parallel with preflight; timers; head checkpoint | [TEAM] | 2h | A-15, A-18, A-22, A-31, A-32 | M1 | [x] |
 | A-27 | Property tests T-I1 to T-I8 (fast-check): write red against A-01, turn green as rules land | [TEAM] | 1.5h | A-15, A-26 | M3 | [x] |
 | A-28 | Scenario tests T-S1 to T-S3 (the live stops) on the merchant stub and rail-sim | [TEAM] | 1h | A-20, A-22, A-26 | M2 | [x] |
-| A-29 | Coverage gate for `packages/core` [F44]; close gaps | [TEAM] | 1h | A-27 | M3 | [ ] |
-| A-30 | Stretch, cut first (D9): teen chain, parent to teen to agent, caps compose | [TEAM] | 3h | A-26 | M4 | [ ] |
+| A-29 | Coverage gate for `packages/core` [F44]; close gaps. CI runs `pnpm coverage`; core is about 96% [F91]. | [TEAM] | 1h | A-27 | M3 | [x] |
+| A-30 | Family budget (D17, was the teen chain): a `parent` link, `seal` with a parent credential, an allocation ledger, `EXCEEDS_PARENT`; a child only narrows the parent | [TEAM] | 3h | A-26 | M4 | [x] |
 | A-31 | Cart builder in `core` (02 §Components): `propose_cart` input to Cart, priced from the listing record incl. shipping, fees, FX [F3]; the planner sets no money fields | [TEAM] | 1.5h | X-05, X-07 | M1 | [x] |
 | A-32 | AgentDelegationCredential (02 §Crypto, ADR-0007): `signMandateCredential`, `verifyMandateCredential` (eddsa-jcs-2022: SHA-256(JCS(proof config)) then SHA-256(JCS(document)), Ed25519, `z` + base58btc), did:key encode and decode, `mandateFromCredential`; golden vectors computed by this code and frozen in tests. Tests first: tampered subject, wrong issuer key, wrong cryptosuite, `proofValue` without `z` | [TEAM] | 2h | A-17, X-05 | M1 | [x] |
 | A-33 | Rail token features (SIMULATED): optional `merchant_lock` and `purpose` on mint; decline `MERCHANT_MISMATCH`; mint idempotent by `decision.id` (same CardRecord, no second card); a replay after the charge declines `CARD_USED` (DM2). Tests first | [TEAM] | 1.5h | A-20 | M2 | [x] |
@@ -105,23 +105,23 @@
 ### Lane C: UI + verifier
 | ID | Task | Owner | Est | Deps | Milestone | Done |
 |---|---|---|---|---|---|---|
-| C-01 | Read 04. Tokens (light and dark), fonts, base styles; `ProvenanceChip` first, no bare numbers | [TEAM] | 1.5h | X-02 | M2 | [ ] |
-| C-02 | App shell and thin Node API with SSE live trace in `apps/web`; `PresenterBar` (step, reset, SIMULATED/REAL toggle per 06; REAL stays disabled until D-03 lands); runs on the stub engine until A-26 | [TEAM] | 1.5h | C-01, A-01 | M2 | [ ] |
-| C-03 | Seal screen: `MandateEditor`, sentence to compiled rule chips side by side, editable, Seal | [TEAM] | 2.5h | C-02 | M2 | [ ] |
-| C-04 | `PacketMeter` and `CardTicket` (masked last4, limit, TTL, state, merchant lock, purpose) | [TEAM] | 1.5h | C-01 | M2 | [ ] |
-| C-05 | Run screen: live trace planner, judge, engine, rail; `CartCard`; `DecisionCard` (rule ID, inputs, comparator, judge probabilities, outcome) | [TEAM] | 3h | C-02 | M2 | [ ] |
-| C-06 | `StopBanner` built from rule templates and recorded inputs (A-16): colour, icon and text | [TEAM] | 1h | A-16, C-05 | M3 | [ ] |
-| C-07 | Packet console: `RevokeButton` (hold to confirm), escalation countdown (amber) | [TEAM] | 1.5h | C-04, A-24 | M3 | [ ] |
-| C-08 | `LogTimeline` screen | [TEAM] | 1.5h | A-18, C-02 | M3 | [ ] |
+| C-01 | Read 04. Tokens (light and dark), fonts, base styles; `ProvenanceChip` first, no bare numbers | [TEAM] | 1.5h | X-02 | M2 | [x] |
+| C-02 | App shell and thin Node API with SSE live trace in `apps/web`; `PresenterBar` (step, reset, SIMULATED/REAL toggle per 06; REAL stays disabled until D-03 lands); runs on the stub engine until A-26 | [TEAM] | 1.5h | C-01, A-01 | M2 | [x] |
+| C-03 | Seal screen: `MandateEditor`, sentence to compiled rule chips side by side, editable, Seal. Built as the Seal flow with "Read my sentence". | [TEAM] | 2.5h | C-02 | M2 | [x] |
+| C-04 | `PacketMeter` and `CardTicket` (masked last4, limit, TTL, state, merchant lock, purpose). Built as the Budget hero and the one-off card. | [TEAM] | 1.5h | C-01 | M2 | [x] |
+| C-05 | Run screen: live trace planner, judge, engine, rail; `CartCard`; `DecisionCard` (rule ID, inputs, comparator, judge probabilities, outcome). Built as the Wally screen. | [TEAM] | 3h | C-02 | M2 | [x] |
+| C-06 | `StopBanner` built from rule templates and recorded inputs (A-16): colour, icon and text. Built as the Stopped before paying screen. | [TEAM] | 1h | A-16, C-05 | M3 | [x] |
+| C-07 | Packet console: `RevokeButton` (hold to confirm), escalation countdown (amber). Built as Manage this budget (Cancel this budget, hold to confirm) and Needs your OK. | [TEAM] | 1.5h | C-04, A-24 | M3 | [x] |
+| C-08 | `LogTimeline` screen. Built as Receipts. | [TEAM] | 1.5h | A-18, C-02 | M3 | [x] |
 | C-09 | `apps/verifier` offline page with `VerifierPanel`: paste log, public keys, head checkpoint; pass or first failing seq; Tamper button flips one byte of a copy; no network calls (T-V1) | [TEAM] | 2h | A-19 | M3 | [x] |
 | C-10 | Evidence screen (04 §Screens): `EvidenceCharts` from harness results (B0, B1, B2), manual-route table (E3), OBSERVED captures (E5), the one real decline | [TEAM] | 2.5h | D-11, D-12 | M4 | [x] |
-| C-11 | Presenter mode: big-screen layout; the finalist stage reuses the booth app | [TEAM] | 1h | C-05 | M4 | [ ] |
+| C-11 | Presenter mode: big-screen layout; the finalist stage reuses the booth app | [TEAM] | 1h | C-05 | M4 | [x] |
 | C-12 | zh-HK second-line copy, reviewed by a zh-HK reader | [TEAM] | 0.75h | C-03 | M4 | [ ] |
-| C-13 | Accessibility and mobile-first pass: contrast, 44px touch targets, reduced motion | [TEAM] | 1.5h | C-11 | M4 | [ ] |
-| C-14 | Label audit: SIMULATED visible wherever the rail appears; no HKT, Tap & Go or Mastercard logos or lookalikes | [TEAM] | 0.5h | C-13 | M4 | [ ] |
-| C-15 | Booth screen (04 §Booth): M0 sealed on load; `ScenarioPicker`; live trace planner, judge, engine, rail; log with Verify and Tamper; Reset; SIMULATED badge; EN + zh-HK; works with network off and no API key | [TEAM] | 3h | C-05, C-09 | M3 | [ ] |
-| C-16 | `ScenarioPicker`: preset buttons (normal purchase, flagged seller, shipping overflow, injected listing, off-category item [F29], revoke, replay the card, wrong merchant, price drift, rail timeout), "Try to trick the agent" free-text box (sent as listing data to planner and judge), Reset | [TEAM] | 1.5h | C-02, A-35 | M3 | [ ] |
-| C-17 | Budget-stop affordances: "See alternatives" (B-18 via A-35) and "Top up packet" (opens Seal for a new signed mandate); an escalation answer never overrides a hard rule | [TEAM] | 1h | C-06, A-35 | M4 | [ ] |
+| C-13 | Accessibility and mobile-first pass: contrast, 44px touch targets, reduced motion | [TEAM] | 1.5h | C-11 | M4 | [x] |
+| C-14 | Label audit: SIMULATED visible wherever the rail appears; no HKT, Tap & Go or Mastercard logos or lookalikes | [TEAM] | 0.5h | C-13 | M4 | [x] |
+| C-15 | Booth screen (04 §Booth): M0 sealed on load; `ScenarioPicker`; live trace planner, judge, engine, rail; log with Verify and Tamper; Reset; SIMULATED badge; EN + zh-HK; works with network off and no API key. Built as Budget with Try asking; on-device mode needs no network or key. | [TEAM] | 3h | C-05, C-09 | M3 | [x] |
+| C-16 | `ScenarioPicker`: preset buttons (normal purchase, flagged seller, shipping overflow, injected listing, off-category item [F29], revoke, replay the card, wrong merchant, price drift, rail timeout), "Try to trick the agent" free-text box (sent as listing data to planner and judge), Reset. Built as Try asking and the Ask sheet. | [TEAM] | 1.5h | C-02, A-35 | M3 | [x] |
+| C-17 | Budget-stop affordances: "See alternatives" (B-18 via A-35) and "Top up packet" (opens Seal for a new signed mandate); an escalation answer never overrides a hard rule. Built as See cheaper options and Top up budget. | [TEAM] | 1h | C-06, A-35 | M4 | [x] |
 | C-18 | `CredentialPanel`: the sealed AgentDelegationCredential (issuer did:key, validity, rules, proof) with the R1 result; on Seal and Booth | [TEAM] | 1h | C-03, A-32 | M3 | [ ] |
 | C-19 | Bilingual pass for booth strings, scenario labels and stop banners: zh-HK second line, read by a zh-HK reader | [TEAM] | 0.75h | C-12, C-16 | M4 | [ ] |
 | C-20 | Kiosk polish: full screen on the booth laptop, idle reset, fonts bundled offline, no dead ends, every error state recovers through Reset | [TEAM] | 1h | C-15 | M4 | [ ] |
@@ -132,14 +132,15 @@
 | M-01 | Rename to Wally: user-facing strings through one brand constant now; one scripted rename of the `@laisee/*` scope, README, CLAUDE.md, docs and schema ids after all lanes merge | [TEAM] | 1h | all lanes merged | M3 | [ ] |
 | M-02 | Qwen install: `services/qwen/` (setup, serve, stop, smoke), llama-server on 127.0.0.1:8809, pinned GGUF revision and sha, FINDINGS | [TEAM] | 1.5h | none | M2 | [x] |
 | M-03 | Local planner (`PLANNER_PROVIDER=local`): grammar-constrained proposal, English, Chinese and Cantonese requests, alternatives, never throws, logged trace. Built in `@laisee/agent`; the booth server uses it with `PLANNER_PROVIDER=local`, or `auto` when Qwen answers | [TEAM] | 2h | M-02 | M2 | [x] |
-| M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile. Built as `@laisee/agent/compiler`, served by `POST /api/compile`; the Seal screen does not call it yet | [TEAM] | 1.5h | M-02 | M2 | [x] |
+| M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile. Built as `@laisee/agent/compiler`, served by `POST /api/compile`; the Seal screen calls it ("Read my sentence") | [TEAM] | 1.5h | M-02 | M2 | [x] |
 | M-05 | Design system phase A: cool-wallet tokens, Wally character, primitives, style guide route | [TEAM] | 2h | none | M2 | [x] |
 | M-06 | PWA shell: manifest, icons, service worker, install prompt, offline fallback | [TEAM] | 1.5h | M-05 | M2 | [x] |
-| M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle. In progress: the app shell, Budget home, Seal flow, console, Ask sheet, Wally, Receipts, Proof, presenter and evidence screens are merged; the Seal flow's model slot (`suggestRules`) is empty | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [ ] |
+| M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle. All merged: the app shell, Budget home, Seal flow, Manage this budget, Ask sheet, Wally, Receipts, Proof, Why trust Wally and Presenter | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [x] |
 | M-08 | Local mode: real engine, orchestrator, RailSim and signers in the browser with recorded model answers; static public build | [TEAM] | 3h | e-orch merged, M-07 | M3 | [x] |
 | M-09 | Delegator key on the phone: generate and sign seal, revoke and escalation answers on the device; the server only verifies. Groundwork merged: async signer adapter and the design in `apps/web/src/api/local/KEYS.md` | [TEAM] | 2h | M-08 | M4 | [ ] |
-| M-10 | LAN mode: server `--lan` with a pairing token, Host and Origin checks and a QR on the booth screen so phones drive the Mac | [TEAM] | 2h | e-server merged | M4 | [ ] |
-| M-11 | Device pass: iOS Simulator Safari checks, safe areas, install flow, Android emulation; optional Capacitor wrappers (stretch) | [TEAM] | 2h | M-07 | M4 | [ ] |
+| M-10 | LAN mode: server `--lan` (`pnpm demo:lan`) with a pairing token, Host and Origin checks and a QR in About and Presenter so phones drive the Mac, plus "Connect to the booth Mac" in the native shells (that link is untested in both) | [TEAM] | 2h | e-server merged | M4 | [x] |
+| M-11 | Device pass: iOS Simulator Safari checks, safe areas, install flow, Android emulation; Capacitor wrappers built (`apps/mobile`); checked on the iPhone 17 Simulator and an Android API 36 emulator, not on a physical device | [TEAM] | 2h | M-07 | M4 | [x] |
+| M-12 | Voice input in the Ask sheet: the browser's speech recogniser, a mic inside the field only where one exists and never in the native shells, a first-press note that audio may leave the device, nothing sent until Send. Built on `lane/ui-polish-b`; tick when merged to `main` | [TEAM] | 1.5h | M-07 | M4 | [ ] |
 
 ### Lane D: evidence + pitch
 | ID | Task | Owner | Est | Deps | Milestone | Done |
