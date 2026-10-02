@@ -33,7 +33,10 @@ function indexCatalogue(records: readonly ListingRecord[]): ReadonlyMap<string, 
       throw new PlannerConfigError(`planner catalogue: invalid listing record ${record.id}: ${checked.errors.map((e) => `${e.path} ${e.message}`).join("; ")}`);
     }
   });
-  return new Map(records.map((r) => [r.url, r] as const));
+  const byUrl = new Map(records.map((r) => [r.url, r] as const));
+  const clash = records.find((r) => byUrl.get(r.url)?.id !== r.id);
+  if (clash !== undefined) throw new PlannerConfigError(`planner catalogue: two listing records share the same url ${clash.url}`);
+  return byUrl;
 }
 
 function validTimeout(opts: PlannerOptions): boolean {

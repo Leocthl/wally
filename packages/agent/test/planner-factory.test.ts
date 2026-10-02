@@ -55,6 +55,12 @@ describe("createPlanner", () => {
     expect(() => createPlanner({ provider: "claude" })).toThrow(PlannerConfigError);
   });
 
+  it("rejects two different listing records with the same url at start-up, but accepts a repeated identical record", () => {
+    const other = { ...tee, id: "lst_otherTee" };
+    expect(() => createPlanner({ provider: "rule", catalogue: [tee, other] })).toThrow(/same url/);
+    expect(() => createPlanner({ provider: "rule", catalogue: [tee, tee] })).not.toThrow();
+  });
+
   it("rejects an invalid catalogue record at start-up", () => {
     const broken = { ...tee, items: [] } as unknown as ListingRecord; // invalid on purpose: no items
     expect(() => createPlanner({ provider: "rule", catalogue: [broken] })).toThrow(PlannerConfigError);
