@@ -9,7 +9,7 @@ describe("@laisee/core/config", () => {
     expect(ENGINE_CONFIG.velocity).toEqual({ max_mints: 3, window_s: 600 }); // F32
     expect(ENGINE_CONFIG.timeouts).toEqual({ planner_ms: 20_000, judge_ms: 1_500 }); // F33, F34
     expect(ENGINE_CONFIG.latency.decision_p95_ms).toBe(3_000); // F35
-    expect(ENGINE_CONFIG.judge).toEqual({ t_inj: 0.63, t_sell_deny: 0.55, t_sell_esc: 0.42, t_scope: 0.55, t_esc: 0.5 }); // F36, F50
+    expect(ENGINE_CONFIG.judge).toEqual({ t_inj: 0.39, t_sell_deny: 0.86, t_sell_esc: 0.85, t_scope: 0.63, t_esc: 0.5 }); // F36, F50
     expect(ENGINE_CONFIG.seller.max_capture_age_s).toBe(86_400); // F52
   });
 
@@ -19,7 +19,7 @@ describe("@laisee/core/config", () => {
     expect(() => {
       (ENGINE_CONFIG.judge as { t_inj: number }).t_inj = 0.99;
     }).toThrow(TypeError);
-    expect(ENGINE_CONFIG.judge.t_inj).toBe(0.63);
+    expect(ENGINE_CONFIG.judge.t_inj).toBe(0.39);
   });
 
   it("names threshold refs the decision schema accepts", () => {

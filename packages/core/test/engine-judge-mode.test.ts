@@ -54,7 +54,12 @@ describe("shadow mode (config) records a usable reading without effect, and stil
     const results = evaluateR10({ mandate: M0, judge: JUDGE_INJECTED, config: SHADOW_CONFIG });
     expect(results.every((r) => r.result === "SKIPPED")).toBe(true);
     expect(results.find((r) => r.check === "injection_risk")?.inputs).toMatchObject({ shadow: true, shadow_verdict: "DENY", shadow_template_id: "R10.injection" });
-    expect(results.find((r) => r.check === "scope_fit")?.inputs).toMatchObject({ shadow_verdict: "PASS" });
+    // Every shadow result carries exactly the verdict enforce mode gives for the same check.
+    const enforced = evaluateR10({ mandate: M0, judge: JUDGE_INJECTED, config: ENGINE_CONFIG });
+    for (const r of results) {
+      const e = enforced.find((x) => x.check === r.check);
+      expect(r.inputs).toMatchObject({ shadow_verdict: e?.result === "FAIL" ? e.verdict : "PASS" });
+    }
     expect(shadowEngine.decide(M0, PACKET_INITIAL, CART_A1, JUDGE_INJECTED, NOW, undefined, PROOF_OK).outcome).toBe("APPROVE");
   });
 

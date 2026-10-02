@@ -60,10 +60,10 @@ export const ENGINE_CONFIG: EngineConfig = deepFreeze({
     max_capture_age_s: 86_400, // older Scameter capture => unverified [F52] (R9)
   },
   judge: {
-    t_inj: 0.63, // [F36.T_inj]
-    t_sell_deny: 0.55, // [F36.T_sell_deny]
-    t_sell_esc: 0.42, // [F36.T_sell_esc]
-    t_scope: 0.55, // [F36.T_scope]
+    t_inj: 0.39, // [F36.T_inj]
+    t_sell_deny: 0.86, // [F36.T_sell_deny]
+    t_sell_esc: 0.85, // [F36.T_sell_esc]
+    t_scope: 0.63, // [F36.T_scope]
     t_esc: 0.5, // [F50.T_esc]
   },
   timeouts: {

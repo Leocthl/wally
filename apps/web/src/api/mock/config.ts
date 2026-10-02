@@ -17,10 +17,10 @@ export const MOCK_CONFIG = {
   maxCaptureAgeMs: 24 * 60 * 60 * 1000,
   /** F36 judge thresholds v0 (typed profile) and F50 for escalate_or_proceed. */
   judge: {
-    tInj: 0.63,
-    tSellDeny: 0.55,
-    tSellEsc: 0.42,
-    tScope: 0.55,
+    tInj: 0.39,
+    tSellDeny: 0.86,
+    tSellEsc: 0.85,
+    tScope: 0.63,
     tEsc: 0.5,
   },
   /** F26 truncation: about 940 state tokens fit per row. */

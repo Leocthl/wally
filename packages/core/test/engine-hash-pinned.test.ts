@@ -20,8 +20,8 @@ describe("engine hashes are pinned", () => {
 
   it("config_sha256 of ENGINE_CONFIG", () => {
     // Changed on purpose once, after the noble swap: judge_mode joined the config (audit S-JUDGE-1). Before: 7abe1794...3720.
-    expect(configSha256(ENGINE_CONFIG)).toBe("a73bf0978202dd52c216c33839f79f105c72b6f82bb647d903322bc6b7fe65ce");
-    expect(engine.configSha256).toBe("a73bf0978202dd52c216c33839f79f105c72b6f82bb647d903322bc6b7fe65ce");
+    expect(configSha256(ENGINE_CONFIG)).toBe("a9ea2b0393fa95ecaa16bea6192f6caafac8f761b922cbf94d5d43c160a6096d");
+    expect(engine.configSha256).toBe("a9ea2b0393fa95ecaa16bea6192f6caafac8f761b922cbf94d5d43c160a6096d");
   });
 
   it("canonical JSON text and a deterministic decision id", () => {

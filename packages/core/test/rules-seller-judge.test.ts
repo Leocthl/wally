@@ -67,7 +67,7 @@ describe("R10 judge thresholds (typed profile [F36, F50]); the judge can only ti
       ["R10", "seller_risk", "PASS"],
       ["R10", "escalate_or_proceed", "PASS"],
     ]);
-    expect(results[1]).toMatchObject({ comparator: "<", threshold_ref: "F36.T_inj", inputs: { threshold: 0.63 } });
+    expect(results[1]).toMatchObject({ comparator: "<", threshold_ref: "F36.T_inj", inputs: { threshold: ENGINE_CONFIG.judge.t_inj } });
   });
 
   it("denies the injected listing (S3, DM5)", () => {
@@ -75,8 +75,13 @@ describe("R10 judge thresholds (typed profile [F36, F50]); the judge can only ti
   });
 
   it("denies a high seller risk and escalates the middle band", () => {
-    expect(byCheck(JUDGE_FLAGGED)["seller_risk"]).toMatchObject({ verdict: "DENY", template_id: "R10.seller_risk", threshold_ref: "F36.T_sell_deny" });
-    const middle = judgeWith({ seller_risk: { low_risk: 0.55, high_risk: 0.45 } });
+    // The recorded flagged-seller listing scores below T_sell_deny since the fit (the gate is a weak signal, F36);
+    // it is stopped by R9 and the injection gate. A clearly risky reading still denies here.
+    const risky = judgeWith({ seller_risk: { low_risk: 0.05, high_risk: 0.95 } });
+    expect(byCheck(risky)["seller_risk"]).toMatchObject({ verdict: "DENY", template_id: "R10.seller_risk", threshold_ref: "F36.T_sell_deny" });
+    expect(JUDGE_FLAGGED).toBeDefined();
+    const midP = (ENGINE_CONFIG.judge.t_sell_esc + ENGINE_CONFIG.judge.t_sell_deny) / 2;
+    const middle = judgeWith({ seller_risk: { low_risk: 1 - midP, high_risk: midP } });
     expect(byCheck(middle)["seller_risk"]).toMatchObject({ verdict: "ESCALATE", template_id: "R10.seller_risk", threshold_ref: "F36.T_sell_esc" });
   });
 
@@ -85,19 +90,22 @@ describe("R10 judge thresholds (typed profile [F36, F50]); the judge can only ti
   });
 
   it("applies each threshold exactly at the limit", () => {
-    const inj = (s: number, i: number) => byCheck(judgeWith({ injection_risk: { clean: 1 - s - i, suspicious: s, injection: i } }))["injection_risk"];
-    expect(inj(0, 0.63)?.result).toBe("FAIL");
-    expect(inj(0, 0.62)?.result).toBe("PASS");
-    const scope = (p: number) => byCheck(judgeWith({ scope_fit: { in_scope: p, out_of_scope: 1 - p } }))["scope_fit"];
-    expect(scope(0.55)?.result).toBe("PASS");
-    expect(scope(0.54)?.result).toBe("FAIL");
-    const seller = (p: number) => byCheck(judgeWith({ seller_risk: { low_risk: 1 - p, high_risk: p } }))["seller_risk"];
-    expect(seller(0.55)?.verdict).toBe("DENY");
-    expect(seller(0.42)?.verdict).toBe("ESCALATE");
-    expect(seller(0.41)?.result).toBe("PASS");
-    const esc = (p: number) => byCheck(judgeWith({ escalate_or_proceed: { proceed: 1 - p, escalate: p } }))["escalate_or_proceed"];
-    expect(esc(0.5)).toMatchObject({ verdict: "ESCALATE", template_id: "R10.escalate", threshold_ref: "F50.T_esc" });
-    expect(esc(0.49)?.result).toBe("PASS");
+    const t = ENGINE_CONFIG.judge;
+    const step = 0.01;
+    const round = (x: number) => Math.round(x * 10_000) / 10_000;
+    const inj = (s: number, i: number) => byCheck(judgeWith({ injection_risk: { clean: round(1 - s - i), suspicious: s, injection: i } }))["injection_risk"];
+    expect(inj(0, t.t_inj)?.result).toBe("FAIL");
+    expect(inj(0, round(t.t_inj - step))?.result).toBe("PASS");
+    const scope = (p: number) => byCheck(judgeWith({ scope_fit: { in_scope: p, out_of_scope: round(1 - p) } }))["scope_fit"];
+    expect(scope(t.t_scope)?.result).toBe("PASS");
+    expect(scope(round(t.t_scope - step))?.result).toBe("FAIL");
+    const seller = (p: number) => byCheck(judgeWith({ seller_risk: { low_risk: round(1 - p), high_risk: p } }))["seller_risk"];
+    expect(seller(t.t_sell_deny)?.verdict).toBe("DENY");
+    expect(seller(t.t_sell_esc)?.verdict).toBe("ESCALATE");
+    expect(seller(round(t.t_sell_esc - step))?.result).toBe("PASS");
+    const esc = (p: number) => byCheck(judgeWith({ escalate_or_proceed: { proceed: round(1 - p), escalate: p } }))["escalate_or_proceed"];
+    expect(esc(t.t_esc)).toMatchObject({ verdict: "ESCALATE", template_id: "R10.escalate", threshold_ref: "F50.T_esc" });
+    expect(esc(round(t.t_esc - step))?.result).toBe("PASS");
   });
 
   it("reads the tighter of P(x) and 1 - P(not x) when options do not sum to 1", () => {
@@ -132,7 +140,11 @@ describe("R10 judge thresholds (typed profile [F36, F50]); the judge can only ti
     const results = evaluateR10({ mandate: M0, judge: JUDGE_INJECTED, config: shadowConfig });
     expect(results.every((r) => r.result === "SKIPPED")).toBe(true);
     expect(results.find((r) => r.check === "injection_risk")?.inputs).toMatchObject({ shadow: true, shadow_verdict: "DENY", shadow_template_id: "R10.injection" });
-    expect(results.find((r) => r.check === "scope_fit")?.inputs).toMatchObject({ shadow_verdict: "PASS" });
+    const enforced = evaluateR10({ mandate: M0, judge: JUDGE_INJECTED, config: ENGINE_CONFIG });
+    for (const r of results) {
+      const e = enforced.find((x) => x.check === r.check);
+      expect(r.inputs).toMatchObject({ shadow_verdict: e?.result === "FAIL" ? e.verdict : "PASS" });
+    }
     const down = evaluateR10({ mandate: M0, judge: { ...JUDGE_TEE, status: "TIMEOUT", answers: undefined }, config: shadowConfig });
     expect(down[0]).toMatchObject({ result: "FAIL", verdict: "ESCALATE", template_id: "R10.unavailable" });
   });
