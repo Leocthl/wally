@@ -1,5 +1,6 @@
 // One headline metric: the plain question first, then B0, B1, B2 in that order, then how B2 compares, worse or better.
 import type { ReactElement } from "react";
+import { useReveal } from "../useReveal";
 import { Tx } from "./Tx";
 import { BASELINE_NAMES, type MetricSpec } from "../metrics";
 import { compareToB2 } from "../select";
@@ -30,8 +31,9 @@ export function RateChart({ spec, run, wiring }: { readonly spec: MetricSpec; re
   const rate = (b: (typeof BASELINES)[number]): Rate | null => run.baselines[b]?.rates[spec.key] ?? null;
   const rows = BASELINES.map((b) => ({ ident: b, name: BASELINE_NAMES[b], rate: rate(b) }));
   const label = chartLabel(spec.question.en, rows.map((r) => ({ ...r, name: r.name.en })));
+  const { ref, reveal } = useReveal<HTMLElement>();
   return (
-    <figure className="ev-chart" data-metric={spec.key}>
+    <figure ref={ref} className="ev-chart" data-metric={spec.key} {...(reveal ? { "data-reveal": reveal } : {})}>
       <figcaption className="ev-chart__head">
         <WiringStamp on={wiring} />
         <h3 className="ev-chart__q"><Tx text={spec.question} /></h3>
@@ -39,7 +41,7 @@ export function RateChart({ spec, run, wiring }: { readonly spec: MetricSpec; re
       </figcaption>
       <EvScope chips={chipsOf(rows.map((r) => r.rate))}>
         <div className="ev-bars" role="img" aria-label={label}>
-          {rows.map((r) => <BarRow key={r.ident} ident={r.ident} name={r.name} rate={r.rate} tone={r.ident} />)}
+          {rows.map((r, i) => <BarRow key={r.ident} ident={r.ident} name={r.name} rate={r.rate} tone={r.ident} order={i} />)}
         </div>
       </EvScope>
       <ul className="ev-verdicts" aria-label={`B2 compared, ${spec.title.en}`}>

@@ -112,11 +112,12 @@ const card = (over: Partial<CardRecord>): CardRecord => ({
 });
 
 describe("one-off cards", () => {
-  it("shows a ready card as a ticket: last four, the exact amount, the shop, a countdown and SIMULATED", () => {
+  it("shows a ready card as a card: last four, the exact amount, the shop, a countdown and SIMULATED", () => {
     const { container } = render(<CardsSection active={[card({})]} past={[]} />);
-    const ticket = container.querySelector('.console-ticket[data-card-state="ACTIVE"]')!;
+    const ticket = container.querySelector('.oc[data-card-state="ACTIVE"]')!;
     expect(ticket).toHaveTextContent("4821");
-    expect(ticket).toHaveTextContent("Works once, for HK$259 only");
+    expect(ticket).toHaveTextContent("HK$259");
+    expect(ticket).toHaveTextContent("Works once, for this amount only");
     expect(ticket).toHaveTextContent("Only at demo-shop.example");
     expect(ticket).toHaveTextContent(/Ends in \d+:\d\d:\d\d|Ends in \d+:\d\d/);
     expect(ticket.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();
@@ -151,7 +152,7 @@ describe("Cancel this budget in the app", () => {
   it("Cancel the budget card: a card is made, the hold and the dialog revoke, the card stops working", async () => {
     const h = await bootApp();
     await press(h, "revoke");
-    await waitFor(() => expect(document.querySelector('.console-ticket[data-card-state="ACTIVE"]')).not.toBeNull());
+    await waitFor(() => expect(document.querySelector('.oc[data-card-state="ACTIVE"]')).not.toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(document.getElementById("budget-console")));
     expect(window.location.hash).toBe("#/budget");
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -165,7 +166,7 @@ describe("Cancel this budget in the app", () => {
     await waitFor(async () => expect((await h.api.snapshot()).packet?.status).toBe("REVOKED"));
     expect(await screen.findByText("This budget is cancelled")).toBeInTheDocument();
     expect(await screen.findByText(/Budget cancelled\. Unused cards stopped working\./)).toBeInTheDocument();
-    expect(document.querySelector('.console-ticket[data-card-state="ACTIVE"]')).toBeNull();
+    expect(document.querySelector('.oc[data-card-state="ACTIVE"]')).toBeNull();
     expect(document.querySelector('[data-card-state="VOIDED"]')).not.toBeNull();
     expect(screen.queryByRole("button", { name: /hold to cancel/i })).toBeNull();
     expect(screen.getAllByRole("link", { name: /Set up a new budget/ })[0]).toHaveAttribute("href", "#/seal");

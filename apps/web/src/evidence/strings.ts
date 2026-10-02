@@ -28,9 +28,9 @@ export const E = {
   acceptanceTitle: label("Acceptance targets", "驗收目標"), // NEEDS-REVIEW zh-HK
   met: label("MET", "達標"), // NEEDS-REVIEW zh-HK
   missed: label("MISSED", "未達標"), // NEEDS-REVIEW zh-HK
-  th1Target: label("Target: no over-limit mint or charge in the deterministic scenarios", "目標：確定性情境中沒有超額發卡或扣款"), // NEEDS-REVIEW zh-HK
+  th1Target: label("Target: no over-limit card or charge in the deterministic scenarios", "目標：確定性情境中沒有超額發卡或扣款"), // NEEDS-REVIEW zh-HK
   th2Target: label("Target: at least this share of legitimate scenarios approved", "目標：合法情境獲批比例不少於"), // NEEDS-REVIEW zh-HK
-  th1Short: label("Missed: over-limit mints or charges found", "未達標：發現超額發卡或扣款"), // NEEDS-REVIEW zh-HK
+  th1Short: label("Missed: over-limit cards or charges found", "未達標：發現超額發卡或扣款"), // NEEDS-REVIEW zh-HK
   th2Short: label("Missed: more approvals needed to reach the target", "未達標：尚欠的批准數目"), // NEEDS-REVIEW zh-HK
   th2Empty: label("Missed: no legitimate scenario in the run, so nothing was measured.", "未達標：今次沒有合法情境，無從量度。"), // NEEDS-REVIEW zh-HK
   inconsistent: label("The file's verdict disagrees with its own counts; trust neither until it is re-run.", "檔案的結論與其數字不符；重新運行前兩者都不應採信。"), // NEEDS-REVIEW zh-HK
@@ -44,13 +44,15 @@ export const E = {
   higher: label("higher", "較高"), // NEEDS-REVIEW zh-HK
   equal: label("equal", "相同"), // NEEDS-REVIEW zh-HK
   noCompare: label("cannot compare", "無法比較"), // NEEDS-REVIEW zh-HK
+  missesTitle: label("Where the full pipeline is not better", "完整流程未有更好的地方"), // NEEDS-REVIEW zh-HK
+  missesAgainst: label("against", "對比"), // NEEDS-REVIEW zh-HK
   better: label("B2 better here", "此項 B2 較好"), // NEEDS-REVIEW zh-HK
   worse: label("B2 worse here", "此項 B2 較差"), // NEEDS-REVIEW zh-HK
   same: label("no difference", "沒有分別"), // NEEDS-REVIEW zh-HK
   overlap: label("intervals overlap: not a clear difference at this sample size", "區間重疊：以此樣本量未見明確分別"), // NEEDS-REVIEW zh-HK
 
   latencyQuestion: label("How long from cart to decision?", "由購物車到決定要多久？"), // NEEDS-REVIEW zh-HK
-  latencyTitle: label("Decision latency, judge plus engine plus mint", "決定延遲：判斷器、規則引擎及發卡"), // NEEDS-REVIEW zh-HK
+  latencyTitle: label("Decision latency, judge plus engine plus making the card", "決定延遲：判斷器、規則引擎及發卡"), // NEEDS-REVIEW zh-HK
   latencyNotMeasured: label("not measured in this run", "今次運行沒有量度"), // NEEDS-REVIEW zh-HK
   judgeQuestion: label("How often did an injected listing get past the judge?", "植入指令的商品頁有幾常騙過判斷器？"), // NEEDS-REVIEW zh-HK
   judgeR10: label("B2, engine R10 check", "B2，規則引擎 R10 檢查"), // NEEDS-REVIEW zh-HK

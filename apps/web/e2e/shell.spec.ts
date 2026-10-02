@@ -79,7 +79,7 @@ test("seals a budget through the whole flow: Meet Wally, Describe, Check and sea
 
 test("cancels the budget: hold, confirm, the card stops working and a new budget is offered", async ({ page }) => {
   await page.locator('main [data-scenario="revoke"]').click();
-  await expect(page.locator('.console-ticket[data-card-state="ACTIVE"]')).toBeVisible();
+  await expect(page.locator('.oc[data-card-state="ACTIVE"]')).toBeVisible();
   await holdCancel(page);
   const dialog = page.getByRole("alertdialog", { name: "Cancel this budget?" });
   await expect(dialog).toBeVisible();

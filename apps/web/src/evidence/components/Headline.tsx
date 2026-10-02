@@ -10,6 +10,7 @@ import { E } from "../strings";
 import type { HarnessRun } from "../types";
 import { HEADLINE_KEYS } from "./BigNumbers";
 import { MarkEqual, MarkHigher, MarkLower, MarkMiss, MarkNone, MarkPass } from "./marks";
+import { Misses } from "./Misses";
 import { Tx } from "./Tx";
 
 const EU = UI.evidenceUi;
@@ -42,6 +43,7 @@ export function Headline({ run }: { readonly run: HarnessRun }): ReactElement {
       <ul className="ev-headline__lines">
         {HEADLINE_KEYS.map((m) => <Line key={m} metric={m} run={run} />)}
       </ul>
+      <Misses run={run} />
       {acceptance.length > 0 ? (
         <ul className="ev-headline__targets" aria-label={EU.acceptanceShort.en}>
           {acceptance.map((row) => {

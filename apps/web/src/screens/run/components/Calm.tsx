@@ -7,6 +7,8 @@ import { Button } from "../../../ui/Button";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
 import { Wally, type WallyState } from "../../../wally/Wally";
+import { useAskEcho } from "../askEcho";
+import { AskBubble } from "./AskBubble";
 
 const R = UI.run;
 
@@ -26,15 +28,24 @@ function copyFor(kind: CalmKind, code: string | undefined): { readonly title: La
   return COPY[kind];
 }
 
-export function Calm({ kind, code, onAsk, headingRef }: { readonly kind: CalmKind; readonly code?: string | undefined; readonly onAsk: () => void; readonly headingRef?: Ref<HTMLHeadingElement> }): ReactElement {
+/** What the person asked, still on screen when Wally could not pick (so the miss reads as an answer to those words). */
+function AskedEcho({ runId }: { readonly runId: string }): ReactElement | null {
+  const asked = useAskEcho(runId);
+  return asked ? <AskBubble text={asked} still /> : null;
+}
+
+export function Calm({ kind, code, runId, onAsk, headingRef }: { readonly kind: CalmKind; readonly code?: string | undefined; readonly runId?: string | undefined; readonly onAsk: () => void; readonly headingRef?: Ref<HTMLHeadingElement> }): ReactElement {
   const { t } = useLocale();
   const copy = copyFor(kind, code);
   return (
-    <section className="run-calm" data-run-state={kind} role={kind === "error" ? "alert" : undefined}>
-      <Wally state={copy.wally} size={kind === "idle" ? 132 : 112} decorative />
-      <h2 className="run-calm__title" tabIndex={-1} ref={headingRef}>{t(copy.title)}</h2>
-      <p className="run-calm__body">{t(copy.body)}</p>
-      <Button size="lg" onClick={onAsk} icon={<Icon name="sparkle" size={20} />} className="run-calm__action">{t(R.ask)}</Button>
-    </section>
+    <>
+      {runId !== undefined && kind !== "idle" ? <AskedEcho runId={runId} /> : null}
+      <section className="run-calm" data-run-state={kind} role={kind === "error" ? "alert" : undefined}>
+        <Wally state={copy.wally} size={kind === "idle" ? 132 : 112} decorative />
+        <h2 className="run-calm__title" tabIndex={-1} ref={headingRef}>{t(copy.title)}</h2>
+        <p className="run-calm__body">{t(copy.body)}</p>
+        <Button size="lg" onClick={onAsk} icon={<Icon name="sparkle" size={20} />} className="run-calm__action">{t(R.ask)}</Button>
+      </section>
+    </>
   );
 }

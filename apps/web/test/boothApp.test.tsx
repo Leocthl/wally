@@ -134,8 +134,9 @@ describe("Needs your OK: from the Budget banner to the answer (S5, R11)", () => 
   it("the banner on Budget links to the question; Approve makes the one-off card", async () => {
     const h = await bootApp();
     await press(h, "unverified");
-    expect(await screen.findByRole("heading", { name: "Needs your OK" })).toBeInTheDocument();
-    expect(screen.getByText("Wally couldn't check this seller recently.")).toBeInTheDocument();
+    // The question rises as a sheet over a quiet card; both carry the heading.
+    expect(await screen.findByRole("dialog", { name: "Needs your OK" })).toBeInTheDocument();
+    expect(screen.getAllByText("Wally couldn't check this seller recently.").length).toBeGreaterThan(0);
     await go("#/budget");
     const { region, decisionId } = await banner();
     expect(region).toHaveTextContent("Cotton tee");
@@ -145,9 +146,9 @@ describe("Needs your OK: from the Budget banner to the answer (S5, R11)", () => 
     await h.user.click(review);
     await screenReady();
     expect(window.location.hash).toBe(`#/wally?d=${decisionId}`);
-    expect(await screen.findByRole("heading", { name: "Needs your OK" })).toBeInTheDocument();
-    expect(screen.getByRole("timer")).toHaveTextContent("60 s left");
-    await h.user.click(screen.getByRole("button", { name: "Approve" }));
+    const sheet = await screen.findByRole("dialog", { name: "Needs your OK" });
+    expect(within(sheet).getByRole("timer")).toHaveTextContent("60 s left");
+    await h.user.click(within(sheet).getByRole("button", { name: "Approve" }));
     expect(await screen.findByText("You said yes, so Wally went ahead.")).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "One-off card" })).toBeInTheDocument();
     await go("#/budget");
@@ -161,8 +162,8 @@ describe("Needs your OK: from the Budget banner to the answer (S5, R11)", () => 
     await go("#/budget");
     const { region, decisionId } = await banner();
     await h.user.click(within(region).getByRole("link", { name: /Review/ }));
-    await screen.findByRole("heading", { name: "Needs your OK" });
-    await h.user.click(screen.getByRole("button", { name: "No thanks" }));
+    const sheet = await screen.findByRole("dialog", { name: "Needs your OK" });
+    await h.user.click(within(sheet).getByRole("button", { name: "No thanks" }));
     const alert = await stopped(/You said no, so Wally stopped it\./);
     expect(alert).toHaveTextContent("Stopped before paying");
     expect((await h.api.snapshot()).cards).toHaveLength(0);
@@ -194,7 +195,7 @@ describe("rail beats (DM2)", () => {
     const story = await screen.findByRole("region", { name: "At checkout" });
     expect(story.querySelector('[data-kind="overshoot"]')).toHaveTextContent("The shop asked for HK$268. Declined, the HK$259 limit held.");
     await go("#/budget");
-    expect(document.querySelectorAll('.console-ticket[data-card-state="ACTIVE"]')).toHaveLength(1);
+    expect(document.querySelectorAll('.oc[data-card-state="ACTIVE"]')).toHaveLength(1);
     await press(h, "normal");
     await waitFor(() => expect(wally().querySelector('[data-kind="exact"]')).toHaveTextContent("Charged the exact HK$259."));
     await press(h, "replay");
@@ -216,12 +217,12 @@ describe("rail beats (DM2)", () => {
   it("puts the SIMULATED chip on every one-off card, on Wally and on Budget", async () => {
     const h = await bootApp();
     await press(h, "normal");
-    await waitFor(() => expect(document.querySelectorAll(".run-ticket").length).toBeGreaterThan(0));
-    for (const ticket of document.querySelectorAll(".run-ticket")) expect(ticket.querySelector('.run-ticket__meta [data-prov="SIMULATED"]')).not.toBeNull();
+    await waitFor(() => expect(document.querySelectorAll(".oc").length).toBeGreaterThan(0));
+    for (const card of document.querySelectorAll(".oc")) expect(card.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();
     await press(h, "overshoot");
-    for (const ticket of document.querySelectorAll(".run-ticket")) expect(ticket.querySelector('.run-ticket__meta [data-prov="SIMULATED"]')).not.toBeNull();
+    for (const card of document.querySelectorAll(".oc")) expect(card.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();
     await go("#/budget");
-    const tickets = document.querySelectorAll(".console-ticket");
+    const tickets = document.querySelectorAll(".oc");
     expect(tickets.length).toBeGreaterThan(0);
     for (const ticket of tickets) expect(ticket.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();
   });

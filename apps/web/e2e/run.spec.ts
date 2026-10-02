@@ -29,7 +29,8 @@ test("idle: Wally is ready and offers to help", async ({ page }) => {
 test("normal purchase: a one-off card for the exact amount, no rule ids on screen", async ({ page }) => {
   await tryAsking(page, "normal");
   const card = page.getByRole("article", { name: "One-off card" });
-  await expect(card).toContainText("Works once, for HK$259 only");
+  await expect(card).toContainText("HK$259");
+  await expect(card).toContainText("Works once, for this amount only");
   await expect(card).toContainText("SIMULATED");
   await expect(page.locator('[data-screen="wally"]')).not.toContainText(/\bR\d{1,2}\b/);
 });
@@ -48,9 +49,11 @@ test("flagged seller: stopped before paying, plain reason, then the Why sheet an
 
 test("needs your OK: Approve continues to the one-off card", async ({ page }) => {
   await tryAsking(page, "unverified");
-  await expect(page.getByRole("heading", { name: "Needs your OK" })).toBeVisible();
-  await expect(page.getByRole("timer")).toContainText("s left");
-  await page.getByRole("button", { name: "Approve" }).click();
+  const sheet = page.getByRole("dialog", { name: "Needs your OK" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("timer")).toContainText("s left");
+  await expect(sheet).toContainText("Wally makes a one-off card for exactly HK$259.");
+  await sheet.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("You said yes, so Wally went ahead.")).toBeVisible();
 });
 

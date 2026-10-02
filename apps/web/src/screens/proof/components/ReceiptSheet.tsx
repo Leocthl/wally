@@ -61,7 +61,7 @@ export function ReceiptSheet({ open, receipt, entry, onClose, onOpenDecision, ap
   const decision = entry.kind === "DECISION" ? entry.payload : null;
   const scope: readonly Prov[] = prov.kind === "SIMULATED" ? [SIMULATED] : [SIMULATED, prov];
   return (
-    <Sheet open={open} onClose={onClose} title={t(meta.label)} description={receiptTitle(receipt, t)}>
+    <Sheet open={open} onClose={onClose} title={t(meta.label)} description={receiptTitle(receipt, t, true)}>
       <ChipScope provs={scope} className="rc-sheet" chipsClassName="rc-sheet__chips">
         <div className={cx("rc-hero", `rc-hero--${meta.tone}`)} data-receipt-seq={receipt.seq}>
           <span className="rc-hero__icon"><Icon name={meta.icon} size={28} /></span>

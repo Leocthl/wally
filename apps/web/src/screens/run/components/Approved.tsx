@@ -1,23 +1,23 @@
-// Approved: a green hero with Wally approved and the amount, the dark one-off card ticket, the budget now, and the card
-// story when the shop has used the card (DM2 beats). Pay now appears only while the card is unpaid and the checkout is
-// manual (the run ended with the card still ready).
+// Approved: Wally made a one-off card. The card is the hero: the exact amount big, SIMULATED, the shop lock and a live
+// clock. Pay now sits right under it while the card is unpaid and the checkout is manual (the run ended with the card
+// still ready). Then what is left of the budget, the checkout story (DM2 beats) and Why.
 import type { ReactElement, Ref } from "react";
 import type { PacketState } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
-import { cartProv } from "../../../domain/provenance";
 import { UI } from "../../../i18n/ui";
 import { Button } from "../../../ui/Button";
-import { ProvenanceChip } from "../../../ui/Chip";
+import { cx } from "../../../ui/cx";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
-import { useCountUp } from "../hooks";
-import { itemTitle, shopName } from "../model/item";
+import { Wally } from "../../../wally/Wally";
+import { OneOffCard } from "../../console/OneOffCard";
+import { shopName } from "../model/item";
 import type { Result } from "../model/screen";
 import { isPaid } from "../model/story";
 import { BudgetNow } from "./BudgetNow";
 import { CardStory } from "./CardStory";
-import { OneOffCard } from "./OneOffCard";
-import { Footnote, Hero } from "./parts";
+import { Footnote } from "./parts";
+import { SignedMark } from "./SignedMark";
 
 const R = UI.run;
 
@@ -33,36 +33,40 @@ export interface ApprovedProps {
   readonly onWhy: () => void;
 }
 
+/** How many times the shop was refused: the card holds, and a new one makes it shake. */
+export const declinesOf = (result: Result): number => result.story.filter((s) => s.tone === "held").length;
+
 export function Approved({ result, packet, fresh, headingRef, paying, canPay, onPay, onWhy }: ApprovedProps): ReactElement | null {
   const { t } = useLocale();
   const chain = result.chain;
-  const total = chain?.current.approved_limit_minor ?? chain?.current.cart.total_minor ?? 0;
-  const shown = useCountUp(total, 0, fresh);
   if (!chain) return null;
   const cart = chain.current.cart;
+  const total = chain.current.approved_limit_minor ?? cart.total_minor;
   const paid = isPaid(result.story);
   const unpaid = result.card?.state === "ACTIVE" && !paid;
   return (
     <div className="run-stack" data-run-state="approved">
-      <Hero tone="ok" wally="approved" title={t(paid ? R.paidTitle : R.approvedTitle)} headingRef={headingRef} role="status" fresh={fresh}>
-        <p className="run-hero__amount">
-          <span aria-hidden="true">{formatHkd(shown)}</span>
+      <div className={cx("run-head", fresh && "run-head--enter")} role="status">
+        <Wally state="approved" size={64} decorative />
+        <div className="run-head__text">
+          <h2 className="run-head__title" tabIndex={-1} ref={headingRef}>{t(paid ? R.paidTitle : R.approvedTitle)}</h2>
+          {result.answer === "yes" ? <p className="run-head__note"><SignedMark /> {t(R.youSaidYes)}</p> : null}
           <span className="sr-only">{formatHkd(total)}</span>
-          <ProvenanceChip prov={cartProv(cart)} className="run-hero__chip" />
-        </p>
-        <p className="run-hero__what">{itemTitle(cart)} · {shopName(cart)}</p>
-        {result.answer === "yes" ? <p className="run-hero__note">{t(R.youSaidYes)}</p> : null}
-      </Hero>
-      <OneOffCard card={result.card} shop={shopName(cart)} enter={fresh} />
-      {packet ? <BudgetNow packet={packet} fromMinor={chain.current.packet.remaining_minor} animate={fresh} /> : null}
-      <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? total} />
-      <div className="run-actions">
+        </div>
+      </div>
+      <OneOffCard card={result.card} shop={shopName(cart)} enter={fresh} declines={declinesOf(result)} />
+      {/* Everything under the card fades in once the card is dealing in, so no button waits in an empty slot. */}
+      <div className={cx("run-after", fresh && "run-after--enter")}>
         {unpaid && canPay && (!result.busy || paying) ? (
           <Button size="lg" block icon={<Icon name="lock" size={20} />} loading={paying} onClick={onPay}>{t(R.payNow)}</Button>
         ) : null}
-        <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyApproved)}</Button>
+        {packet ? <BudgetNow packet={packet} fromMinor={chain.current.packet.remaining_minor} animate={fresh} /> : null}
+        <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? total} />
+        <div className="run-actions">
+          <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyApproved)}</Button>
+        </div>
+        <Footnote />
       </div>
-      <Footnote />
     </div>
   );
 }

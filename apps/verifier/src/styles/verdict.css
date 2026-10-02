@@ -1,0 +1,95 @@
+/* The verdict, like the Proof card in the app: a big status disc (shield-check on green, shield-alert on red, a dashed
+   shield for NOT VERIFIED), the word large and bold, the facts as a tidy two-column list. Red only for a failed check. */
+.verdict {
+  display: grid;
+  gap: var(--sp-3);
+  padding: 1.25rem var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+.verdict--pass { background: var(--c-ok-tint); border-color: transparent; box-shadow: none; }
+.verdict--fail { background: var(--c-stop-tint); border-color: transparent; box-shadow: none; }
+
+.verdict__badge {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-heavy);
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-tight);
+}
+.verdict__disc {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--c-primary-tint);
+  color: var(--c-primary-ink);
+}
+.verdict__disc .icon { stroke-width: 1.7; }
+.verdict--pass .verdict__disc { background: var(--c-ok); color: var(--c-on-ok); }
+.verdict--fail .verdict__disc { background: var(--c-stop); color: var(--c-on-stop); }
+.verdict--pass .verdict__word { color: var(--c-ok-ink); }
+.verdict--fail .verdict__word { color: var(--c-stop-ink); }
+.verdict--idle .verdict__word, .verdict--none .verdict__word { color: var(--c-ink-muted); }
+
+.verdict__lede { font-size: var(--text-lg); line-height: var(--lh-snug); }
+.verdict__headline { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
+.verdict__reason { line-height: var(--lh-snug); }
+.verdict__detail {
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.verdict__list { display: grid; gap: var(--sp-2); padding-left: var(--sp-5); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.code {
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--r-xs);
+  background: var(--c-surface);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.facts { display: grid; margin-top: var(--sp-1); }
+.fact {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, max-content) minmax(0, 1fr);
+  gap: var(--sp-3);
+  padding: 0.375rem 0;
+  border-top: 1px solid var(--c-verdict-line);
+  font-size: var(--text-sm);
+}
+.fact dt { color: var(--c-ink-muted); }
+.fact dd { margin: 0; overflow-wrap: anywhere; }
+
+/* What Tamper changed: a dashed card, red edge (a failed check), the byte shown in context. */
+.tamper-note {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1.5px dashed var(--c-stop);
+  border-radius: var(--r-lg);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.tamper-note__title { font-size: var(--text-md); font-weight: var(--weight-bold); }
+.tamper-note .code { background: var(--c-surface-sunken); }
+.snippet {
+  overflow-x: auto;
+  white-space: pre;
+  padding: var(--sp-3);
+  background: var(--c-surface-sunken);
+  border-radius: var(--r-md);
+  font-size: var(--text-xs);
+}
+.snippet del { color: var(--c-stop-ink); background: var(--c-stop-tint); text-decoration: line-through; border-radius: 3px; }
+.snippet ins { color: var(--c-ok-ink); background: var(--c-ok-tint); text-decoration: underline; font-weight: var(--weight-bold); border-radius: 3px; }

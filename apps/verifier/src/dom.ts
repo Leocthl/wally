@@ -14,12 +14,21 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** English line, then the zh-HK line marked lang="zh-HK" (docs/04 Fonts, Microcopy). */
-export function bi(text: Bi, tag: "span" | "p" | "div" = "span", className = ""): HTMLElement {
+/**
+ * Both languages are in the DOM, one span each; CSS shows the one that matches <html data-lang> (src/lang.ts,
+ * verifier.css), so the page reads one language at a time and a screen reader skips the hidden one (display:none).
+ * Use this form when a language needs its own nodes (a code element inside a sentence): each side gets its own copy.
+ */
+export function biParts(en: readonly Child[], zh: readonly Child[], tag: "span" | "p" | "div" = "span", className = ""): HTMLElement {
   return el(tag, { class: `bi ${className}`.trim() }, [
-    el("span", { class: "bi__en" }, [text.en]),
-    el("span", { class: "bi__zh", lang: "zh-HK" }, [text.zh]),
+    el("span", { class: "bi__en", lang: "en" }, en),
+    el("span", { class: "bi__zh", lang: "zh-HK" }, zh),
   ]);
+}
+
+/** English text, then the zh-HK text marked lang="zh-HK" (docs/04 Fonts, Microcopy). */
+export function bi(text: Bi, tag: "span" | "p" | "div" = "span", className = ""): HTMLElement {
+  return biParts([text.en], [text.zh], tag, className);
 }
 
 export function mustFind<T extends Element>(root: ParentNode, selector: string): T {

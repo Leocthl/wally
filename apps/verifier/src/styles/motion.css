@@ -1,0 +1,37 @@
+/* Motion: two moments, PASS and then Tamper and FAIL. Everything is transform or opacity, runs from CSS (off the main
+   thread), and plays when the new element is inserted: a Verify press rebuilds the verdict and the entries, so it
+   replays; typing, switching language and the empty page never animate. The stagger is set through the CSSOM (never an
+   inline style attribute, which the page's CSP blocks): --i on each row, --step on the list (src/motion.ts).
+   Under reduced motion nothing moves at all; the colours, shields and words still say what happened. */
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { transform: scale(0.7); } to { transform: none; } }
+@keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes row-fade { from { opacity: 0; } to { opacity: 1; } }
+/* The broken row lands (200ms), then shakes once (320ms): left, right, left a little, still. */
+@keyframes row-land {
+  0%   { opacity: 0; transform: translateY(6px); }
+  38%  { opacity: 1; transform: none; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  54%  { transform: translateX(-3px); }
+  69%  { transform: translateX(3px); }
+  85%  { transform: translateX(-2px); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The verdict (not the empty page's), the Tamper note and the demo sentence rise in; the status disc pops. */
+  .verdict:not(.verdict--idle), .demo-badge { animation: rise var(--dur-base) var(--ease-out) both; }
+  .tamper-note { animation: rise var(--dur-base) var(--ease-out) 80ms both; }
+  .verdict:not(.verdict--idle) .verdict__disc { animation: pop var(--dur-pop) var(--ease-spring) var(--dur-press) both; }
+
+  /* Entries: rows before the break light in one after another; the broken row lands last and shakes once; the rows
+     after it fade in dashed. A short hold (120ms) before the break gives the eye a beat. */
+  .row--ok { animation: row-in 200ms var(--ease-out) calc(var(--i, 0) * var(--step, 40ms)) both; }
+  .row--ok .row__disc { animation: pop var(--dur-pop) var(--ease-spring) calc(var(--i, 0) * var(--step, 40ms) + 60ms) both; }
+  .row--broken { animation: row-land 520ms var(--ease-out) calc(var(--i, 0) * var(--step, 40ms) + 120ms) both; }
+  .row--broken .row__disc { animation: pop var(--dur-pop) var(--ease-spring) calc(var(--i, 0) * var(--step, 40ms) + 160ms) both; }
+  .row--unchecked { animation: row-fade 320ms var(--ease-out) calc(var(--i, 0) * var(--step, 40ms) + 280ms) both; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

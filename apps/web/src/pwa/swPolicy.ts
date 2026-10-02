@@ -1,5 +1,6 @@
 // What the service worker may touch. Pure, so tests can prove it: only same-origin GETs inside the app scope, never
-// /api (JSON or the SSE stream), never ranges. Navigations get the cached app shell; other requests, cache first.
+// /api (JSON or the SSE stream), never the offline verifier page (/verifier/), never ranges. Navigations get the cached
+// app shell; other requests, cache first.
 
 export const CACHE_PREFIX = "wally-shell-";
 export const SHELL_URL = "./index.html";
@@ -28,11 +29,17 @@ export function isApiPath(path: string): boolean {
   return /(^|\/)api(\/|$)/.test(path);
 }
 
+/** True for the offline verifier page (/verifier/), which the booth serves as a page of its own, wherever the app is mounted. */
+export function isVerifierPath(path: string): boolean {
+  return /(^|\/)verifier(\/|$)/.test(path);
+}
+
 export function classify(req: RequestInfo, scope: string): RouteKind {
   if (req.method !== "GET" || req.range) return "ignore";
   if (req.accept?.includes("text/event-stream")) return "ignore";
   const path = scopedPath(req.url, scope);
-  if (path === null || isApiPath(path)) return "ignore";
+  // The verifier is not the app: without this a controlled page that opens /verifier/ would get the app shell back.
+  if (path === null || isApiPath(path) || isVerifierPath(path)) return "ignore";
   return req.mode === "navigate" ? "navigate" : "asset";
 }
 

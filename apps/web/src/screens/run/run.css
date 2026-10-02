@@ -12,85 +12,11 @@
 /* A long state ("Stopped before paying") wraps inside its row instead of running under the amount. */
 .run-history .w-row__subtitle { min-width: 0; }
 .run-history .w-tag { max-width: 100%; white-space: normal; text-align: left; }
-.run-stack { display: grid; gap: var(--sp-4); min-width: 0; }
+.run-stack, .run-after { display: grid; gap: var(--sp-4); min-width: 0; }
 .run-section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .run-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-size: var(--text-sm); color: var(--c-ink-muted); }
 .run-link { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--tap); color: var(--c-primary-ink); font-weight: var(--weight-semibold); text-decoration: none; }
-.run-link:hover { text-decoration: underline; }
-
-/* Hero: Wally, one sentence, the figure. A soft tint says the outcome; the words and Wally's pose say it too. */
-.run-hero {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-5) var(--sp-4) var(--sp-5);
-  border-radius: var(--r-xl);
-  text-align: center;
-  overflow: hidden;
-  isolation: isolate;
-}
-.run-hero--ok { background: var(--c-ok-tint); }
-.run-hero--stop { background: var(--c-stop-tint); }
-.run-hero--warn { background: var(--c-warn-tint); }
-.run-hero--calm { background: var(--c-surface); }
-/* A soft glow behind Wally, decoration only. */
-.run-hero::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: -40% -20% auto;
-  height: 22rem;
-  background: radial-gradient(closest-side, var(--c-surface), transparent);
-  opacity: 0.7;
-  pointer-events: none;
-}
-.run-hero__wally { margin-bottom: var(--sp-1); }
-.run-hero__title { font-size: var(--text-2xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); line-height: var(--lh-snug); }
-/* Headings take focus only so a screen reader starts at the result; they are not controls, so no ring. */
-.run-hero__title:focus, .run-ask__title:focus, .run-calm__title:focus { outline: none; }
-.run-hero__amount {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-1) var(--sp-2);
-  font-family: var(--font-display);
-  font-size: var(--text-4xl);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: var(--num);
-  letter-spacing: var(--track-tight);
-  line-height: 1.05;
-  color: var(--c-ok-ink);
-}
-.run-hero__chip { font-family: var(--font-sans); letter-spacing: normal; }
-.run-hero__what { color: var(--c-ink-muted); font-weight: var(--weight-medium); overflow-wrap: anywhere; }
-.run-hero__note { font-size: var(--text-sm); color: var(--c-ink-muted); }
-.run-hero__sentence { max-width: 22rem; font-size: var(--text-lg); line-height: var(--lh-snug); }
-.run-hero__sentence--sub { font-size: var(--text-md); color: var(--c-ink-muted); }
-.run-hero__tags { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-1); }
-.run-hero__tags .w-tag { background: var(--c-surface); }
-
-/* The one-off card: dark in both themes, like a real card, with a quiet teal glow as decoration. */
-.run-ticket { display: grid; gap: var(--sp-2); min-height: 10.5rem; isolation: isolate; }
-.run-ticket::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  width: 12rem;
-  height: 12rem;
-  right: -5rem;
-  bottom: -7rem;
-  border-radius: 50%;
-  background: var(--c-accent);
-  opacity: 0.16;
-  pointer-events: none;
-}
-.run-ticket__label { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--c-on-ticket-muted); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
-.run-ticket__number { font-family: var(--font-mono); font-size: var(--text-2xl); letter-spacing: 0.12em; }
-.run-ticket__once { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
-.run-ticket__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-3); color: var(--c-on-ticket-muted); font-size: var(--text-sm); }
-.run-ticket .w-skeleton { background: var(--c-on-ticket-muted); opacity: 0.25; animation: none; }
+@media (hover: hover) and (pointer: fine) { .run-link:hover { text-decoration: underline; } }
 
 /* Budget now */
 .run-budget { display: grid; gap: var(--sp-2); padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
@@ -117,8 +43,6 @@
 .run-sim { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 .run-repeat { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
 .run-repeat svg { flex: none; color: var(--c-info-ink, var(--c-ink-muted)); }
-.run-nocard { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
-.run-nocard svg { flex: none; color: var(--c-ink-muted); }
 
 /* Wally is shopping */
 .run-item { display: flex; align-items: center; gap: var(--sp-4); min-height: 6.25rem; }
@@ -127,25 +51,6 @@
 .run-item__title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
 .run-item__meta { color: var(--c-ink-muted); font-size: var(--text-sm); }
 .run-item__price { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); font-weight: var(--weight-semibold); font-variant-numeric: var(--num); }
-
-/* Needs your OK */
-.run-ask { display: grid; gap: var(--sp-3); }
-.run-ask__head { display: flex; align-items: center; gap: var(--sp-3); }
-.run-ask__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
-.run-ask__reason { font-size: var(--text-lg); line-height: var(--lh-snug); }
-.run-ask__deal { display: grid; gap: 0.125rem; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--c-surface); }
-.run-ask__item { font-weight: var(--weight-bold); overflow-wrap: anywhere; }
-.run-ask__shop { color: var(--c-ink-muted); font-size: var(--text-sm); }
-.run-ask__amount { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); font-variant-numeric: var(--num); }
-.run-ask__limit { display: flex; align-items: flex-start; gap: var(--sp-2); font-size: var(--text-sm); color: var(--c-ink-muted); }
-.run-ask__limit svg { flex: none; margin-top: 0.125rem; color: var(--c-ok-ink); }
-.run-ask__buttons { display: grid; gap: var(--sp-2); }
-.run-countdown { display: grid; gap: var(--sp-2); }
-.run-countdown__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
-.run-countdown__left { font-variant-numeric: var(--num); color: var(--c-warn-ink); }
-.run-countdown__track { display: block; height: 0.5rem; border-radius: var(--r-pill); background: var(--c-surface); overflow: hidden; }
-.run-countdown__fill { display: block; height: 100%; border-radius: inherit; background: var(--c-warn); transform-origin: left center; transition: transform var(--dur-expire) linear; }
-.run-countdown[data-over] .run-countdown__fill { transform: scaleX(0) !important; }
 
 /* Quiet states */
 .run-calm { display: grid; justify-items: center; gap: var(--sp-2); padding: var(--sp-5) var(--sp-3) var(--sp-3); text-align: center; }
@@ -202,17 +107,13 @@
 .run-nerd-ids dt { color: var(--c-ink-muted); }
 .run-nerd-ids dd { margin: 0; overflow-wrap: anywhere; }
 
-/* Motion: the result settles in, the card slides up, new card-story rows appear. All off under reduced motion. */
+/* Motion: new checkout rows rise in, the shopping item fades in. Off under reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .run-hero--enter { animation: run-rise var(--dur-slow) var(--ease-out) both; }
-  .run-hero--enter .run-hero__title, .run-hero--enter .run-hero__amount, .run-hero--enter .run-hero__sentence { animation: run-rise var(--dur-slow) var(--ease-out) both; animation-delay: var(--dur-fast); }
-  .run-ticket--enter { animation: run-ticket-in var(--dur-slow) var(--ease-spring) both; animation-delay: calc(var(--dur-fast) * 2); }
-  .run-story__item { animation: run-rise var(--dur-base) var(--ease-out) both; }
+  .run-story__item--new { animation: run-rise var(--dur-base) var(--ease-out) both; }
   [data-run-state="working"] .run-item { animation: run-fade var(--dur-base) var(--ease-out) both; }
 }
 @keyframes run-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes run-ticket-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes run-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .run-countdown__fill, .run-nerds__chevron { transition: none; }
+  .run-nerds__chevron { transition: none; }
 }

@@ -1,19 +1,8 @@
-/* Components still used outside the new screens: the bilingual text (Bi), the state badge, the chop mark and the
-   evidence page's details. The Wally components live in src/ui and src/screens/*. */
+/* Components still used outside the new screens: the bilingual text (Bi, used by the on-device note) and the details
+   disclosure on the Evidence page. The Wally components live in src/ui and src/screens/*. */
 .bi { display: inline-flex; flex-direction: column; }
 .bi__en { display: block; }
 .bi__zh { display: block; font-size: 0.875em; color: var(--fg-soft); }
 p.bi, div.bi { display: flex; }
-
-/* State: colour + icon + text. */
-.state { display: inline-flex; align-items: center; gap: var(--sp-2); padding: 2px var(--sp-3); border-radius: var(--r-chip); font-weight: 700; font-size: var(--fs-s); letter-spacing: 0.04em; border: 1px solid currentColor; }
-.state__zh { font-weight: 500; }
-.state--minted { color: var(--minted); background: var(--minted-bg); }
-.state--stopped { color: var(--stopped); background: var(--stopped-bg); }
-.state--escalated { color: var(--escalated); background: var(--escalated-bg); }
-.state--pending { color: var(--pending); background: var(--pending-bg); }
-
-.chop { display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 3px solid var(--vermilion); color: var(--vermilion); font-size: var(--fs-2); font-weight: 700; border-radius: 4px; transform: rotate(-4deg); }
-@keyframes chop { from { transform: scale(1.06) rotate(-4deg); } to { transform: scale(1) rotate(-4deg); } }
 
 .disclosure > summary { cursor: pointer; min-height: var(--tap); display: flex; align-items: center; font-weight: 600; }

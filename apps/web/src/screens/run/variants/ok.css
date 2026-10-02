@@ -1,0 +1,31 @@
+/* "Needs your OK": the two layouts that did not ship (Hold to approve, Permission slip), kept for the variant harness (dev only). */
+.kv-fine { display: flex; align-items: flex-start; gap: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.kv-fine svg { flex: none; margin-top: 0.125rem; color: var(--c-ok-ink); }
+
+/* 2. Hold to approve */
+.kv-hold { display: grid; gap: var(--sp-2); }
+.kv-hold__button { position: relative; overflow: hidden; isolation: isolate; touch-action: none; }
+.kv-hold__fill { position: absolute; inset: 0; z-index: -1; background: var(--c-primary-pressed); transform: scaleX(0); transform-origin: left center; }
+.kv-hold__button[data-holding="true"][data-motion="full"] .kv-hold__fill { transform: scaleX(1); transition: transform var(--dur-hold) linear; }
+.kv-hold__button[data-done] .kv-hold__fill { transform: scaleX(1); }
+.kv-hold__button[data-motion="reduced"][data-step="1"] .kv-hold__fill { transform: scaleX(0.25); }
+.kv-hold__button[data-motion="reduced"][data-step="2"] .kv-hold__fill { transform: scaleX(0.5); }
+.kv-hold__button[data-motion="reduced"][data-step="3"] .kv-hold__fill { transform: scaleX(0.75); }
+.kv-hold__button[data-motion="reduced"][data-step="4"] .kv-hold__fill { transform: scaleX(1); }
+.kv-hold__hint { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
+
+/* 3. Permission slip */
+.kv-slip { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-4); overflow: hidden; border: 1px solid var(--c-line); border-radius: var(--r-xl); background: var(--c-surface); box-shadow: var(--shadow-2); }
+.kv-slip__head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4); background: var(--c-warn-tint); }
+.kv-slip__titles { display: grid; gap: var(--sp-1); min-width: 0; }
+.kv-slip__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); }
+.kv-slip__title:focus { outline: none; }
+.kv-slip__reason { line-height: var(--lh-snug); }
+.kv-slip__clock, .kv-slip .kv-fine { padding: 0 var(--sp-4); }
+.kv-slip .run-countdown__track { background: var(--c-surface-sunken); }
+.kv-slip__rows { display: grid; margin: 0; padding: 0 var(--sp-4); }
+.kv-slip__rows > div { display: grid; gap: 0.125rem; padding: var(--sp-3) 0; border-top: 1px solid var(--c-line); }
+.kv-slip__rows dt { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.kv-slip__rows dd { margin: 0; line-height: var(--lh-snug); }
+.kv-slip__muted { color: var(--c-ink-muted); }
+.kv-slip__answers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--sp-2); padding: 0 var(--sp-4); }

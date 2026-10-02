@@ -11,7 +11,9 @@ import { useLocale } from "../../../ui/locale";
 import { Steps } from "../../../ui/Steps";
 import { Card, Skeleton } from "../../../ui/Surface";
 import type { RunView } from "../../../state/booth";
+import { useAskEcho } from "../askEcho";
 import { itemTitle, shopName } from "../model/item";
+import { AskBubble } from "./AskBubble";
 import { activeStep, stepsFor } from "../model/steps";
 
 const R = UI.run;
@@ -55,8 +57,10 @@ export function Progress({ run, info }: { readonly run: RunView; readonly info: 
   const active = activeStep(steps);
   const prov = stageProv(info);
   const timed = steps.some((s) => s.latencyMs !== undefined);
+  const asked = useAskEcho(run.runId);
   return (
     <div className="run-stack" data-run-state="working">
+      {asked ? <AskBubble text={asked} /> : null}
       <Item run={run} />
       <Card className="run-steps">
         <Steps

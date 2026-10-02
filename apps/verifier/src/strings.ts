@@ -1,20 +1,24 @@
-// UI labels: English first, zh-HK second line (docs/04 Microcopy). Plain words, glossary terms only.
-// Every zh-HK string is a draft owed a native read (docs/04, C-12): each line carries NEEDS-REVIEW.
+// UI labels in both languages (docs/04 Microcopy); the page shows one at a time (src/lang.ts). Plain words: budget,
+// rules, one-off card, receipts, Wally. Every zh-HK string is a draft owed a native read (docs/04, C-12): each line
+// carries NEEDS-REVIEW. Sentences that take a number or a name are functions in phrases.ts.
 export interface Bi {
   readonly en: string;
   readonly zh: string;
 }
 
 export const S = {
-  title: { en: "Log verifier", zh: "紀錄驗證" }, // NEEDS-REVIEW zh-HK
+  title: { en: "Receipt verifier", zh: "收據驗證" }, // NEEDS-REVIEW zh-HK
+  railSimulated: { en: "Rail SIMULATED", zh: "發卡層 SIMULATED" }, // NEEDS-REVIEW zh-HK
   intro: {
-    en: "Checks a decision log offline: hash chain, engine signatures, the mandate credential and the head checkpoint.",
-    zh: "離線檢查決策紀錄：雜湊鏈、引擎簽署、授權憑證及最新檢查點。", // NEEDS-REVIEW zh-HK
+    en: "Checks Wally's receipts offline: the hash chain, the engine signatures, your signed budget rules and the latest checkpoint.",
+    zh: "離線檢查 Wally 的收據：雜湊鏈、引擎簽署、你已簽署的預算規則及最新檢查點。", // NEEDS-REVIEW zh-HK
   },
-  logLabel: { en: "Log (JSONL, one entry per line)", zh: "紀錄（JSONL，每行一筆）" }, // NEEDS-REVIEW zh-HK
+  actions: { en: "Actions", zh: "操作" }, // NEEDS-REVIEW zh-HK
+  inputsTitle: { en: "Check your own receipts", zh: "檢查你自己的收據" }, // NEEDS-REVIEW zh-HK
+  logLabel: { en: "Receipts (JSONL, one entry per line)", zh: "收據（JSONL，每行一筆）" }, // NEEDS-REVIEW zh-HK
   keysLabel: { en: "Public keys (JSON)", zh: "公鑰（JSON）" }, // NEEDS-REVIEW zh-HK
   checkpointLabel: { en: "Head checkpoint (JSON, optional)", zh: "最新檢查點（JSON，可選）" }, // NEEDS-REVIEW zh-HK
-  fileLog: { en: "Load log file", zh: "載入紀錄檔案" }, // NEEDS-REVIEW zh-HK
+  fileLog: { en: "Load receipts file", zh: "載入收據檔案" }, // NEEDS-REVIEW zh-HK
   fileKeys: { en: "Load public keys file", zh: "載入公鑰檔案" }, // NEEDS-REVIEW zh-HK
   fileCheckpoint: { en: "Load checkpoint file", zh: "載入檢查點檔案" }, // NEEDS-REVIEW zh-HK
   verify: { en: "Verify", zh: "驗證" }, // NEEDS-REVIEW zh-HK
@@ -24,13 +28,32 @@ export const S = {
   pass: { en: "PASS", zh: "驗證通過" }, // NEEDS-REVIEW zh-HK
   fail: { en: "FAIL", zh: "已中斷" }, // NEEDS-REVIEW zh-HK
   notVerified: { en: "NOT VERIFIED", zh: "未驗證" }, // NEEDS-REVIEW zh-HK
-  idle: { en: "Not verified yet. Load or paste a log and its public keys, then press Verify.", zh: "尚未驗證。請載入或貼上紀錄及公鑰，再按「驗證」。" }, // NEEDS-REVIEW zh-HK
+  idle: {
+    en: "Not verified yet. Load the demo log, or paste your receipts and their public keys, then press Verify.",
+    zh: "尚未驗證。請載入示範紀錄，或貼上收據及公鑰，再按「驗證」。", // NEEDS-REVIEW zh-HK
+  },
   timeline: { en: "Entries", zh: "紀錄條目" }, // NEEDS-REVIEW zh-HK
+  noEntries: { en: "No entries checked yet.", zh: "尚未檢查任何紀錄條目。" }, // NEEDS-REVIEW zh-HK
   result: { en: "Result", zh: "結果" }, // NEEDS-REVIEW zh-HK
   computedHere: { en: "Computed here, offline. Nothing leaves this page.", zh: "於此頁離線計算，資料不會離開本頁。" }, // NEEDS-REVIEW zh-HK
   rowOk: { en: "verified", zh: "已驗證" }, // NEEDS-REVIEW zh-HK
   rowBroken: { en: "broken", zh: "中斷" }, // NEEDS-REVIEW zh-HK
   rowUnchecked: { en: "not checked", zh: "未檢查" }, // NEEDS-REVIEW zh-HK
+  checkpointOk: { en: "Head checkpoint matches.", zh: "最新檢查點相符。" }, // NEEDS-REVIEW zh-HK
+  checkpointBroken: {
+    en: "Head checkpoint does not match: the log was cut short or rewritten.",
+    zh: "最新檢查點不符：紀錄已被截短或改寫。", // NEEDS-REVIEW zh-HK
+  },
+  checkpointUnchecked: { en: "Head checkpoint not checked: the chain broke first.", zh: "未檢查最新檢查點：紀錄鏈已先中斷。" }, // NEEDS-REVIEW zh-HK
+  passLede: { en: "Chain verified: hashes, order and every signature check out.", zh: "紀錄鏈已驗證：雜湊、次序及所有簽署均正確。" }, // NEEDS-REVIEW zh-HK
+  factEntries: { en: "Entries", zh: "紀錄條目" }, // NEEDS-REVIEW zh-HK
+  factLog: { en: "Log id", zh: "紀錄編號" }, // NEEDS-REVIEW zh-HK
+  factHead: { en: "Head hash", zh: "最新雜湊" }, // NEEDS-REVIEW zh-HK
+  factCheckpoint: { en: "Checkpoint", zh: "檢查點" }, // NEEDS-REVIEW zh-HK
+  detail: { en: "Detail: ", zh: "詳情：" }, // NEEDS-REVIEW zh-HK
+  snippetLabel: { en: "Changed byte in context", zh: "已改動的位元組及其前後文字" }, // NEEDS-REVIEW zh-HK
+  tamperTitle: { en: "Tampered copy. The original is kept; Restore puts it back.", zh: "已竄改的副本。原文已保留，按「還原」即可復原。" }, // NEEDS-REVIEW zh-HK
+  noFile: { en: "No file chosen.", zh: "未選擇檔案。" }, // NEEDS-REVIEW zh-HK
   demoBadge: {
     en: "SIMULATED demo log and throwaway test keys, not the booth keys.",
     zh: "模擬示範紀錄及一次性測試公鑰，並非攤位所用的金鑰。", // NEEDS-REVIEW zh-HK

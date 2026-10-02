@@ -6,6 +6,8 @@ import { lazy, Suspense, type ComponentType, type ReactElement } from "react";
 const ROUTES: Readonly<Record<string, ComponentType>> = {
   home: lazy(() => import("./HomeVariants")),
   seal: lazy(() => import("./SealVariants")),
+  // Lane B's moments: run/stopped, run/card, run/ok (the page reads the rest of the hash itself).
+  run: lazy(() => import("../run/variants/RunVariants")),
 };
 
 export default function Variants({ name }: { readonly name: string }): ReactElement {

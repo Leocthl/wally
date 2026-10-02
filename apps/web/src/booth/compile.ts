@@ -57,8 +57,8 @@ const money = (m: RegExpMatchArray | null, group = 1): number | null => {
 };
 
 const MSG = {
-  budgetMissing: label("No HK$ amount found. Write the packet size, for example HK$800.", "找不到港幣金額。請寫明利是金額，例如 HK$800。"),
-  budgetZero: label("The packet must be more than zero.", "利是金額必須大於零。"),
+  budgetMissing: label("No HK$ amount found. Write the budget, for example HK$800.", "找不到港幣金額。請寫明預算金額，例如 HK$800。"),
+  budgetZero: label("The budget must be more than zero.", "預算金額必須大於零。"),
   categoryMissing: label("No known category. Try clothes, shoes, electronics or groceries.", "找不到已知類別。可試衣服、鞋、電子產品或雜貨。"),
   daysBad: label("Days must be a whole number of at least one.", "日數必須是至少一的整數。"),
 };
