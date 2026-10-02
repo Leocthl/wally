@@ -2,9 +2,9 @@
 import { validateCardEvent } from "@laisee/core/schema";
 import { describe, expect, it } from "vitest";
 import type { RailSim } from "../src";
-import { MINUTE_MS, NOW, TTL_30_MIN, approvedDecision, decisionId, makeRail, mintCard, pay } from "./helpers";
+import { MINUTE_MS, NOW, CARD_TTL_MS, approvedDecision, decisionId, makeRail, mintCard, pay } from "./helpers";
 
-async function mintMany(rail: RailSim, totals: readonly number[], ttlMs = TTL_30_MIN) {
+async function mintMany(rail: RailSim, totals: readonly number[], ttlMs = CARD_TTL_MS) {
   const cards = [];
   for (const [i, totalMinor] of totals.entries()) {
     cards.push(await rail.mint({ decision: approvedDecision({ id: decisionId(i + 1), totalMinor }), ttlMs, now: NOW }));
@@ -35,7 +35,7 @@ describe("void: ACTIVE cards only; a used card is final [F2]", () => {
     const [a, b] = await mintMany(rail, [1_000, 2_000]);
     await rail.void(a!.id, NOW);
     await expect(rail.void(a!.id, NOW)).rejects.toMatchObject({ code: "NOT_ACTIVE" });
-    await rail.expireDue(new Date(NOW.getTime() + TTL_30_MIN));
+    await rail.expireDue(new Date(NOW.getTime() + CARD_TTL_MS));
     await expect(rail.void(b!.id, NOW)).rejects.toMatchObject({ code: "NOT_ACTIVE" });
     await expect(rail.void("crd_doesNotExist1", NOW)).rejects.toMatchObject({ code: "UNKNOWN_CARD" });
   });
@@ -55,8 +55,8 @@ describe("expireDue(now)", () => {
     const cards = await mintMany(rail, [1_000, 2_000]);
     const [first, second] = cards;
     await pay(rail, second!, 2_000); // USED cards are never expired
-    expect(await rail.expireDue(new Date(NOW.getTime() + TTL_30_MIN - 1))).toEqual([]);
-    const at = new Date(NOW.getTime() + TTL_30_MIN);
+    expect(await rail.expireDue(new Date(NOW.getTime() + CARD_TTL_MS - 1))).toEqual([]);
+    const at = new Date(NOW.getTime() + CARD_TTL_MS);
     const events = await rail.expireDue(at);
     expect(events).toEqual([{ card_id: first!.id, event: "EXPIRED", at: at.toISOString(), simulated: true }]);
     expect(events.every((e) => validateCardEvent(e).ok)).toBe(true);
@@ -69,13 +69,13 @@ describe("expireDue(now)", () => {
   it("expires several due cards at once, oldest mint first", async () => {
     const rail = makeRail();
     const cards = await mintMany(rail, [1_000, 2_000]);
-    const events = await rail.expireDue(new Date(NOW.getTime() + 2 * TTL_30_MIN));
+    const events = await rail.expireDue(new Date(NOW.getTime() + 2 * CARD_TTL_MS));
     expect(events.map((e) => e.card_id)).toEqual(cards.map((c) => c.id));
   });
 
   it("an expired card is final: no charge, no void", async () => {
     const { rail, card } = await mintCard({}, { totalMinor: 1_000 });
-    await rail.expireDue(new Date(NOW.getTime() + TTL_30_MIN));
+    await rail.expireDue(new Date(NOW.getTime() + CARD_TTL_MS));
     expect(await pay(rail, card, 1_000)).toMatchObject({ decline_code: "CARD_EXPIRED" });
     await expect(rail.void(card.id, NOW)).rejects.toMatchObject({ code: "NOT_ACTIVE" });
   });

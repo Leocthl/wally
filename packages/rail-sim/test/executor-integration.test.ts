@@ -7,7 +7,7 @@ import { loadFixture } from "@laisee/core/testing/fixtures";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { MerchantStub, RailSim, SIMULATED_SURCHARGE_MINOR, seededRandom, type MerchantStubOptions } from "../src";
-import { MERCHANT, NOW, PAN_LIKE, TTL_30_MIN, approvedDecision } from "./helpers";
+import { MERCHANT, NOW, PAN_LIKE, CARD_TTL_MS, approvedDecision } from "./helpers";
 
 const LOG_ID = "log_demoM0";
 const TOTAL = 25_900;
@@ -38,7 +38,7 @@ async function rig(stubOptions: Partial<Omit<MerchantStubOptions, "rail">> = {},
   await store.append(placeholderEntry({ logId: LOG_ID, seq: 0, kind: "MANDATE_SEALED", payload: loadFixture("mandate/m0.credential.json", "mandate-credential"), ts: NOW }));
   const rail = new RailSim({ random: seededRandom(11) });
   const decision = approvedDecision({ totalMinor: TOTAL });
-  const card = await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW, ...(opts.lock === false ? {} : { merchantLock: MERCHANT }), purpose: decision.cart.id });
+  const card = await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW, ...(opts.lock === false ? {} : { merchantLock: MERCHANT }), purpose: decision.cart.id });
   const stub = new MerchantStub({ rail, ...stubOptions });
   const executor = createExecutor({
     merchant: stub,
@@ -170,7 +170,7 @@ describe("R12 drift, revocation and wrong merchant through the executor", () => 
 describe("expiry through the executor", () => {
   it("expireDue logs EXPIRED and the card then declines CARD_EXPIRED", async () => {
     const r = await rig();
-    r.clock.advance(TTL_30_MIN);
+    r.clock.advance(CARD_TTL_MS);
     expect(await r.executor.expireDue({ logId: LOG_ID })).toMatchObject({ status: "EXPIRED", events: [{ event: "EXPIRED", card_id: r.card.id }] });
     expect(await r.checkout()).toMatchObject({ status: "DECLINED", event: { decline_code: "CARD_EXPIRED" } });
   });

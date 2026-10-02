@@ -2,12 +2,12 @@
 import type { CardRecord, Cart, Decision } from "@laisee/core/generated";
 import type { CardEvent } from "@laisee/core/ports";
 import { loadFixture } from "@laisee/core/testing/fixtures";
-import { RailSim, seededRandom, type RailSimOptions } from "../src";
+import { RAIL_SIM_DEFAULTS, RailSim, seededRandom, type RailSimOptions } from "../src";
 
 export const NOW = new Date("2026-10-03T02:05:02Z");
 export const MINUTE_MS = 60_000;
-/** F30 card TTL: 30 minutes. Mirrors the rail default so tests read naturally. */
-export const TTL_30_MIN = 30 * MINUTE_MS;
+/** The rail's own card TTL [F30]. Read from config, never restated, so a re-based row cannot break a test. */
+export const CARD_TTL_MS = RAIL_SIM_DEFAULTS.maxTtlMs;
 export const MERCHANT = "demo-apparel.example";
 
 const BASE_CART = loadFixture("carts/attempt-1.json", "cart");
@@ -128,7 +128,7 @@ export async function mintCard(
   const decision = approvedDecision(spec);
   const card = await rail.mint({
     decision,
-    ttlMs: mint.ttlMs ?? TTL_30_MIN,
+    ttlMs: mint.ttlMs ?? CARD_TTL_MS,
     now: NOW,
     ...(mint.merchantLock === undefined ? {} : { merchantLock: mint.merchantLock }),
     ...(mint.purpose === undefined ? {} : { purpose: mint.purpose }),

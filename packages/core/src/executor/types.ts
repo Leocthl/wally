@@ -21,8 +21,9 @@ export interface CheckoutInput {
   /** The card minted for that decision. Only its handle goes to the merchant. */
   readonly card: CardRecord;
   /**
-   * Stable key for this attempt. Default chk:<card id>:<n>, n = 1 + the CARD_EVENT charge attempts already in
-   * the log for this card, so a re-run after a lost response reuses the key and the rail never charges twice.
+   * Stable key for this attempt. Default chk:<card id>:<n>, n = 1 + the logged attempts that used such a key for
+   * this card, so a re-run after a lost response (nothing logged) reuses the key and the rail never charges twice.
+   * A key that is already in the log replays the logged outcome (attempts 0) with no merchant call and no new entry.
    */
   readonly idempotencyKey?: string;
 }

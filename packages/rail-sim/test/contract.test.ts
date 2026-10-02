@@ -7,16 +7,18 @@ import type { RailPort } from "@laisee/core/ports";
 import { FakeRail } from "@laisee/core/testing";
 import { describe, expect, it } from "vitest";
 import { RailSim, seededRandom } from "../src";
-import { MERCHANT, NOW, TTL_30_MIN, approvedDecision, decisionId, deniedDecision } from "./helpers";
+import { MERCHANT, NOW, approvedDecision, decisionId, deniedDecision } from "./helpers";
 
+// Both rails get the same explicit limits (test values, not register rows), so only the semantics are compared.
+const LIMITS = { ceilingMinor: 100_000, maxActive: 2, maxTtlMs: 10 * 60_000 };
 const factories: [string, () => RailPort & { cards: readonly { id: string; handle: string; state: string }[] }][] = [
-  ["FakeRail", () => new FakeRail()],
-  ["RailSim", () => new RailSim({ random: seededRandom(3) })],
+  ["FakeRail", () => new FakeRail(LIMITS)],
+  ["RailSim", () => new RailSim({ ...LIMITS, random: seededRandom(3) })],
 ];
 
 describe.each(factories)("%s: shared F1 semantics", (_name, make) => {
   const mintOne = async (rail: RailPort, n: number, totalMinor: number, extra: { merchantLock?: string; purpose?: string; ttlMs?: number } = {}) =>
-    rail.mint({ decision: approvedDecision({ id: decisionId(n), totalMinor, remainingMinor: 300_000 }), ttlMs: extra.ttlMs ?? TTL_30_MIN, now: NOW, ...extra });
+    rail.mint({ decision: approvedDecision({ id: decisionId(n), totalMinor, remainingMinor: 3 * LIMITS.ceilingMinor }), ttlMs: extra.ttlMs ?? LIMITS.maxTtlMs, now: NOW, ...extra });
   const pay = (rail: RailPort, handle: string, amountMinor: number, key: string, domain = MERCHANT) =>
     rail.authorise({ handle, amountMinor, merchantDomain: domain, now: NOW, idempotencyKey: key });
   const code = async (p: Promise<unknown>): Promise<string> => p.then(() => "OK", (e: { code?: string }) => e.code ?? "THROWN");
@@ -24,14 +26,14 @@ describe.each(factories)("%s: shared F1 semantics", (_name, make) => {
   it("mints the approved total as an ACTIVE SIMULATED card", async () => {
     const card = await mintOne(make(), 1, 25_900, { merchantLock: MERCHANT, purpose: "crt_test000001" });
     expect(card).toMatchObject({ limit_minor: 25_900, state: "ACTIVE", simulated: true, currency: "HKD", merchant_lock: MERCHANT, purpose: "crt_test000001" });
-    expect(card.expires_at).toBe(new Date(NOW.getTime() + TTL_30_MIN).toISOString());
+    expect(card.expires_at).toBe(new Date(NOW.getTime() + LIMITS.maxTtlMs).toISOString());
   });
 
   it("refuses to mint for a DENY, above the ceiling, a third active card, or a TTL above the card TTL", async () => {
     const rail = make();
-    expect(await code(rail.mint({ decision: deniedDecision(), ttlMs: TTL_30_MIN, now: NOW }))).toBe("NOT_APPROVED");
-    expect(await code(mintOne(rail, 1, 200_001))).toBe("OVER_CEILING");
-    expect(await code(mintOne(rail, 2, 1_000, { ttlMs: TTL_30_MIN + 1 }))).toBe("TTL_TOO_LONG");
+    expect(await code(rail.mint({ decision: deniedDecision(), ttlMs: LIMITS.maxTtlMs, now: NOW }))).toBe("NOT_APPROVED");
+    expect(await code(mintOne(rail, 1, LIMITS.ceilingMinor + 1))).toBe("OVER_CEILING");
+    expect(await code(mintOne(rail, 2, 1_000, { ttlMs: LIMITS.maxTtlMs + 1 }))).toBe("TTL_TOO_LONG");
     await mintOne(rail, 3, 1_000);
     await mintOne(rail, 4, 1_000);
     expect(await code(mintOne(rail, 5, 1_000))).toBe("MAX_ACTIVE");
@@ -65,7 +67,7 @@ describe.each(factories)("%s: shared F1 semantics", (_name, make) => {
     await expect(rail.void(a.id, NOW)).rejects.toThrow();
     expect(await pay(rail, a.handle, 1_000, "kv")).toMatchObject({ decline_code: "CARD_VOIDED" });
     expect(await rail.expireDue(NOW)).toEqual([]);
-    const later = new Date(NOW.getTime() + TTL_30_MIN);
+    const later = new Date(NOW.getTime() + LIMITS.maxTtlMs);
     expect(await rail.expireDue(later)).toEqual([{ card_id: b.id, event: "EXPIRED", at: later.toISOString(), simulated: true }]);
     expect(await pay(rail, b.handle, 2_000, "ke")).toMatchObject({ decline_code: "CARD_EXPIRED" });
   });

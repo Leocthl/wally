@@ -2,8 +2,8 @@
 // Also the id and random sources (injectable, deterministic).
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { RailSim, createIdSource, cryptoRandom, seededRandom, sequentialIds } from "../src";
-import { MERCHANT, NOW, PAN_LIKE, TTL_30_MIN, approvedDecision, decisionId, makeRail, pay } from "./helpers";
+import { RAIL_SIM_DEFAULTS, RailSim, createIdSource, cryptoRandom, seededRandom, sequentialIds } from "../src";
+import { MERCHANT, NOW, PAN_LIKE, CARD_TTL_MS, approvedDecision, decisionId, makeRail, pay } from "./helpers";
 
 const FORBIDDEN_KEYS = /^(pan|cvv|cvc|cvv2|card_?number|number|expiry|exp|exp_?month|exp_?year|security_?code|track)$/i;
 
@@ -23,13 +23,13 @@ describe("T-I8: nothing the rail emits looks like a card", () => {
   it("across mint, authorise, decline, void and expiry, outputs carry no PAN-like run and no card-detail field", async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 200_000 }),
-        fc.integer({ min: 1, max: 300_000 }),
+        fc.integer({ min: 1, max: RAIL_SIM_DEFAULTS.ceilingMinor }),
+        fc.integer({ min: 1, max: 2 * RAIL_SIM_DEFAULTS.ceilingMinor }),
         fc.integer({ min: 0, max: 10_000 }),
         async (total, charge, seed) => {
           const rail = makeRail({}, seed);
-          const decision = approvedDecision({ totalMinor: total, remainingMinor: 400_000 });
-          const card = await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW, merchantLock: MERCHANT, purpose: decision.cart.id });
+          const decision = approvedDecision({ totalMinor: total, remainingMinor: 2 * RAIL_SIM_DEFAULTS.ceilingMinor });
+          const card = await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW, merchantLock: MERCHANT, purpose: decision.cart.id });
           const outputs: unknown[] = [card];
           outputs.push(await pay(rail, card, charge));
           outputs.push(await pay(rail, card, charge, { domain: "other-shop.example" }));
@@ -50,10 +50,10 @@ describe("T-I8: nothing the rail emits looks like a card", () => {
 
   it("void and expiry events are label-only too", async () => {
     const rail = makeRail();
-    const card = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
+    const card = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
     const voided = await rail.void(card.id, NOW);
-    const second = await rail.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
-    const expired = await rail.expireDue(new Date(NOW.getTime() + TTL_30_MIN));
+    const second = await rail.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
+    const expired = await rail.expireDue(new Date(NOW.getTime() + CARD_TTL_MS));
     expect(second.id).toBe(expired[0]?.card_id);
     expect(PAN_LIKE.test(JSON.stringify([voided, expired]))).toBe(false);
     expect(keysOf([voided, expired]).filter((k) => FORBIDDEN_KEYS.test(k))).toEqual([]);
@@ -139,19 +139,19 @@ describe("id and random sources", () => {
 
   it("the default (crypto) source mints distinct ids", async () => {
     const rail = new RailSim();
-    const a = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
-    const b = await rail.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
+    const a = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
+    const b = await rail.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
     expect(a.id).not.toBe(b.id);
     expect(a.handle).not.toBe(b.handle);
   });
 
   it("an injected id source is used as given, and a colliding source fails closed", async () => {
     const rail = new RailSim({ random: seededRandom(1), ids: sequentialIds() });
-    const a = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
+    const a = await rail.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
     expect(a.id).toBe("crd_sim000001");
     expect(a.handle).toMatch(/^hdl_SIMULATED/);
     const stuck = new RailSim({ random: seededRandom(1), ids: { cardId: () => "crd_samesame1", handle: () => "hdl_sameSameSameSame1" } });
-    await stuck.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW });
-    await expect(stuck.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: TTL_30_MIN, now: NOW })).rejects.toMatchObject({ code: "INTERNAL" });
+    await stuck.mint({ decision: approvedDecision({ id: decisionId(1), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW });
+    await expect(stuck.mint({ decision: approvedDecision({ id: decisionId(2), totalMinor: 1_000 }), ttlMs: CARD_TTL_MS, now: NOW })).rejects.toMatchObject({ code: "INTERNAL" });
   });
 });

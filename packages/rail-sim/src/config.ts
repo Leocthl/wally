@@ -2,20 +2,23 @@
 
 export const RAIL_LABEL = "SIMULATED";
 
-/** The rail's own limits, mirroring the Single Use Card. Options on RailSim override them for tests. */
+/**
+ * The rail's own limits, mirroring the Single Use Card. The register rows are the source: change the row and
+ * these values together. Options on RailSim override them (tests pass their own).
+ */
 export const RAIL_SIM_DEFAULTS = Object.freeze({
-  /** [F1.ceiling] HK$2,000 per card, as integer HKD minor units (cents). */
+  /** [F1.ceiling] per-card ceiling, integer HKD minor units (cents). */
   ceilingMinor: 200_000,
-  /** [F1.active] at most 2 cards ACTIVE at once. */
+  /** [F1.active] most cards ACTIVE at once. */
   maxActive: 2,
-  /** [F30] card TTL after mint, 30 minutes in milliseconds; always also <= packet expiry and <= F1 validity. */
+  /** [F30] card TTL after mint, in milliseconds; a card is also bounded by the packet expiry and F1 validity. */
   maxTtlMs: 30 * 60 * 1000,
-  /** [F1.validity] a card is valid for at most 2 months (calendar months, UTC). */
+  /** [F1.validity] longest card validity, in calendar months (UTC). */
   validityMonths: 2,
 });
 
 /**
- * Size of the surcharge the merchant stub adds in its overshoot, drift and preauth scenarios: HK$30 in minor units.
+ * Size of the surcharge the merchant stub adds in its overshoot, drift and preauth scenarios, in minor units.
  * SIMULATED scenario size, borrowed from the shipping line of the storyline cart [F22]; not a rail fact.
  * Override per demo with the stub options.
  */

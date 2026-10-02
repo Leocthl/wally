@@ -8,7 +8,7 @@ import {
   MERCHANT,
   MINUTE_MS,
   NOW,
-  TTL_30_MIN,
+  CARD_TTL_MS,
   approvedDecision,
   decisionId,
   deniedDecision,
@@ -28,9 +28,13 @@ async function mintCode(promise: Promise<unknown>): Promise<string> {
   }
 }
 
-describe("rail defaults come from F1 and F30", () => {
-  it("pins ceiling, active maximum, card TTL and validity", () => {
-    expect(RAIL_SIM_DEFAULTS).toEqual({ ceilingMinor: 200_000, maxActive: 2, maxTtlMs: 30 * MINUTE_MS, validityMonths: 2 });
+describe("rail defaults come from config (F1, F30), not from test literals", () => {
+  it("are positive integers, frozen, and the card TTL fits inside the validity limit", () => {
+    const { ceilingMinor, maxActive, maxTtlMs, validityMonths } = RAIL_SIM_DEFAULTS;
+    for (const value of [ceilingMinor, maxActive, maxTtlMs, validityMonths]) expect(Number.isSafeInteger(value) && value > 0).toBe(true);
+    expect(Object.isFrozen(RAIL_SIM_DEFAULTS)).toBe(true);
+    expect(maxTtlMs).toBeLessThanOrEqual(validityMonths * 28 * DAY_MS);
+    expect(new RailSim().limits).toEqual(RAIL_SIM_DEFAULTS);
   });
 });
 
@@ -48,7 +52,7 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
       merchant_lock: MERCHANT,
       purpose: "crt_test000001",
       minted_at: NOW.toISOString(),
-      expires_at: new Date(NOW.getTime() + TTL_30_MIN).toISOString(),
+      expires_at: new Date(NOW.getTime() + CARD_TTL_MS).toISOString(),
     });
     expect(card.handle).toMatch(/^hdl_[A-Za-z0-9_-]{16,64}$/);
     expect(card.last4).toMatch(/^[0-9]{4}$/);
@@ -62,7 +66,7 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
 
   it("never mints for DENY, ESCALATE or a missing limit (NOT_APPROVED)", async () => {
     const rail = makeRail();
-    const req = { ttlMs: TTL_30_MIN, now: NOW };
+    const req = { ttlMs: CARD_TTL_MS, now: NOW };
     expect(await mintCode(rail.mint({ ...req, decision: deniedDecision() }))).toBe("NOT_APPROVED");
     expect(await mintCode(rail.mint({ ...req, decision: escalatedDecision() }))).toBe("NOT_APPROVED");
     const { approved_limit_minor: _limit, ...noLimit } = approvedDecision();
@@ -72,7 +76,7 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
 
   it("fails closed on malformed or inconsistent decisions (NOT_APPROVED)", async () => {
     const rail = makeRail();
-    const req = { ttlMs: TTL_30_MIN, now: NOW };
+    const req = { ttlMs: CARD_TTL_MS, now: NOW };
     const ok = approvedDecision({ totalMinor: 10_000 });
     const cases: unknown[] = [
       undefined,
@@ -91,18 +95,19 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
     expect(rail.cards).toHaveLength(0);
   });
 
-  it("OVER_CEILING above HK$2,000 [F1], allowed exactly at the ceiling", async () => {
-    const rail = makeRail();
-    const at = approvedDecision({ id: decisionId(1), totalMinor: 200_000, remainingMinor: 300_000 });
-    const over = approvedDecision({ id: decisionId(2), totalMinor: 200_001, remainingMinor: 300_000 });
-    expect((await rail.mint({ decision: at, ttlMs: TTL_30_MIN, now: NOW })).limit_minor).toBe(200_000);
-    expect(await mintCode(rail.mint({ decision: over, ttlMs: TTL_30_MIN, now: NOW }))).toBe("OVER_CEILING");
+  it("OVER_CEILING above the ceiling [F1], allowed exactly at it", async () => {
+    const ceilingMinor = 150_000;
+    const rail = makeRail({ ceilingMinor });
+    const at = approvedDecision({ id: decisionId(1), totalMinor: ceilingMinor, remainingMinor: 2 * ceilingMinor });
+    const over = approvedDecision({ id: decisionId(2), totalMinor: ceilingMinor + 1, remainingMinor: 2 * ceilingMinor });
+    expect((await rail.mint({ decision: at, ttlMs: CARD_TTL_MS, now: NOW })).limit_minor).toBe(ceilingMinor);
+    expect(await mintCode(rail.mint({ decision: over, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("OVER_CEILING");
     expect(rail.cards).toHaveLength(1);
   });
 
-  it("MAX_ACTIVE at two ACTIVE cards [F1]; a used, voided or expired card frees a slot", async () => {
-    const rail = makeRail();
-    const mint = (n: number) => rail.mint({ decision: approvedDecision({ id: decisionId(n), totalMinor: 1_000 * n }), ttlMs: TTL_30_MIN, now: NOW });
+  it("MAX_ACTIVE at the active-card maximum [F1]; a used, voided or expired card frees a slot", async () => {
+    const rail = makeRail({ maxActive: 2 });
+    const mint = (n: number) => rail.mint({ decision: approvedDecision({ id: decisionId(n), totalMinor: 1_000 * n }), ttlMs: CARD_TTL_MS, now: NOW });
     const first = await mint(1);
     const second = await mint(2);
     expect(await mintCode(mint(3))).toBe("MAX_ACTIVE");
@@ -115,22 +120,22 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
   });
 
   it("an idempotent repeat still works while the rail is at MAX_ACTIVE", async () => {
-    const rail = makeRail();
+    const rail = makeRail({ maxActive: 2 });
     const decisions = [1, 2].map((n) => approvedDecision({ id: decisionId(n), totalMinor: 1_000 }));
     const cards = [];
-    for (const decision of decisions) cards.push(await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW }));
-    expect(await rail.mint({ decision: decisions[0]!, ttlMs: TTL_30_MIN, now: NOW })).toEqual(cards[0]);
+    for (const decision of decisions) cards.push(await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW }));
+    expect(await rail.mint({ decision: decisions[0]!, ttlMs: CARD_TTL_MS, now: NOW })).toEqual(cards[0]);
     expect(rail.cards).toHaveLength(2);
   });
 });
 
 describe("mint: TTL = min(card TTL [F30], packet expiry, validity [F1])", () => {
-  it("rejects a TTL above the card TTL (TTL_TOO_LONG)", async () => {
+  it("rejects a TTL above the card TTL [F30] (TTL_TOO_LONG)", async () => {
     const rail = makeRail();
     const decision = approvedDecision();
-    expect(await mintCode(rail.mint({ decision, ttlMs: TTL_30_MIN + 1, now: NOW }))).toBe("TTL_TOO_LONG");
+    expect(await mintCode(rail.mint({ decision, ttlMs: CARD_TTL_MS + 1, now: NOW }))).toBe("TTL_TOO_LONG");
     expect(rail.cards).toHaveLength(0);
-    expect((await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW })).state).toBe("ACTIVE");
+    expect((await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW })).state).toBe("ACTIVE");
   });
 
   it("rejects a TTL that is not a positive integer (TTL_TOO_LONG, fail closed)", async () => {
@@ -154,8 +159,8 @@ describe("mint: TTL = min(card TTL [F30], packet expiry, validity [F1])", () => 
     }
   });
 
-  it("caps validity at two calendar months [F1] when the card TTL is configured higher", async () => {
-    const rail = makeRail({ maxTtlMs: 90 * DAY_MS });
+  it("caps validity at the validity limit in calendar months [F1] when the card TTL is configured higher", async () => {
+    const rail = makeRail({ maxTtlMs: 90 * DAY_MS, validityMonths: 2 });
     const packetExpiresAt = "2027-01-31T00:00:00Z";
     const decision = approvedDecision({ packetExpiresAt });
     const twoMonths = Date.parse("2026-12-03T02:05:02Z") - NOW.getTime();
@@ -164,8 +169,8 @@ describe("mint: TTL = min(card TTL [F30], packet expiry, validity [F1])", () => 
     expect(card.expires_at).toBe("2026-12-03T02:05:02.000Z");
   });
 
-  it("clamps month-end validity (31 Dec plus two months is 28 Feb)", async () => {
-    const rail = makeRail({ maxTtlMs: 90 * DAY_MS });
+  it("clamps month-end validity (31 Dec plus the validity limit lands on the last day of February)", async () => {
+    const rail = makeRail({ maxTtlMs: 90 * DAY_MS, validityMonths: 2 });
     const now = new Date("2026-12-31T00:00:00Z");
     const decision = approvedDecision({ packetExpiresAt: "2027-06-30T00:00:00Z" });
     const limit = Date.parse("2027-02-28T00:00:00Z") - now.getTime();
@@ -178,7 +183,7 @@ describe("mint: idempotent by decision.id", () => {
   it("a repeat returns the same CardRecord and mints nothing new", async () => {
     const rail = makeRail();
     const decision = approvedDecision();
-    const req = { decision, ttlMs: TTL_30_MIN, now: NOW, merchantLock: MERCHANT, purpose: "crt_test000001" };
+    const req = { decision, ttlMs: CARD_TTL_MS, now: NOW, merchantLock: MERCHANT, purpose: "crt_test000001" };
     const first = await rail.mint(req);
     const again = await rail.mint({ ...req, now: new Date(NOW.getTime() + 1_000) });
     expect(again).toEqual(first);
@@ -188,9 +193,9 @@ describe("mint: idempotent by decision.id", () => {
   it("a repeat after the card was used still returns the record as minted (state ACTIVE)", async () => {
     const rail = makeRail();
     const decision = approvedDecision({ totalMinor: 1_000 });
-    const first = await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW });
+    const first = await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW });
     await rail.authorise({ handle: first.handle, amountMinor: 1_000, merchantDomain: MERCHANT, now: NOW, idempotencyKey: "used_once" });
-    expect(await rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW })).toEqual(first);
+    expect(await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW })).toEqual(first);
     expect(rail.card(first.id)?.state).toBe("USED");
     expect(rail.cards).toHaveLength(1);
   });
@@ -198,7 +203,7 @@ describe("mint: idempotent by decision.id", () => {
   it("ALREADY_MINTED only when the repeat asks for different terms", async () => {
     const rail = makeRail();
     const decision = approvedDecision();
-    const base = { decision, ttlMs: TTL_30_MIN, now: NOW, merchantLock: MERCHANT, purpose: "crt_test000001" };
+    const base = { decision, ttlMs: CARD_TTL_MS, now: NOW, merchantLock: MERCHANT, purpose: "crt_test000001" };
     await rail.mint(base);
     expect(await mintCode(rail.mint({ ...base, merchantLock: "other-shop.example" }))).toBe("ALREADY_MINTED");
     expect(await mintCode(rail.mint({ ...base, purpose: "crt_test000002" }))).toBe("ALREADY_MINTED");
@@ -211,7 +216,7 @@ describe("mint: idempotent by decision.id", () => {
 
   it("two concurrent mints for one decision produce one card", async () => {
     const rail = makeRail();
-    const req = { decision: approvedDecision(), ttlMs: TTL_30_MIN, now: NOW };
+    const req = { decision: approvedDecision(), ttlMs: CARD_TTL_MS, now: NOW };
     const [a, b] = await Promise.all([rail.mint(req), rail.mint(req)]);
     expect(a).toEqual(b);
     expect(rail.cards).toHaveLength(1);
@@ -222,11 +227,11 @@ describe("mint: idempotent by decision.id", () => {
     const railB = makeRail({}, 99);
     const d1 = approvedDecision({ id: decisionId(1), totalMinor: 1_000 });
     const d2 = approvedDecision({ id: decisionId(2), totalMinor: 2_000 });
-    await railA.mint({ decision: d1, ttlMs: TTL_30_MIN, now: NOW });
-    await railA.mint({ decision: d1, ttlMs: TTL_30_MIN, now: NOW });
-    await railB.mint({ decision: d1, ttlMs: TTL_30_MIN, now: NOW });
-    const a2 = await railA.mint({ decision: d2, ttlMs: TTL_30_MIN, now: NOW });
-    const b2 = await railB.mint({ decision: d2, ttlMs: TTL_30_MIN, now: NOW });
+    await railA.mint({ decision: d1, ttlMs: CARD_TTL_MS, now: NOW });
+    await railA.mint({ decision: d1, ttlMs: CARD_TTL_MS, now: NOW });
+    await railB.mint({ decision: d1, ttlMs: CARD_TTL_MS, now: NOW });
+    const a2 = await railA.mint({ decision: d2, ttlMs: CARD_TTL_MS, now: NOW });
+    const b2 = await railB.mint({ decision: d2, ttlMs: CARD_TTL_MS, now: NOW });
     expect(a2).toEqual(b2);
   });
 });
@@ -234,7 +239,7 @@ describe("mint: idempotent by decision.id", () => {
 describe("mint: request validation fails closed", () => {
   it("rejects a malformed merchant lock or purpose (RailSimError INVALID_REQUEST)", async () => {
     const rail = makeRail();
-    const base = { decision: approvedDecision(), ttlMs: TTL_30_MIN, now: NOW };
+    const base = { decision: approvedDecision(), ttlMs: CARD_TTL_MS, now: NOW };
     await expect(rail.mint({ ...base, merchantLock: "https://demo-apparel.example/path" })).rejects.toMatchObject({ code: "INVALID_REQUEST" });
     await expect(rail.mint({ ...base, purpose: "crt_1234567890123" })).rejects.toBeInstanceOf(RailSimError); // 13 digits (I8)
     await expect(rail.mint({ ...base, purpose: "x".repeat(81) })).rejects.toBeInstanceOf(RailSimError);
@@ -261,7 +266,7 @@ describe("T-I1: mint only after an APPROVE for that cart (property)", () => {
           for (const [i, s] of specs.entries()) {
             const spec = { id: decisionId(i), totalMinor: s.total, remainingMinor: 10_000 };
             const decision = s.outcome === "APPROVE" ? approvedDecision(spec) : s.outcome === "DENY" ? deniedDecision(spec) : escalatedDecision(spec);
-            const code = await mintCode(rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW }));
+            const code = await mintCode(rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW }));
             expect(code).toBe(s.outcome === "APPROVE" ? "OK" : "NOT_APPROVED");
             if (s.outcome === "APPROVE") approvedIds.set(decision.id, s.total);
           }
@@ -276,21 +281,21 @@ describe("T-I1: mint only after an APPROVE for that cart (property)", () => {
   it("outcome tampering after the fact cannot mint: a DENY relabelled APPROVE has no limit", async () => {
     const denied = deniedDecision();
     const forged = { ...denied, outcome: "APPROVE" } as never;
-    expect(await mintCode(makeRail().mint({ decision: forged, ttlMs: TTL_30_MIN, now: NOW }))).toBe("NOT_APPROVED");
+    expect(await mintCode(makeRail().mint({ decision: forged, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("NOT_APPROVED");
   });
 });
 
 describe("T-I2: minted limit equals the approved total and is <= min(remaining, ceiling) (property)", () => {
   it("mints iff total <= min(remaining, ceiling); the limit is the total", async () => {
+    const ceiling = RAIL_SIM_DEFAULTS.ceilingMinor;
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 400_000 }),
-        fc.integer({ min: 1, max: 400_000 }),
+        fc.integer({ min: 1, max: 2 * ceiling }),
+        fc.integer({ min: 1, max: 2 * ceiling }),
         async (total, remaining) => {
           const rail = makeRail({}, 5);
           const decision = approvedDecision({ totalMinor: total, remainingMinor: remaining });
-          const code = await mintCode(rail.mint({ decision, ttlMs: TTL_30_MIN, now: NOW }));
-          const ceiling = RAIL_SIM_DEFAULTS.ceilingMinor;
+          const code = await mintCode(rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW }));
           if (total > remaining) expect(code).toBe("NOT_APPROVED");
           else if (total > ceiling) expect(code).toBe("OVER_CEILING");
           else {

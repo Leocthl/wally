@@ -12,7 +12,8 @@ import { loadFixture } from "../src/testing/fixtures";
 
 const LOG_ID = "log_demoM0";
 const NOW = "2026-10-03T02:05:02Z";
-const TTL_MS = 30 * 60 * 1000;
+/** Test TTL for the fake rail; the rail rules themselves are tested in rail-sim. */
+const TTL_MS = 60_000;
 const PAN_LIKE = /(?:\d[ -]?){13,19}/;
 
 const CART = loadFixture("carts/attempt-1.json", "cart");
@@ -535,6 +536,43 @@ describe("void and expiry bridge rail events into the log", () => {
     const r = await rig();
     vi.spyOn(r.rail, "expireDue").mockRejectedValue(new Error("rail down"));
     expect(await r.executor.expireDue({ logId: LOG_ID })).toMatchObject({ status: "ERROR", reason: "RAIL_REJECTED", unlogged: [] });
+  });
+});
+
+describe("rail and merchant misbehaviour is contained", () => {
+  it("a rail that answers a void with another kind of event is EVENT_INVALID and nothing is logged", async () => {
+    const r = await rig();
+    const wrong: CardEvent = { card_id: r.card.id, event: "EXPIRED", at: NOW, simulated: true };
+    vi.spyOn(r.rail, "void").mockResolvedValue(wrong);
+    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ status: "ERROR", reason: "EVENT_INVALID" });
+    vi.spyOn(r.rail, "void").mockResolvedValue({ ...wrong, event: "VOIDED", card_id: "crd_someoneElse1" });
+    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ reason: "EVENT_INVALID" });
+    vi.spyOn(r.rail, "void").mockResolvedValue({ event: "VOIDED" } as CardEvent);
+    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ reason: "EVENT_INVALID" });
+    expect(await r.cardEvents()).toEqual([]);
+  });
+
+  it("a rail that expires with a wrong kind of event is EVENT_INVALID and hands every event back", async () => {
+    const r = await rig();
+    const bad: CardEvent = { card_id: r.card.id, event: "VOIDED", at: NOW, simulated: true };
+    vi.spyOn(r.rail, "expireDue").mockResolvedValue([bad]);
+    expect(await r.executor.expireDue({ logId: LOG_ID })).toMatchObject({ status: "ERROR", reason: "EVENT_INVALID", unlogged: [bad] });
+    expect(await r.cardEvents()).toEqual([]);
+  });
+
+  it("a thrown value that is not an Error still becomes a typed outcome", async () => {
+    const r = await rig({ merchant: (rail) => steered(rail, { checkout: async () => Promise.reject("just a string") }) });
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card })).toMatchObject({
+      status: "ERROR",
+      reason: "CHECKOUT_FAILED",
+      message: "unknown error",
+    });
+  });
+
+  it("a rail that throws on void is RAIL_REJECTED", async () => {
+    const r = await rig();
+    vi.spyOn(r.rail, "void").mockRejectedValue(new Error("rail offline"));
+    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ reason: "RAIL_REJECTED", message: expect.stringContaining("rail offline") });
   });
 });
 

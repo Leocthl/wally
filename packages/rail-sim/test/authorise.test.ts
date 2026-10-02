@@ -3,7 +3,7 @@ import { validateCardEvent } from "@laisee/core/schema";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { RailSimError } from "../src";
-import { MERCHANT, MINUTE_MS, NOW, TTL_30_MIN, mintCard, pay } from "./helpers";
+import { MERCHANT, MINUTE_MS, NOW, CARD_TTL_MS, mintCard, pay } from "./helpers";
 
 const LIMIT = 25_900;
 
@@ -71,8 +71,8 @@ describe("authorise: other declines", () => {
 
   it("CARD_EXPIRED once the TTL passes, even before expireDue ran", async () => {
     const { rail, card } = await mintCard({}, { totalMinor: LIMIT });
-    const justBefore = new Date(NOW.getTime() + TTL_30_MIN - 1);
-    const atExpiry = new Date(NOW.getTime() + TTL_30_MIN);
+    const justBefore = new Date(NOW.getTime() + CARD_TTL_MS - 1);
+    const atExpiry = new Date(NOW.getTime() + CARD_TTL_MS);
     expect(await pay(rail, card, LIMIT + 1, { now: justBefore })).toMatchObject({ decline_code: "OVER_LIMIT" });
     expect(await pay(rail, card, LIMIT, { now: atExpiry })).toMatchObject({ event: "DECLINED", decline_code: "CARD_EXPIRED" });
     expect(rail.card(card.id)?.state).toBe("ACTIVE");
@@ -80,7 +80,7 @@ describe("authorise: other declines", () => {
 
   it("CARD_EXPIRED after expireDue", async () => {
     const { rail, card } = await mintCard({}, { totalMinor: LIMIT });
-    await rail.expireDue(new Date(NOW.getTime() + TTL_30_MIN));
+    await rail.expireDue(new Date(NOW.getTime() + CARD_TTL_MS));
     expect(await pay(rail, card, LIMIT)).toMatchObject({ decline_code: "CARD_EXPIRED" });
   });
 
@@ -108,16 +108,16 @@ describe("authorise: other declines", () => {
   it("decline precedence: used > voided > expired > merchant mismatch > over limit", async () => {
     const used = await mintCard({}, { totalMinor: LIMIT }, { merchantLock: MERCHANT });
     await pay(used.rail, used.card, LIMIT);
-    expect(await pay(used.rail, used.card, LIMIT + 1, { domain: "other-shop.example", now: new Date(NOW.getTime() + TTL_30_MIN) })).toMatchObject({
+    expect(await pay(used.rail, used.card, LIMIT + 1, { domain: "other-shop.example", now: new Date(NOW.getTime() + CARD_TTL_MS) })).toMatchObject({
       decline_code: "CARD_USED",
     });
 
     const voided = await mintCard({}, { totalMinor: LIMIT }, { merchantLock: MERCHANT });
     await voided.rail.void(voided.card.id, NOW);
-    expect(await pay(voided.rail, voided.card, LIMIT + 1, { now: new Date(NOW.getTime() + TTL_30_MIN) })).toMatchObject({ decline_code: "CARD_VOIDED" });
+    expect(await pay(voided.rail, voided.card, LIMIT + 1, { now: new Date(NOW.getTime() + CARD_TTL_MS) })).toMatchObject({ decline_code: "CARD_VOIDED" });
 
     const lateWrong = await mintCard({}, { totalMinor: LIMIT }, { merchantLock: MERCHANT });
-    expect(await pay(lateWrong.rail, lateWrong.card, LIMIT + 1, { domain: "other-shop.example", now: new Date(NOW.getTime() + TTL_30_MIN) })).toMatchObject({
+    expect(await pay(lateWrong.rail, lateWrong.card, LIMIT + 1, { domain: "other-shop.example", now: new Date(NOW.getTime() + CARD_TTL_MS) })).toMatchObject({
       decline_code: "CARD_EXPIRED",
     });
 
