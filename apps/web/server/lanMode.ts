@@ -3,10 +3,9 @@
 import { hostname as osHostname, networkInterfaces, type NetworkInterfaceInfo } from "node:os";
 import { getConnInfo } from "@hono/node-server/conninfo";
 import { renderSVG } from "uqr";
+import type { Env } from "./booth/settings";
 import { isLoopbackHostname } from "./http/guards";
 import { newPairingToken, type LanOptions } from "./http/lan";
-
-export type Env = Readonly<Record<string, string | undefined>>;
 
 /** What the server reads from the machine; swapped for fixed values in tests. */
 export interface NetworkInfo {
@@ -39,12 +38,23 @@ export function launchFromEnv(env: Env, argv: readonly string[]): Launch {
 const isIpv4 = (info: NetworkInterfaceInfo): boolean => String(info.family) === "IPv4" || String(info.family) === "4";
 const isLinkLocal = (address: string): boolean => address.startsWith("169.254.");
 const isPrivateRange = (address: string): boolean => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(address);
+/** Interfaces no phone on the Wi-Fi can reach: VPN and other tunnels, Apple wireless direct links, container bridges. */
+const NOT_FOR_PHONES = /^(utun|tun|tap|ppp|ipsec|wg|gif|stf|awdl|llw|anpi|vmnet|veth|docker|br-)/i;
 
-/** This machine's non-internal IPv4 addresses, private ranges first (the Wi-Fi comes before a VPN). */
+function addresses(net: NetworkInfo, keep: (name: string, address: string) => boolean): readonly string[] {
+  const found = Object.entries(net.interfaces()).flatMap(([name, list]) => (list ?? []).filter((i) => !i.internal && isIpv4(i) && keep(name, i.address)).map((i) => i.address));
+  const unique = [...new Set(found)];
+  return [...unique.filter(isPrivateRange), ...unique.filter((a) => !isPrivateRange(a))]; // private ranges first: the Wi-Fi before a VPN
+}
+
+/** Every non-internal IPv4 address of this machine: the Host names the server answers. */
 export function ipv4Addresses(net: NetworkInfo): readonly string[] {
-  const all = Object.values(net.interfaces()).flatMap((list) => (list ?? []).filter((i) => !i.internal && isIpv4(i)).map((i) => i.address));
-  const unique = [...new Set(all)];
-  return [...unique.filter(isPrivateRange), ...unique.filter((a) => !isPrivateRange(a))];
+  return addresses(net, () => true);
+}
+
+/** The addresses worth a pairing link: no tunnels, no link-local 169.254 (a Mac with no DHCP answer). */
+export function phoneAddresses(net: NetworkInfo): readonly string[] {
+  return addresses(net, (name, address) => !NOT_FOR_PHONES.test(name) && !isLinkLocal(address));
 }
 
 /** os.hostname() and its Bonjour form, lower case: "Leos-Mac.local" gives leos-mac and leos-mac.local. */
@@ -55,9 +65,10 @@ export function machineNames(net: NetworkInfo): { readonly base: string | null; 
   return { base, all: [...new Set([raw, base, `${base}.local`])] };
 }
 
-/** Pairing links: one per address that other devices can use, then the .local name. */
+/** Pairing links: one per address a phone can use, then the .local name. */
 export function lanUrls(net: NetworkInfo, port: number, token: string): readonly string[] {
-  const hosts = [...ipv4Addresses(net).filter((a) => !isLinkLocal(a)), ...(machineNames(net).base === null ? [] : [`${machineNames(net).base}.local`])];
+  const { base } = machineNames(net);
+  const hosts = [...phoneAddresses(net), ...(base === null ? [] : [`${base}.local`])];
   return hosts.map((host) => `http://${host}:${port}/?t=${token}`);
 }
 

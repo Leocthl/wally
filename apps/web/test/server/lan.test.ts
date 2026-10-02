@@ -242,6 +242,7 @@ describe("LAN mode on: CORS for the native shells", () => {
     expect(res.headers.get("access-control-allow-origin")).toBe(origin);
     expect(res.headers.get("access-control-allow-headers")).toBe("content-type, x-wally-token");
     expect(res.headers.get("access-control-allow-methods")).toContain("POST");
+    expect(res.headers.get("access-control-allow-private-network")).toBe("true");
     expect(res.headers.get("vary")).toContain("Origin");
   });
 

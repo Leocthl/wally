@@ -12,6 +12,9 @@ export interface LanInfo {
   readonly qrSvg: readonly string[];
 }
 
+/** ASSUMED: how long the booth Mac's own page waits for /api/lan before it shows no QR panel. */
+const LAN_ASK_TIMEOUT_MS = 3_000;
+
 const isStringArray = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every((v) => typeof v === "string");
 
 /** The checked LanInfo, or null for anything else (a 404 body, the dev server's HTML, an odd shape). */
@@ -28,7 +31,7 @@ export function parseLanInfo(value: unknown): LanInfo | null {
 /** GET /api/lan on this origin. Null when LAN mode is off, this page is not on the Mac, or the answer is not LanInfo. */
 export async function fetchLanInfo(fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)): Promise<LanInfo | null> {
   try {
-    const res = await fetcher("/api/lan", { headers: { accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(3_000) });
+    const res = await fetcher("/api/lan", { headers: { accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(LAN_ASK_TIMEOUT_MS) });
     return res.ok ? parseLanInfo((await res.json()) as unknown) : null;
   } catch {
     return null;

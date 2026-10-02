@@ -3,7 +3,7 @@
 // and the QR codes. No test reads the machine's real interfaces.
 import type { NetworkInterfaceInfo } from "node:os";
 import { describe, expect, it } from "vitest";
-import { createLanOptions, ipv4Addresses, lanUrls, launchFromEnv, machineNames, type NetworkInfo } from "../../server/lanMode";
+import { createLanOptions, ipv4Addresses, lanUrls, launchFromEnv, machineNames, phoneAddresses, type NetworkInfo } from "../../server/lanMode";
 
 const iface = (address: string, family: string | number, internal = false): NetworkInterfaceInfo =>
   ({ address, netmask: "255.255.255.0", family, mac: "00:00:00:00:00:00", internal, cidr: `${address}/24` }) as unknown as NetworkInterfaceInfo;
@@ -65,6 +65,21 @@ describe("lanUrls", () => {
 
   it("lists the addresses others can use, then the .local name once", () => {
     expect(lanUrls(net(lists), 8791, "abc")).toEqual(["http://192.168.1.23:8791/?t=abc", "http://leos-mac.local:8791/?t=abc"]);
+  });
+
+  it("leaves tunnels, link-local and wireless-direct interfaces out of the links but keeps them as allowed hosts", () => {
+    const lists = {
+      en0: [iface("192.168.1.23", "IPv4")],
+      bridge100: [iface("192.168.2.1", "IPv4")],
+      utun6: [iface("10.14.0.2", "IPv4")],
+      awdl0: [iface("100.100.0.1", "IPv4")],
+      docker0: [iface("172.17.0.1", "IPv4")],
+      en5: [iface("169.254.3.3", "IPv4")],
+    };
+    expect(phoneAddresses(net(lists))).toEqual(["192.168.1.23", "192.168.2.1"]);
+    expect(lanUrls(net(lists), 8787, "t")).toEqual(["http://192.168.1.23:8787/?t=t", "http://192.168.2.1:8787/?t=t", "http://leos-mac.local:8787/?t=t"]);
+    expect(ipv4Addresses(net(lists))).toEqual(expect.arrayContaining(["10.14.0.2", "169.254.3.3", "100.100.0.1", "172.17.0.1"]));
+    expect(createLanOptions({ port: 8787, network: net(lists), token: "t" }).hostAllowed("10.14.0.2")).toBe(true);
   });
 
   it("still offers the .local name with no address, and nothing without a name", () => {

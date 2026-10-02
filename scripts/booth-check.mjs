@@ -108,9 +108,10 @@ function checkPort() {
   });
 }
 
-/** Non-internal IPv4 addresses, as the server lists them for the QR code. */
+/** The addresses the server offers phones (same rule as apps/web/server/lanMode.ts: no tunnels, no link-local). */
 function lanAddresses() {
-  const all = Object.values(networkInterfaces()).flatMap((list) => (list ?? []).filter((i) => !i.internal && String(i.family) === "IPv4" && !i.address.startsWith("169.254.")).map((i) => i.address));
+  const skip = /^(utun|tun|tap|ppp|ipsec|wg|gif|stf|awdl|llw|anpi|vmnet|veth|docker|br-)/i;
+  const all = Object.entries(networkInterfaces()).flatMap(([name, list]) => (list ?? []).filter((i) => !i.internal && String(i.family) === "IPv4" && !skip.test(name) && !i.address.startsWith("169.254.")).map((i) => i.address));
   return [...new Set(all)];
 }
 

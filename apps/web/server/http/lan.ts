@@ -21,6 +21,7 @@ const ALLOWED_REQUEST_HEADERS = "content-type, x-wally-token";
 const ALLOWED_METHODS = "GET, POST, OPTIONS";
 /** The client waits on X-Event-Seq; a cross-origin page can read it only when it is exposed. */
 const EXPOSED_HEADERS = "x-event-seq";
+/** ASSUMED: how long a browser may reuse a preflight answer (10 minutes). */
 const PREFLIGHT_MAX_AGE_S = "600";
 
 export interface LanOptions {
@@ -116,6 +117,8 @@ function preflight(origin: string): Response {
       "access-control-allow-methods": ALLOWED_METHODS,
       "access-control-allow-headers": ALLOWED_REQUEST_HEADERS,
       "access-control-max-age": PREFLIGHT_MAX_AGE_S,
+      // Chrome and Android WebView ask this of a preflight that goes to a private address (Private Network Access).
+      "access-control-allow-private-network": "true",
       vary: "Origin",
     },
   });
