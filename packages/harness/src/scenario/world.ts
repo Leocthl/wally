@@ -11,7 +11,7 @@ import type {
 import { EXAMPLE_MANDATE, RAIL, SCENARIO_EPOCH, type Category } from "../config";
 import type { Rng } from "../prng";
 import type { InjectionInfo, Scenario, ScenarioEvents, ScenarioLabel } from "../types";
-import { buildCart, type FxPricing } from "./cart";
+import { buildCart, type CartBuilder, type FxPricing } from "./cart";
 import { formatHkd } from "./money";
 import type { Template } from "./templates";
 
@@ -220,7 +220,7 @@ const DEFAULT_EVENTS: ScenarioEvents = {
 };
 
 /** Builds the full scenario. Throws if the spec is inconsistent, so a generator bug fails loudly and early. */
-export function assemble(ctx: Ctx, spec: DraftSpec): Scenario {
+export function assemble(ctx: Ctx, spec: DraftSpec, build: CartBuilder = buildCart): Scenario {
   const mandate = buildMandate(ctx, spec);
   const packet = buildPacket(ctx, spec, mandate);
   const capture = buildCapture(ctx, spec);
@@ -234,7 +234,7 @@ export function assemble(ctx: Ctx, spec: DraftSpec): Scenario {
     note: spec.plannerNote ?? "Recorded planner choice for this scenario.",
   };
   const planner: PlannerReplayRecord = { scenario: ctx.scenarioId.slice(0, 41), listing_ids: [listing.id], proposal };
-  const built = buildCart({
+  const built = build({
     cartId: `crt_${ctx.tag}`,
     mandate,
     listing,

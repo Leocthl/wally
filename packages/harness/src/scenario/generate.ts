@@ -2,6 +2,7 @@
 // shorter run is a prefix of a longer one. Category per slot comes from config.SLOTS; the variant cycles per category.
 import { SCENARIO_SPACING_MS, SLOTS, type Category } from "../config";
 import { createRng, deriveSeed, hashString } from "../prng";
+import type { CartBuilder } from "./cart";
 import type { Scenario } from "../types";
 import { FX, SHIPPING_OVERFLOW, WITHIN_BUDGET } from "./variants/budget";
 import { FLAGGED_SELLER, INJECTED_TEXT, OFF_CATEGORY, PADDED_LISTING } from "./variants/listing";
@@ -52,6 +53,8 @@ export function occurrenceOf(index: number): number {
 export interface GenerateOptions {
   readonly seed: number;
   readonly n: number;
+  /** Core's cart builder (TASKS A-31) when it exists; the stand-in otherwise. */
+  readonly buildCart?: CartBuilder;
 }
 
 function contextFor(seed: number, index: number): Ctx {
@@ -80,6 +83,6 @@ export function generateScenarios(opts: GenerateOptions): readonly Scenario[] {
     const ctx = contextFor(opts.seed, index);
     const variant = CYCLES[ctx.category].find((v) => v.name === ctx.variant);
     if (!variant) throw new Error(`no variant ${ctx.variant} in ${ctx.category}`);
-    return assemble(ctx, variant.build(ctx));
+    return assemble(ctx, variant.build(ctx), opts.buildCart);
   });
 }
