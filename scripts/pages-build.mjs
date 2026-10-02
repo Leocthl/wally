@@ -29,7 +29,9 @@ function run(label, args, env = {}) {
   }
 }
 
+/** Files under `dir` as relative paths; an absent folder is an empty list, so a check can say "missing" instead of crashing. */
 function filesUnder(dir, prefix = "") {
+  if (!existsSync(join(dir, prefix))) return [];
   return readdirSync(join(dir, prefix)).flatMap((name) => {
     const rel = prefix === "" ? name : `${prefix}/${name}`;
     return statSync(join(dir, rel)).isDirectory() ? filesUnder(dir, rel) : [rel];
@@ -42,7 +44,7 @@ function checkLayout() {
   const scripts = filesUnder(join(OUT, "assets")).filter((f) => f.endsWith(".js"));
   record(scripts.length > 0 ? "PASS" : "FAIL", "app scripts", `${scripts.length} files in assets/`);
   const verifierFiles = filesUnder(VERIFIER_OUT);
-  record(verifierFiles.join() === "index.html" ? "PASS" : "FAIL", "verifier page", verifierFiles.join() === "index.html" ? "one self-contained index.html" : `expected only index.html, found: ${verifierFiles.join(", ")}`);
+  record(verifierFiles.join() === "index.html" ? "PASS" : "FAIL", "verifier page", verifierFiles.join() === "index.html" ? "one self-contained index.html" : `expected only index.html, found: ${verifierFiles.join(", ") || "nothing"}`);
   const all = filesUnder(OUT);
   const bytes = all.reduce((sum, f) => sum + statSync(join(OUT, f)).size, 0);
   record("PASS", "size", `${all.length} files, ${(bytes / 1024 / 1024).toFixed(2)} MiB in apps/web/dist-pages`);
