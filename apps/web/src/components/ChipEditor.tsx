@@ -3,6 +3,7 @@
 import { useId, useState, type ReactElement } from "react";
 import { dollarsToMinor, minorToDollarsText } from "../domain/money";
 import type { ChipValue, RuleChip } from "../booth/compile";
+import { label, type LabelPair } from "../i18n/label";
 import { Bi } from "./Bi";
 import { Num } from "./Num";
 
@@ -20,9 +21,16 @@ export interface ChipEditorProps {
   readonly onChange: (next: RuleChip) => void;
 }
 
-function withValue(chip: RuleChip, value: ChipValue, valid: boolean): RuleChip {
+const ERR = {
+  amount: label("Enter an amount above zero.", "請輸入大於零的金額。"),
+  percent: label("Enter a whole percent from one to one hundred.", "請輸入一至一百之間的整數百分比。"),
+  days: label("Days must be a whole number of at least one.", "日數必須是至少一的整數。"),
+  category: label("Pick at least one category.", "請至少選一個類別。"),
+};
+
+function withValue(chip: RuleChip, value: ChipValue, valid: boolean, error?: LabelPair): RuleChip {
   const { error: _error, ...rest } = chip;
-  return { ...rest, value, valid };
+  return { ...rest, value, valid, ...(valid || !error ? {} : { error }) };
 }
 
 function AmountControl({ chip, amount, onChange, build }: { readonly chip: RuleChip; readonly amount: number | null; readonly onChange: (c: RuleChip) => void; readonly build: (m: number | null) => ChipValue }): ReactElement {
@@ -39,7 +47,7 @@ function AmountControl({ chip, amount, onChange, build }: { readonly chip: RuleC
           const t = e.target.value;
           setText(t);
           const m = dollarsToMinor(t);
-          onChange(withValue(chip, build(m), m !== null && m > 0));
+          onChange(withValue(chip, build(m), m !== null && m > 0, ERR.amount));
         }} />
         {valid ? <Num kind="money" value={minor} prov={chip.prov} /> : null}
       </div>
@@ -65,7 +73,7 @@ function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
             <input id={id} inputMode="numeric" defaultValue={String(v.bp / BP_PER_PERCENT)} aria-invalid={!chip.valid} onChange={(e) => {
               const pct = Number.parseInt(e.target.value, 10);
               const ok = Number.isInteger(pct) && pct > 0 && pct <= BP_PER_PERCENT;
-              onChange(withValue(chip, { kind: "share", bp: ok ? pct * BP_PER_PERCENT : 0 }, ok));
+              onChange(withValue(chip, { kind: "share", bp: ok ? pct * BP_PER_PERCENT : 0 }, ok, ERR.percent));
             }} />
             <span aria-hidden="true">%</span>
           </div>
@@ -87,7 +95,7 @@ function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
               <input aria-label="Days" inputMode="numeric" defaultValue={String(v.days)} aria-invalid={!chip.valid} onChange={(e) => {
                 const days = Number.parseInt(e.target.value, 10);
                 const ok = Number.isInteger(days) && days >= 1;
-                onChange(withValue(chip, { kind: "expiry", mode: "days", days: ok ? days : 0 }, ok));
+                onChange(withValue(chip, { kind: "expiry", mode: "days", days: ok ? days : 0 }, ok, ERR.days));
               }} />
             ) : null}
           </div>
@@ -101,7 +109,7 @@ function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
             <label key={slug} className="chip-editor__check tap">
               <input type="checkbox" checked={v.slugs.includes(slug)} onChange={(e) => {
                 const slugs = e.target.checked ? [...v.slugs, slug] : v.slugs.filter((s) => s !== slug);
-                onChange(withValue(chip, { kind: "category", slugs }, slugs.length > 0));
+                onChange(withValue(chip, { kind: "category", slugs }, slugs.length > 0, ERR.category));
               }} />
               <span>{en} · <span lang="zh-HK">{zh}</span></span>
             </label>

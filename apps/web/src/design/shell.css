@@ -1,7 +1,9 @@
 /* App shell, screens and layout. Mobile first: one column at 360 px, columns appear with room. */
 .shell { max-width: 80rem; margin: 0 auto; padding: 0 var(--sp-4) var(--sp-6); }
 .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-5); padding: var(--sp-4) 0; }
-.site-header h1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.site-header h1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); margin-right: auto; }
+.site-header .nav { order: 2; }
+.site-header .rail-badge { order: 3; }
 .site-header h1 [lang] { font-size: var(--fs-0); color: var(--ink-soft); font-weight: 500; }
 .nav { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .nav a { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--sp-4); border: 1px solid var(--line-strong); border-radius: var(--r-packet); color: var(--ink); text-decoration: none; font-weight: 600; background: var(--paper-raised); }
@@ -34,7 +36,7 @@
 .panel-title { margin-bottom: var(--sp-3); }
 
 @media (min-width: 60rem) {
-  .booth__tabs { display: none; }
+  .booth__tabs, .booth__ask { display: none; }
   .booth { grid-template-columns: minmax(15rem, 1fr) minmax(0, 2fr) minmax(0, 1.2fr); gap: var(--sp-5); align-items: start; }
   .booth__meter { grid-column: 1 / -1; }
   .booth__ask { grid-column: 1 / -1; }

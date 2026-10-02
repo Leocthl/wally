@@ -6,7 +6,10 @@ const PROV_WORD = /SIMULATED|OBSERVED|MEASURED|ASSUMED/;
 
 export function bareFigures(root: Element): string[] {
   const clone = root.cloneNode(true) as Element;
-  clone.querySelectorAll("[data-num],[data-ident],[data-chip],script,style").forEach((n) => n.remove());
+  // Form controls hold what the visitor typed (the mandate sentence, a listing), not figures the app asserts.
+  clone.querySelectorAll("[data-num],[data-ident],[data-chip],script,style,textarea,input,select").forEach((n) => n.remove());
+  // Elements are separate boxes on screen; textContent would glue "exists" and "R9" together and hide the id boundary.
+  clone.querySelectorAll("*").forEach((el) => el.append(" "));
   const text = (clone.textContent ?? "").replace(ID_PATTERN, " ");
   const found: string[] = [...text.matchAll(/\d+/g)].map((m) => m[0]);
   const attrFigures = [...root.querySelectorAll("[aria-label],[aria-valuetext],[title]")]

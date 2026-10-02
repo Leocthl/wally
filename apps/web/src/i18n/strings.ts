@@ -22,6 +22,7 @@ export const S = {
   sealHint: label("The chips are the rules that get enforced. The sentence is for reading.", "晶片是實際執行的規則，句子只作閱讀。"),
   sentenceLabel: label("Your mandate, in plain words", "用日常語言寫下授權"),
   chipsLabel: label("Compiled rules", "已編譯規則"),
+  sealAgain: label("Sealing starts a new packet and a new log.", "重新封好會開始新的利是與新的紀錄。"),
   sealBlocked: label("Fix the highlighted chip to seal.", "請先修正標示的晶片才可封好。"),
 
   packetLeft: label("Packet left", "剩餘利是"),

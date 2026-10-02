@@ -7,6 +7,17 @@ import { SIMULATED } from "../domain/provenance";
 import { useBoothContext } from "../hooks/useBooth";
 import type { PacketState } from "../api/types";
 
+function sameRules(chips: readonly RuleChip[], sealed: unknown): boolean {
+  if (chips.some((c) => !c.valid)) return false;
+  return JSON.stringify(sortKeys(chipsToRules(chips))) === JSON.stringify(sortKeys(sealed));
+}
+
+function sortKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortKeys);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => [k, sortKeys(v)]));
+}
+
 function previewPacket(chips: readonly RuleChip[]): PacketState | null {
   if (chips.some((c) => !c.valid)) return null;
   const rules = chipsToRules(chips);
@@ -23,7 +34,8 @@ export function SealPanel(): ReactElement {
   const [chips, setChips] = useState<readonly RuleChip[]>(() => compileMandate(sentence, new Date()).chips);
   const [version, setVersion] = useState(0);
   const preview = useMemo(() => previewPacket(chips), [chips]);
-  const sealedNow = state.mandate !== null && state.mandate.intent_text === sentence && !state.revoked && state.log.entries.length <= 1;
+  // Already sealed when the sentence and every enforced rule match the mandate on the log; any change re-enables Seal.
+  const sealedNow = state.mandate !== null && !state.revoked && state.mandate.intent_text === sentence && sameRules(chips, state.mandate.rules);
 
   return (
     <section className="seal" data-register="packet" aria-label="Seal">

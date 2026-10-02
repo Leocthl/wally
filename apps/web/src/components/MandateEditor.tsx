@@ -1,7 +1,7 @@
 // MandateEditor (docs/04, PACKET): the sentence beside editable compiled rule chips, and Seal. Seal is disabled while any
 // chip is invalid. The chips are what the engine enforces; the sentence is for reading (docs/06 DM1 talker line).
 import { useId, type ReactElement } from "react";
-import { ChopSeal, EnvelopeOutline } from "./icons";
+import { ChopSeal } from "./icons";
 import type { RuleChip } from "../booth/compile";
 import { S } from "../i18n/strings";
 import { Bi } from "./Bi";
@@ -27,7 +27,7 @@ export function MandateEditor({ value, compiled, onValueChange, onChipChange, on
     <section className="mandate-editor" data-register="packet" aria-label="Mandate editor">
       <div className="mandate-editor__sentence">
         <label htmlFor={areaId} className="mandate-editor__label"><Bi text={S.sentenceLabel} /></label>
-        <textarea id={areaId} rows={4} value={value} maxLength={280} onChange={(e) => onValueChange(e.target.value)} readOnly={sealed} />
+        <textarea id={areaId} rows={4} value={value} maxLength={280} onChange={(e) => onValueChange(e.target.value)} />
         <Bi as="p" text={S.sealHint} className="soft" />
       </div>
       <div className="mandate-editor__chips">
@@ -39,12 +39,11 @@ export function MandateEditor({ value, compiled, onValueChange, onChipChange, on
         </ul>
       </div>
       <div className="mandate-editor__seal">
-        <EnvelopeOutline className="mandate-editor__envelope" />
         <button type="button" className="btn btn--primary btn--seal tap" onClick={onSeal} disabled={invalid || sealing || sealed} aria-describedby={invalid ? blockedId : undefined} data-sealed={sealed}>
           <Bi text={sealed ? S.sealed : S.sealButton} />
         </button>
         {sealed ? <ChopSeal className="chop--stamped" /> : null}
-        {invalid ? <Bi as="p" text={S.sealBlocked} className="soft" /> : null}
+        {invalid ? <Bi as="p" text={S.sealBlocked} className="soft" /> : <Bi as="p" text={S.sealAgain} className="soft" />}
         <span id={blockedId} className="sr-only">{S.sealBlocked.en}</span>
       </div>
     </section>

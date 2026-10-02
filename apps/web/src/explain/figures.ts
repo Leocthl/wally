@@ -39,7 +39,7 @@ export function inputFigure(key: string, value: unknown, ctx: FigureContext): { 
 
 export type Segment = { readonly figure: false; readonly text: string } | { readonly figure: true; readonly text: string; readonly prov: Prov };
 
-const TOKEN = /\d{1,2}:\d{2}(?::\d{2})?|HK\$\d[\d,]*(?:\.\d+)?|(?<![A-Za-z$\d.])\d+(?:\.\d+)?(?:\s?(?:ms|min|s)\b|%)?/g;
+const TOKEN = /\d{1,2}:\d{2}(?::\d{2})?|HK\$\d[\d,]*(?:\.\d+)?|(?<![A-Za-z$\d.])\d+(?:\.\d+)?(?:\s?(?:ms|min|h|s)\b|%)?/g;
 const ISO = /^\d{4}-\d{2}-\d{2}T/;
 
 function classify(key: string, ctx: FigureContext): Prov {
@@ -50,11 +50,20 @@ function classify(key: string, ctx: FigureContext): Prov {
   return ctx.money;
 }
 
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
+
+/** Windows and ages: "600 s" stays seconds, a day-sized age reads in hours ("41.1 h"). */
+function seconds(value: number): string[] {
+  const hours = value >= SECONDS_PER_HOUR ? [`${(value / SECONDS_PER_HOUR).toFixed(1)} h`] : [];
+  return [...hours, `${value} s`, value % SECONDS_PER_MINUTE === 0 ? `${value / SECONDS_PER_MINUTE} min` : ""].filter(Boolean);
+}
+
 function formattings(key: string, value: unknown): string[] {
   if (typeof value === "string") return ISO.test(value) ? [key === "valid_until" ? `${formatHkDateTime(value)} UTC+8` : formatHkTime(value)] : [];
   if (typeof value !== "number" || !Number.isFinite(value)) return [];
   if (key.endsWith("_minor") && Number.isSafeInteger(value)) return [formatHkd(value)];
-  if (key.endsWith("_s")) return [`${value} s`, value % 60 === 0 ? `${value / 60} min` : ""].filter(Boolean);
+  if (key.endsWith("_s")) return seconds(value);
   return Number.isInteger(value) ? [String(value)] : [value.toFixed(2)];
 }
 
@@ -73,7 +82,7 @@ export function annotate(text: string, inputs: Readonly<Record<string, unknown>>
   for (const m of text.matchAll(TOKEN)) {
     const start = m.index ?? 0;
     if (start > cursor) segments.push({ figure: false, text: text.slice(cursor, start) });
-    segments.push({ figure: true, text: m[0], prov: known.get(m[0]) ?? known.get(m[0].replace(/\s?(ms|min|s|%)$/, "")) ?? ctx.fallback });
+    segments.push({ figure: true, text: m[0], prov: known.get(m[0]) ?? known.get(m[0].replace(/\s?(ms|min|h|s|%)$/, "")) ?? ctx.fallback });
     cursor = start + m[0].length;
   }
   if (cursor < text.length) segments.push({ figure: false, text: text.slice(cursor) });

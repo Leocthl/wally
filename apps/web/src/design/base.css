@@ -35,9 +35,18 @@ h3 { font-size: var(--fs-0); line-height: var(--lh-tight); }
 button, input, select, textarea { font: inherit; color: inherit; }
 
 /* 44px targets, 8px apart (docs/04 Accessibility). */
-button, [role="button"], select, input[type="checkbox"], input[type="radio"], .tap {
+button, [role="button"], select, .tap {
   min-height: var(--tap);
   min-width: var(--tap);
+}
+
+/* The box itself stays small; its label is the 44 px target (.tap). */
+input[type="checkbox"], input[type="radio"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--vermilion);
+  flex: none;
 }
 
 input[type="text"], input[type="number"], input:not([type]), select, textarea {
