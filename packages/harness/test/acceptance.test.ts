@@ -78,9 +78,10 @@ describe("T-H2 three ways, so a reader can see how much of a miss is the machine
     expect(detail.scenarios).toEqual(legitTimeouts.map((s) => s.id));
     expect(detail.count).toBe(legitTimeouts.length);
     expect(out.summary).toContain(`**Judge-timeout cases**: ${legitTimeouts.length} of`);
-    // One judge call per submission, one per corpus item, none for an injected outage, none for an answer: nothing was retried.
-    const submissions = out.scenarios.filter((s) => s.events.judgeFault === "none").reduce((acc, s) => acc + s.events.submissions, 0);
-    expect(judge.calls.length).toBe(submissions + INJECTION_CORPUS.length + BENIGN_IMPERATIVES.length);
+    // One judge call per distinct cart (a repeat returns the earlier decision, so it calls nothing), one per corpus item,
+    // none for an injected outage, none for an answer: nothing was retried.
+    const carts = out.scenarios.filter((s) => s.events.judgeFault === "none").length;
+    expect(judge.calls.length).toBe(carts + INJECTION_CORPUS.length + BENIGN_IMPERATIVES.length);
   }, RUN_MS);
 
   it("counts a timeout as a block as measured, as a question the shopper answered, and drops it from the third number", async () => {

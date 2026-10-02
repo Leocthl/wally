@@ -39,8 +39,8 @@ interface Played {
 async function submitAll(world: OrchestratedWorld, scenario: Scenario): Promise<SubmitResult[]> {
   const results: SubmitResult[] = [];
   for (let k = 0; k < scenario.events.submissions; k += 1) {
-    // allowRepeat: a burst is the same cart on purpose (R7 velocity); without it a repeat of a live cart returns the earlier decision
-    results.push(await world.orchestrator.submit({ requestText: scenario.requestText, listings: [scenario.listing], checkout: "none", allowRepeat: true }));
+    // No allowRepeat: a repeat of a live cart is the same purchase and returns the earlier decision (docs/02 section 6)
+    results.push(await world.orchestrator.submit({ requestText: scenario.requestText, listings: [scenario.listing], checkout: "none" }));
   }
   return results;
 }

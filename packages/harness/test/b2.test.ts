@@ -18,9 +18,6 @@ import { RUN_MS, SWEEP_MS } from "./support/timeouts";
 
 const B2 = system("B2");
 
-/** The one place a repeated cart goes wrong today: docs/02 section 6 says a repeat returns the earlier Decision. */
-const isRepeatedCart = (s: Scenario): boolean => s.category === "duplicate" && s.label.expectedMints === 1 && s.events.submissions === 2;
-
 async function disagreements(list: readonly Scenario[]): Promise<readonly Scenario[]> {
   const out: Scenario[] = [];
   for (const s of list) if (!labelAgreement(s, await B2.run(s)).all) out.push(s);
@@ -36,10 +33,9 @@ describe("B2 on the fixed seed set", () => {
     }
   }, SWEEP_MS);
 
-  it("agrees with every label when the judge answers as the labels assume, except for a repeated cart", async () => {
+  it("agrees with every label when the judge answers as the labels assume, a repeated cart included", async () => {
     const off = await disagreements(scenarios);
-    expect(off.filter((s) => !isRepeatedCart(s)).map((s) => `${s.id} ${s.variant}`)).toEqual([]);
-    expect(off.length, "the repeated-cart gap is real and stays visible").toBeGreaterThan(0);
+    expect(off.map((s) => `${s.id} ${s.variant}`)).toEqual([]);
   }, SWEEP_MS);
 
   it("leaves a log that verifies offline, with one DECISION entry per decision (I7)", async () => {
@@ -59,7 +55,7 @@ describe("label sweep: B2 agrees with every label across many seeds, so no rare 
       for (const s of generateScenarios({ seed, n: 100 })) {
         seen.add(`${s.category}/${s.variant}`);
         const a = labelAgreement(s, await B2.run(s));
-        if (!a.all && !isRepeatedCart(s)) misses.push(`seed ${seed} ${s.id} ${s.variant}: ${a.reason}`);
+        if (!a.all) misses.push(`seed ${seed} ${s.id} ${s.variant}: ${a.reason}`);
       }
     }
     expect(misses).toEqual([]);
@@ -69,16 +65,16 @@ describe("label sweep: B2 agrees with every label across many seeds, so no rare 
 });
 
 describe("what the orchestrator does after a decision", () => {
-  it("duplicate: a repeated small cart is a second decision, a second card and a second charge (docs/02 section 6 says otherwise)", async () => {
+  it("duplicate: a repeated small cart returns the earlier decision, so one decision, one card and one charge (docs/02 section 6)", async () => {
     const out = await B2.run(pick("duplicate", "double_submit"));
-    expect(out.decision.decisionIds).toHaveLength(2);
-    expect(out.mints).toHaveLength(2);
-    expect(out.authorisedCount).toBe(2);
+    expect(out.decision.decisionIds).toHaveLength(1);
+    expect(out.mints).toHaveLength(1);
+    expect(out.authorisedCount).toBe(1);
   });
 
-  it("duplicate: a repeated large cart is stopped by the budget the first card committed, so one card and one charge", async () => {
+  it("duplicate: a repeated large cart returns the earlier decision too, so one card and one charge", async () => {
     const out = await B2.run(pick("duplicate", "double_submit_large"));
-    expect(out.decision.decisionIds).toHaveLength(2);
+    expect(out.decision.decisionIds).toHaveLength(1);
     expect(out.mints).toHaveLength(1);
     expect(out.authorisedCount).toBe(1);
   });
