@@ -68,7 +68,7 @@ def expand_refs(text):
 
 def main():
     files = [p for p in glob.glob(ROOT + "/**/*", recursive=True)
-             if os.path.isfile(p) and p.endswith((".md", ".json", ".example")) and "node_modules" not in p and "/.worktrees/" not in p
+             if os.path.isfile(p) and p.endswith((".md", ".json", ".example")) and "node_modules" not in p and ".worktrees" not in os.path.relpath(p, ROOT).split(os.sep)
              and "/_register-additions/" not in p]
     files += [os.path.join(ROOT, ".env.example")]
     files = sorted(set(f for f in files if os.path.exists(f)))
