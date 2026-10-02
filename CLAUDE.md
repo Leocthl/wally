@@ -29,7 +29,7 @@ docs/      00-context 01-product-brief 02-architecture 03-implementation-plan 04
            05-evidence-plan 06-demo-script 07-pitch 08-risk-register 09-hkt-delegation-api-ask
            10-test-plan lane-prompts facts-register adr/
 schemas/   MandateCredential Mandate Cart Decision LogEntry CardRecord PacketState (JSON Schema, source of truth)
-scripts/   docs-check.py trace-check.py gen-types.mjs keys-gen.mjs verify-log.mjs demo-reset.mjs booth-check.mjs rename-scope.mjs
+scripts/   docs-check.py trace-check.py gen-types.mjs keys-gen.mjs verify-log.mjs demo-reset.mjs booth-check.mjs pages-build.mjs rename-scope.mjs rename-scope.mjs
 data/      capture-sheet shop-probe real-card-test (templates), evidence/, fixtures/, scenarios/, judge-corpus/, results/ (MEASURED), raw/ (gitignored)
 apps/web apps/verifier                      lane C, M   (PWA, booth server, on-device mode, LAN mode; offline verifier page)
 apps/mobile                                 lane M      (Capacitor iOS and Android shells around the on-device build)
@@ -48,13 +48,14 @@ packages/harness                            lane D
 ## Commands
 - **Docs checks** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
 - **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`.
-- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:lan` (the same for phones: `HOST` or `--lan`, pairing token, QR in About and Presenter [F92]), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE) `/family /lan`; `POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
+- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:lan` (the same for phones: `HOST` or `--lan`, pairing token, QR in About and Presenter [F92]), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page), `pnpm pages:build` (on-device app plus verifier as a static site in `apps/web/dist-pages`; `pnpm --filter @laisee/web e2e:pages` checks it under `/wally/`; `.github/workflows/pages.yml` deploys it once the repo is public). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE) `/family /lan`; `POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
 - **Phones**: on-device page `?api=local`; native shells `pnpm --filter @laisee/mobile sync`, then `ios:sim` or `android:apk` (`apps/mobile/README.md`). `node scripts/rename-scope.mjs` renames `@laisee/*` once, last, after every lane has merged.
 - **Evidence**: `pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]`, `pnpm --filter @laisee/agent judge:fit`.
 - **Local models** (loopback only): `services/laya/{setup,serve,stop}.sh` and `node services/laya/smoke.mjs`; `services/qwen/{setup,serve,stop}.sh` and `node services/qwen/smoke.mjs`. Warm both up after every start (the first call is slow).
 
 ## Known gaps (say them, never hide them)
 - **Judge**: held-out, the F38 floor of 90% legitimate approved is not met at judge level, and the seller gate is inert [F36]; alone it lets 8/40 attack items through (held-out 6/20), while the end-to-end harness meets F38 [F69].
+- **Live link**: Pages serves on-device mode only (recorded planner and judge answers, sample asks, keys in the page); the offline verifier page is not cached by the service worker.
 - **Keys**: the web API holds the delegator demo key, and Mum's for a family budget; on-device mode makes every key in the page; a did:key cannot be rotated.
 - **Log**: proves tamper, reorder, truncation (with the checkpoint), signatures, and consent and money for what is logged. Not omissions, a re-fold, or the shopper's intent.
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.
