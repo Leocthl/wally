@@ -16,6 +16,7 @@
     "./crypto": "./src/crypto/index.ts",
     "./vc": "./src/vc/index.ts",
     "./log": "./src/log/index.ts",
+    "./log/file": "./src/log/file.ts",
     "./verify": "./src/verify/index.ts",
     "./orchestrator": "./src/orchestrator/index.ts",
     "./executor": "./src/executor/index.ts",
