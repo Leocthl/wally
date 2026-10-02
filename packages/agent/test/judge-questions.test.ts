@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import { variantById } from "../src/judge/fit/variants";
 import { planRows, rotationOrder, toWireQuestions } from "../src/judge/plan";
 import { JUDGE_QUESTION_DEFS, JUDGE_QUESTIONS, QUESTION_OPTIONS } from "../src/judge/questions";
 
@@ -9,8 +10,9 @@ const laya = JSON.parse(
 ) as { questions: Record<string, unknown> };
 
 describe("judge question definitions", () => {
-  it("reuse services/laya/fixtures/questions.json word for word (drift guard)", () => {
-    expect(JUDGE_QUESTION_DEFS).toEqual(laya.questions);
+  it("keep the v0 baseline word for word equal to services/laya/fixtures/questions.json (drift guard)", () => {
+    // The shipped default is the B-19 winner; judge-variants.test.ts checks it equals its variant word for word.
+    expect(variantById("v0").questions).toEqual(laya.questions);
   });
 
   it("list the options in the canonical order of the criteria", () => {

@@ -6,6 +6,7 @@ import type { DiagnosticReason } from "./diagnostics";
 import { sendRequest, type FetchLike } from "./http";
 import { parseSystemOneResponse, type ParsedResponse } from "./parse";
 import { toWireQuestions, type QuestionRow } from "./plan";
+import type { JudgeQuestionDefs } from "./questions";
 import type { JudgeState } from "./state";
 
 export interface CallContext {
@@ -14,6 +15,8 @@ export interface CallContext {
   readonly model: string;
   readonly headers: Readonly<Record<string, string>>;
   readonly rows: readonly QuestionRow[];
+  /** Question wording; undefined sends the shipped default. */
+  readonly questions?: JudgeQuestionDefs | undefined;
   readonly requireUsage: boolean;
   readonly deadline: Deadline;
 }
@@ -42,7 +45,7 @@ export function callFailure(
 const postUrl = (baseUrl: string): string => `${baseUrl.replace(/\/+$/, "")}${SYSTEM_ONE_PATH}`;
 
 export async function callSystemOne(ctx: CallContext, state: JudgeState): Promise<CallOutcome> {
-  const body = JSON.stringify({ model: ctx.model, state, questions: toWireQuestions(ctx.rows) });
+  const body = JSON.stringify({ model: ctx.model, state, questions: toWireQuestions(ctx.rows, ctx.questions) });
   const outcome = await sendRequest(ctx.fetchImpl, postUrl(ctx.baseUrl), { method: "POST", headers: ctx.headers, body }, ctx.deadline.signal, MAX_RESPONSE_BYTES);
   switch (outcome.kind) {
     case "aborted":

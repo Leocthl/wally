@@ -21,6 +21,7 @@ import { failureRecord, okRecord, type RecordBase } from "./record";
 import { buildJudgeState } from "./state";
 import { callFailure, callSystemOne, type CallContext, type CallFailure, type CallOutcome } from "./system-one-call";
 import type { ParsedResponse } from "./parse";
+import type { JudgeQuestionDefs } from "./questions";
 import type { WarmUpOptions, WarmUpResult, WarmableJudge } from "./warm-up";
 import { combineWindowAnswers, splitListing, type WindowPlan, type WindowingOptions } from "./windows";
 
@@ -38,6 +39,8 @@ export interface SystemOneJudgeOptions {
    * conservatively (windows.ts). Without it a listing that overflows the row is an ERROR with input_truncated.
    */
   readonly windowing?: WindowingOptions | false | undefined;
+  /** Question wording. Default: the shipped JUDGE_QUESTION_DEFS. The judge:tune experiment passes its variants. */
+  readonly questions?: JudgeQuestionDefs | undefined;
   readonly fetchImpl?: FetchLike | undefined;
   readonly onDiagnostic?: DiagnosticSink | undefined;
   /** Monotonic milliseconds; tests may inject. Default performance.now. */
@@ -112,6 +115,7 @@ export class SystemOneJudge implements WarmableJudge {
       model: this.#options.model,
       headers: this.#headers(),
       rows: planRows(this.#options.rotations ?? true),
+      questions: this.#options.questions,
       requireUsage: this.provider === "laya",
       deadline,
     };

@@ -1,23 +1,20 @@
 // The judge:fit run: corpus and demo listings through the live judge, then JSON and markdown reports.
 // It only queries the server (POST /v1/systemone, GET /health); it never starts, stops or changes it.
-import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Mandate } from "@laisee/core/generated";
-import { formatIssues, validateMandate } from "@laisee/core/schema";
-import { DEFAULT_FIXTURES_DIR } from "../replay-recordings";
 import { SystemOneJudge } from "../system-one-judge";
 import { DEFAULT_WINDOWING } from "../windows";
 import { loadAnchors } from "./anchors";
 import { DEFAULT_CORPUS_DIR, loadCorpus } from "./corpus";
+import { ServerUnreachableError, gitInfo, loadMandate, readHealth } from "./fit-env";
 import { renderMarkdown } from "./markdown";
 import { buildReport, type AnchorResult, type FitMeta, type FitReport } from "./report";
 import { inputFor, runCorpus } from "./run";
 import { loadThresholds } from "./thresholds";
 
 export const DEFAULT_RESULTS_DIR = fileURLToPath(new URL("../../../../../data/results/", import.meta.url));
-const REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
+export { ServerUnreachableError } from "./fit-env";
 
 export interface FitOptions {
   readonly baseUrl: string;
@@ -38,46 +35,6 @@ export interface FitOutput {
   readonly jsonPath: string;
   readonly markdownPath: string;
   readonly report: FitReport;
-}
-
-interface Health {
-  readonly revision: string | null;
-  readonly device: string | null;
-}
-
-async function readHealth(baseUrl: string, model: string): Promise<Health | null> {
-  try {
-    const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/health`, { signal: AbortSignal.timeout(5_000) });
-    if (!res.ok) return null;
-    const body = (await res.json()) as { revisions?: Record<string, string>; checkpoint_devices?: Record<string, string>; device?: string };
-    return { revision: body.revisions?.[model]?.slice(0, 8) ?? null, device: body.checkpoint_devices?.[model] ?? body.device ?? null };
-  } catch {
-    return null;
-  }
-}
-
-function gitInfo(): FitMeta["commit"] {
-  try {
-    const run = (...args: string[]): string => execFileSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    // Untracked files (the report being written) do not make the code dirty.
-    return { hash: run("rev-parse", "HEAD"), dirty: run("status", "--porcelain", "--untracked-files=no").length > 0 };
-  } catch {
-    return null;
-  }
-}
-
-function loadMandate(): Mandate {
-  const raw = JSON.parse(readFileSync(join(DEFAULT_FIXTURES_DIR, "mandate/m0.json"), "utf8")) as { data: unknown };
-  const checked = validateMandate(raw.data);
-  if (!checked.ok) throw new Error(`mandate/m0.json: ${formatIssues(checked.errors)}`);
-  return checked.value;
-}
-
-export class ServerUnreachableError extends Error {
-  constructor(baseUrl: string) {
-    super(`no judge server answered at ${baseUrl}/health; start services/laya/serve.sh first`);
-    this.name = "ServerUnreachableError";
-  }
 }
 
 export async function runFit(options: FitOptions): Promise<FitOutput> {

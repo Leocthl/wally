@@ -20,8 +20,14 @@ export interface ChoiceQuestionDef {
   readonly criteria: Readonly<Record<string, string>>;
 }
 
+/** One definition per question; the option labels must stay QUESTION_OPTIONS (the engine reads them). */
+export type JudgeQuestionDefs = { readonly [Q in JudgeQuestion]: ChoiceQuestionDef };
+
+/** Which B-19 wording variant (fit/variants.ts) the shipped definitions below are, word for word (a test checks). */
+export const SHIPPED_WORDING_VARIANT = "v0";
+
 /** Instructions are fixed trusted text. Listing text never goes here, only in the state's delimited block. */
-export const JUDGE_QUESTION_DEFS: { readonly [Q in JudgeQuestion]: ChoiceQuestionDef } = {
+export const JUDGE_QUESTION_DEFS: JudgeQuestionDefs = {
   scope_fit: {
     type: "choice",
     instructions: "Does this listing fit the buyer's mandate?",
