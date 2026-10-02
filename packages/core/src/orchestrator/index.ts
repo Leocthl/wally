@@ -1,23 +1,7 @@
 // @laisee/core/orchestrator (A-26): pipeline per docs/00 Pipeline contract v0, one serialised queue per packet.
-import type { Orchestrator, OrchestratorDeps } from "./types";
-
-const notImplemented = (method: string) => (): Promise<never> =>
-  Promise.reject(new Error(`not implemented: Orchestrator.${method} (lane e-orch)`));
-
-/** Contract stub: every method rejects until the implementation lands. */
-export function createOrchestrator(_deps: OrchestratorDeps): Orchestrator {
-  return {
-    seal: notImplemented("seal"),
-    submit: notImplemented("submit"),
-    checkout: notImplemented("checkout"),
-    answerEscalation: notImplemented("answerEscalation"),
-    revoke: notImplemented("revoke"),
-    tick: notImplemented("tick"),
-    snapshot: notImplemented("snapshot"),
-    subscribe: () => () => undefined,
-  };
-}
-
+// Node and browser: no node: imports (the FileLogStore is injected by the composition root).
+export { createOrchestrator } from "./create";
+export { ORCHESTRATOR_DEFAULTS, OrchestratorConfigError, purposeOf } from "./config";
 export type {
   AnswerOptions,
   AnswerResult,
