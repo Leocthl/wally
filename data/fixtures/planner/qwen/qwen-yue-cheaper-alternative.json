@@ -1,0 +1,23 @@
+{
+  "fixture": "planner/qwen/qwen-yue-cheaper-alternative",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind alternative. Request: \"平啲嘅，例如襪\". Mode: alternatives after R3.over_remaining with 54100 minor units left. The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-cheaper-alternative",
+    "listing_ids": [
+      "lst_demoJacket",
+      "lst_demoTee",
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/socks",
+      "items": [
+        {
+          "title": "Ankle socks, 3 pairs (SIMULATED)",
+          "qty": 1
+        }
+      ]
+    }
+  }
+}

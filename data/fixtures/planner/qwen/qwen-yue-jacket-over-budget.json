@@ -1,0 +1,23 @@
+{
+  "fixture": "planner/qwen/qwen-yue-jacket-over-budget",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind over-budget wording. Request: \"就算超咗預算都要買件牛仔褸\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-jacket-over-budget",
+    "listing_ids": [
+      "lst_demoJacket",
+      "lst_demoTee",
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-streetwear.example/p/jacket",
+      "items": [
+        {
+          "title": "Denim jacket (SIMULATED)",
+          "qty": 1
+        }
+      ]
+    }
+  }
+}

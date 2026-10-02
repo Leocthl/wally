@@ -13,6 +13,8 @@ services/laya/.venv/
 services/laya/.cache/
 services/laya/*.pid
 services/laya/*.log
+services/qwen/.cache/
+services/qwen/*.pid
 .worktrees/
 .claude/
 apps/web/test-results/

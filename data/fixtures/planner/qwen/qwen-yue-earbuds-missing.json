@@ -1,0 +1,15 @@
+{
+  "fixture": "planner/qwen/qwen-yue-earbuds-missing",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind off-catalogue. Request: \"有冇藍牙耳機？\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-earbuds-missing",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": null
+  }
+}

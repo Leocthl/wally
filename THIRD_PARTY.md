@@ -8,6 +8,8 @@
 |---|---|---|---|---|
 | Laya `typed-decisions` checkpoint (huggingface.co/convaiinnovations/laya) | Convai Innovations | Apache-2.0 [F11c] | judge questions and planner decisions, on the demo laptop | in use |
 | ModernBERT-large, the encoder architecture inside that checkpoint [F11c] | Answer.AI and LightOn | Apache-2.0, verify when added | inside the checkpoint | in use |
+| Qwen3.5-9B (huggingface.co/Qwen/Qwen3.5-9B), as the GGUF Q4_K_M quant `Qwen_Qwen3.5-9B-Q4_K_M.gguf` from huggingface.co/bartowski/Qwen_Qwen3.5-9B-GGUF, commit 182be2fd6c7bc44887d88a91cb03ff009cc9f549 | Qwen team, Alibaba Cloud (quant: bartowski) | Apache-2.0 (model card and quant card) | Wally's local planner and sentence-to-rules compiler, on the demo laptop; never a judge | in use |
+| Qwen3.5-4B (huggingface.co/Qwen/Qwen3.5-4B), as `Qwen_Qwen3.5-4B-Q4_K_M.gguf` from huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF, commit 4168f45a16a1290d65a4ec0fa312ae917a4c15d6 | Qwen team, Alibaba Cloud (quant: bartowski) | Apache-2.0 (model card and quant card) | smaller, faster alternative for the same two jobs (`QWEN_MODEL=4b`) | in use |
 
 ## Laya server (`services/laya/`, Python venv not committed)
 | Package | Licence | Use |
@@ -24,6 +26,12 @@
 | uv | MIT or Apache-2.0 | setup tool |
 
 - The full resolved list is saved with the Laya run in `services/laya/`; every other package there is a transitive dependency of the rows above.
+
+## Qwen server (`services/qwen/`, weights not committed)
+| Software | Licence | Use |
+|---|---|---|
+| llama.cpp `llama-server` and ggml (github.com/ggml-org/llama.cpp), Homebrew bottle 0.4.1, build 10964 | MIT | loopback HTTP server for the Qwen GGUF files, Metal backend |
+| curl (system) | curl licence (MIT-style) | one-time verified download in `fetch_model.mjs` |
 
 ## JavaScript and TypeScript
 | Package | Version | Licence | Use | Status |

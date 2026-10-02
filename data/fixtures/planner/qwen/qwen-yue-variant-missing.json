@@ -1,0 +1,13 @@
+{
+  "fixture": "planner/qwen/qwen-yue-variant-missing",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind variant. Request: \"要件紅色T恤，細碼\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-variant-missing",
+    "listing_ids": [
+      "lst_variantTee"
+    ],
+    "proposal": null
+  }
+}

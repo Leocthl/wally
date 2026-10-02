@@ -1,0 +1,23 @@
+{
+  "fixture": "planner/qwen/qwen-yue-hoodie",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind clear. Request: \"幫我搵件抓毛衛衣啊\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-hoodie",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-flashdeals.example/p/hoodie",
+      "items": [
+        {
+          "title": "Fleece hoodie (SIMULATED)",
+          "qty": 1
+        }
+      ]
+    }
+  }
+}
