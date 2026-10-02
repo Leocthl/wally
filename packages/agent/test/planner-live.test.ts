@@ -5,7 +5,7 @@ import type { PlannerTraceStep } from "@laisee/core/ports";
 import { validateProposeCartInput } from "@laisee/core/schema";
 import { DEFAULT_LAYA_URL } from "../src/planner/config";
 import { createRulePlanner } from "../src/planner/rule-planner";
-import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";
+import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, VARIANT_LISTING, ctxOf, fixtureListing } from "./support/planner/data";
 
 const LAYA_URL = process.env["LAYA_URL"] ?? DEFAULT_LAYA_URL;
 
@@ -25,7 +25,7 @@ const socks = fixtureListing("socks");
 const jacket = fixtureListing("jacket");
 const hoodie = fixtureListing("hoodie");
 const injected = fixtureListing("injected");
-const planner = createRulePlanner({ catalogue: ALL_FIXTURE_LISTINGS, layaUrl: LAYA_URL });
+const planner = createRulePlanner({ catalogue: [...ALL_FIXTURE_LISTINGS, VARIANT_LISTING], layaUrl: LAYA_URL });
 const APPAREL = [tee, socks, jacket, hoodie, injected];
 const LIVE_TIMEOUT = 60_000; // the first call after a Laya restart takes about 2.6 s [F26]; the planner timeout itself is F33
 
@@ -57,12 +57,21 @@ describe.skipIf(!up)("rule planner against the live Laya server", () => {
     expect(out?.items.map((i) => i.title)).toEqual([title]);
   }, LIVE_TIMEOUT);
 
-  it.each(["something to wear", "clothes", "surprise me"])("abstains for the ambiguous request %j", async (request) => {
+  it.each(["something to wear", "clothes", "surprise me", "a gift for my friend", "HK$800, clothes, verified sellers."])("abstains for the ambiguous request %j", async (request) => {
     expect(await planner.propose(ctxOf(request, APPAREL), OPTS)).toBeNull();
   }, LIVE_TIMEOUT);
 
   it("abstains when two tees fit equally well", async () => {
     expect(await planner.propose(ctxOf("a tee", [tee, injected]), OPTS)).toBeNull();
+  }, LIVE_TIMEOUT);
+
+  it("picks the variant the request states, and asks the shopper when it leaves several open or names one that is not listed", async () => {
+    const title = async (request: string) => (await planner.propose(ctxOf(request, [VARIANT_LISTING]), OPTS))?.items[0]?.title ?? null;
+    expect(await title("a black cotton tee in size M")).toBe("Cotton tee, black, M (SIMULATED)");
+    expect(await title("white cotton tee, L")).toBe("Cotton tee, white, L (SIMULATED)");
+    expect(await title("a black cotton tee")).toBeNull();
+    expect(await title("a cotton tee in size M")).toBeNull();
+    expect(await title("a red cotton tee in size M")).toBeNull();
   }, LIVE_TIMEOUT);
 
   it("abstains for something no listing sells", async () => {

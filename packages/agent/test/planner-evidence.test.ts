@@ -78,6 +78,18 @@ describe("hasEvidence", () => {
     expect(hasEvidence("a gift card", family("injected", 1))).toBe(true);
   });
 
+  it("needs the head noun, or two words, when the item name has several content words", () => {
+    const gift = family("injected", 1); // Gift card bundle: gift, card, bundle
+    expect(hasEvidence("a gift for my friend", gift)).toBe(false);
+    expect(hasEvidence("a card", gift)).toBe(false);
+    expect(hasEvidence("a gift card", gift)).toBe(true);
+    expect(hasEvidence("a bundle", gift)).toBe(true);
+    const earbuds = family("earbuds"); // Wireless earbuds: wireless, earbud
+    expect(hasEvidence("something wireless", earbuds)).toBe(false);
+    expect(hasEvidence("earbuds", earbuds)).toBe(true);
+    expect(hasEvidence("wireless earbuds", earbuds)).toBe(true);
+  });
+
   it("never throws", () => {
     fc.assert(fc.property(fc.string({ maxLength: 200 }), (text) => typeof hasEvidence(text, family("tee")) === "boolean"));
   });

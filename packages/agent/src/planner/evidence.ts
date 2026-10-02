@@ -48,8 +48,15 @@ export function contentWords(text: string): readonly string[] {
   return kept.filter((w, i) => kept.indexOf(w) === i);
 }
 
-/** True when the request shares a product-naming word with the item's name. */
+/**
+ * True when the request names the item: it shares the item's head noun (the last content word of the name),
+ * or at least two content words. One shared modifier is not enough ("a gift for my friend" does not name
+ * the gift card bundle).
+ */
 export function hasEvidence(request: string, family: ItemFamily): boolean {
   const wanted = new Set(contentWords(request));
-  return contentWords(family.baseName).some((w) => wanted.has(w));
+  const name = contentWords(family.baseName);
+  const shared = name.filter((w) => wanted.has(w));
+  const head = name.at(-1);
+  return shared.length >= 2 || (head !== undefined && shared.includes(head));
 }

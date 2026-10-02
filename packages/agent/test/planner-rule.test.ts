@@ -244,7 +244,7 @@ describe("empty and unusable input", () => {
       ...tee,
       id: `lst_many${i}`,
       url: `https://demo-apparel.example/p/widget-${i}`,
-      items: [{ title: `Widget model ${String.fromCharCode(97 + i)} (SIMULATED)`, category: "apparel", unit_price_minor: 1000 + i }],
+      items: [{ title: `Widget ${String.fromCharCode(97 + i)} (SIMULATED)`, category: "apparel", unit_price_minor: 1000 + i }],
     }));
     const { out } = await propose(many, "a widget");
     const body = mock.requests()[0]?.body as { questions: Record<string, { criteria: object }> };
