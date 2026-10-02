@@ -95,7 +95,7 @@ function unavailable(reading: Extract<Reading, { usable: false }>): RuleResult {
   return failed({ id: "R10", check: "judge_status", inputs, comparator: "==" }, "ESCALATE", "R10.unavailable");
 }
 
-/** Shadow mode (JUDGE_MODE=shadow): recorded as SKIPPED with the verdict it would have given. */
+/** Shadow mode (config judge_mode shadow): a usable reading is recorded as SKIPPED with the verdict it would have given. */
 function toShadow(r: RuleResult): RuleResult {
   const verdict = r.result === "FAIL" ? (r.verdict ?? "ESCALATE") : "PASS";
   const template = r.template_id === undefined ? {} : { shadow_template_id: r.template_id };
@@ -109,13 +109,15 @@ export interface R10Input {
   readonly config: EngineConfig;
 }
 
-/** R10: one result per judge question, or one R10.unavailable result when the record is unusable. */
+/**
+ * R10: one result per judge question, or one R10.unavailable result when the record is unusable. The mode comes
+ * from config.judge_mode only (the record's shadow flag is informational, audit S-JUDGE-1): shadow mode skips a
+ * usable reading, and an unusable record ESCALATEs in either mode (I5).
+ */
 export function evaluateR10({ mandate, judge, config }: R10Input): RuleResult[] {
   const reading = readJudge(judge);
+  if (!reading.usable) return [unavailable(reading)];
   const t = config.judge;
-  const results = reading.usable
-    ? [scopeFit(reading.answers, t, mandate.rules.categories), injectionRisk(reading.answers, t), sellerRisk(reading.answers, t), escalateOrProceed(reading.answers, t)]
-    : [unavailable(reading)];
-  const shadow = isRecord(judge) && judge["shadow"] === true;
-  return shadow ? results.map(toShadow) : results;
+  const results = [scopeFit(reading.answers, t, mandate.rules.categories), injectionRisk(reading.answers, t), sellerRisk(reading.answers, t), escalateOrProceed(reading.answers, t)];
+  return config.judge_mode === "shadow" ? results.map(toShadow) : results;
 }
