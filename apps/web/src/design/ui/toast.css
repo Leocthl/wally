@@ -1,0 +1,43 @@
+/* Toast: an inverse pill above the tab bar. Shells with a tab bar raise it with --toast-offset. */
+.w-toast-region {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--toast-offset, calc(var(--sp-4) + var(--safe-bottom)));
+  z-index: var(--z-toast);
+  display: grid;
+  justify-items: center;
+  padding: 0 max(var(--gutter), var(--safe-right)) 0 max(var(--gutter), var(--safe-left));
+  pointer-events: none;
+}
+.w-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: calc(var(--column) - 2 * var(--gutter));
+  min-height: var(--tap-xl);
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--c-ticket);
+  color: var(--c-on-ticket);
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+  animation: w-toast-in var(--dur-base) var(--ease-spring) both;
+}
+.w-toast__icon { flex: none; color: var(--c-accent); }
+.w-toast--stop .w-toast__icon { color: var(--c-on-ticket); }
+.w-toast__msg { flex: 1; min-width: 0; font-weight: var(--weight-medium); line-height: var(--lh-snug); }
+.w-toast__action {
+  flex: none;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-accent);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+.w-toast__close { color: var(--c-on-ticket-muted); }
+@keyframes w-toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }

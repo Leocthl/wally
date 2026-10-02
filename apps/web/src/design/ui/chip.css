@@ -1,0 +1,22 @@
+/* Tag: quiet rounded labels. Provenance chip styles live in ../chips.css (shared with the legacy ProvChip). */
+.w-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  border-radius: var(--r-pill);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.w-tag--sm { padding: 0.1875rem 0.5rem; font-size: var(--text-xs); }
+.w-tag--md { padding: 0.3125rem 0.75rem; font-size: var(--text-sm); }
+.w-tag__icon { display: inline-flex; flex: none; }
+.w-tag--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
+.w-tag--primary { background: var(--c-primary-tint); color: var(--c-primary-ink); }
+.w-tag--accent { background: var(--c-accent-tint); color: var(--c-accent-ink); }
+.w-tag--ok { background: var(--c-ok-tint); color: var(--c-ok-ink); }
+.w-tag--warn { background: var(--c-warn-tint); color: var(--c-warn-ink); }
+.w-tag--stop { background: var(--c-stop-tint); color: var(--c-stop-ink); }
+.w-tag--info { background: var(--c-info-tint); color: var(--c-info-ink); }
+.w-tag--on-hero { background: var(--c-hero-to); color: var(--c-on-hero); }

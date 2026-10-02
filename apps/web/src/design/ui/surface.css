@@ -1,0 +1,118 @@
+/* Card, Divider, List, ListRow, Skeleton. Flat-ish: hairline or soft shadow, never both heavy. */
+.w-card {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+.w-card--pad-none { padding: 0; }
+.w-card--pad-md { padding: var(--sp-4); }
+.w-card--pad-lg { padding: var(--sp-5); }
+.w-card--elevated { box-shadow: var(--shadow-2); border-color: transparent; }
+.w-card--dashed { border-style: dashed; border-color: var(--c-line-strong); background: transparent; }
+.w-card--sunken { background: var(--c-surface-sunken); border-color: transparent; }
+.w-card--ok { background: var(--c-ok-tint); border-color: transparent; color: var(--c-ink); }
+.w-card--warn { background: var(--c-warn-tint); border-color: transparent; color: var(--c-ink); }
+.w-card--stop { background: var(--c-stop-tint); border-color: transparent; color: var(--c-ink); }
+.w-card--info { background: var(--c-info-tint); border-color: transparent; color: var(--c-ink); }
+
+/* Hero: the budget card, the one gradient in the system. Teal shapes are decoration only. */
+.w-card--hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: linear-gradient(140deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
+  color: var(--c-on-hero);
+  box-shadow: var(--shadow-2);
+}
+.w-card--hero::before, .w-card--hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.w-card--hero::before { width: 13rem; height: 13rem; right: -4.5rem; top: -6rem; background: var(--c-hero-to); opacity: 0.6; }
+.w-card--hero::after { width: 7rem; height: 7rem; right: 3.5rem; bottom: -4.25rem; background: var(--c-hero-glow); }
+
+/* Ticket: the one-off card, dark in both themes like a real card. */
+.w-card--ticket {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-ticket);
+  color: var(--c-on-ticket);
+  box-shadow: var(--shadow-2);
+}
+
+.w-divider { height: 0; margin: 0; border: 0; border-top: 1px solid var(--c-line); }
+.w-divider--inset { margin-left: calc(var(--sp-4) + 2.5rem + var(--sp-3)); }
+
+/* Lists */
+.w-list { list-style: none; margin: 0; padding: 0; }
+.w-list--inset { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg); overflow: hidden; }
+.w-row + .w-row { border-top: 1px solid var(--c-line); }
+.w-list--inset .w-row + .w-row { margin-left: var(--sp-4); }
+.w-row__hit {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 3.5rem;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.w-list--inset .w-row + .w-row .w-row__hit { padding-left: 0; }
+a.w-row__hit, button.w-row__hit { cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out); }
+a.w-row__hit:active, button.w-row__hit:active { background: var(--c-surface-sunken); }
+.w-row__leading { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--r-md); background: var(--c-primary-tint); color: var(--c-primary-ink); }
+.w-row__leading--ok { background: var(--c-ok-tint); color: var(--c-ok-ink); }
+.w-row__leading--stop { background: var(--c-stop-tint); color: var(--c-stop-ink); }
+.w-row__leading--warn { background: var(--c-warn-tint); color: var(--c-warn-ink); }
+.w-row__leading--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
+.w-row__text { display: grid; flex: 1; min-width: 0; gap: 0.125rem; }
+.w-row__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.w-row__subtitle { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.w-row__trailing { flex: none; text-align: right; font-variant-numeric: var(--num); font-weight: var(--weight-semibold); }
+.w-row__chevron { flex: none; color: var(--c-ink-muted); }
+
+/* Skeleton: a calm shimmer only when motion is allowed. */
+.w-skeleton-group { display: grid; gap: var(--sp-2); }
+.w-skeleton { display: block; background: var(--c-surface-sunken); max-width: 100%; }
+.w-skeleton--sm { border-radius: var(--r-xs); }
+.w-skeleton--md { border-radius: var(--r-md); }
+.w-skeleton--pill { border-radius: var(--r-pill); }
+@media (prefers-reduced-motion: no-preference) {
+  .w-skeleton { background: linear-gradient(90deg, var(--c-surface-sunken) 0%, var(--c-line) 50%, var(--c-surface-sunken) 100%) 0 0 / 200% 100%; animation: w-shimmer var(--dur-shimmer) var(--ease-in-out) infinite; }
+}
+@keyframes w-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* HeroPanel: full-bleed balance header with rounded bottom corners, under the status bar (viewport-fit=cover). */
+.w-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: max(var(--sp-4), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-6) max(var(--gutter), var(--safe-left));
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
+  background: linear-gradient(150deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
+  color: var(--c-on-hero);
+}
+.w-hero::before { content: ""; position: absolute; z-index: -1; width: 18rem; height: 18rem; right: -7rem; top: -8rem; border-radius: 50%; background: var(--c-hero-glow); pointer-events: none; }
+
+/* Card list: separate rounded cards with a gap (local wallet convention), chevrons on rows that navigate. */
+.w-list--cards { display: grid; gap: var(--sp-3); }
+.w-list--cards .w-row { border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); overflow: hidden; }
+.w-list--cards .w-row + .w-row { border-top: 1px solid var(--c-line); }
+
+/* A tag pinned to a card's top-right corner ("One-off card", "Approved"). */
+.w-card__corner { position: absolute; top: 0; right: 0; border-radius: 0 var(--r-lg) 0 var(--r-md); }
