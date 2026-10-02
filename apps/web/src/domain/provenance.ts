@@ -50,7 +50,7 @@ export function judgeProv(provider: string): Prov {
   return provider === "replay" ? SIMULATED : measured(1);
 }
 
-/** Stage latencies: the mock replays fixture numbers (SIMULATED); a live client reports its own timing, MEASURED(n=1). */
-export function latencyProv(api: "mock" | "http"): Prov {
+/** Stage latencies: the mock replays fixture numbers (SIMULATED); the server and the on-device stack report their own timing, MEASURED(n=1). */
+export function latencyProv(api: "mock" | "http" | "local"): Prov {
   return api === "mock" ? SIMULATED : measured(1);
 }

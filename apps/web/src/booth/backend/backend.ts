@@ -2,13 +2,13 @@
 // fresh one (new orchestrator, rail, log id). All operations run one at a time through a queue, each after a tick
 // (R11 expiry, card expiry, packet expiry). DEMO SHORTCUT: the delegator's throwaway key lives here and signs seal,
 // revoke and escalation answers for the shopper; a real deployment keeps that key on the shopper's device.
+// Portable (no node:*): the Node server (server/compose.ts) and the on-device client (src/api/local) both run it.
 import type { OrchestratorEvent } from "@laisee/core/orchestrator";
 import { toJsonl } from "@laisee/core/log";
 import { signEscalationAnswer, signRevocation } from "@laisee/core/log";
 import type { LogEntry } from "@laisee/core/generated";
 import type { VerifyFailure } from "@laisee/core/ports";
 import { verifyChain } from "@laisee/core/verify";
-import { tamperCopy, type TamperedCopy } from "../../src/api/mock/log";
 import type {
   ApiInfo,
   BoothSnapshot,
@@ -24,15 +24,15 @@ import type {
   TraceListener,
   Unsubscribe,
   VerifyOutcome,
-} from "../../src/api/types";
-import type { BoothBackend, ExportView } from "../backend";
-import { BoothError } from "../http/errors";
-import type { Logger } from "../http/routes";
+} from "../../api/types";
 import type { Catalogue } from "./catalogue";
+import { BoothError } from "./errors";
 import { mapEvent, RunTracker } from "./events";
 import { ScenarioRunner } from "./runner";
 import type { ScenarioTable } from "./scenarioTable";
 import { openSession, type Session, type SessionDeps } from "./session";
+import { tamperCopy, type TamperedCopy } from "./tamper";
+import type { BackendLogger, BoothBackend, ExportView } from "./types";
 
 export const VERIFY_CHECKS: readonly VerifyFailure[] = ["SCHEMA", "SEQ", "PREV_HASH", "PAYLOAD_HASH", "ENTRY_HASH", "SIGNATURE", "PAYLOAD_SIGNATURE", "TRUNCATED"];
 
@@ -44,7 +44,11 @@ export interface BackendDeps {
   readonly plannerProvider: "rule" | "replay";
   readonly info: () => ApiInfo;
   readonly presetSeal: (now: Date) => SealRequest;
-  readonly logger: Logger;
+  readonly logger: BackendLogger;
+  /** Run note when the judge gave no usable answer (on-device mode says the judge is offline there). Default: none. */
+  readonly judgeOfflineNote?: string;
+  /** The note on exported public keys. Default: the server's. */
+  readonly keysNote?: string;
 }
 
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
@@ -183,6 +187,7 @@ export class OrchestratorBackend implements BoothBackend {
       catalogue: this.#d.catalogue,
       table: this.#d.table,
       runId: () => this.#deps.newId("run"),
+      ...(this.#d.judgeOfflineNote === undefined ? {} : { judgeOfflineNote: this.#d.judgeOfflineNote }),
     });
   }
 
@@ -284,7 +289,7 @@ export class OrchestratorBackend implements BoothBackend {
       return {
         log: toJsonl(snap.log),
         publicKeys: {
-          note: "Throwaway demo keys this server signs with right now (rail SIMULATED). Public keys only.",
+          note: this.#d.keysNote ?? "Throwaway demo keys this server signs with right now (rail SIMULATED). Public keys only.",
           engine: [session.engineDid],
           delegator: session.delegatorDid,
           agent: session.agentDid,

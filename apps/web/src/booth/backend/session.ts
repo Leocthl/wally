@@ -8,8 +8,8 @@ import type { Orchestrator, OrchestratorDeps, OrchestratorEvent, PlannerFactory 
 import type { AppendEntry, Clock, Engine, JudgePort, LogStore, Signer } from "@laisee/core/ports";
 import { credentialIdForMandate, CredentialSignError, signMandateCredential, type UnsignedMandateCredential } from "@laisee/core/vc";
 import { MerchantStub, RailSim, type RandomSource } from "@laisee/rail-sim";
-import type { SealRequest } from "../../src/api/types";
-import { BoothError } from "../http/errors";
+import type { SealRequest } from "../../api/types";
+import { BoothError } from "./errors";
 import { throwawayAgentDid } from "./keys";
 
 export const VC_CONTEXT: MandateCredential["@context"] = ["https://www.w3.org/ns/credentials/v2", "https://laisee.local/contexts/delegation/v1"];

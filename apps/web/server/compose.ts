@@ -13,17 +13,23 @@ import { createOrchestrator as realOrchestrator, type Orchestrator, type Orchest
 import type { Clock, JudgePort, LogStore } from "@laisee/core/ports";
 import { cryptoRandom, type RandomSource } from "@laisee/rail-sim";
 import type { Hono } from "hono";
+import { OrchestratorBackend } from "../src/booth/backend/backend";
+import { scameterLookup } from "../src/booth/backend/catalogue";
+import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
+import { buildInfo, type JudgeHealth } from "../src/booth/backend/info";
+import { replayPlannerFactory } from "../src/booth/backend/planner";
+import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
+import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
-import { buildInfo, type JudgeHealth } from "./booth/info";
-import { OrchestratorBackend } from "./booth/backend";
-import { loadCatalogue, scameterLookup } from "./booth/catalogue";
+import { loadCatalogue } from "./booth/catalogue";
 import { loadDemoKeys, type DemoKeys } from "./booth/keys";
-import { loadScenarioTable, type ScenarioTable } from "./booth/scenarioTable";
-import type { SessionDeps } from "./booth/session";
+import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
+
+export { randomId } from "../src/booth/backend/ids";
 
 /** The brief: tick every second (R11 windows [F31] are 60 s, card TTL [F30] 30 min). */
 export const TICK_MS = 1_000;
@@ -62,34 +68,13 @@ export interface Booth {
   close(): Promise<void>;
 }
 
-const SYSTEM_CLOCK: Clock = { now: () => new Date() };
-const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-/** Opaque ids with letters only (no digit runs anywhere near a card number, I8). */
-export function randomId(prefix: string, length = 16): string {
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(length));
-  return `${prefix}_${[...bytes].map((b) => ID_ALPHABET.charAt(b % ID_ALPHABET.length)).join("")}`;
-}
-
 function plannerFactory(settings: BoothSettings, table: ScenarioTable): PlannerFactory {
   if (settings.plannerProvider === "rule") return (listings) => createPlanner({ provider: "rule", catalogue: listings, layaUrl: settings.layaUrl });
   const records: readonly PlannerReplayRecord[] = [
     ...loadReplayRecords(join(settings.fixturesDir, "planner")),
     ...loadReplayRecords(join(settings.scenariosDir, "planner")),
   ];
-  const byListings = new Map<string, string>();
-  for (const entry of [...Object.values(table.scenarios), table.custom]) {
-    const key = [...entry.listings].sort().join("|");
-    const known = byListings.get(key);
-    if (known !== undefined && known !== entry.plannerReplay) throw new Error(`booth.json: listings ${key} name two replay records (${known}, ${entry.plannerReplay})`);
-    byListings.set(key, entry.plannerReplay);
-  }
-  const missing = [...byListings.values()].filter((id) => !records.some((r) => r.scenario === id));
-  if (missing.length > 0) throw new Error(`booth.json names unknown planner replay record(s): ${missing.join(", ")}`);
-  return (listings) => {
-    const scenario = byListings.get(listings.map((l) => l.id).sort().join("|"));
-    return createPlanner({ provider: "replay", records, catalogue: listings, ...(scenario === undefined ? {} : { scenario }) });
-  };
+  return replayPlannerFactory(records, table);
 }
 
 function makeJudge(opts: ComposeOptions, settings: BoothSettings): JudgePort {

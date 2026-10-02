@@ -13,7 +13,7 @@
 
 - `dist/index.html` is self-contained: one classic inline script, one inline style, no external file, font or image.
 - **CSP** in the page: `default-src 'none'`, `connect-src 'none'`, scripts and styles only by SHA-256 hash.
-- `'unsafe-eval'` is on because ajv (inside `@laisee/core/verify`) compiles its schema validators with `new Function` at load. Precompiled validators in core would remove it.
+- No `'unsafe-eval'`: the schema validators in `@laisee/core` are compiled ahead of time (`pnpm gen:types`, ajv standalone), so the page never calls `eval` or `new Function`; `test/build.test.ts` fails if it does.
 - The build fails if the page contains `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, a module script, `<link>`, `<img>`, CSS `url()` and similar (`build/scan.ts`).
 
 ## Use

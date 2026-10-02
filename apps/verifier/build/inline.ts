@@ -2,9 +2,6 @@
 // fetch. Pure string work plus SHA-256 (node:crypto, build time only; never in the page bundle).
 import { createHash } from "node:crypto";
 
-/** ajv (inside @laisee/core/verify) compiles its validators with new Function at load, hence 'unsafe-eval'. */
-const SCRIPT_EVAL = "'unsafe-eval'";
-
 export function sha256Base64(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("base64");
 }
@@ -21,11 +18,15 @@ export function assertInlineStyle(css: string): string {
   return css;
 }
 
-/** default-src 'none' blocks fetch, XHR, WebSocket, images, fonts, frames and form posts; only the hashed inline code runs. */
+/**
+ * default-src 'none' blocks fetch, XHR, WebSocket, images, fonts, frames and form posts; only the hashed inline code
+ * runs. No 'unsafe-eval': the schema validators inside @laisee/core/verify are compiled ahead of time (ajv standalone),
+ * so nothing calls eval or new Function.
+ */
 export function contentSecurityPolicy(script: string, style: string): string {
   return [
     "default-src 'none'",
-    `script-src 'sha256-${sha256Base64(script)}' ${SCRIPT_EVAL}`,
+    `script-src 'sha256-${sha256Base64(script)}'`,
     `style-src 'sha256-${sha256Base64(style)}'`,
     "connect-src 'none'",
     "img-src 'none'",

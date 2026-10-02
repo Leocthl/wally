@@ -1,7 +1,8 @@
 # apps/web
 
 - **What**: the booth UI (Vite + React 19), mobile first, EN with a zh-HK second line. The rail is SIMULATED on every screen.
-- **Two clients, one interface** (`ApiClient`, `src/api/types.ts`): `HttpApiClient` (`src/api/http/`) when the booth server answers `/api/info`, else `MockApiClient` (offline, SIMULATED, mock-mode notes on screen). `?api=mock` or `VITE_API=mock` forces the mock. Both pass `test/apiClientContract.ts`.
+- **Two modes, one interface** (`ApiClient`, `src/api/types.ts`): `HttpApiClient` (`src/api/http/`, live mode) when the booth server answers `/api/info`, else `LocalApiClient` (`src/api/local/`, on-device mode: the real engine, log and SIMULATED rail in the page, recorded planner and judge answers, no network, a note on screen). `?api=local` or `VITE_API=local` forces on-device mode. `MockApiClient` is a UI-test double only. All pass `test/apiClientContract.ts`.
+- **Portable backend** (`src/booth/backend/`): the booth runner, session and `OrchestratorBackend`, no `node:` import; the server and `LocalApiClient` both run it. Key design for the phone: `src/api/local/KEYS.md`.
 - **Booth server** (`server/`, Hono, 127.0.0.1 only): `pnpm demo` from the repo root (preflight, build if needed, start), then open the printed URL. `pnpm demo:reset` resets keys, logs and the packet.
 - **Stop texts**: `src/explain/renderStop.ts` wraps a stub; lane A's `render` replaces it in one line.
 

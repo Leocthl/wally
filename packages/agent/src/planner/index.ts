@@ -31,6 +31,8 @@ export {
 } from "./factory";
 export { createRulePlanner, type RulePlannerOptions } from "./rule-planner";
 export { ALTERNATIVE_SUFFIX, createReplayPlanner, loadReplayRecords, type ReplayPlannerOptions } from "./replay-planner";
+// Browser-safe: validates one fixture file's text (the on-device client bundles the files instead of reading a dir).
+export { parseReplayFile } from "./replay-store";
 export { parseColours, parseQuantity, parseSizes, MAX_QTY, type QuantityResult } from "./parse-request";
 export { candidatesFromListing, parseTitle, type PlannerCandidate } from "./candidates";
 export {
