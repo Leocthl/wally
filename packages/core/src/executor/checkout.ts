@@ -18,6 +18,17 @@ interface Run {
   readonly input: CheckoutInput;
 }
 
+interface LoggedEvent {
+  readonly event: CardEvent;
+  readonly seq: number;
+}
+
+interface Keyed {
+  readonly key: string;
+  /** The CARD_EVENT already in the log for this key, if any: the charge attempt is done, replay it. */
+  readonly logged: LoggedEvent | undefined;
+}
+
 export async function runCheckout(deps: ExecutorDeps, maxCalls: number, input: CheckoutInput): Promise<CheckoutOutcome> {
   try {
     return await checkoutSteps({ deps, maxCalls, input });
@@ -33,30 +44,32 @@ async function checkoutSteps(run: Run): Promise<CheckoutOutcome> {
   if (problem !== null) return errorOutcome("INVALID_INPUT", problem);
 
   const approvedTotalMinor = decision.cart.total_minor;
+  const keyed = await resolveKey(run);
+  if (!keyed.ok) return keyed.outcome;
+  const { key, logged } = keyed.value;
+  const ctx: EventContext = { cardId: card.id, idempotencyKey: key, approvedTotalMinor, cart: decision.cart };
+  if (logged !== undefined) return settled(ctx, card.last4, logged.event, 0, logged.seq);
+
   const quoted = await requote(deps, decision.cart, card);
   if (!quoted.ok) return quoted.outcome;
   if (quoted.value.total_minor !== approvedTotalMinor) {
-    const delta = quoted.value.total_minor - approvedTotalMinor;
     return {
       status: "DRIFT",
       simulated: true,
       last4: card.last4,
       approved_total_minor: approvedTotalMinor,
       quoted_total_minor: quoted.value.total_minor,
-      delta_minor: delta,
+      delta_minor: quoted.value.total_minor - approvedTotalMinor,
       quote: quoted.value,
     };
   }
 
-  const key = await resolveKey(run);
-  if (!key.ok) return key.outcome;
-  const call = await callMerchant(run, key.value);
+  const call = await callMerchant(run, key);
   if (call.kind === "failed") return call.outcome;
   if (call.kind === "timeout") {
-    return { status: "TIMEOUT", simulated: true, last4: card.last4, attempts: call.calls, idempotency_key: key.value };
+    return { status: "TIMEOUT", simulated: true, last4: card.last4, attempts: call.calls, idempotency_key: key };
   }
-  const ctx: EventContext = { cardId: card.id, idempotencyKey: key.value, approvedTotalMinor, cart: decision.cart };
-  return settle(run, ctx, call.event, call.calls);
+  return record(run, ctx, call.event, call.calls);
 }
 
 async function requote(deps: ExecutorDeps, cart: Cart, card: CardRecord): Promise<Step<MerchantQuote>> {
@@ -71,20 +84,28 @@ async function requote(deps: ExecutorDeps, cart: Cart, card: CardRecord): Promis
   return { ok: true, value: quote };
 }
 
-/** An explicit key wins. Otherwise chk:<card id>:<n>, n counting the charge attempts already logged for this card. */
-async function resolveKey(run: Run): Promise<Step<string>> {
+/**
+ * The attempt's key and the log entry for it, if one exists. An explicit key wins; otherwise chk:<card id>:<n>
+ * with n counting the charge attempts already logged for this card, so a re-run after a lost answer (nothing
+ * logged) gets the same key and the rail never charges twice.
+ */
+async function resolveKey(run: Run): Promise<Step<Keyed>> {
   const { deps, input } = run;
   const { card } = input;
-  if (input.idempotencyKey !== undefined) {
-    if (IDEMPOTENCY_KEY_PATTERN.test(input.idempotencyKey)) return { ok: true, value: input.idempotencyKey };
+  const explicit = input.idempotencyKey;
+  if (explicit !== undefined && !IDEMPOTENCY_KEY_PATTERN.test(explicit)) {
     return { ok: false, outcome: errorOutcome("INVALID_INPUT", "idempotencyKey does not match the CardEvent pattern", { last4: card.last4 }) };
   }
   try {
     const entries = await deps.store.read(input.logId);
-    const attempts = entries.filter(
-      (e) => e.kind === "CARD_EVENT" && e.payload.card_id === card.id && e.payload.idempotency_key !== undefined,
-    ).length;
-    return { ok: true, value: `${CHECKOUT_KEY_PREFIX}:${card.id}:${attempts + 1}` };
+    const attempts = entries.flatMap((e) => (e.kind === "CARD_EVENT" ? [{ seq: e.seq, event: e.payload }] : []));
+    const prefix = `${CHECKOUT_KEY_PREFIX}:${card.id}:`;
+    const derived = attempts.filter((a) => a.event.idempotency_key?.startsWith(prefix) === true);
+    const key = explicit ?? `${prefix}${derived.length + 1}`;
+    const logged = attempts.find(
+      (a) => a.event.idempotency_key === key && (a.event.card_id === card.id || a.event.decline_code === "UNKNOWN_HANDLE"),
+    );
+    return { ok: true, value: { key, logged } };
   } catch (err) {
     return { ok: false, outcome: errorOutcome("LOG_UNAVAILABLE", describeError(err), { last4: card.last4 }) };
   }
@@ -113,25 +134,28 @@ async function callMerchant(run: Run, key: string): Promise<MerchantCall> {
   return { kind: "timeout", calls: maxCalls };
 }
 
-async function settle(run: Run, ctx: EventContext, event: CardEvent, calls: number): Promise<CheckoutOutcome> {
+/** Validates the rail's answer, appends it to the log, and reports it. */
+async function record(run: Run, ctx: EventContext, event: CardEvent, calls: number): Promise<CheckoutOutcome> {
   const { deps, input } = run;
   const last4 = input.card.last4;
   const problem = eventProblem(event, ctx);
   if (problem !== null) return errorOutcome("EVENT_INVALID", problem, { last4, idempotencyKey: ctx.idempotencyKey });
-
   const appended = await appendCardEvent(deps, input.logId, event);
   if (!appended.ok) {
     return errorOutcome("LOG_APPEND_FAILED", appended.message, { last4, idempotencyKey: ctx.idempotencyKey, event });
   }
-  const settled: CheckoutSettled = {
+  return settled(ctx, last4, event, calls, appended.seq);
+}
+
+function settled(ctx: EventContext, last4: string, event: CardEvent, calls: number, seq: number): CheckoutSettled {
+  return {
     status: event.event === "AUTHORISED" ? "AUTHORISED" : "DECLINED",
     simulated: true,
     event,
     last4,
     attempts: calls,
     idempotency_key: ctx.idempotencyKey,
-    log_seq: appended.seq,
+    log_seq: seq,
     anomalies: anomaliesOf(event, ctx),
   };
-  return settled;
 }

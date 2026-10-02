@@ -147,6 +147,84 @@ describe("checkout: happy path", () => {
   });
 });
 
+describe("checkout: concurrency and replays keep the log honest", () => {
+  it("two concurrent checkouts on one card are serialised: one charge, one blocked replay, exactly two log entries", async () => {
+    const r = await rig();
+    const input = { logId: LOG_ID, decision: r.decision, card: r.card };
+    const [a, b] = await Promise.all([r.executor.checkout(input), r.executor.checkout(input)]);
+    expect(a).toMatchObject({ status: "AUTHORISED", idempotency_key: `chk:${r.card.id}:1`, log_seq: 1 });
+    expect(b).toMatchObject({ status: "DECLINED", idempotency_key: `chk:${r.card.id}:2`, log_seq: 2, event: { decline_code: "CARD_USED" } });
+    expect((await r.cardEvents()).map((e) => e.event)).toEqual(["AUTHORISED", "DECLINED"]);
+  });
+
+  it("does not serialise different cards against each other (both reach the merchant before either finishes)", async () => {
+    let started = 0;
+    let release: () => void = () => {};
+    const bothStarted = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const r = await rig({
+      merchant: (rail) =>
+        steered(rail, {
+          checkout: async (_n, _input, honest) => {
+            started += 1;
+            if (started === 2) release();
+            await bothStarted;
+            return honest();
+          },
+        }),
+    });
+    const decision2 = approvedDecision(CART, "dec_exec000002");
+    const card2 = await r.rail.mint({ decision: decision2, ttlMs: TTL_MS, now: r.clock.now(), merchantLock: CART.merchant.domain });
+    const [a, b] = await Promise.all([
+      r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card }),
+      r.executor.checkout({ logId: LOG_ID, decision: decision2, card: card2 }),
+    ]);
+    expect([a.status, b.status]).toEqual(["AUTHORISED", "AUTHORISED"]);
+    expect([a, b].map((o) => (o.status === "AUTHORISED" ? o.idempotency_key : ""))).toEqual([`chk:${r.card.id}:1`, `chk:${card2.id}:1`]);
+  });
+
+  it("an explicit key that is already in the log replays the logged outcome: no merchant call, no new entry", async () => {
+    const r = await rig();
+    const input = { logId: LOG_ID, decision: r.decision, card: r.card, idempotencyKey: "order-7.try:1" };
+    const first = await r.executor.checkout(input);
+    const spy = vi.spyOn(r.merchant, "checkout");
+    const replay = await r.executor.checkout(input);
+    expect(replay).toMatchObject({ status: "AUTHORISED", attempts: 0, idempotency_key: "order-7.try:1", log_seq: 1, anomalies: [] });
+    expect(replay).toHaveProperty("event", (first as { event: CardEvent }).event);
+    expect(spy).not.toHaveBeenCalled();
+    expect(await r.cardEvents()).toHaveLength(1);
+  });
+
+  it("a logged DECLINED replays the same way", async () => {
+    const r = await rig();
+    await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
+    const declined = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card, idempotencyKey: "retry-after-used" });
+    expect(declined).toMatchObject({ status: "DECLINED", attempts: 1 });
+    const again = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card, idempotencyKey: "retry-after-used" });
+    expect(again).toMatchObject({ status: "DECLINED", attempts: 0, log_seq: 2 });
+    expect(await r.cardEvents()).toHaveLength(2);
+  });
+
+  it("a void queued behind a checkout waits for it; a checkout queued behind a void is declined CARD_VOIDED", async () => {
+    const pay = await rig();
+    const [paid, voided] = await Promise.all([
+      pay.executor.checkout({ logId: LOG_ID, decision: pay.decision, card: pay.card }),
+      pay.executor.voidCard({ logId: LOG_ID, cardId: pay.card.id }),
+    ]);
+    expect(paid.status).toBe("AUTHORISED");
+    expect(voided).toMatchObject({ status: "ERROR", reason: "RAIL_REJECTED" }); // a used card is final [F2]
+
+    const stop = await rig();
+    const [first, second] = await Promise.all([
+      stop.executor.voidCard({ logId: LOG_ID, cardId: stop.card.id }),
+      stop.executor.checkout({ logId: LOG_ID, decision: stop.decision, card: stop.card }),
+    ]);
+    expect(first.status).toBe("VOIDED");
+    expect(second).toMatchObject({ status: "DECLINED", event: { decline_code: "CARD_VOIDED" } });
+  });
+});
+
 describe("checkout: overshoot decline holds the limit (DM2)", () => {
   it("a charge above the quote is declined OVER_LIMIT, logged, and the card stays usable", async () => {
     const r = await rig({
@@ -234,12 +312,22 @@ describe("checkout: bounded retries on a simulated timeout, always the SAME key"
     const r = await rig({ merchant, maxCheckoutCalls: 2 });
     const first = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
     expect(first).toMatchObject({ status: "TIMEOUT", attempts: 2, idempotency_key: `chk:${r.card.id}:1`, last4: r.card.last4 });
+    expect((r.merchant as ReturnType<typeof steered>).checkoutCalls).toHaveLength(2);
     expect(await r.cardEvents()).toEqual([]);
 
     failing = false;
     const rerun = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
     expect(rerun).toMatchObject({ status: "AUTHORISED", idempotency_key: `chk:${r.card.id}:1`, attempts: 1 });
     expect(await r.cardEvents()).toHaveLength(1);
+  });
+
+  it("the default bound is EXECUTOR_DEFAULTS.maxCheckoutCalls calls, no more", async () => {
+    const r = await rig({ merchant: (rail) => steered(rail, { checkout: async () => Promise.reject(new SimulatedTimeoutError()) }) });
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card })).toMatchObject({
+      status: "TIMEOUT",
+      attempts: EXECUTOR_DEFAULTS.maxCheckoutCalls,
+    });
+    expect((r.merchant as ReturnType<typeof steered>).checkoutCalls).toHaveLength(EXECUTOR_DEFAULTS.maxCheckoutCalls);
   });
 
   it("does not retry anything but a simulated timeout (fail closed, handle redacted)", async () => {
@@ -277,19 +365,27 @@ describe("checkout: bounded retries on a simulated timeout, always the SAME key"
 describe("checkout: fail closed on bad input, quotes and answers (I5)", () => {
   it("refuses a decision that is not an APPROVE for this card, before the merchant is touched", async () => {
     const r = await rig();
-    const { approved_limit_minor: _limit, explanation: _e, ...rest } = r.decision;
-    const cases: [string, Decision, CardRecord, string?][] = [
-      ["DENY", { ...rest, outcome: "DENY" } as Decision, r.card],
-      ["limit differs from cart total", { ...r.decision, approved_limit_minor: r.decision.cart.total_minor - 1 }, r.card],
-      ["card minted for another decision", r.decision, { ...r.card, decision_id: "dec_otherDecision1" }],
-      ["card limit differs from approved limit", r.decision, { ...r.card, limit_minor: r.card.limit_minor + 1 }],
-      ["card for another mandate", r.decision, { ...r.card, mandate_id: "mnd_otherMandate1" }],
-      ["schema-invalid card", r.decision, { ...r.card, last4: "12" }],
-      ["schema-invalid decision", { ...r.decision, id: "nope" }, r.card],
+    const { approved_limit_minor: _limit, ...withoutLimit } = r.decision;
+    const denied: Decision = {
+      ...withoutLimit,
+      outcome: "DENY",
+      rules: [{ id: "R3", result: "FAIL", verdict: "DENY", inputs: {}, comparator: "<=", threshold_ref: "packet.remaining_minor", template_id: "R3.over_remaining" }],
+      explanation: { template_id: "R3.over_remaining", inputs: {}, rendered: "Stopped by R3 (SIMULATED test)." },
+    };
+    const cases: [string, string, Decision, CardRecord][] = [
+      ["a DENY", "not an APPROVE", denied, r.card],
+      ["a limit that differs from the cart total", "cart total", { ...r.decision, approved_limit_minor: r.decision.cart.total_minor - 1 }, r.card],
+      ["a card minted for another decision", "another decision|not minted for this decision", r.decision, { ...r.card, decision_id: "dec_otherDecision1" }],
+      ["a card limit that differs from the approved limit", "card limit", r.decision, { ...r.card, limit_minor: r.card.limit_minor + 1 }],
+      ["a card of another mandate", "another mandate", r.decision, { ...r.card, mandate_id: "mnd_otherMandate1" }],
+      ["a schema-invalid card", "card is not schema-valid", r.decision, { ...r.card, last4: "12" }],
+      ["a schema-invalid decision", "decision is not schema-valid", { ...r.decision, id: "nope" }, r.card],
     ];
     const spy = vi.spyOn(r.merchant, "quote");
-    for (const [, decision, card] of cases) {
-      expect(await r.executor.checkout({ logId: LOG_ID, decision, card })).toMatchObject({ status: "ERROR", reason: "INVALID_INPUT" });
+    for (const [name, expected, decision, card] of cases) {
+      const outcome = await r.executor.checkout({ logId: LOG_ID, decision, card });
+      expect(outcome, name).toMatchObject({ status: "ERROR", reason: "INVALID_INPUT" });
+      expect((outcome as { message: string }).message, name).toMatch(new RegExp(expected));
     }
     expect(await r.executor.checkout({ logId: "not-a-log", decision: r.decision, card: r.card })).toMatchObject({ reason: "INVALID_INPUT" });
     expect(spy).not.toHaveBeenCalled();

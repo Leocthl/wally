@@ -5,22 +5,37 @@ import { runCheckout } from "./checkout";
 import { EXECUTOR_DEFAULTS } from "./config";
 import { runExpireDue, runVoid } from "./lifecycle";
 import { describeError, errorOutcome, expireErrorOutcome } from "./outcome";
+import { createExclusive } from "./queue";
 import type { Executor, ExecutorDeps } from "./types";
 
-export function createExecutor(deps: ExecutorDeps): Executor {
+/** Appends to one log queue up: appendEntry reads the head and writes head + 1, so two at once would collide. */
+function withSerialAppends(deps: ExecutorDeps): ExecutorDeps {
+  const exclusive = createExclusive();
+  return {
+    ...deps,
+    appendEntry: (store, signer, logId, kind, payload, now) =>
+      exclusive(logId, () => deps.appendEntry(store, signer, logId, kind, payload, now)),
+  };
+}
+
+export function createExecutor(unserialised: ExecutorDeps): Executor {
+  const deps = withSerialAppends(unserialised);
   const maxCalls = deps.maxCheckoutCalls ?? EXECUTOR_DEFAULTS.maxCheckoutCalls;
   if (!Number.isInteger(maxCalls) || maxCalls < 1) {
     throw new RangeError(`maxCheckoutCalls must be an integer >= 1, got ${String(maxCalls)}`);
   }
+  // One card at a time: concurrent checkouts or voids on the same card queue up; other cards run in parallel.
+  const exclusive = createExclusive();
   return {
-    checkout: (input) => runCheckout(deps, maxCalls, input),
-    async voidCard(input) {
-      try {
-        return await runVoid(deps, input);
-      } catch (err) {
-        return errorOutcome("RAIL_REJECTED", describeError(err));
-      }
-    },
+    checkout: (input) => exclusive(input?.card?.id ?? "", () => runCheckout(deps, maxCalls, input)),
+    voidCard: (input) =>
+      exclusive(input?.cardId ?? "", async () => {
+        try {
+          return await runVoid(deps, input);
+        } catch (err) {
+          return errorOutcome("RAIL_REJECTED", describeError(err));
+        }
+      }),
     async expireDue(input) {
       try {
         return await runExpireDue(deps, input);
