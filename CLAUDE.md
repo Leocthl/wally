@@ -4,8 +4,8 @@
 
 ## Status
 - **Event**: HacKU 2026, FinTech track "Give a Machine a Wallet", 2026-10-02 to 2026-10-04 [F13]; HKT problem statement declared [F13, F17]. Not affiliated with HKT, Tap & Go or Mastercard.
-- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D12, D13). Engine, crypto, log, rail, judge, planner, harness and the mock-backed UI are merged; orchestrator, API server and booth wiring are in progress.
-- **Local-first, Laya only**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac [F11c] as the judge and drives the planner: a decision loop in a deterministic harness, with `replay` as fallback. Claude and hosted Jev are optional backends nothing depends on.
+- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D13, D15). Merged: engine, crypto, log, offline verifier, rail-sim, cart builder, executor, orchestrator, booth server, judge, planners, harness, PWA shell and on-device mode. Open: screens are being rebuilt, and the Qwen planner and compiler are built and measured but not yet in the booth path (see `TASKS.md`).
+- **Local-first, two local models**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac as the judge [F11c]. Qwen3.5 under llama.cpp, also loopback only, is the planner and the sentence-to-rules compiler [F27]; it never gates a decision. There is no LLM judge. Planner providers: `rule` (Laya decision loop, default), `local` (Qwen), `replay` (recorded; CI default). The `claude` provider is removed; hosted Jev is optional.
 - **Freeze**: no commits after Sun 2026-10-04 13:00 HKT [F16]. The repo is public by then and submitted with deck, video and declaration [F18]. Procedure: 03 §Freeze.
 - **Open**: assumptions in `docs/00-context.md`; unknowns and re-captures in the register's VERIFY queue.
 - **Sources of truth**: numbers `docs/facts-register.md` · IDs `docs/00-context.md` · data shapes `schemas/` · design tokens `docs/04-design-language.md` · backlog `TASKS.md`.
@@ -29,26 +29,34 @@ docs/      00-context 01-product-brief 02-architecture 03-implementation-plan 04
            05-evidence-plan 06-demo-script 07-pitch 08-risk-register 09-hkt-delegation-api-ask
            10-test-plan lane-prompts facts-register adr/
 schemas/   MandateCredential Mandate Cart Decision LogEntry CardRecord PacketState (JSON Schema, source of truth)
-scripts/   docs-check.py trace-check.py
-data/      capture-sheet shop-probe real-card-test (templates), fixtures/, raw/ (gitignored)
-apps/web apps/verifier                      lane C
-packages/core packages/rail-sim             lane A
-packages/agent                              lane B
-services/laya                               lane B   (local Laya server, weights gitignored)
+scripts/   docs-check.py trace-check.py gen-types.mjs keys-gen.mjs verify-log.mjs demo-reset.mjs booth-check.mjs
+data/      capture-sheet shop-probe real-card-test (templates), fixtures/, scenarios/, judge-corpus/, results/ (MEASURED), raw/ (gitignored)
+apps/web apps/verifier                      lane C, M   (PWA, booth server, on-device mode; offline verifier page)
+packages/core packages/rail-sim             lane A      (engine, crypto, log, verifier, cart, executor, orchestrator; SIMULATED rail)
+packages/agent                              lane B      (planners, compiler, judge adapters, judge fit)
+services/laya services/qwen                 lane B, M   (local model servers, weights gitignored)
 packages/harness                            lane D
 ```
 
 ## Local services
-- **Laya**: `services/laya/` (setup.sh, serve.sh, stop.sh, smoke.mjs) on 127.0.0.1:8808, checkpoint `typed-decisions` [F11c]. Down ⇒ judge status ERROR ⇒ ESCALATE `R10.unavailable` (I5).
-- **Planner**: no server of its own; the `rule` backend runs the Laya decision loop (02 §14). `PLANNER_PROVIDER=replay` is the booth fallback and the CI default.
-- **Bound to 127.0.0.1 only**; listing text sent to Laya never leaves the Mac. Env names: 02 §15.
+- **Laya** (judge): `services/laya/` (setup.sh, serve.sh, stop.sh, smoke.mjs) on 127.0.0.1:8808, checkpoint `typed-decisions` [F11c]. Down ⇒ judge status ERROR ⇒ ESCALATE `R10.unavailable` (I5).
+- **Qwen** (planner, compiler): `services/qwen/` (same four scripts) on 127.0.0.1:8809, Q4_K_M GGUF files pinned by commit and SHA-256 [F27, F63]; `QWEN_MODEL=4b` for the smaller model. Down ⇒ no proposal.
+- **Planner**: no server of its own; `rule` runs the Laya decision loop (02 §14), `local` calls Qwen. `PLANNER_PROVIDER=replay` is the booth fallback and the CI default.
+- **Bound to 127.0.0.1 only**; listing text and requests sent to either model never leave the Mac. Env names: 02 §15.
 
 ## Commands
-- **Work today** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
-- **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm build`, `pnpm gen:types` (schemas to types; commit the output), `pnpm docs:check`. API: `pnpm --filter @laisee/web api` (127.0.0.1:8787).
-- **Laya judge** (local, loopback only): `services/laya/setup.sh` once, `services/laya/serve.sh`, `services/laya/stop.sh`, `node services/laya/smoke.mjs`; warm it up after every start (first call is slow).
-- **Also working**: `pnpm coverage` (core line gate [F44]), `pnpm keys:gen` (throwaway demo keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm harness -- --seed 7 --n 150 --judge live|recorded`, `pnpm --filter @laisee/agent judge:fit`.
-- **TBD until their lanes land**: `pnpm demo:reset`, the API server and the one-command booth start.
+- **Docs checks** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
+- **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`.
+- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE); `POST /api/seal /scenario/:id /propose /revoke /escalation/answer /verify /tamper /restore /reset`.
+- **Evidence**: `pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]`, `pnpm --filter @laisee/agent judge:fit`.
+- **Local models** (loopback only): `services/laya/{setup,serve,stop}.sh` and `node services/laya/smoke.mjs`; `services/qwen/{setup,serve,stop}.sh` and `node services/qwen/smoke.mjs`. Warm both up after every start (the first call is slow).
+
+## Known gaps (say them, never hide them)
+- **Duplicate submission**: the same cart submitted twice gets two APPROVEs and two cards; idempotency by cart fingerprint is not built (02 §6, harness `duplicate` [F69]).
+- **Judge**: held-out, the F38 floor of 90% legitimate approved is not met at judge level, and the seller gate is inert [F36]; the end-to-end harness meets F38 [F69].
+- **Keys**: the web API holds the delegator demo key; on-device mode makes every key in the page; a did:key cannot be rotated.
+- **Log**: proves tamper, reorder, truncation (with the checkpoint), signatures, and consent and money for what is logged. Not omissions, a re-fold, or the shopper's intent.
+- **Qwen**: evaluated on author-written cases with no held-out set [F68]; not yet wired into the booth server or the Seal screen.
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.
@@ -66,14 +74,14 @@ packages/harness                            lane D
 
 ## Definition of done per lane
 - **A policy + rail**: every rule R1-R12 unit-tested with tests written first; T-I1..T-I8, T-S1..T-S6, T-R1 green; mandate credential and log verify offline (T-V1); coverage of `packages/core` meets [F44]; no PAN or CVV anywhere (I8); rail outputs carry a SIMULATED label; `pnpm test` green.
-- **B agent + judge**: planner can call only `propose_cart` (I4) and runs without any API key; the Laya/Jev adapter and the replay judge pass the JudgePort contract tests including timeout, error and truncated input ⇒ fail closed (I5); rotation averaging is on; shadow mode logs judge output with no effect; model version and latency logged; fixtures for S2 and S3 give the expected judge outputs; no secrets in the repo.
+- **B agent + judge**: planner can call only `propose_cart` (I4) and runs without any API key; the Laya/Jev adapter and the replay judge pass the JudgePort contract tests including timeout, error and truncated input ⇒ fail closed (I5); rotation averaging is on; shadow mode logs judge output with no effect; model version and latency logged; fixtures for S2 and S3 give the expected judge outputs; the `local` planner and the compiler never throw (no proposal, or the rule-based fallback); no secrets in the repo.
 - **C UI + verifier**: screens seal, run, console, log + verifier, evidence, presenter and booth built to 04; the booth works with no network and no API key; every number wears a provenance chip; stop banners render from rule templates; verifier works offline and fails on tamper (T-V1); contrast and 44px touch targets pass; mobile-first view; reduced motion respected.
 - **D evidence + pitch**: at least 100 seeded scenarios (target 150-200) [F37] run through B0, B1, B2 with MEASURED(n) results; captures logged in `data/capture-sheet.md`; real-card test and shop probe done or marked skipped with the reason; four timed rehearsals [F41]; submission package ready before the freeze: public repo, deck, 3-minute video, declaration [F18]; every touched register row is OBSERVED or still READ-BY-CLAUDE.
 - **X cross-lane**: CI green (typecheck, lint, test, docs-check); T-E2E passes DM1-DM7; each gate M1-M5 recorded in TASKS.md; no lane merged red.
 
 ## Cut order and triggers [F41]
 - **Cut first to last (D9)**: teen chain, screenshot intake (only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key and the credential stay: HKT's workshop centres on DID-VC [F19]. DM6 in the demo goes before any of these.
-- **Optional by design, not cuts**: hosted Jev, claude planner. There is no LLM judge.
+- **Optional by design, not cuts**: hosted Jev. The claude planner is removed. There is no LLM judge.
 - **Triggers**: H2 Laya smoke fails ⇒ planner `replay` and recorded judge outputs, labelled; live judge calls ESCALATE · H6 no end-to-end stop ⇒ log signing to hash-chain only (credential proof stays) · H10 still failing ⇒ Track 4 contingency (D8) · H12 no real-card test ⇒ sim-only, say so.
 
 ## Doc style (team-facing md)
