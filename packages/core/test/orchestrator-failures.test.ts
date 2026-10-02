@@ -111,7 +111,10 @@ describe("log and rail failures", () => {
     expect(result.ok === false && result.message).toMatch(/voided at once/);
     expect((r.rail as FakeRail).cards.map((c) => c.state)).toEqual(["VOIDED"]);
     expect(await r.kinds()).toEqual(["MANDATE_SEALED", "DECISION"]);
-    expect((await r.orchestrator.snapshot()).packet).toMatchObject({ committed_minor: 0, remaining_minor: 80000 });
+    // Changed (lane s-fix-core, audit H4): the logged APPROVE holds its limit until a card is logged for it. The log
+    // cannot tell a failed mint from a pending one (and a failed void would leave a live card), so the hold stays:
+    // the packet under-spends, it never over-commits. Before: committed 0, remaining 80000.
+    expect((await r.orchestrator.snapshot()).packet).toMatchObject({ committed_minor: 25900, remaining_minor: 54100, active_cards: [] });
   });
 
   it("MintError: the Decision stays in the log, no card exists, the code is reported", async () => {

@@ -16,9 +16,9 @@ export interface ExecutorDeps {
 
 export interface CheckoutInput {
   readonly logId: string;
-  /** The APPROVE this checkout pays (I1). Its cart is what the merchant is re-quoted against (R12). */
+  /** The APPROVE this checkout pays (I1), exactly as logged in `logId`. Its cart is what the merchant is re-quoted against (R12). */
   readonly decision: Decision;
-  /** The card minted for that decision. Only its handle goes to the merchant. */
+  /** The card minted for that decision, exactly as logged (CARD_MINTED). Only its handle goes to the merchant. */
   readonly card: CardRecord;
   /**
    * Stable key for this attempt. Default chk:<card id>:<n>, n = 1 + the logged attempts that used such a key for
@@ -28,16 +28,32 @@ export interface CheckoutInput {
   readonly idempotencyKey?: string;
 }
 
-/** Facts worth a second look. The event is logged regardless; the orchestrator decides what follows. */
-export type ExecutorAnomaly = "AMOUNT_ABOVE_APPROVED" | "MERCHANT_DOMAIN_MISMATCH";
+/**
+ * Facts worth a second look. The event is logged regardless; the orchestrator decides what follows.
+ * MERCHANT_REPORT_MISMATCH: the merchant's copy of the event differs from the rail's own record; the rail's is logged.
+ */
+export type ExecutorAnomaly = "AMOUNT_ABOVE_APPROVED" | "MERCHANT_DOMAIN_MISMATCH" | "MERCHANT_REPORT_MISMATCH";
 
+/**
+ * Why nothing was presented, or nothing logged. The log-standing reasons (audit H3) refuse before any merchant call:
+ * MANDATE_REVOKED, PACKET_EXPIRED (logged or past validUntil), APPROVAL_NOT_LOGGED (the APPROVE is not in this log as
+ * given), APPROVAL_RESOLVED (a later decision closed it), CARD_NOT_LOGGED (no matching CARD_MINTED), LOG_INVALID (the
+ * fold refuses the log). RAIL_MISMATCH: the rail does not confirm the merchant's answer for the key (H5).
+ */
 export type ExecutorErrorReason =
   | "INVALID_INPUT"
   | "LOG_UNAVAILABLE"
+  | "LOG_INVALID"
+  | "MANDATE_REVOKED"
+  | "PACKET_EXPIRED"
+  | "APPROVAL_NOT_LOGGED"
+  | "APPROVAL_RESOLVED"
+  | "CARD_NOT_LOGGED"
   | "QUOTE_FAILED"
   | "QUOTE_INVALID"
   | "CHECKOUT_FAILED"
   | "EVENT_INVALID"
+  | "RAIL_MISMATCH"
   | "RAIL_REJECTED"
   | "LOG_APPEND_FAILED";
 
@@ -55,15 +71,20 @@ export interface CheckoutSettled {
   readonly anomalies: readonly ExecutorAnomaly[];
 }
 
-/** The re-quote differs from the approved total. Nothing was charged and nothing was logged. R12 is the engine's call. */
+/**
+ * The re-quote differs from the approved cart in any price field (total, subtotal, shipping, fees, FX), not only the
+ * total. Nothing was charged and nothing was logged. R12 is the engine's call (same comparison, rules/drift.ts).
+ */
 export interface CheckoutDrift {
   readonly status: "DRIFT";
   readonly simulated: true;
   readonly last4: string;
   readonly approved_total_minor: number;
   readonly quoted_total_minor: number;
-  /** quoted minus approved; negative when the price fell. */
+  /** quoted minus approved; negative when the price fell, 0 when only the split moved. */
   readonly delta_minor: number;
+  /** Price fields that differ from the approved cart. */
+  readonly changed: readonly string[];
   readonly quote: MerchantQuote;
 }
 
@@ -126,7 +147,11 @@ export interface ExpireError {
 export type ExpireOutcome = ExpireSettled | ExpireError;
 
 export interface Executor {
-  /** Re-quote (R12), charge through the merchant with a stable key, log the CARD_EVENT, return a typed outcome. Never throws. */
+  /**
+   * Refuse unless the log still stands behind the payment (not revoked or expired, the APPROVE and the card logged, the
+   * approval not resolved), re-quote (R12), charge through the merchant with a stable key, log the rail's own CARD_EVENT
+   * for that key, return a typed outcome. Never throws.
+   */
   checkout(input: CheckoutInput): Promise<CheckoutOutcome>;
   /** rail.void for an ACTIVE card, then log CARD_EVENT(VOIDED). Never throws. */
   voidCard(input: VoidInput): Promise<VoidOutcome>;

@@ -35,7 +35,7 @@ function decideValid(packet: PacketState, cart: Cart, judge: JudgeRecord, now: s
 function record(log: LogEntry[], d: Decision, n: number): LogEntry[] {
   const logged = append(log, "DECISION", d, d.decided_at);
   if (d.outcome !== "APPROVE") return logged;
-  const minted = card(n, d.approved_limit_minor ?? -1, d.decided_at);
+  const minted = { ...card(n, d.approved_limit_minor ?? -1, d.decided_at), decision_id: d.id }; // the card takes over the APPROVE's hold (H4)
   const withCard = append(logged, "CARD_MINTED", minted, minted.minted_at);
   return append(withCard, "CARD_EVENT", cardEvent(minted.id, "AUTHORISED", d.decided_at, minted.limit_minor), d.decided_at);
 }

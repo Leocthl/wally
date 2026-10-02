@@ -1,11 +1,13 @@
-// foldPacket (A-02, U1): PacketState as a pure fold of one log, seq 0..n (packet-state.schema.json).
-// Commit the limit on CARD_MINTED; release it on VOIDED or EXPIRED; AUTHORISED moves the actual amount
-// to spent and releases the rest; DECLINED holds the limit. Integer cents. Browser-safe, no clock.
-// A log the fold cannot trust throws PacketFoldError, so the caller decides nothing (fail closed, I5).
-import type { CardRecord, Decision, LogEntry, MandateCredential, PacketState } from "../generated";
-import type { CardEvent } from "../ports";
+// foldPacket (A-02, U1): PacketState as a pure fold of one log, seq 0..n (packet-state.schema.json). Reducers live in
+// apply.ts. Committed = limits of ACTIVE cards + limits held by APPROVE decisions whose card is not logged yet (audit
+// H4; the schema has no held field, so the hold is counted inside committed_minor). Holds end when the packet is
+// REVOKED or EXPIRED: no card can be minted after that (I6). Browser-safe, no clock.
+// A log the fold cannot trust throws PacketFoldError, so the caller decides nothing (fail closed, I5). That includes
+// a log whose commitments exceed the budget: it is reported, never clamped to zero.
+import type { LogEntry, MandateCredential, PacketState } from "../generated";
 import { formatIssues, validateLogEntry } from "../schema";
 import { mandateIdFromCredentialId } from "../vc/mandate";
+import { EMPTY, applyCardEvent, applyDecision, applyMinted, type FoldState } from "./apply";
 
 export class PacketFoldError extends Error {
   readonly seq: number | null;
@@ -16,85 +18,16 @@ export class PacketFoldError extends Error {
   }
 }
 
-type CardState = "ACTIVE" | "USED" | "VOIDED" | "EXPIRED";
-
-interface TrackedCard {
-  readonly limit: number;
-  readonly expiresAt: string;
-  readonly state: CardState;
+/** One APPROVE whose card is not logged yet; its limit is inside PacketState.committed_minor. */
+export interface HeldApproval {
+  readonly decision_id: string;
+  readonly limit_minor: number;
 }
 
-interface FoldState {
-  readonly cards: ReadonlyMap<string, TrackedCard>;
-  readonly committed: number;
-  readonly spent: number;
-  readonly mintTimes: readonly string[];
-  readonly open: ReadonlyMap<string, string>;
-  readonly settled: ReadonlySet<string>;
-  readonly revoked: boolean;
-  readonly expired: boolean;
-}
-
-const EMPTY: FoldState = {
-  cards: new Map(),
-  committed: 0,
-  spent: 0,
-  mintTimes: [],
-  open: new Map(),
-  settled: new Set(),
-  revoked: false,
-  expired: false,
-};
-
-const isMoney = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
-
-function withCard(s: FoldState, id: string, card: TrackedCard): ReadonlyMap<string, TrackedCard> {
-  return new Map([...s.cards, [id, card]]);
-}
-
-function applyMinted(s: FoldState, card: CardRecord): FoldState {
-  if (s.cards.has(card.id)) return s; // the same card logged twice commits once
-  const tracked: TrackedCard = { limit: card.limit_minor, expiresAt: card.expires_at, state: "ACTIVE" };
-  return { ...s, cards: withCard(s, card.id, tracked), committed: s.committed + card.limit_minor, mintTimes: [...s.mintTimes, card.minted_at] };
-}
-
-function settleKey(ev: CardEvent): string {
-  return `${ev.card_id}|${ev.idempotency_key ?? `${ev.at}|${String(ev.amount_minor)}`}`;
-}
-
-function applyAuthorised(s: FoldState, ev: CardEvent): FoldState {
-  const key = settleKey(ev);
-  if (s.settled.has(key)) return s; // a retry with the same idempotency key charged once
-  const card = s.cards.get(ev.card_id);
-  const amount = isMoney(ev.amount_minor) ? ev.amount_minor : (card?.limit ?? 0);
-  const settled = new Set([...s.settled, key]);
-  if (card?.state !== "ACTIVE") return { ...s, settled, spent: s.spent + amount }; // anomaly: count it (conservative)
-  const cards = withCard(s, ev.card_id, { ...card, state: "USED" });
-  return { ...s, cards, settled, committed: s.committed - card.limit, spent: s.spent + amount };
-}
-
-function applyRelease(s: FoldState, ev: CardEvent, state: "VOIDED" | "EXPIRED"): FoldState {
-  const card = s.cards.get(ev.card_id);
-  if (card?.state !== "ACTIVE") return s;
-  return { ...s, cards: withCard(s, ev.card_id, { ...card, state }), committed: s.committed - card.limit };
-}
-
-function applyCardEvent(s: FoldState, ev: CardEvent): FoldState {
-  switch (ev.event) {
-    case "AUTHORISED":
-      return applyAuthorised(s, ev);
-    case "VOIDED":
-    case "EXPIRED":
-      return applyRelease(s, ev, ev.event);
-    default:
-      return s; // DECLINED: limit held
-  }
-}
-
-function applyDecision(s: FoldState, d: Decision): FoldState {
-  const remaining = [...s.open].filter(([id]) => id !== d.resolves);
-  const opened: [string, string][] = d.outcome === "ESCALATE" && d.escalation !== undefined ? [[d.id, d.escalation.expires_at]] : [];
-  return { ...s, open: new Map([...remaining, ...opened]) };
+export interface PacketLedger {
+  readonly packet: PacketState;
+  /** Approvals holding budget now, in log order. Empty once the packet is REVOKED or EXPIRED. */
+  readonly held: readonly HeldApproval[];
 }
 
 function applyEntry(s: FoldState, entry: LogEntry): FoldState {
@@ -127,40 +60,65 @@ function checkEntries(entries: readonly LogEntry[]): MandateCredential {
   return first.payload;
 }
 
-function statusOf(s: FoldState, remaining: number, nowMs: number, untilMs: number): PacketState["status"] {
-  if (s.revoked) return "REVOKED";
-  if (s.expired || !Number.isFinite(untilMs) || nowMs >= untilMs) return "EXPIRED";
-  return remaining === 0 ? "EXHAUSTED" : "ACTIVE";
-}
-
 /** Oldest first; equal times keep log order (Array.prototype.sort is stable). */
 function sortedTimes(times: readonly string[]): string[] {
   return [...times].sort((a, b) => Date.parse(a) - Date.parse(b));
 }
 
-/** PacketState for `entries` (one whole log from seq 0) at `now`. Throws PacketFoldError on a log it cannot trust. */
-export function foldPacket(entries: readonly LogEntry[], now: Date): PacketState {
+interface Totals {
+  readonly committed: number;
+  readonly remaining: number;
+  readonly held: readonly HeldApproval[];
+}
+
+/** Commitments against the budget; throws when they exceed it (an over-committed log is corrupt, never clamped). */
+function totalsOf(s: FoldState, budget: number, stopped: boolean): Totals {
+  const held = stopped ? [] : [...s.holds].map(([decision_id, limit_minor]) => ({ decision_id, limit_minor }));
+  const committed = s.committed + held.reduce((sum, h) => sum + h.limit_minor, 0);
+  const remaining = budget - committed - s.spent;
+  if (!Number.isSafeInteger(remaining) || remaining < 0 || s.committed < 0) {
+    throw new PacketFoldError(null, `over-committed: committed ${committed} + spent ${s.spent} exceeds the budget ${budget}`);
+  }
+  return { committed, remaining, held };
+}
+
+function statusOf(s: FoldState, remaining: number, expiredByTime: boolean): PacketState["status"] {
+  if (s.revoked) return "REVOKED";
+  if (s.expired || expiredByTime) return "EXPIRED";
+  return remaining === 0 ? "EXHAUSTED" : "ACTIVE";
+}
+
+/** PacketState plus the approvals that hold budget, for `entries` (one whole log from seq 0) at `now`. */
+export function foldLedger(entries: readonly LogEntry[], now: Date): PacketLedger {
   const nowMs = now instanceof Date ? now.getTime() : Number.NaN;
   if (!Number.isFinite(nowMs)) throw new PacketFoldError(null, "invalid clock");
   const vc = checkEntries(entries);
   const s = entries.slice(1).reduce(applyEntry, EMPTY);
+  const untilMs = Date.parse(vc.validUntil);
+  const expiredByTime = !Number.isFinite(untilMs) || nowMs >= untilMs;
   const budget = vc.credentialSubject.rules.budget.amount_minor;
-  const remaining = Math.max(0, budget - s.committed - s.spent); // clamps only a corrupted, over-committed log
+  const totals = totalsOf(s, budget, s.revoked || s.expired || expiredByTime);
   const activeCards = [...s.cards].filter(([, c]) => c.state === "ACTIVE").map(([id, c]) => ({ id, limit_minor: c.limit, expires_at: c.expiresAt }));
-  return {
+  const packet: PacketState = {
     mandate_id: mandateIdFromCredentialId(vc.id), // the credential id is a URN, the packet carries the mnd_ id
     log_id: entries[0]?.log_id ?? "",
     budget_minor: budget,
-    committed_minor: s.committed,
+    committed_minor: totals.committed,
     spent_minor: s.spent,
-    remaining_minor: remaining,
+    remaining_minor: totals.remaining,
     currency: vc.credentialSubject.rules.budget.currency,
     active_cards: activeCards,
     mint_times: sortedTimes(s.mintTimes),
     open_escalations: [...s.open].map(([decision_id, expires_at]) => ({ decision_id, expires_at })),
-    status: statusOf(s, remaining, nowMs, Date.parse(vc.validUntil)),
+    status: statusOf(s, totals.remaining, expiredByTime),
     expires_at: vc.validUntil,
     folded_through_seq: entries.length - 1,
     computed_at: new Date(nowMs).toISOString(),
   };
+  return { packet, held: totals.held };
+}
+
+/** PacketState for `entries` (one whole log from seq 0) at `now`. Throws PacketFoldError on a log it cannot trust. */
+export function foldPacket(entries: readonly LogEntry[], now: Date): PacketState {
+  return foldLedger(entries, now).packet;
 }

@@ -173,10 +173,12 @@ describe("wrong_merchant: charges from a different domain", () => {
     expect(await checkout("w2")).toMatchObject({ event: "AUTHORISED" });
   });
 
-  it("slips through when no lock was set, because the real card has none [F1] (honest limitation)", async () => {
+  // Changed (lane s-fix-core, audit S-RAIL-4): the SIMULATED lock now defaults to the approved cart's domain, so a mint
+  // without a lock is locked too. The real card still has no lock [F1]; that limitation is stated in docs/09, not here.
+  it("is declined even when no lock was asked for: the lock defaults to the approved merchant", async () => {
     const { checkout } = await setup({ mode: "wrong_merchant" });
     const event = await checkout("w3");
-    expect(event).toMatchObject({ event: "AUTHORISED" });
+    expect(event).toMatchObject({ event: "DECLINED", decline_code: "MERCHANT_MISMATCH" });
     expect(event.merchant_domain).not.toBe(MERCHANT);
   });
 

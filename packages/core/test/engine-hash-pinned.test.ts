@@ -27,6 +27,8 @@ describe("engine hashes are pinned", () => {
   it("canonical JSON text and a deterministic decision id", () => {
     expect(canonicalJson({ b: "é", a: [1, 0.63, { z: null }] })).toBe('{"a":[1,0.63,{"z":null}],"b":"é"}');
     const d = engine.decide(M0, PACKET_INITIAL, CART_A3, JUDGE_TEE, at("2026-10-03T02:12:00Z"), undefined, PROOF_OK);
-    expect(d.id).toBe("dec_demoA3470eb76d6c13c53c");
+    // Changed on purpose once (lane s-fix-core, audit LOW): the digest now also covers the outcome and the cart
+    // fingerprint, not only cart id, time, resolves and phase. Before: dec_demoA3470eb76d6c13c53c.
+    expect(d.id).toBe("dec_demoA3697aced0f37b9248");
   });
 });

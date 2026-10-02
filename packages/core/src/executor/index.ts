@@ -1,6 +1,7 @@
-// @laisee/core/executor: deterministic checkout (re-quote R12, present the handle, record CARD_EVENT), plus the
-// void and expiry bridges from rail events to log entries. Rail and merchant are SIMULATED. Owner: lane A.
-// Imports ports and schema validators only: no rail-sim, no crypto (signing happens inside the injected AppendEntry).
+// @laisee/core/executor: deterministic checkout (log standing H3, re-quote R12, present the handle, record the rail's
+// own CARD_EVENT H5), plus the void and expiry bridges from rail events to log entries. Rail and merchant are SIMULATED.
+// Imports ports, schema validators and the pure packet fold and rule helpers: no rail-sim, no crypto module, no log
+// writer (signing happens inside the injected AppendEntry).
 import { runCheckout } from "./checkout";
 import { EXECUTOR_DEFAULTS } from "./config";
 import { runExpireDue, runVoid } from "./lifecycle";

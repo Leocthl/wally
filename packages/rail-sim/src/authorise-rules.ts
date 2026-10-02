@@ -4,11 +4,14 @@ import type { CardRecord } from "@laisee/core/generated";
 import type { AuthoriseRequest, CardEvent } from "@laisee/core/ports";
 import type { DeclineCode } from "./decline-table";
 
-/** The decline for this request on this card, or null when the charge is authorised. */
-export function evaluateAuthorise(card: CardRecord, req: AuthoriseRequest): DeclineCode | null {
+/**
+ * The decline for this request on this card, or null when the charge is authorised. Expiry is judged at `atMs`, the
+ * rail's monotonic time (never earlier than any time it has seen), not at the caller's `now` alone.
+ */
+export function evaluateAuthorise(card: CardRecord, req: AuthoriseRequest, atMs: number): DeclineCode | null {
   if (card.state === "USED") return "CARD_USED";
   if (card.state === "VOIDED") return "CARD_VOIDED";
-  if (card.state === "EXPIRED" || Date.parse(card.expires_at) <= req.now.getTime()) return "CARD_EXPIRED";
+  if (card.state === "EXPIRED" || Date.parse(card.expires_at) <= atMs) return "CARD_EXPIRED";
   if (card.merchant_lock !== undefined && card.merchant_lock !== req.merchantDomain) return "MERCHANT_MISMATCH";
   if (req.amountMinor > card.limit_minor) return "OVER_LIMIT";
   return null;

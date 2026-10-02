@@ -66,8 +66,8 @@ export interface OrchestratorDeps {
   readonly scameter: ScameterLookup;
   readonly appendEntry: AppendEntry;
   /**
-   * Default: createExecutor over the merchant wrapped by attestMerchant (the rail's own event is logged, never the
-   * merchant's claim) plus rail, store, signer, appendEntry and clock. An injected executor must do the same.
+   * Default: createExecutor over merchant, rail, store, signer, appendEntry and clock; it logs the rail's own event for
+   * each attempt, never the merchant's claim (H5). An injected executor must do the same.
    */
   readonly executor?: Executor;
   readonly config?: Partial<OrchestratorConfig>;

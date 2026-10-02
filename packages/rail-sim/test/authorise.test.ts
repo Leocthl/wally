@@ -91,7 +91,7 @@ describe("authorise: other declines", () => {
     expect(validateCardEvent(event).ok).toBe(true);
   });
 
-  it("MERCHANT_MISMATCH only when a lock is set (SIMULATED feature; the real card has none [F1])", async () => {
+  it("MERCHANT_MISMATCH from any other domain (SIMULATED lock, default the approved merchant; the real card has none [F1])", async () => {
     const locked = await mintCard({}, { totalMinor: LIMIT }, { merchantLock: MERCHANT });
     expect(await pay(locked.rail, locked.card, LIMIT, { domain: "other-shop.example" })).toMatchObject({
       event: "DECLINED",
@@ -101,8 +101,10 @@ describe("authorise: other declines", () => {
     expect(locked.rail.card(locked.card.id)?.state).toBe("ACTIVE");
     expect(await pay(locked.rail, locked.card, LIMIT)).toMatchObject({ event: "AUTHORISED" });
 
-    const open = await mintCard({}, { totalMinor: LIMIT });
-    expect(await pay(open.rail, open.card, LIMIT, { domain: "other-shop.example" })).toMatchObject({ event: "AUTHORISED" });
+    // Changed (lane s-fix-core, audit S-RAIL-4): a mint without a lock is locked to the approved cart's domain.
+    const unasked = await mintCard({}, { totalMinor: LIMIT });
+    expect(unasked.card.merchant_lock).toBe(MERCHANT);
+    expect(await pay(unasked.rail, unasked.card, LIMIT, { domain: "other-shop.example" })).toMatchObject({ decline_code: "MERCHANT_MISMATCH" });
   });
 
   it("decline precedence: used > voided > expired > merchant mismatch > over limit", async () => {

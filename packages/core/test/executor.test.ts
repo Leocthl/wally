@@ -6,12 +6,14 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { createExecutor, EXECUTOR_DEFAULTS, SimulatedTimeoutError, isSimulatedTimeout, type ExecutorDeps } from "../src/executor";
 import type { CardRecord, Cart, Decision, LogEntry } from "../src/generated";
-import type { AppendEntry, CardEvent, MerchantPort, MerchantQuote, Signer } from "../src/ports";
+import type { AppendEntry, CardEvent, MerchantPort, MerchantQuote, RailPort, Signer } from "../src/ports";
 import { FakeClock, FakeMerchant, FakeRail, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "../src/testing";
 import { loadFixture } from "../src/testing/fixtures";
 
 const LOG_ID = "log_demoM0";
 const NOW = "2026-10-03T02:05:02Z";
+/** The rig logs MANDATE_SEALED (seq 0), the APPROVE (1) and its CARD_MINTED (2): the first CARD_EVENT is seq 3. */
+const FIRST_EVENT_SEQ = 3;
 /** Test TTL for the fake rail; the rail rules themselves are tested in rail-sim. */
 const TTL_MS = 60_000;
 const PAN_LIKE = /(?:\d[ -]?){13,19}/;
@@ -58,20 +60,46 @@ interface Rig {
   cardEvents(): Promise<CardEvent[]>;
 }
 
-async function rig(
-  options: { merchant?: (rail: FakeRail) => MerchantPort; append?: AppendEntry; maxCheckoutCalls?: number; lock?: boolean } = {},
-): Promise<Rig> {
+/** A RailPort over FakeRail that also keeps its own record per idempotency key (eventFor), optionally altered. */
+function recordingRail(inner: FakeRail, alter: (event: CardEvent) => CardEvent = (event) => event): RailPort {
+  let byKey: ReadonlyMap<string, CardEvent> = new Map();
+  return {
+    mint: (req) => inner.mint(req),
+    authorise: async (req) => {
+      const event = await inner.authorise(req);
+      byKey = new Map([...byKey, [req.idempotencyKey, alter(event)]]);
+      return event;
+    },
+    void: (id, at) => inner.void(id, at),
+    expireDue: (at) => inner.expireDue(at),
+    eventFor: async (key) => byKey.get(key) ?? null,
+  };
+}
+
+interface RigOptions {
+  /** The merchant, given the FakeRail and the RailPort the executor uses (the same object unless `rail` wraps it). */
+  readonly merchant?: (rail: FakeRail, port: RailPort) => MerchantPort;
+  readonly rail?: (inner: FakeRail) => RailPort;
+  readonly append?: AppendEntry;
+  readonly maxCheckoutCalls?: number;
+  readonly lock?: boolean;
+}
+
+async function rig(options: RigOptions = {}): Promise<Rig> {
   const clock = new FakeClock(NOW);
   const store = new MemoryLogStore();
   await store.append(placeholderEntry({ logId: LOG_ID, seq: 0, kind: "MANDATE_SEALED", payload: CREDENTIAL, ts: clock.now() }));
   const rail = new FakeRail();
+  const port = options.rail?.(rail) ?? rail;
   const decision = approvedDecision();
   const lock = options.lock === false ? {} : { merchantLock: CART.merchant.domain };
   const card = await rail.mint({ decision, ttlMs: TTL_MS, now: clock.now(), purpose: CART.id, ...lock });
-  const merchant = options.merchant?.(rail) ?? new FakeMerchant(rail);
+  await appendEntry(store, signer, LOG_ID, "DECISION", decision, clock.now()); // the executor pays only what the log stands behind (H3)
+  await appendEntry(store, signer, LOG_ID, "CARD_MINTED", card, clock.now());
+  const merchant = options.merchant?.(rail, port) ?? new FakeMerchant(port);
   const deps: ExecutorDeps = {
     merchant,
-    rail,
+    rail: port,
     store,
     signer,
     appendEntry: options.append ?? appendEntry,
@@ -122,7 +150,7 @@ describe("checkout: happy path", () => {
       last4: r.card.last4,
       attempts: 1,
       idempotency_key: `chk:${r.card.id}:1`,
-      log_seq: 1,
+      log_seq: FIRST_EVENT_SEQ,
       anomalies: [],
       event: { event: "AUTHORISED", amount_minor: CART.total_minor, card_id: r.card.id, simulated: true },
     });
@@ -135,7 +163,7 @@ describe("checkout: happy path", () => {
     const r = await rig();
     await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
     const replay = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
-    expect(replay).toMatchObject({ status: "DECLINED", idempotency_key: `chk:${r.card.id}:2`, log_seq: 2, event: { decline_code: "CARD_USED" } });
+    expect(replay).toMatchObject({ status: "DECLINED", idempotency_key: `chk:${r.card.id}:2`, log_seq: FIRST_EVENT_SEQ + 1, event: { decline_code: "CARD_USED" } });
     expect((await r.cardEvents()).map((e) => e.event)).toEqual(["AUTHORISED", "DECLINED"]);
   });
 
@@ -153,8 +181,8 @@ describe("checkout: concurrency and replays keep the log honest", () => {
     const r = await rig();
     const input = { logId: LOG_ID, decision: r.decision, card: r.card };
     const [a, b] = await Promise.all([r.executor.checkout(input), r.executor.checkout(input)]);
-    expect(a).toMatchObject({ status: "AUTHORISED", idempotency_key: `chk:${r.card.id}:1`, log_seq: 1 });
-    expect(b).toMatchObject({ status: "DECLINED", idempotency_key: `chk:${r.card.id}:2`, log_seq: 2, event: { decline_code: "CARD_USED" } });
+    expect(a).toMatchObject({ status: "AUTHORISED", idempotency_key: `chk:${r.card.id}:1`, log_seq: FIRST_EVENT_SEQ });
+    expect(b).toMatchObject({ status: "DECLINED", idempotency_key: `chk:${r.card.id}:2`, log_seq: FIRST_EVENT_SEQ + 1, event: { decline_code: "CARD_USED" } });
     expect((await r.cardEvents()).map((e) => e.event)).toEqual(["AUTHORISED", "DECLINED"]);
   });
 
@@ -177,6 +205,8 @@ describe("checkout: concurrency and replays keep the log honest", () => {
     });
     const decision2 = approvedDecision(CART, "dec_exec000002");
     const card2 = await r.rail.mint({ decision: decision2, ttlMs: TTL_MS, now: r.clock.now(), merchantLock: CART.merchant.domain });
+    await appendEntry(r.store, signer, LOG_ID, "DECISION", decision2, r.clock.now());
+    await appendEntry(r.store, signer, LOG_ID, "CARD_MINTED", card2, r.clock.now());
     const [a, b] = await Promise.all([
       r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card }),
       r.executor.checkout({ logId: LOG_ID, decision: decision2, card: card2 }),
@@ -191,7 +221,7 @@ describe("checkout: concurrency and replays keep the log honest", () => {
     const first = await r.executor.checkout(input);
     const spy = vi.spyOn(r.merchant, "checkout");
     const replay = await r.executor.checkout(input);
-    expect(replay).toMatchObject({ status: "AUTHORISED", attempts: 0, idempotency_key: "order-7.try:1", log_seq: 1, anomalies: [] });
+    expect(replay).toMatchObject({ status: "AUTHORISED", attempts: 0, idempotency_key: "order-7.try:1", log_seq: FIRST_EVENT_SEQ, anomalies: [] });
     expect(replay).toHaveProperty("event", (first as { event: CardEvent }).event);
     expect(spy).not.toHaveBeenCalled();
     expect(await r.cardEvents()).toHaveLength(1);
@@ -203,7 +233,7 @@ describe("checkout: concurrency and replays keep the log honest", () => {
     const declined = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card, idempotencyKey: "retry-after-used" });
     expect(declined).toMatchObject({ status: "DECLINED", attempts: 1 });
     const again = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card, idempotencyKey: "retry-after-used" });
-    expect(again).toMatchObject({ status: "DECLINED", attempts: 0, log_seq: 2 });
+    expect(again).toMatchObject({ status: "DECLINED", attempts: 0, log_seq: FIRST_EVENT_SEQ + 1 });
     expect(await r.cardEvents()).toHaveLength(2);
   });
 
@@ -265,18 +295,21 @@ describe("checkout: R12 price drift is reported, never decided", () => {
     expect(r.rail.cards[0]?.state).toBe("ACTIVE");
   });
 
-  it("an unchanged total is not drift even if components were re-split", async () => {
+  // Changed (lane s-fix-core, audit LOW): the drift check compares every price field, as R12 does, not only the total.
+  it("a re-split with an unchanged total is drift too (same comparison as R12); nothing is charged", async () => {
     const r = await rig({
       merchant: (rail) => steered(rail, { quote: async (cart) => ({ ...quoteOf(cart), shipping_minor: 100, subtotal_minor: cart.subtotal_minor - 100 }) }),
     });
-    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card })).toMatchObject({ status: "AUTHORISED" });
+    const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
+    expect(outcome).toMatchObject({ status: "DRIFT", delta_minor: 0, changed: ["subtotal_minor", "shipping_minor"] });
+    expect((r.merchant as ReturnType<typeof steered>).checkoutCalls).toHaveLength(0);
   });
 
   it("the orchestrator can then void the card through the executor", async () => {
     const r = await rig({ merchant: (rail) => steered(rail, { quote: async (cart) => quoteOf(cart, 500) }) });
     await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
     const voided = await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id });
-    expect(voided).toMatchObject({ status: "VOIDED", log_seq: 1, event: { event: "VOIDED", card_id: r.card.id } });
+    expect(voided).toMatchObject({ status: "VOIDED", log_seq: FIRST_EVENT_SEQ, event: { event: "VOIDED", card_id: r.card.id } });
     expect(r.rail.cards[0]?.state).toBe("VOIDED");
   });
 });
@@ -293,7 +326,7 @@ describe("checkout: bounded retries on a simulated timeout, always the SAME key"
       });
     const r = await rig({ merchant });
     const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
-    expect(outcome).toMatchObject({ status: "AUTHORISED", attempts: 3, log_seq: 1 });
+    expect(outcome).toMatchObject({ status: "AUTHORISED", attempts: 3, log_seq: FIRST_EVENT_SEQ });
     const calls = (r.merchant as ReturnType<typeof steered>).checkoutCalls;
     expect(calls).toHaveLength(3);
     expect(new Set(calls.map((c) => c.key)).size).toBe(1);
@@ -439,7 +472,9 @@ describe("checkout: fail closed on bad input, quotes and answers (I5)", () => {
     expect(await r.cardEvents()).toHaveLength(1);
   });
 
-  it("reports AMOUNT_ABOVE_APPROVED when the rail authorised more than was approved, and still logs the fact", async () => {
+  // Changed (lane s-fix-core, audit H5): the executor logs the rail's own record for the key, not the merchant's copy.
+  // A merchant that claims a charge it never made gets its claim replayed at the rail, which declines it OVER_LIMIT.
+  it("a claimed charge above the approved total is not what gets logged: the rail's own record (a decline) is", async () => {
     const r = await rig({
       merchant: (rail) =>
         steered(rail, {
@@ -455,7 +490,14 @@ describe("checkout: fail closed on bad input, quotes and answers (I5)", () => {
         }),
     });
     const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
-    expect(outcome).toMatchObject({ status: "AUTHORISED", anomalies: ["AMOUNT_ABOVE_APPROVED"] });
+    expect(outcome).toMatchObject({ status: "DECLINED", event: { decline_code: "OVER_LIMIT" }, anomalies: ["MERCHANT_REPORT_MISMATCH"] });
+    expect(await r.cardEvents()).toEqual([expect.objectContaining({ event: "DECLINED" })]);
+  });
+
+  it("reports AMOUNT_ABOVE_APPROVED when the rail's own record shows more than was approved, and still logs the fact", async () => {
+    const r = await rig({ rail: (inner) => recordingRail(inner, (event) => (event.event === "AUTHORISED" ? { ...event, amount_minor: CART.total_minor + 1 } : event)) });
+    const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
+    expect(outcome).toMatchObject({ status: "AUTHORISED", anomalies: ["AMOUNT_ABOVE_APPROVED", "MERCHANT_REPORT_MISMATCH"] });
     expect(await r.cardEvents()).toHaveLength(1);
   });
 
@@ -502,7 +544,7 @@ describe("checkout: fail closed on bad input, quotes and answers (I5)", () => {
 describe("void and expiry bridge rail events into the log", () => {
   it("voidCard logs VOIDED; a second void, or a void after use, is RAIL_REJECTED", async () => {
     const r = await rig();
-    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ status: "VOIDED", log_seq: 1 });
+    expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ status: "VOIDED", log_seq: FIRST_EVENT_SEQ });
     expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ status: "ERROR", reason: "RAIL_REJECTED" });
     const used = await rig();
     await used.executor.checkout({ logId: LOG_ID, decision: used.decision, card: used.card });
@@ -520,7 +562,7 @@ describe("void and expiry bridge rail events into the log", () => {
     expect(await r.executor.expireDue({ logId: LOG_ID })).toMatchObject({ status: "EXPIRED", events: [], log_seqs: [] });
     r.clock.advance(TTL_MS);
     const done = await r.executor.expireDue({ logId: LOG_ID });
-    expect(done).toMatchObject({ status: "EXPIRED", log_seqs: [1], events: [{ event: "EXPIRED", card_id: r.card.id }] });
+    expect(done).toMatchObject({ status: "EXPIRED", log_seqs: [FIRST_EVENT_SEQ], events: [{ event: "EXPIRED", card_id: r.card.id }] });
     expect(await r.executor.expireDue({ logId: LOG_ID })).toMatchObject({ events: [] });
     expect(r.rail.cards[0]?.state).toBe("EXPIRED");
   });
@@ -573,6 +615,73 @@ describe("rail and merchant misbehaviour is contained", () => {
     const r = await rig();
     vi.spyOn(r.rail, "void").mockRejectedValue(new Error("rail offline"));
     expect(await r.executor.voidCard({ logId: LOG_ID, cardId: r.card.id })).toMatchObject({ reason: "RAIL_REJECTED", message: expect.stringContaining("rail offline") });
+  });
+});
+
+describe("H3: the executor pays only what the log still stands behind (audit S-RAIL-1, at the component)", () => {
+  const revocation = { mandate_id: "mnd_demoM0", revoked_at: NOW, signer: CREDENTIAL.issuer, signature: "A".repeat(86) };
+  const resolving = (approved: Decision): Decision => {
+    const { approved_limit_minor: _limit, ...rest } = approved;
+    return {
+      ...rest,
+      id: "dec_exec000009",
+      outcome: "DENY",
+      resolves: approved.id,
+      rules: [{ id: "R12", result: "FAIL", verdict: "DENY", inputs: {}, comparator: "==", template_id: "R12.price_drift" }],
+      explanation: { template_id: "R12.price_drift", inputs: {}, rendered: "Stopped by R12 (SIMULATED test)." },
+    };
+  };
+  const cases: readonly [string, string, (r: Rig) => Promise<unknown>][] = [
+    ["the mandate was revoked", "MANDATE_REVOKED", (r) => appendEntry(r.store, signer, LOG_ID, "MANDATE_REVOKED", revocation, r.clock.now())],
+    ["PACKET_EXPIRED is logged", "PACKET_EXPIRED", (r) => appendEntry(r.store, signer, LOG_ID, "PACKET_EXPIRED", { mandate_id: "mnd_demoM0", expired_at: NOW }, r.clock.now())],
+    ["validUntil has passed", "PACKET_EXPIRED", async (r) => r.clock.set(CREDENTIAL.validUntil)],
+    ["a later decision resolved the approval", "APPROVAL_RESOLVED", (r) => appendEntry(r.store, signer, LOG_ID, "DECISION", resolving(r.decision), r.clock.now())],
+    ["the log over-commits (the fold refuses it)", "LOG_INVALID", (r) => appendEntry(r.store, signer, LOG_ID, "DECISION", { ...approvedDecision(CART, "dec_exec000077"), approved_limit_minor: 60_000, cart: { ...CART, total_minor: 60_000, subtotal_minor: 60_000, shipping_minor: 0, fees_minor: 0, fx: null, items: [{ ...CART.items[0], qty: 1, unit_price_minor: 60_000 }] } }, r.clock.now())],
+  ];
+  it.each(cases)("refuses when %s: no quote, no merchant call, nothing logged", async (_name, reason, mutate) => {
+    const r = await rig();
+    await mutate(r);
+    const quote = vi.spyOn(r.merchant, "quote");
+    const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
+    expect(outcome).toMatchObject({ status: "ERROR", reason, last4: r.card.last4 });
+    expect(quote).not.toHaveBeenCalled();
+    expect(await r.cardEvents()).toEqual([]);
+    expect(r.rail.cards[0]?.state).toBe("ACTIVE");
+  });
+
+  it("refuses an APPROVE or a card that is not in the log exactly as given", async () => {
+    const r = await rig();
+    const otherDecision = { ...r.decision, decided_at: "2026-10-03T02:05:03Z" };
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: otherDecision, card: r.card })).toMatchObject({ reason: "APPROVAL_NOT_LOGGED" });
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: { ...r.card, purpose: "crt_otherPurpose" } })).toMatchObject({ reason: "CARD_NOT_LOGGED" });
+    expect(await r.cardEvents()).toEqual([]);
+  });
+});
+
+describe("H5: the rail's own record is what gets logged (rail with eventFor)", () => {
+  const lying = (port: RailPort): MerchantPort => {
+    const honest = new FakeMerchant(port);
+    return { quote: (i) => honest.quote(i), checkout: async (i) => ({ ...(await honest.checkout(i)), amount_minor: 1 }) };
+  };
+
+  it("an under-reporting merchant: the rail's amount is logged, the claim is flagged MERCHANT_REPORT_MISMATCH", async () => {
+    const r = await rig({ rail: (inner) => recordingRail(inner), merchant: (_fake, port) => lying(port) });
+    const outcome = await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card });
+    expect(outcome).toMatchObject({ status: "AUTHORISED", event: { amount_minor: CART.total_minor }, anomalies: ["MERCHANT_REPORT_MISMATCH"] });
+    expect((await r.cardEvents()).map((e) => e.amount_minor)).toEqual([CART.total_minor]);
+  });
+
+  it("a merchant that never reached the rail: RAIL_MISMATCH, nothing logged, the card stays ACTIVE", async () => {
+    const fake = (cardId: string, key: string): CardEvent => ({ card_id: cardId, event: "AUTHORISED", at: NOW, amount_minor: 1, merchant_domain: CART.merchant.domain, idempotency_key: key, simulated: true });
+    const r = await rig({ rail: (inner) => recordingRail(inner), merchant: (rail) => steered(rail, { checkout: async (_n, input) => fake(rail.cards[0]?.id ?? "", input.idempotencyKey) }) });
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card })).toMatchObject({ status: "ERROR", reason: "RAIL_MISMATCH" });
+    expect(await r.cardEvents()).toEqual([]);
+    expect(r.rail.cards[0]?.state).toBe("ACTIVE");
+  });
+
+  it("an honest merchant's event equals the rail's record: logged as is, no anomaly", async () => {
+    const r = await rig({ rail: (inner) => recordingRail(inner) });
+    expect(await r.executor.checkout({ logId: LOG_ID, decision: r.decision, card: r.card })).toMatchObject({ status: "AUTHORISED", anomalies: [] });
   });
 });
 

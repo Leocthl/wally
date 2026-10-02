@@ -78,6 +78,8 @@ function mintedProblem(card: CardRecord, decision: Decision): string | null {
   if (!checked.ok) return "the rail returned a card that fails card-record.schema.json";
   if (card.decision_id !== decision.id || card.mandate_id !== decision.mandate_id) return "the rail returned a card for another decision (I1)";
   if (card.limit_minor !== decision.approved_limit_minor) return "the rail returned a card whose limit is not the approved total (I2)";
+  if (card.state !== "ACTIVE") return `the rail returned a ${card.state} card for a fresh mint`;
+  if (card.merchant_lock !== decision.cart.merchant.domain) return "the rail returned a card locked to another merchant";
   return null;
 }
 
@@ -97,10 +99,12 @@ async function mintBlocker(ctx: Ctx, logId: string, decision: Decision): Promise
   if (decision.rules.some((r) => r.result === "FAIL")) return "the APPROVE carries a FAIL rule";
   if (decision.approved_limit_minor !== decision.cart.total_minor) return "the approved limit is not the cart total (I2)";
   const state = await readLogState(ctx, logId, now(ctx)); // re-fold: another writer may have logged since the decide
-  if (state.packet.status !== "ACTIVE") return `the packet is ${state.packet.status} now (I6)`;
+  const status = state.packet.status;
+  if (status === "REVOKED" || status === "EXPIRED") return `the packet is ${status} now (I6)`; // EXHAUSTED may be this approval's own hold
   if (findDecision(state.entries, decision.id) === undefined) return "the approval is not in the log (I7)";
   if (decisions(state.entries).some((d) => d.resolves === decision.id)) return "the approval was resolved by a later decision";
   if (state.entries.some((e) => e.kind === "CARD_MINTED" && e.payload.decision_id === decision.id)) return "a card was already minted for this approval";
+  if (!state.held.some((h) => h.decision_id === decision.id)) return "the approval holds no budget in the packet (H4)";
   return null;
 }
 

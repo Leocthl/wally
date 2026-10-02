@@ -4,7 +4,6 @@ import { parseDidKey } from "../crypto/did-key";
 import { createExecutor } from "../executor";
 import type { Executor } from "../executor/types";
 import { createExclusive } from "../executor/queue";
-import { attestMerchant } from "./attest";
 import { OrchestratorConfigError, resolveConfig } from "./config";
 import { checkoutCard } from "./checkout";
 import { PACKET_QUEUE_KEY, StepError, describe, sealedOrThrow, type Ctx } from "./context";
@@ -64,11 +63,10 @@ async function operate<T extends { readonly ok: boolean }>(
   }
 }
 
-/** The default executor charges through the attested merchant, so the log carries the rail's own events (H5). */
+/** The default executor logs the rail's own event for each attempt, never the merchant's claim (H5, executor/attest.ts). */
 function executorFor(deps: OrchestratorDeps): Executor {
   if (deps.executor !== undefined) return deps.executor;
-  const merchant = attestMerchant(deps.merchant, deps.rail);
-  return createExecutor({ merchant, rail: deps.rail, store: deps.store, signer: deps.signer, appendEntry: deps.appendEntry, clock: deps.clock });
+  return createExecutor({ merchant: deps.merchant, rail: deps.rail, store: deps.store, signer: deps.signer, appendEntry: deps.appendEntry, clock: deps.clock });
 }
 
 export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
