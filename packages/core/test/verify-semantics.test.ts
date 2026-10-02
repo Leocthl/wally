@@ -3,10 +3,11 @@
 // fail at the right seq with the right reason. A generator of rule-following logs checks they always pass.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import type { Cart, Decision } from "../src/generated";
+import type { Cart, Decision, MandateCredential } from "../src/generated";
 import { signEscalationAnswer, signRevocation } from "../src/log";
 import type { CardEvent } from "../src/ports";
 import { loadFixture } from "../src/testing/fixtures";
+import { signMandateCredential } from "../src/vc";
 import { verifyChain } from "../src/verify";
 import {
   approveOf,
@@ -177,6 +178,69 @@ describe("OVERSPEND (I2 and the sealed budget)", () => {
     const steps = buys.flatMap((d, i) => [decision(d), minted(d, `crd_semOver000${i}`)]);
     expect(3 * CART.total_minor).toBeLessThanOrEqual(BUDGET);
     expect(await verify(steps)).toMatchObject({ failedSeq: 8, reason: "OVERSPEND" });
+  });
+});
+
+describe("identical repeats change nothing (as in the packet fold)", () => {
+  it("a byte-identical DECISION or CARD_MINTED logged twice passes and is counted once", async () => {
+    const buys = [1, 2, 3].map((n) => approveOf(`dec_semRep000${n}`, CART));
+    const steps = buys.flatMap((d, i) => [decision(d), minted(d, `crd_semRep000${i}`)]);
+    const repeated = [...steps, decision(buys[2]!), minted(buys[2]!, "crd_semRep0002")];
+    expect(3 * CART.total_minor).toBeLessThanOrEqual(BUDGET);
+    expect(4 * CART.total_minor).toBeGreaterThan(BUDGET);
+    expect(await verify(repeated)).toMatchObject({ ok: true });
+  });
+});
+
+describe("validity window (R2, I6): dates checked against the signed credential, not only log order", () => {
+  it("an APPROVE decided after validUntil or before validFrom, with no PACKET_EXPIRED marker", async () => {
+    const late = approveOf("dec_semLate0001", CART, { decided_at: "2026-11-01T00:00:00Z" });
+    expect(await verify([decision(late)])).toMatchObject({ failedSeq: 1, reason: "AFTER_REVOKE" });
+    const early = approveOf("dec_semEarly001", CART, { decided_at: "2026-10-03T01:59:59Z" });
+    expect(await verify([decision(early)])).toMatchObject({ failedSeq: 1, reason: "AFTER_REVOKE" });
+  });
+
+  it("a card minted after validUntil", async () => {
+    const card = { ...cardFor(APPROVE_1, "crd_semLate0001"), minted_at: "2026-11-01T00:00:00Z", expires_at: "2026-11-01T00:30:00Z" };
+    expect(await verify([decision(APPROVE_1), { kind: "CARD_MINTED", payload: card }])).toMatchObject({ failedSeq: 2, reason: "AFTER_REVOKE" });
+  });
+});
+
+describe("per-purchase terms (R4) from the signed credential", () => {
+  type Rules = MandateCredential["credentialSubject"]["rules"];
+  function sealWith(rules: Partial<Rules>): DemoStep {
+    const { proof: _proof, ...base } = demoCredential(keys);
+    const unsigned = { ...base, credentialSubject: { ...base.credentialSubject, rules: { ...base.credentialSubject.rules, ...rules } } };
+    return { kind: "MANDATE_SEALED", payload: signMandateCredential(unsigned, keys.delegator, { created: new Date("2026-10-03T02:00:00Z") }) };
+  }
+  async function verifyUnder(rules: Partial<Rules>, steps: readonly DemoStep[]) {
+    const log = await buildLog([sealWith(rules), ...steps], keys);
+    return verifyChain(log.entries, keys.publicKeys);
+  }
+  const ASK_BELOW = { per_purchase: { ask_above_minor: CART.total_minor - 1 } };
+
+  it("an APPROVE above ask-above needs the delegator's answer: alone it is CONSENT, answered it passes", async () => {
+    expect(await verifyUnder(ASK_BELOW, [decision(APPROVE_1)])).toMatchObject({ failedSeq: 1, reason: "CONSENT" });
+    const answered = [decision(ESCALATE_1), decision(approvalOf("dec_semRes0001", ESCALATE_1))];
+    expect(await verifyUnder(ASK_BELOW, answered)).toMatchObject({ ok: true });
+    expect(await verifyUnder({ per_purchase: { ask_above_minor: CART.total_minor } }, [decision(APPROVE_1)])).toMatchObject({ ok: true });
+  });
+
+  it("over the hard cap is OVERSPEND, even with the delegator's answer", async () => {
+    const capped = { per_purchase: { hard_cap_minor: CART.total_minor - 1 } };
+    expect(await verifyUnder(capped, [decision(APPROVE_1)])).toMatchObject({ failedSeq: 1, reason: "OVERSPEND" });
+    const answered = [decision(ESCALATE_1), decision(approvalOf("dec_semRes0001", ESCALATE_1))];
+    expect(await verifyUnder(capped, answered)).toMatchObject({ failedSeq: 2, reason: "OVERSPEND" });
+  });
+
+  it("over the share of what remains, as the log accounts it, is OVERSPEND", async () => {
+    const share = { per_purchase: { share_of_remaining_bp: 4000 } }; // 40% of what remains
+    const [a, b] = [approveOf("dec_semShare001", CART), approveOf("dec_semShare002", CART)];
+    expect(Math.floor((BUDGET * 4000) / 10000)).toBeGreaterThanOrEqual(CART.total_minor);
+    expect(Math.floor(((BUDGET - CART.total_minor) * 4000) / 10000)).toBeLessThan(CART.total_minor);
+    expect(await verifyUnder(share, [decision(a), minted(a, "crd_semShare001")])).toMatchObject({ ok: true });
+    const second = [decision(a), minted(a, "crd_semShare001"), decision(b)];
+    expect(await verifyUnder(share, second)).toMatchObject({ failedSeq: 3, reason: "OVERSPEND" });
   });
 });
 

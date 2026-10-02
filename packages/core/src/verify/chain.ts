@@ -90,7 +90,7 @@ function checkEntry(raw: unknown, index: number, walk: Walk, keys: { readonly en
   if (broken) return { ok: false, report: broken };
   const delegated = walk.sealed === null ? checkSeal(entry, keys.delegator) : checkDelegated(entry, walk.sealed);
   if (!delegated.ok) return { ok: false, report: fail(index, "PAYLOAD_SIGNATURE", delegated.detail) };
-  const semantic = checkSemantics(entry, walk.semantics ?? initialSemantics(delegated.sealed.budgetMinor));
+  const semantic = checkSemantics(entry, walk.semantics ?? initialSemantics(delegated.sealed.terms));
   if (!semantic.ok) return { ok: false, report: fail(index, semantic.reason, semantic.detail) };
   return { ok: true, walk: { prevHash: entry.entry_hash, last: entry, sealed: delegated.sealed, semantics: semantic.state } };
 }

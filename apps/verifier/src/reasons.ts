@@ -48,16 +48,16 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
     zh: "只可發生一次的事發生了兩次：決定編號、同一批准的卡，或同一同意被再用。", // NEEDS-REVIEW zh-HK
   },
   CONSENT: {
-    en: "An approval claims the delegator's consent, but there is no signed, in-time yes from the delegator for this exact cart.",
-    zh: "此批准聲稱已得委託人同意，但沒有委託人就這個購物車及時簽署的同意。", // NEEDS-REVIEW zh-HK
+    en: "An approval needed the delegator's consent (an escalation, or above the ask-above amount), but there is no signed, in-time yes for this exact cart.",
+    zh: "此批准需要委託人同意（升級處理，或超過須先詢問的金額），但沒有委託人就這個購物車及時簽署的同意。", // NEEDS-REVIEW zh-HK
   },
   OVERSPEND: {
-    en: "The money does not add up: a limit, a charge or the total goes past what was approved or sealed.",
-    zh: "金額不符：上限、扣款或總額超出已批准或封存的數目。", // NEEDS-REVIEW zh-HK
+    en: "The money does not add up: a limit, a per-purchase cap, a charge or the total goes past what was approved or sealed.",
+    zh: "金額不符：上限、每次購買上限、扣款或總額超出已批准或封存的數目。", // NEEDS-REVIEW zh-HK
   },
   AFTER_REVOKE: {
-    en: "A card was minted after the mandate was revoked or expired.",
-    zh: "授權已撤銷或到期後仍發出了卡。", // NEEDS-REVIEW zh-HK
+    en: "A purchase was approved or a card minted outside the mandate's validity, or after it was revoked or expired.",
+    zh: "在授權有效期以外，或授權已撤銷或到期後，仍批准購買或發出了卡。", // NEEDS-REVIEW zh-HK
   },
 };
 

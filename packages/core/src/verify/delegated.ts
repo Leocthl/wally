@@ -8,13 +8,14 @@ import { verifyEscalationAnswer, verifyRevocation } from "../log/delegator";
 import { logIdForMandate } from "../log/ids";
 import { mandateIdFromCredentialId } from "../vc/mandate";
 import { verifyMandateCredential } from "../vc/proof";
+import { termsOf, type SealedTerms } from "./terms";
 
 export interface Sealed {
   readonly logId: string;
   readonly mandateId: string;
   readonly delegator: string;
-  /** The sealed budget (credentialSubject.rules.budget.amount_minor), for the semantics pass. */
-  readonly budgetMinor: number;
+  /** Budget, validity and per-purchase terms from the signed credential, for the semantics pass. */
+  readonly terms: SealedTerms;
   /** ESCALATE decisions seen so far: id -> the escalated cart an answer must be bound to. */
   readonly escalations: ReadonlyMap<string, Cart>;
 }
@@ -31,8 +32,7 @@ export function checkSeal(entry: LogEntry, expectedDelegator: string): Delegated
   if (logIdForMandate(mandateId) !== entry.log_id) {
     return bad(`credential for ${mandateId} cannot root ${entry.log_id} (replayed into another log)`);
   }
-  const budgetMinor = vc.credentialSubject.rules.budget.amount_minor;
-  return { ok: true, sealed: { logId: entry.log_id, mandateId, delegator: vc.issuer, budgetMinor, escalations: new Map() } };
+  return { ok: true, sealed: { logId: entry.log_id, mandateId, delegator: vc.issuer, terms: termsOf(vc), escalations: new Map() } };
 }
 
 function checkAnswer(decision: Decision, sealed: Sealed): string | null {
