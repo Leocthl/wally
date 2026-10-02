@@ -54,7 +54,7 @@ const REVOKED_RUN = await (async () => {
   const card = await s.mintFor(d, CART);
   await s.log("CARD_MINTED", card);
   const out = await s.executor.checkout({ logId: LOG_ID, decision: d, card });
-  return { status: (await s.fold()).status, checkout: out.status };
+  return { status: (await s.fold()).status, checkout: out.status, reason: out.status === "ERROR" ? out.reason : null, charges: s.rail.authorisations().length };
 })();
 
 // A2-04 (I2): an APPROVE that is not minted yet reserves nothing; a later decision sees the full budget.
@@ -96,6 +96,7 @@ const STALE_FOLD_RUN = await (async () => {
 })();
 
 // A2-05 (I2): the executor logs the merchant's copy of the charge; a merchant that under-reports frees budget.
+// (lane s-fix-core) buy() now stops at a decision that is not an APPROVE, which the rail would refuse to mint.
 const LYING_MERCHANT_RUN = await (async () => {
   let lie = true;
   const s = await setup(9, (rail) => {
@@ -111,6 +112,7 @@ const LYING_MERCHANT_RUN = await (async () => {
   const buy = async (c: Cart) => {
     const d = engine.decide(M0, await s.fold(), c, JUDGE, s.clock.now(), undefined, PROOF);
     await s.log("DECISION", d);
+    if (d.outcome !== "APPROVE") return d.outcome; // (lane s-fix-core) the rail refuses to mint anything else
     const card = await s.mintFor(d, c);
     await s.log("CARD_MINTED", card);
     const out = await s.executor.checkout({ logId: LOG_ID, decision: d, card });
@@ -142,14 +144,20 @@ describe("setup reached the intended states", () => {
     expect(REVOKED_RUN.status).toBe("REVOKED");
     expect(OVERCOMMIT_RUN.outcomes[0]).toBe("APPROVE"); // before the fix the second was an APPROVE too
     expect(STALE_FOLD_RUN.outcomes).toEqual(["APPROVE", "APPROVE"]);
-    expect([LYING_MERCHANT_RUN.first, LYING_MERCHANT_RUN.second]).toEqual(["AUTHORISED", "AUTHORISED"]);
+    expect(LYING_MERCHANT_RUN.first).toBe("AUTHORISED"); // before the fix the second purchase was AUTHORISED too
     expect(LOCK_RUN.minted === true || LOCK_RUN.minted === false).toBe(true);
   });
 });
 
-describe("KNOWN DEFECT S-RAIL-1 (I6): an approval is minted and charged after the packet was revoked", () => {
-  it.fails("checkout refuses an approval once MANDATE_REVOKED is logged", () => {
+// FIXED at the component (lane s-fix-core): the executor folds the log it reads for the attempt and refuses, before any
+// quote or merchant call, when the mandate is revoked, the packet expired, or the approval or card is not (or no
+// longer) what the log stands behind. The rail still mints from the decision's own snapshot: minting stays the
+// orchestrator's call, which re-folds right before it (no clean RailPort extra for a fresh fold).
+describe("S-RAIL-1 (fixed, I6): nothing is charged for an approval once MANDATE_REVOKED is logged", () => {
+  it("checkout refuses an approval once MANDATE_REVOKED is logged", () => {
     expect(REVOKED_RUN.checkout).not.toBe("AUTHORISED");
+    expect(REVOKED_RUN.reason).toBe("MANDATE_REVOKED");
+    expect(REVOKED_RUN.charges).toBe(0);
   });
 });
 
@@ -167,9 +175,12 @@ describe("S-RAIL-2 (fixed, I2): unminted approvals hold their limit, so the pack
   });
 });
 
-describe("KNOWN DEFECT S-RAIL-3 (I2): the logged charge is the merchant's claim, not the rail's record", () => {
-  it.fails("the rail never charges more than the sealed budget across purchases", () => {
+// FIXED (lane s-fix-core): the executor logs the rail's own record for the attempt's key (RailPort.eventFor), flags the
+// merchant's 1-cent claim as MERCHANT_REPORT_MISMATCH, so the fold sees HK$600 spent and the HK$700 cart is DENY R3.
+describe("S-RAIL-3 (fixed, I2): the logged charge is the rail's record, not the merchant's claim", () => {
+  it("the rail never charges more than the sealed budget across purchases", () => {
     expect(LYING_MERCHANT_RUN.railSpent).toBeLessThanOrEqual(LYING_MERCHANT_RUN.budget);
+    expect(LYING_MERCHANT_RUN.second).toBe("DENY");
   });
 });
 

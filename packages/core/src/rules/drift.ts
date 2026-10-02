@@ -11,10 +11,11 @@ export interface R12Input {
 }
 
 const FIELDS = ["total_minor", "subtotal_minor", "shipping_minor", "fees_minor", "fx_minor"] as const;
+export type QuoteField = (typeof FIELDS)[number];
 
-/** R12: PASS when every price field of the re-quote equals the approved cart's. */
-export function evaluateR12({ approved, quote }: R12Input): RuleResult {
-  const expected: Readonly<Record<(typeof FIELDS)[number], number>> = {
+/** Price fields of the re-quote that differ from the approved cart (or are not money). One definition for the engine and the executor. */
+export function quoteChanges(approved: Cart, quote: unknown): QuoteField[] {
+  const expected: Readonly<Record<QuoteField, number>> = {
     total_minor: approved.total_minor,
     subtotal_minor: approved.subtotal_minor,
     shipping_minor: approved.shipping_minor,
@@ -22,7 +23,13 @@ export function evaluateR12({ approved, quote }: R12Input): RuleResult {
     fx_minor: approved.fx?.fee_minor ?? 0,
   };
   const seen: Readonly<Record<string, unknown>> = quote !== null && typeof quote === "object" ? { ...quote } : {};
-  const changed = FIELDS.filter((f) => !isMoney(seen[f]) || seen[f] !== expected[f]);
+  return FIELDS.filter((f) => !isMoney(seen[f]) || seen[f] !== expected[f]);
+}
+
+/** R12: PASS when every price field of the re-quote equals the approved cart's. */
+export function evaluateR12({ approved, quote }: R12Input): RuleResult {
+  const seen: Readonly<Record<string, unknown>> = quote !== null && typeof quote === "object" ? { ...quote } : {};
+  const changed = quoteChanges(approved, quote);
   const inputs = { approved_total_minor: approved.total_minor, checkout_total_minor: seen["total_minor"] ?? null, changed };
   return judged(changed.length === 0, { id: "R12", inputs, comparator: "==" }, "DENY", "R12.price_drift");
 }

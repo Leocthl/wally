@@ -39,6 +39,8 @@ async function rig(stubOptions: Partial<Omit<MerchantStubOptions, "rail">> = {},
   const rail = new RailSim({ random: seededRandom(11) });
   const decision = approvedDecision({ totalMinor: TOTAL });
   const card = await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW, ...(opts.lock === false ? {} : { merchantLock: MERCHANT }), purpose: decision.cart.id });
+  await appendEntry(store, signer, LOG_ID, "DECISION", decision, NOW); // the executor pays only what the log stands behind (H3)
+  await appendEntry(store, signer, LOG_ID, "CARD_MINTED", card, NOW);
   const stub = new MerchantStub({ rail, ...stubOptions });
   const executor = createExecutor({
     merchant: stub,

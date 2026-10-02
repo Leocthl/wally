@@ -2,7 +2,6 @@
 // Node and browser: no node: imports (the FileLogStore is injected by the composition root).
 export { createOrchestrator } from "./create";
 export { ORCHESTRATOR_DEFAULTS, OrchestratorConfigError, purposeOf } from "./config";
-export { RailMismatchError, attestMerchant } from "./attest";
 export type {
   AnswerOptions,
   AnswerResult,

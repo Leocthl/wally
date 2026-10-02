@@ -22,8 +22,12 @@ async function buy(r: Integration, proposal: ProposeCartInput, listing: ListingR
   return (await r.orchestrator.submit({ requestText: "shopper request", listings: [listing] })) as DecidedResult;
 }
 
+// Changed (lane s-fix-core, H5 moved into the executor): the charge did land at the rail, so the truthful log entry is
+// the rail's own event (HK$600), with the merchant's 1-cent claim flagged MERCHANT_REPORT_MISMATCH. Before, the
+// orchestrator's attestMerchant refused the claim and logged nothing, which hid a real charge from the log (it kept
+// the limit committed, so the budget held either way).
 describe("A2-05: an under-reporting merchant cannot free budget (H5)", () => {
-  it("the 1-cent claim is refused, nothing is logged, the limit stays committed, and the next cart cannot overspend", async () => {
+  it("the rail's own HK$600 is logged, the 1-cent claim is flagged, and the next cart cannot overspend", async () => {
     let lie = true;
     const r = (open = await integration("honest", (stub) => ({
       quote: (i) => stub.quote(i),
@@ -35,9 +39,14 @@ describe("A2-05: an under-reporting merchant cannot free budget (H5)", () => {
     expect(await r.orchestrator.seal(credential(r.keys))).toMatchObject({ ok: true });
     const first = await buy(r, P_A1, priced(TEE, 60_000));
     expect(first).toMatchObject({ outcome: "APPROVE" });
-    expect(await r.orchestrator.checkout({ cardId: first.card?.id ?? "" })).toMatchObject({ ok: false, code: "CHECKOUT_FAILED" });
-    expect((await r.kinds()).filter((k) => k === "CARD_EVENT")).toEqual([]);
-    expect((await r.orchestrator.snapshot()).packet).toMatchObject({ committed_minor: 60_000, remaining_minor: 20_000 });
+    expect(await r.orchestrator.checkout({ cardId: first.card?.id ?? "" })).toMatchObject({
+      ok: true,
+      status: "AUTHORISED",
+      event: { amount_minor: 60_000 },
+      anomalies: ["MERCHANT_REPORT_MISMATCH"],
+    });
+    expect((await r.kinds()).filter((k) => k === "CARD_EVENT")).toEqual(["CARD_EVENT"]);
+    expect((await r.orchestrator.snapshot()).packet).toMatchObject({ committed_minor: 0, spent_minor: 60_000, remaining_minor: 20_000 });
     lie = false;
     const second = await buy(r, P_A4, priced(SOCKS, 70_000));
     expect(second).toMatchObject({ outcome: "DENY", decision: { explanation: { template_id: "R3.over_remaining" } } });

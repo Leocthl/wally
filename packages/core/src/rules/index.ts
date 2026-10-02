@@ -8,7 +8,7 @@ export { evaluateR7, evaluateR8, type R7Input, type R8Input } from "./rate";
 export { evaluateR9, type R9Input } from "./seller";
 export { evaluateR10, type R10Input } from "./judge";
 export { evaluateR11, type R11Input, type R11Outcome } from "./escalation";
-export { evaluateR12, type R12Input } from "./drift";
+export { evaluateR12, quoteChanges, type QuoteField, type R12Input } from "./drift";
 export {
   failed,
   isMoney,

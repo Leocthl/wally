@@ -1,6 +1,7 @@
 // Checks on what the merchant and rail hand back, before anything is logged.
 import type { CardRecord, Cart, Decision } from "../generated";
 import type { CardEvent } from "../ports";
+import { cartTotals } from "../rules";
 import { formatIssues, validateCardEvent, validateCardRecord, validateDecision } from "../schema";
 import { LOG_ID_PATTERN } from "./config";
 import type { ExecutorAnomaly } from "./types";
@@ -16,6 +17,7 @@ export function inputProblem(logId: string, decision: Decision, card: CardRecord
   if (decision.outcome !== "APPROVE" || approved === undefined) return "decision is not an APPROVE (I1)";
   if (approved <= 0) return "approved limit is zero";
   if (approved !== decision.cart.total_minor) return "approved limit differs from the cart total (I2)";
+  if (!cartTotals(decision.cart).consistent) return "the approved cart does not add up (lines, shipping, fees, FX)";
   if (card.decision_id !== decision.id) return "card was not minted for this decision (I1)";
   if (card.mandate_id !== decision.mandate_id) return "card belongs to another mandate";
   if (card.limit_minor !== approved) return "card limit differs from the approved limit (I2)";
