@@ -99,7 +99,7 @@ describe("Proof: around the card", () => {
   });
 
   it("offers three verifier files when the client can export", async () => {
-    const exportLog = vi.fn(async () => ({ log: '{"seq":0}', publicKeys: { engine: ["did:key:z1"], delegator: "did:key:z2" }, checkpoint: { log_id: "l", seq: 0, entry_hash: "a" } }));
+    const exportLog = vi.fn(async () => ({ log: '{"seq":0}', publicKeys: { note: "demo keys", engine: ["did:key:z1"], delegator: "did:key:z2", agent: "did:key:z3" }, checkpoint: { log_id: "l", seq: 0, entry_hash: "a" } }));
     const { user } = await proof({ wrap: (api) => delegate(api, { exportLog }) });
     await user.click(screen.getByRole("button", { name: "Export receipts" }));
     const sheet = await screen.findByRole("dialog", { name: "Export for the offline verifier" });

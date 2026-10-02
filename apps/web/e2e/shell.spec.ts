@@ -33,14 +33,14 @@ test("lands on Budget with the budget card, the tabs and the SIMULATED note", as
 test("runs Normal purchase from Try asking and shows it in Recent and on the budget card", async ({ page }) => {
   await page.locator('main [data-scenario="normal"]').click();
   await expect(page).toHaveURL(/#\/wally$/);
-  await expect(page.locator('[data-event="AUTHORISED"]')).toBeVisible();
+  await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$259.");
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED");
   const first = page.getByRole("list", { name: "Recent" }).getByRole("link").first();
   await expect(first).toContainText("Approved");
   await expect(first).toContainText("HK$259");
   await first.click();
-  await expect(page).toHaveURL(/#\/wally\?decision=dec_/);
+  await expect(page).toHaveURL(/#\/wally\?d=dec_/);
 });
 
 test("About switches the language to 繁 and the theme to dark, and remembers both", async ({ page }) => {

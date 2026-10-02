@@ -1,13 +1,10 @@
-/* Receipts (rc-) and Proof (pf-) screens. Phone column first; tokens only; motion only when allowed. */
+/* Receipts (rc-) and Proof (pf-) screens. Phone column first; tokens only; motion only when allowed. The shell owns the
+   side padding and the tab bar clearance. */
 .rc-screen, .pf-screen {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--sp-4);
-  width: 100%;
-  max-width: var(--column);
-  margin: 0 auto;
-  padding: 0 max(var(--gutter), var(--safe-right)) calc(var(--tabbar-h) + var(--sp-6) + var(--safe-bottom)) max(var(--gutter), var(--safe-left));
   color: var(--c-ink);
 }
 .rc-screen > *, .pf-screen > * { min-width: 0; }

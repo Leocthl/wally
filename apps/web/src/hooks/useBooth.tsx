@@ -66,6 +66,10 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
 
   useEffect(() => api.subscribe((e) => dispatch(e as BoothAction)), [api]);
 
+  // A verdict belongs to one log: a new seal (a new log) or a reset starts without one.
+  const logId = state.packet?.log_id;
+  useEffect(() => setVerifyOutcome(null), [logId]);
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;

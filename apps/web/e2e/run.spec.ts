@@ -1,32 +1,25 @@
 // Wally screen smoke test (lane b-run) on the offline mock client, phone and desktop projects. Scenarios start from the
-// shell's Try asking cards ([data-scenario], in the Ask sheet or on the Budget home). The app shell from lane b-shell
-// routes #/wally; on a build without it, each test skips and says why.
-import { expect, test, type Locator, type Page } from "@playwright/test";
+// Try asking cards on Budget; a press moves to #/wally, where the result shows. Every URL carries ?api=mock.
+import { expect, test, type Page } from "@playwright/test";
 
-const SHELL = "needs the app shell from lane b-shell: #/wally and the Try asking cards";
-
-async function wallyScreen(page: Page): Promise<Locator | null> {
+/** Wally's screen on a fresh mock. */
+async function openWally(page: Page): Promise<void> {
   await page.goto("/?api=mock#/wally");
-  const screen = page.locator('[data-screen="wally"]');
-  return (await screen.waitFor({ timeout: 5_000 }).then(() => true, () => false)) ? screen : null;
+  await expect(page.locator('[data-screen="wally"]')).toBeVisible();
 }
 
-/** Presses the Try asking card for a scenario, opening the Ask sheet first when the card lives there. */
-async function tryAsking(page: Page, scenario: string): Promise<boolean> {
-  const card = page.locator(`[data-scenario="${scenario}"]`).first();
-  if (!(await card.isVisible())) await page.getByRole("button", { name: /^(Ask|問 Wally)$/ }).first().click({ timeout: 2_000 }).catch(() => undefined);
-  if (!(await card.isVisible())) {
-    await page.goto("/?api=mock#/budget");
-    await card.waitFor({ timeout: 3_000 }).catch(() => undefined);
-  }
-  if (!(await card.isVisible())) return false;
+/** Presses the Try asking card for a scenario on Budget (a hash change, so the mock keeps its state); the result shows on Wally. */
+async function tryAsking(page: Page, scenario: string): Promise<void> {
+  await page.goto("/?api=mock#/budget");
+  const card = page.locator(`main [data-scenario="${scenario}"]`);
+  await expect(card).toBeEnabled();
   await card.click();
-  if (!page.url().includes("#/wally")) await page.goto("/?api=mock#/wally");
-  return true;
+  await expect(page).toHaveURL(/#\/wally/);
+  await expect(page.locator('[data-screen="wally"]')).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
-  test.skip((await wallyScreen(page)) === null, SHELL);
+  await openWally(page);
 });
 
 test("idle: Wally is ready and offers to help", async ({ page }) => {
@@ -34,7 +27,7 @@ test("idle: Wally is ready and offers to help", async ({ page }) => {
 });
 
 test("normal purchase: a one-off card for the exact amount, no rule ids on screen", async ({ page }) => {
-  test.skip(!(await tryAsking(page, "normal")), SHELL);
+  await tryAsking(page, "normal");
   const card = page.getByRole("article", { name: "One-off card" });
   await expect(card).toContainText("Works once, for HK$259 only");
   await expect(card).toContainText("SIMULATED");
@@ -42,7 +35,7 @@ test("normal purchase: a one-off card for the exact amount, no rule ids on scree
 });
 
 test("flagged seller: stopped before paying, plain reason, then the Why sheet and its details", async ({ page }) => {
-  test.skip(!(await tryAsking(page, "flagged")), SHELL);
+  await tryAsking(page, "flagged");
   const alert = page.getByRole("alert").filter({ hasText: "Stopped before paying" });
   await expect(alert).toContainText("This seller is flagged as a possible scam.");
   await expect(page.getByText("No card was made. Nothing can be charged.")).toBeVisible();
@@ -54,7 +47,7 @@ test("flagged seller: stopped before paying, plain reason, then the Why sheet an
 });
 
 test("needs your OK: Approve continues to the one-off card", async ({ page }) => {
-  test.skip(!(await tryAsking(page, "unverified")), SHELL);
+  await tryAsking(page, "unverified");
   await expect(page.getByRole("heading", { name: "Needs your OK" })).toBeVisible();
   await expect(page.getByRole("timer")).toContainText("s left");
   await page.getByRole("button", { name: "Approve" }).click();
@@ -62,7 +55,7 @@ test("needs your OK: Approve continues to the one-off card", async ({ page }) =>
 });
 
 test("no horizontal scroll at 320 px on a result", async ({ page }) => {
-  test.skip(!(await tryAsking(page, "overflow")), SHELL);
+  await tryAsking(page, "overflow");
   await page.setViewportSize({ width: 320, height: 640 });
   await expect(page.getByRole("alert").first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);

@@ -24,6 +24,10 @@ export interface Result {
   /** A run is still writing to this result (a checkout on its card). */
   readonly busy: boolean;
   readonly note?: string;
+  /** Why a run that decided nothing ended (UNKNOWN_REQUEST, NO_PROPOSAL:<reason>...), so the screen words it. */
+  readonly code?: string;
+  /** The latest run repeated a live cart: this is the earlier purchase, and nothing new was decided, minted or charged. */
+  readonly repeat?: true;
 }
 
 export type ScreenModel = { readonly kind: "idle" } | { readonly kind: "working"; readonly run: RunView } | { readonly kind: "result"; readonly result: Result };
@@ -66,7 +70,7 @@ export function chainResult(state: BoothState, chain: Chain, run: RunView | unde
 }
 
 function bareResult(kind: ResultKind, run: RunView): Result {
-  return { kind, key: run.runId, story: [], busy: false, run, ...(run.note ? { note: run.note } : {}) };
+  return { kind, key: run.runId, story: [], busy: false, run, ...(run.note ? { note: run.note } : {}), ...(run.code ? { code: run.code } : {}) };
 }
 
 /** A finished run that decided nothing: no clear pick, an error, or a step that only reused an earlier card. */
@@ -123,6 +127,8 @@ export function selectScreen(state: BoothState, pin?: Pin): ScreenModel {
     const live = latest !== undefined && runInvolves(latest, pinned, cardOf(state, pinned)) ? latest : undefined;
     return { kind: "result", result: chainResult(state, pinned, live) };
   }
+  const again = latest?.finished && latest.duplicateOf !== undefined ? chainOf(knownDecisions(state), latest.duplicateOf) : undefined;
+  if (again) return { kind: "result", result: { ...chainResult(state, again, undefined), repeat: true } };
   return latest ? latestScreen(state, latest) : { kind: "idle" };
 }
 

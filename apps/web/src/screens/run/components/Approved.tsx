@@ -27,11 +27,13 @@ export interface ApprovedProps {
   readonly fresh: boolean;
   readonly headingRef: Ref<HTMLHeadingElement>;
   readonly paying: boolean;
+  /** Pay now pays the newest open card; offered only when that is this card. */
+  readonly canPay: boolean;
   readonly onPay: () => void;
   readonly onWhy: () => void;
 }
 
-export function Approved({ result, packet, fresh, headingRef, paying, onPay, onWhy }: ApprovedProps): ReactElement | null {
+export function Approved({ result, packet, fresh, headingRef, paying, canPay, onPay, onWhy }: ApprovedProps): ReactElement | null {
   const { t } = useLocale();
   const chain = result.chain;
   const total = chain?.current.approved_limit_minor ?? chain?.current.cart.total_minor ?? 0;
@@ -55,7 +57,7 @@ export function Approved({ result, packet, fresh, headingRef, paying, onPay, onW
       {packet ? <BudgetNow packet={packet} fromMinor={chain.current.packet.remaining_minor} animate={fresh} /> : null}
       <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? total} />
       <div className="run-actions">
-        {unpaid && (!result.busy || paying) ? (
+        {unpaid && canPay && (!result.busy || paying) ? (
           <Button size="lg" block icon={<Icon name="lock" size={20} />} loading={paying} onClick={onPay}>{t(R.payNow)}</Button>
         ) : null}
         <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyApproved)}</Button>

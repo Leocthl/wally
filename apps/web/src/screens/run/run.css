@@ -1,14 +1,17 @@
-/* The Wally screen (#/wally). Tokens only; one column at phone width, fluid inside the shell's centred column. Motion
+/* The Wally screen (#/wally). Tokens only; one column at phone width, fluid inside the shell's centred column (the shell owns
+   the side padding and the tab bar clearance). Motion
    runs only under prefers-reduced-motion: no-preference, and never delays content or blocks a tap. */
 .run-screen {
   display: grid;
   align-content: start;
   min-width: 0;
-  padding: 0 max(var(--gutter), var(--safe-right)) var(--sp-6) max(var(--gutter), var(--safe-left));
   color: var(--c-ink);
 }
 .run-screen .w-topbar { margin: 0 calc(-1 * var(--sp-1)); padding-left: var(--sp-1); padding-right: var(--sp-1); }
 .run-body { display: grid; gap: var(--sp-5); min-width: 0; padding-top: var(--sp-2); }
+/* A long state ("Stopped before paying") wraps inside its row instead of running under the amount. */
+.run-history .w-row__subtitle { min-width: 0; }
+.run-history .w-tag { max-width: 100%; white-space: normal; text-align: left; }
 .run-stack { display: grid; gap: var(--sp-4); min-width: 0; }
 .run-section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .run-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-size: var(--text-sm); color: var(--c-ink-muted); }
@@ -112,6 +115,8 @@
 .run-foot { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 .run-foot svg { flex: none; color: var(--c-ok-ink); }
 .run-sim { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
+.run-repeat { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
+.run-repeat svg { flex: none; color: var(--c-info-ink, var(--c-ink-muted)); }
 .run-nocard { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
 .run-nocard svg { flex: none; color: var(--c-ink-muted); }
 

@@ -93,6 +93,48 @@ describe("booth reducer", () => {
     expect(state.log.entries).toHaveLength(1);
   });
 
+  it("starts over when a new seal brings a different log: earlier log, cards, escalations and runs do not carry over", async () => {
+    const clock = new FakeClock();
+    const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
+    let state = initialState();
+    client.subscribe((e) => {
+      state = reduce(deepFreeze(state), e as BoothAction);
+    });
+    await client.seal(m0SealRequest(clock.now()));
+    await client.runScenario("normal");
+    await client.runScenario("unverified");
+    const first = state;
+    expect(first.cards).toHaveLength(1);
+    expect(first.escalations).toHaveLength(1);
+    expect(first.log.entries.length).toBeGreaterThan(1);
+    expect(first.runs).toHaveLength(2);
+
+    await client.seal(m0SealRequest(clock.now()));
+    expect(state.packet?.log_id).not.toBe(first.packet?.log_id);
+    expect(state.mandate?.id).not.toBe(first.mandate?.id);
+    expect(state.cards).toEqual([]);
+    expect(state.escalations).toEqual([]);
+    expect(state.runs).toEqual([]);
+    expect(state.log.entries.map((e) => e.kind)).toEqual(["MANDATE_SEALED"]);
+    expect(state.log.entries.every((e) => e.log_id === state.packet?.log_id)).toBe(true);
+    expect(state.packet?.remaining_minor).toBe(80_000);
+  });
+
+  it("keeps everything when the same seal is heard twice (same log)", async () => {
+    const state = await play(async (c) => void (await c.runScenario("normal")));
+    const again = reduce(state, { type: "mandate.sealed", mandate: state.mandate as NonNullable<BoothState["mandate"]>, packet: state.packet as NonNullable<BoothState["packet"]>, at: "2026-10-03T02:00:00Z" });
+    expect(again.cards).toEqual(state.cards);
+    expect(again.log.entries).toEqual(state.log.entries);
+    expect(again.runs).toEqual(state.runs);
+  });
+
+  it("keeps the code and the earlier decision of a repeated cart on the run", () => {
+    const at = "2026-10-03T02:00:00Z";
+    const started = reduce(initialState(), { type: "run.started", runId: "run_1", scenario: "custom", at });
+    const done = reduce(started, { type: "run.finished", runId: "run_1", outcome: "APPROVE", at, note: "again", code: "DUPLICATE", duplicateOf: "dec_1" });
+    expect(done.runs[0]).toMatchObject({ finished: true, outcome: "APPROVE", code: "DUPLICATE", duplicateOf: "dec_1" });
+  });
+
   it("does not mutate its input (frozen state survives every event)", async () => {
     await expect(play(async (c) => void (await c.runScenario("injected")))).resolves.toBeDefined();
   });

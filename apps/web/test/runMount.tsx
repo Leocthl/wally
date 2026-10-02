@@ -5,7 +5,7 @@ import { FakeClock } from "@laisee/core/testing";
 import { act, render, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { expect } from "vitest";
-import type { ApiClient, ScenarioId, TraceEvent, TraceListener } from "../src/api/types";
+import type { ApiClient, ApiFeatures, ApiInfo, ScenarioId, TraceEvent, TraceListener } from "../src/api/types";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { BoothProvider } from "../src/hooks/useBooth";
 import { RunScreen, type RunScreenProps } from "../src/screens/run/RunScreen";
@@ -26,14 +26,19 @@ export interface Mounted {
 export interface MountOptions extends RunScreenProps {
   readonly locale?: Locale;
   readonly hash?: string;
-  /** Extra client methods, e.g. suggestAlternatives (a later wave). */
+  /** Extra client methods, e.g. suggestAlternatives. */
   readonly extend?: Readonly<Record<string, unknown>>;
+  /** What the booth says it can do (info().features); the mock says nothing beyond the buttons. */
+  readonly features?: Partial<ApiFeatures>;
 }
 
-function wrap(mock: MockApiClient, listeners: Set<TraceListener>, extend: Readonly<Record<string, unknown>>): ApiClient {
+function wrap(mock: MockApiClient, listeners: Set<TraceListener>, extend: Readonly<Record<string, unknown>>, features: Partial<ApiFeatures>): ApiClient {
   const base: ApiClient = {
     kind: "mock",
-    info: () => mock.info(),
+    info: async (): Promise<ApiInfo> => {
+      const info = await mock.info();
+      return { ...info, features: { ...info.features, ...features } };
+    },
     snapshot: () => mock.snapshot(),
     seal: (r) => mock.seal(r),
     runScenario: (id) => mock.runScenario(id),
@@ -62,7 +67,7 @@ export async function mountRun(opts: MountOptions = {}): Promise<Mounted> {
   const clock = new FakeClock();
   const mock = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
   const listeners = new Set<TraceListener>();
-  const api = wrap(mock, listeners, opts.extend ?? {});
+  const api = wrap(mock, listeners, opts.extend ?? {}, opts.features ?? {});
   const user = userEvent.setup();
   const props: RunScreenProps = { now: opts.now ?? (() => clock.now().getTime()), ...(opts.onAsk ? { onAsk: opts.onAsk } : {}) };
   const { container } = render(

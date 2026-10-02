@@ -11,6 +11,7 @@ import type {
   CompileResult,
   CompileRulesRequest,
   EscalationAnswerRequest,
+  ExportView,
   LogView,
   ProposeRequest,
   RevokeResult,
@@ -120,6 +121,11 @@ export class HttpApiClient implements ApiClient {
   /** Not a run: nothing streams, so it neither waits for the event stream nor for events. */
   compileRules(req: CompileRulesRequest): Promise<CompileResult> {
     return this.#request<CompileResult>("/api/compile", { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, body: JSON.stringify(req) });
+  }
+
+  /** The stored log, keys and checkpoint for the offline verifier. A plain read: no run, no events. */
+  exportLog(): Promise<ExportView> {
+    return this.#get<ExportView>("/api/export");
   }
 
   verify(): Promise<VerifyOutcome> {

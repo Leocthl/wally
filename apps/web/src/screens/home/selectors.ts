@@ -1,7 +1,8 @@
 // Pure views of the booth state for the Budget screen. A new seal starts a new log and a new set of cards on the
-// engine side, while the reducer keeps what it saw before; these selectors read only the current budget's records.
+// engine side and the reducer starts over with it (state/booth.ts), so everything in the state is the current budget's.
 import type { CardRecord, Decision, EscalationView, LogEntry } from "../../api/types";
 import type { BoothState } from "../../state/booth";
+import { plainName } from "../run/model/item";
 
 export type DecisionOutcome = Decision["outcome"];
 
@@ -15,10 +16,9 @@ export interface DecisionRow {
   readonly at: string;
 }
 
-/** The log of the budget in force: the packet names it; before any packet, the newest entry does. */
+/** The log of the budget in force. */
 export function currentEntries(state: BoothState): readonly LogEntry[] {
-  const logId = state.packet?.log_id ?? state.log.entries.at(-1)?.log_id;
-  return logId === undefined ? [] : state.log.entries.filter((e) => e.log_id === logId);
+  return state.log.entries;
 }
 
 function decisionOf(entry: LogEntry): Decision | null {
@@ -32,8 +32,8 @@ function rowOf(entry: LogEntry, d: Decision): DecisionRow {
     id: d.id,
     seq: entry.seq,
     outcome: d.outcome,
-    title: d.cart.items[0]?.title ?? d.cart.merchant.name,
-    merchant: d.cart.merchant.name,
+    title: plainName(d.cart.items[0]?.title ?? d.cart.merchant.name),
+    merchant: plainName(d.cart.merchant.name),
     totalMinor: d.cart.total_minor,
     at: d.decided_at,
   };
@@ -61,17 +61,14 @@ export interface CardGroups {
 
 /** Cards of the budget in force, newest first: ready ones on top, used, cancelled and expired ones after. */
 export function cardGroups(state: BoothState): CardGroups {
-  const mandateId = state.mandate?.id;
-  const mine = state.cards.filter((c) => mandateId === undefined || c.mandate_id === mandateId);
-  const newest = [...mine].sort((a, b) => Date.parse(b.minted_at) - Date.parse(a.minted_at));
+  const newest = [...state.cards].sort((a, b) => Date.parse(b.minted_at) - Date.parse(a.minted_at));
   return { active: newest.filter((c) => c.state === "ACTIVE"), past: newest.filter((c) => c.state !== "ACTIVE") };
 }
 
-/** Escalations still waiting for an answer in the budget in force, the oldest (first to expire) first. */
+/** Escalations still waiting for an answer, the oldest (first to expire) first. */
 export function openEscalations(state: BoothState): readonly EscalationView[] {
-  const ids = new Set(currentEntries(state).flatMap((e) => (e.kind === "DECISION" ? [String((e.payload as { id?: unknown }).id)] : [])));
   return state.escalations
-    .filter((e) => e.state === "OPEN" && (ids.size === 0 || ids.has(e.decisionId)))
+    .filter((e) => e.state === "OPEN")
     .slice()
     .sort((a, b) => Date.parse(a.expiresAt) - Date.parse(b.expiresAt));
 }
@@ -80,7 +77,7 @@ export function openEscalations(state: BoothState): readonly EscalationView[] {
 export function decisionTitle(state: BoothState, decisionId: string): string | null {
   for (const e of currentEntries(state)) {
     const d = decisionOf(e);
-    if (d?.id === decisionId) return d.cart.items[0]?.title ?? d.cart.merchant.name;
+    if (d?.id === decisionId) return plainName(d.cart.items[0]?.title ?? d.cart.merchant.name);
   }
   return null;
 }

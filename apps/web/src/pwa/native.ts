@@ -35,7 +35,7 @@ export function nativePlugin<T>(name: string, win: CapacitorWindow | undefined =
   return plugin === undefined || plugin === null ? undefined : (plugin as T);
 }
 
-/** Route names that count as home: the Budget screen, and the default route the app opens on (the Booth until the rebuilt screens land). */
+/** Route names that count as home: the Budget screen under every name the route table gives it (hooks/useRoute.ts: "", "budget", "booth"). */
 export const HOME_ROUTES: readonly string[] = ["", "budget", "booth"];
 
 export function isHomeHash(hash: string): boolean {

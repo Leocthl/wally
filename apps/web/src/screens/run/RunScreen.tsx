@@ -2,9 +2,9 @@
 // the result the engine decided: approved (one-off card), stopped before paying, or needs your OK, with a "Why?" sheet.
 // Everything is a pure view of the TraceEvent state (selectScreen); #/wally?d=<decisionId> pins one purchase.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type RefObject } from "react";
-import type { ApiClient } from "../../api/types";
 import { useBoothContext } from "../../hooks/useBooth";
 import { UI } from "../../i18n/ui";
+import { ASK_EVENT } from "../../shell/askEvent";
 import { haptic, type HapticKind } from "../../ui/haptics";
 import { useLocale } from "../../ui/locale";
 import { TopBar } from "../../ui/Nav";
@@ -14,6 +14,7 @@ import { Calm } from "./components/Calm";
 import { History } from "./components/History";
 import { NeedsOk } from "./components/NeedsOk";
 import { Progress } from "./components/Progress";
+import { RepeatNote } from "./components/RepeatNote";
 import { Stopped } from "./components/Stopped";
 import { WhySheet } from "./components/WhySheet";
 import { logSeqOf } from "./model/chain";
@@ -27,18 +28,8 @@ import "./run.css";
 const R = UI.run;
 const HISTORY_ROWS = 3;
 
-/** Fired when the shell gave no onAsk: the shell can open its Ask sheet on this window event. */
-export const ASK_EVENT = "wally:ask";
-
-interface Suggests {
-  readonly suggestAlternatives?: (req: { readonly decisionId: string }) => Promise<unknown>;
-}
-
-/** "See cheaper options" exists only when the client offers it (a later wave adds suggestAlternatives). */
-function cheaperOf(api: ApiClient): Suggests["suggestAlternatives"] {
-  const fn = (api as ApiClient & Suggests).suggestAlternatives;
-  return typeof fn === "function" ? fn.bind(api) : undefined;
-}
+/** Fired when the screen has no onAsk prop: the shell opens its Ask sheet on this window event (shell/askEvent.ts). */
+export { ASK_EVENT };
 
 const HAPTIC: Readonly<Partial<Record<Result["kind"], HapticKind>>> = { approved: "success", stopped: "stop", needsOk: "warning", error: "stop" };
 
@@ -137,8 +128,13 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
     },
     [booth, result?.escalation?.decisionId],
   );
-  const suggest = cheaperOf(booth.api);
-  const cheaper = suggest && result?.chain ? () => void booth.exec(() => suggest({ decisionId: result.chain?.current.id ?? "" })) : undefined;
+  // "See cheaper options" needs the booth to offer it (info.features.alternatives) and the client to implement it.
+  const suggest = booth.info?.features.alternatives === true ? booth.api.suggestAlternatives : undefined;
+  const decisionId = result?.chain?.current.id;
+  const cheaper = suggest && decisionId ? () => void booth.exec(() => suggest.call(booth.api, { decisionId })) : undefined;
+  // The "pay" button pays the newest open card, so Pay now is offered only on the screen of that card.
+  const newestOpen = booth.state.cards.filter((c) => c.state === "ACTIVE").at(-1);
+  const canPay = result?.card !== undefined && newestOpen?.id === result.card.id;
   const topUp = useCallback(() => {
     window.location.hash = "#/seal";
   }, []);
@@ -150,6 +146,7 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
       <div className="run-body">
         {model.kind === "idle" ? <Calm kind="idle" onAsk={ask} /> : null}
         {model.kind === "working" ? <Progress run={model.run} info={booth.info} /> : null}
+        {result?.repeat ? <RepeatNote kind={result.kind} /> : null}
         {result ? (
           <ResultView
             result={result}
@@ -157,6 +154,7 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
             heading={heading}
             packet={booth.state.packet}
             paying={paying}
+            canPay={canPay}
             answering={answering}
             onAsk={ask}
             onPay={pay}
@@ -191,6 +189,7 @@ interface ResultViewProps {
   readonly heading: RefObject<HTMLHeadingElement | null>;
   readonly packet: ReturnType<typeof useBoothContext>["state"]["packet"];
   readonly paying: boolean;
+  readonly canPay: boolean;
   readonly answering: "APPROVE" | "DENY" | null;
   readonly onAsk: () => void;
   readonly onPay: () => void;
@@ -205,7 +204,7 @@ function ResultView(p: ResultViewProps): ReactElement {
   const { result } = p;
   switch (result.kind) {
     case "approved":
-      return <Approved result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} paying={p.paying} onPay={p.onPay} onWhy={p.onWhy} />;
+      return <Approved result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} paying={p.paying} canPay={p.canPay} onPay={p.onPay} onWhy={p.onWhy} />;
     case "stopped":
       return <Stopped result={result} fresh={p.fresh} headingRef={p.heading} onWhy={p.onWhy} onTopUp={p.onTopUp} onAsk={p.onAsk} {...(p.onCheaper ? { onCheaper: p.onCheaper } : {})} />;
     case "needsOk":
@@ -213,6 +212,6 @@ function ResultView(p: ResultViewProps): ReactElement {
     case "noPick":
     case "error":
     case "info":
-      return <Calm kind={result.kind} onAsk={p.onAsk} headingRef={p.heading} />;
+      return <Calm kind={result.kind} code={result.code} onAsk={p.onAsk} headingRef={p.heading} />;
   }
 }

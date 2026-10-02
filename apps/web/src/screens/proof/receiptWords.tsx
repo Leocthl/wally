@@ -73,7 +73,8 @@ export function receiptTitle(r: Receipt, t: T, compact = false): ReactNode {
     case "approved":
     case "stopped":
     case "needsOk": {
-      const head = [name(r.merchant), name(r.item)].filter(Boolean).join(" · ");
+      // The shop's own names ("Ankle socks, 3 pairs") are data, not figures the app asserts.
+      const head = <span data-ident>{[name(r.merchant), name(r.item)].filter(Boolean).join(" · ")}</span>;
       return r.moreItems > 0 ? <>{head} <Fill text={t(R.moreItems)} slots={{ n: <span data-ident>{r.moreItems}</span> }} /></> : head;
     }
     case "sealed":

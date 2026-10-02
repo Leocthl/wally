@@ -1,7 +1,8 @@
 # apps/web
 
 - **What**: the booth UI (Vite + React 19), mobile first, EN with a zh-HK second line. The rail is SIMULATED on every screen.
-- **Two modes, one interface** (`ApiClient`, `src/api/types.ts`): `HttpApiClient` (`src/api/http/`, live mode) when the booth server answers `/api/info`, else `LocalApiClient` (`src/api/local/`, on-device mode: the real engine, log and SIMULATED rail in the page, recorded planner and judge answers, no network, a note on screen). `?api=local` or `VITE_API=local` forces on-device mode. `MockApiClient` is a UI-test double only. All pass `test/apiClientContract.ts`.
+- **Three clients, one interface** (`ApiClient`, `src/api/types.ts`): `HttpApiClient` (`src/api/http/`, live mode) when the booth server answers `/api/info`, else `LocalApiClient` (`src/api/local/`, on-device mode: the real engine, log and SIMULATED rail in the page, recorded planner and judge answers, no network, a note on screen). `?api=local` or `VITE_API=local` forces on-device mode; `?api=mock` is for tests. `MockApiClient` is a UI-test double only. All pass `test/apiClientContract.ts`.
+- **What the booth can do** (`info().features`): `ask` shows the typed field in the Ask sheet (on-device it knows the sample asks only and says so), `alternatives` shows "See cheaper options" after a budget stop, `compile` says who reads the Seal sentence (`model` or the fixed `rules`). `exportLog()` (live and on-device) adds Receipts > Export for the offline verifier.
 - **Portable backend** (`src/booth/backend/`): the booth runner, session and `OrchestratorBackend`, no `node:` import; the server and `LocalApiClient` both run it. Key design for the phone: `src/api/local/KEYS.md`.
 - **Booth server** (`server/`, Hono, 127.0.0.1 only unless LAN mode): `pnpm demo` from the repo root (preflight, build if needed, start), then open the printed URL. `pnpm demo:reset` resets keys, logs and the packet. `pnpm demo:lan` is the same server for phones on the Wi-Fi (section below).
 - **Stop texts**: `src/explain/renderStop.ts` wraps a stub; lane A's `render` replaces it in one line.
@@ -17,16 +18,26 @@
 ## Screens (hash routes)
 | Route | Screen |
 |---|---|
-| `#/booth` | preset M0 sealed on load, scenario buttons, free-text box, Verify and Tamper |
-| `#/seal` | sentence beside editable rule chips, Seal |
-| `#/run`, `#/console`, `#/log` | one panel each |
+| `#/`, `#/budget`, `#/booth` | Budget: what is left, rules, Recent, Try asking, Manage this budget (cards, Cancel); `?focus=console` scrolls to the cards |
+| `#/wally` | Wally's screen: shopping, approved (one-off card), stopped, Needs your OK, Why sheet; `?d=<decisionId>` pins one purchase |
+| `#/receipts` | the signed log as receipts; `?d=<decisionId>` opens that receipt |
+| `#/proof` | Verify, Try to tamper, Restore, Export, How is this checked |
+| `#/seal` | first-run steps, or `?mode=topup`, `?mode=edit`, `?mode=welcome` |
+| `#/evidence` | Why trust Wally: measured results |
 | `#/presenter` | big screen, PresenterBar steps DM1 to DM9 |
+| `#/styleguide` | design primitives (outside the shell) |
+
+- **Old addresses**: `#/run` goes to Wally, `#/console` to Budget `?focus=console`, `#/log` to Receipts; `?decision=` reads as `?d=`. Each is replaced in the address bar.
+- **Shell** (`src/shell/`): top bar with the SIMULATED note, tab bar with the raised Ask button, Ask and About sheets, connection banners. Screens load as separate chunks.
+- **State**: `src/state/booth.ts` is a pure fold of trace events; a new seal (a new log) starts it over.
 
 ## Booth server
 | Route | Does |
 |---|---|
 | `GET /api/info`, `/api/snapshot`, `/api/log`, `/api/export`, `/api/health` | state; export = JSONL log, public keys in use, checkpoint for the verifier page |
 | `POST /api/seal`, `/api/scenario/:id`, `/api/propose`, `/api/revoke`, `/api/escalation/answer` | pipeline runs (`data/scenarios/booth.json`) |
+| `POST /api/ask`, `/api/alternatives` | a typed request; "See cheaper options" after a budget stop. Both are runs; a repeat of a live cart returns the earlier decision (`duplicate`) |
+| `POST /api/compile` | Seal sentence to rule chips; not a run, seals nothing |
 | `POST /api/verify`, `/api/tamper`, `/api/restore`, `/api/reset` | log demo and reset |
 | `GET /api/events` | SSE trace; ready comment, ids, keep-alive every 15 s, no replay |
 | `GET /api/lan` | LAN mode only, and only to a page on the Mac itself (loopback Host and peer; 404 for everyone else): `{ lan, token, urls[], qrSvg[] }` |
@@ -36,7 +47,7 @@
 - **Laya down**: the server still starts; the judge answers ERROR and the engine escalates (R10.unavailable). `JUDGE_PROVIDER=replay` and `PLANNER_PROVIDER=replay` are labelled operator switches.
 
 ## Rules the tests hold
-- Every figure goes through `Num` with a provenance chip; no bare numbers.
+- Budget, Receipts and Proof: every figure goes through `Num` or `Fig` with a provenance chip; no bare numbers. Wally's screen words amounts inside sentences, so each surface (hero, card, story, list) shows its own chip (`figuresOutsideChipSurface`).
 - Money is integer minor units; times are HKT for display only.
 - Mock outputs say SIMULATED; typed text meets a keyword stand-in, not Laya.
 

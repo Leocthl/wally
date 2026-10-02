@@ -1,5 +1,5 @@
 // Budget home (lane b-shell): the budget card on live data, rule tags, Recent with receipt numbers that open Wally, Try
-// asking, and the selectors that keep a re-sealed budget's old records out.
+// asking, and the selectors over the state the reducer keeps for the budget in force.
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Decision, LogEntry } from "../src/api/types";
@@ -37,8 +37,10 @@ describe("budget card", () => {
     const first = within(recent).getAllByRole("link")[0]!;
     expect(first).toHaveTextContent(/Approved · #\d+/);
     expect(first).toHaveTextContent("HK$259");
+    expect(first).toHaveTextContent("Cotton tee");
+    expect(first).not.toHaveTextContent("(SIMULATED)"); // the chip says it; the fixture's suffix does not repeat it
     const decisionId = (await h.api.snapshot()).log.entries.filter((e) => e.kind === "DECISION").at(-1)?.payload["id"];
-    expect(first).toHaveAttribute("href", `#/wally?decision=${String(decisionId)}`);
+    expect(first).toHaveAttribute("href", `#/wally?d=${String(decisionId)}`);
   });
 
   it("keeps Recent to the last three purchases, newest first, each with its state in words", async () => {
@@ -97,10 +99,9 @@ function stateWith(entries: readonly LogEntry[], logId: string): BoothState {
 }
 
 describe("selectors", () => {
-  it("read only the log of the budget in force after a re-seal", () => {
-    const old = entry(1, "log_old", "DECISION", decision("dec_old", "APPROVE", "Old tee", 100));
+  it("read the records the reducer holds for the budget in force", () => {
     const fresh = entry(1, "log_new", "DECISION", decision("dec_new", "DENY", "Hoodie", 200));
-    const state = stateWith([old, fresh], "log_new");
+    const state = stateWith([fresh], "log_new");
     expect(currentEntries(state)).toEqual([fresh]);
     expect(recentDecisions(state).map((r) => r.id)).toEqual(["dec_new"]);
   });
@@ -112,19 +113,19 @@ describe("selectors", () => {
     expect(rows).toEqual([{ id: "dec_2", seq: 2, outcome: "DENY", title: "Tee", merchant: "Demo", totalMinor: 25900, at: "2026-10-03T02:00:00Z" }]);
   });
 
-  it("group cards of this budget: ready first, the rest after, newest first", () => {
+  it("group cards: ready first, the rest after, newest first", () => {
     const s = initialState();
-    const card = (id: string, state: string, minted: string, mandate = "mnd_1") => ({ id, state, minted_at: minted, mandate_id: mandate }) as unknown as BoothState["cards"][number];
-    const state: BoothState = { ...s, mandate: { id: "mnd_1" } as BoothState["mandate"], cards: [card("a", "USED", "2026-10-03T01:00:00Z"), card("b", "ACTIVE", "2026-10-03T02:00:00Z"), card("c", "ACTIVE", "2026-10-03T01:30:00Z"), card("x", "ACTIVE", "2026-10-03T03:00:00Z", "mnd_0")] };
+    const card = (id: string, state: string, minted: string) => ({ id, state, minted_at: minted, mandate_id: "mnd_1" }) as unknown as BoothState["cards"][number];
+    const state: BoothState = { ...s, cards: [card("a", "USED", "2026-10-03T01:00:00Z"), card("b", "ACTIVE", "2026-10-03T02:00:00Z"), card("c", "ACTIVE", "2026-10-03T01:30:00Z")] };
     const groups = cardGroups(state);
     expect(groups.active.map((c) => c.id)).toEqual(["b", "c"]);
     expect(groups.past.map((c) => c.id)).toEqual(["a"]);
   });
 
-  it("list only open escalations of this budget, the first to expire first", () => {
+  it("list only open escalations, the first to expire first", () => {
     const s = stateWith([entry(1, "log", "DECISION", decision("dec_1", "ESCALATE", "Tee", 1)), entry(2, "log", "DECISION", decision("dec_2", "ESCALATE", "Socks", 1))], "log");
     const esc = (decisionId: string, state: "OPEN" | "EXPIRED", expiresAt: string) => ({ decisionId, state, expiresAt, templateId: "R9.unverified", ruleId: "R9", openedAt: "", totalMinor: 1, merchantName: "Demo" }) as BoothState["escalations"][number];
-    const state: BoothState = { ...s, escalations: [esc("dec_2", "OPEN", "2026-10-03T02:02:00Z"), esc("dec_1", "OPEN", "2026-10-03T02:01:00Z"), esc("dec_9", "OPEN", "2026-10-03T02:00:00Z"), esc("dec_1", "EXPIRED", "2026-10-03T02:00:00Z")] };
+    const state: BoothState = { ...s, escalations: [esc("dec_2", "OPEN", "2026-10-03T02:02:00Z"), esc("dec_1", "OPEN", "2026-10-03T02:01:00Z"), esc("dec_1", "EXPIRED", "2026-10-03T02:00:00Z")] };
     expect(openEscalations(state).map((e) => e.decisionId)).toEqual(["dec_1", "dec_2"]);
   });
 });

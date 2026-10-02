@@ -1,13 +1,13 @@
 // Seal flow (lane b-shell): Meet Wally, Describe your budget, Check and seal, Sealed. Rows validate with words; example
 // chips fill sentence and rows; Top up and Change the rules start prefilled; a failed seal stays put; the model slot
-// (suggestRules) fills rows and never seals by itself.
+// (api.compileRules, or suggestRules from <App>) fills rows, says what it read and never seals by itself.
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "../src/App";
 import type { MockApiClient } from "../src/api/MockApiClient";
-import type { CompiledRules } from "../src/api/types";
+import type { CompileResult, CompiledRules } from "../src/api/types";
 import { bootApp, go } from "./helpers/app";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
 import { FirstSealFails, SealAlwaysFails } from "./helpers/shellClients";
@@ -119,28 +119,103 @@ describe("Top up and Change the rules", () => {
   });
 });
 
-describe("the model slot (suggestRules)", () => {
-  it("fills the rows from the model's rules and never seals by itself", async () => {
-    const rules: CompiledRules = { budget: { amount_minor: 30000, currency: "HKD" }, categories: ["groceries"], merchants: { allow: null, deny: [] }, seller_check: { require_capture: false } };
-    const suggestRules = vi.fn(async () => rules);
+const SAMPLE = "HK$800 this month for clothes, verified sellers only";
+
+function compiled(over: Partial<CompileResult> = {}): CompileResult {
+  const rules: CompiledRules = { budget: { amount_minor: 30000, currency: "HKD" }, categories: ["groceries"], merchants: { allow: null, deny: [] }, seller_check: { require_capture: false } };
+  return { source: "model", rules, validUntil: "2099-12-30T15:59:59Z", labels: [{ kind: "budget", rule: "R3", en: "HK$300 budget", zhHK: "預算 HK$300" }], notes: ["No end date was given, so the budget lasts to the end of the month."], clamped: [], confirmRequired: true, ...over };
+}
+
+describe("the sentence reader (api.compileRules, or suggestRules from <App>)", () => {
+  it("fills the rows from the reader's rules, says what it read, and never seals by itself", async () => {
+    const suggestRules = vi.fn(async () => compiled({ clamped: ["A weekly limit is not a rule Wally can enforce."] }));
     const api = new FirstSealFails();
     const seal = vi.spyOn(api, "seal");
     const { user } = firstRun(api, { suggestRules });
     await user.click(await screen.findByRole("button", { name: /^Start/ }));
     await user.click(screen.getByRole("button", { name: /Read my sentence/ }));
     await waitFor(() => expect(amount()).toHaveValue("300"));
-    expect(suggestRules).toHaveBeenCalledWith("HK$800 this month for clothes, verified sellers only");
+    expect(suggestRules).toHaveBeenCalledWith(SAMPLE, "en");
     expect(screen.getByRole("button", { name: "Groceries" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("switch", { name: "Verified sellers only" })).not.toBeChecked();
+    const read = screen.getByRole("status", { name: "What Wally understood" });
+    expect(read).toHaveTextContent("HK$300 budget");
+    expect(read).toHaveTextContent("No end date was given");
+    expect(within(read).getByText("Left out of the suggestion")).toBeInTheDocument();
+    expect(read).toHaveTextContent("A weekly limit is not a rule Wally can enforce.");
+    expect(read).toHaveTextContent("Read by Wally's on-device model.");
+    expect(read).toHaveTextContent("Nothing is sealed until you say so.");
     expect(seal).toHaveBeenCalledTimes(1); // only the preset seal on load, which failed
   });
 
-  it("says so when the model cannot read the sentence", async () => {
+  it("asks the booth's own reader by default, with the screen language, and keeps every row editable", async () => {
+    const api = new FirstSealFails();
+    const compile = vi.spyOn(api, "compileRules");
+    const seal = vi.spyOn(api, "seal");
+    const { user } = firstRun(api);
+    await user.click(await screen.findByRole("button", { name: /^Start/ }));
+    await user.click(screen.getByRole("button", { name: /Read my sentence/ }));
+    const read = await screen.findByRole("status", { name: "What Wally understood" });
+    expect(compile).toHaveBeenCalledWith({ text: SAMPLE, locale: "en" });
+    expect(read).toHaveAttribute("data-source", "rules");
+    expect(read).toHaveTextContent("Read by fixed rules.");
+    expect(amount()).toHaveValue("800");
+    await user.clear(amount());
+    await user.type(amount(), "650");
+    expect(amount()).toHaveValue("650");
+    await user.click(next());
+    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(seal).toHaveBeenCalledTimes(1);
+  });
+
+  it("forgets what it read when the sentence changes", async () => {
+    const { user } = firstRun();
+    await user.click(await screen.findByRole("button", { name: /^Start/ }));
+    await user.click(screen.getByRole("button", { name: /Read my sentence/ }));
+    await screen.findByRole("status", { name: "What Wally understood" });
+    await user.type(screen.getByRole("textbox", { name: /Your budget in a sentence/ }), " today");
+    expect(screen.queryByRole("status", { name: "What Wally understood" })).toBeNull();
+  });
+
+  it("has no Read my sentence button when the client cannot read a sentence; typing still fills the rows", async () => {
+    const api = new FirstSealFails();
+    (api as { compileRules?: unknown }).compileRules = undefined;
+    const { user } = firstRun(api);
+    await user.click(await screen.findByRole("button", { name: /^Start/ }));
+    expect(screen.queryByRole("button", { name: /Read my sentence/ })).toBeNull();
+    expect(amount()).toHaveValue("800");
+  });
+
+  it("falls back to the typed sentence's rows, with a plain note, when the reader fails or cannot read it", async () => {
+    const api = new FirstSealFails();
+    vi.spyOn(api, "compileRules").mockRejectedValueOnce(new Error("the booth could not be reached"));
+    const { user } = firstRun(api);
+    await user.click(await screen.findByRole("button", { name: /^Start/ }));
+    await user.click(screen.getByRole("button", { name: /Read my sentence/ }));
+    expect(await screen.findByText("Wally couldn't read that. Set the rules below.")).toBeInTheDocument();
+    expect(amount()).toHaveValue("800");
+    expect(screen.queryByRole("status", { name: "What Wally understood" })).toBeNull();
+  });
+
+  it("says so when suggestRules returns nothing", async () => {
     const { user } = firstRun(new FirstSealFails(), { suggestRules: async () => null });
     await user.click(await screen.findByRole("button", { name: /^Start/ }));
     await user.click(screen.getByRole("button", { name: /Read my sentence/ }));
     expect(await screen.findByText("Wally couldn't read that. Set the rules below.")).toBeInTheDocument();
     expect(amount()).toHaveValue("800");
+  });
+
+  it("sends the Chinese sentence with locale zh-HK", async () => {
+    window.localStorage.setItem("wally:lang", "zh-HK");
+    window.location.hash = "#/budget";
+    const api = new FirstSealFails();
+    const compile = vi.spyOn(api, "compileRules");
+    const user = userEvent.setup();
+    render(<App api={api} /> as ReactElement);
+    await user.click(await screen.findByRole("button", { name: /^開始/ }));
+    await user.click(screen.getByRole("button", { name: /幫我讀句子/ }));
+    await waitFor(() => expect(compile).toHaveBeenCalledWith({ text: "今個月 HK$800 買衫，只限認證賣家", locale: "zh-HK" }));
+    window.localStorage.clear();
   });
 });
 

@@ -29,6 +29,7 @@
 
 /* Blocks and sections */
 .home-block { display: grid; gap: var(--sp-3); }
+.home-block > * { min-width: 0; }
 .home-block__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); }
 .home-block__lead { margin-top: calc(-1 * var(--sp-2)); color: var(--c-ink-muted); font-size: var(--text-sm); }
 .home-block__empty { color: var(--c-ink-muted); }

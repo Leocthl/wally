@@ -153,13 +153,30 @@ describe("stopped before paying", () => {
     expect(window.location.hash).toBe("#/seal");
   });
 
-  it("See cheaper options appears only when the client offers suggestAlternatives", async () => {
+  it("See cheaper options calls suggestAlternatives for the stopped decision when the booth offers it", async () => {
     const suggestAlternatives = vi.fn(async () => undefined);
-    const m = await mountRun({ extend: { suggestAlternatives } });
+    const m = await mountRun({ extend: { suggestAlternatives }, features: { alternatives: true } });
     await m.run("normal");
     await m.run("overflow");
     await m.user.click(screen.getByRole("button", { name: "See cheaper options" }));
     expect(suggestAlternatives).toHaveBeenCalledWith({ decisionId: (await lastDecision(m)).id });
+  });
+
+  it("hides See cheaper options when the booth does not offer alternatives, even if the client has the method", async () => {
+    const suggestAlternatives = vi.fn(async () => undefined);
+    const m = await mountRun({ extend: { suggestAlternatives }, features: { alternatives: false } });
+    await m.run("normal");
+    await m.run("overflow");
+    expect(screen.getByRole("alert")).toHaveTextContent("It costs HK$550 with shipping");
+    expect(screen.queryByRole("button", { name: "See cheaper options" })).toBeNull();
+  });
+
+  it("hides See cheaper options when the client has no suggestAlternatives, even if the booth says it can", async () => {
+    const m = await mountRun({ features: { alternatives: true } });
+    await m.run("normal");
+    await m.run("overflow");
+    expect(screen.getByRole("alert")).toHaveTextContent("It costs HK$550 with shipping");
+    expect(screen.queryByRole("button", { name: "See cheaper options" })).toBeNull();
   });
 
   it("injected listing: the plain injection reason, never a probability", async () => {
@@ -320,5 +337,104 @@ describe("recent purchases", () => {
     });
     expect(await screen.findByRole("heading", { name: "Paid with a one-off card" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+  });
+});
+
+describe("a repeated ask", () => {
+  async function again(m: Mounted, decisionId: string): Promise<void> {
+    const at = "2026-10-03T03:00:00Z";
+    await m.inject([
+      { type: "run.started", runId: "run_again", scenario: "custom", at },
+      { type: "run.finished", runId: "run_again", outcome: "APPROVE", at, note: "Wally already decided this exact purchase.", code: "DUPLICATE", duplicateOf: decisionId },
+    ]);
+  }
+
+  it("shows the earlier card with a calm note instead of a second run", async () => {
+    const m = await mountRun();
+    await m.run("normal");
+    await again(m, (await lastDecision(m)).id);
+    expect(m.root().querySelector("[data-run-repeat]")).toHaveTextContent("You already have a one-off card for this. Nothing new was bought.");
+    expect(screen.getByRole("heading", { name: "Paid with a one-off card" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "One-off card" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Nothing new to buy" })).toBeNull();
+    expectPlainSurface(m);
+  });
+
+  it("says a stopped purchase was already stopped, and a question is still waiting", async () => {
+    const m = await mountRun();
+    await m.run("flagged");
+    await again(m, (await lastDecision(m)).id);
+    expect(m.root().querySelector("[data-run-repeat]")).toHaveTextContent("Wally already looked at this exact purchase and stopped it.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Stopped before paying");
+    const q = await mountRun();
+    await q.run("unverified");
+    await again(q, (await lastDecision(q)).id);
+    expect(q.root().querySelector("[data-run-repeat]")).toHaveTextContent("Wally already asked you about this. It is waiting for your answer.");
+    expect(within(q.root()).getByRole("heading", { name: "Needs your OK" })).toBeInTheDocument();
+  });
+
+  it("goes away once another purchase takes the screen", async () => {
+    const m = await mountRun();
+    await m.run("normal");
+    await again(m, (await lastDecision(m)).id);
+    expect(m.root().querySelector("[data-run-repeat]")).not.toBeNull();
+    await m.run("flagged");
+    expect(m.root().querySelector("[data-run-repeat]")).toBeNull();
+    expect(screen.getByRole("alert")).toHaveTextContent("Stopped before paying");
+  });
+});
+
+describe("runs that end for a known reason", () => {
+  async function ended(m: Mounted, code: string): Promise<void> {
+    const at = "2026-10-03T03:00:00Z";
+    await m.inject([
+      { type: "run.started", runId: "run_why", scenario: "custom", at },
+      { type: "run.finished", runId: "run_why", outcome: "INFO", at, note: "english note", code },
+    ]);
+  }
+
+  it("a typed ask this device has no recording for says live asks need the booth server", async () => {
+    const m = await mountRun();
+    await ended(m, "UNKNOWN_REQUEST");
+    expect(screen.getByRole("heading", { name: "Wally can't shop for that here" })).toBeInTheDocument();
+    expect(screen.getByText("Live asks need the booth server. Try one of the cards on Budget instead.")).toBeInTheDocument();
+  });
+
+  it("no cheaper pick says nothing cheaper fits what is left", async () => {
+    const m = await mountRun();
+    await m.inject([
+      { type: "run.started", runId: "run_alt", scenario: "custom", at: "2026-10-03T03:00:00Z" },
+      { type: "stage", runId: "run_alt", stage: "planner", status: "done", at: "2026-10-03T03:00:01Z" },
+      { type: "run.finished", runId: "run_alt", outcome: "INFO", at: "2026-10-03T03:00:02Z", note: "english note", code: "NO_PROPOSAL:no_alternative" },
+    ]);
+    expect(screen.getByRole("heading", { name: "No cheaper option fits" })).toBeInTheDocument();
+    expect(screen.getByText("Nothing cheaper fits what is left in your budget.")).toBeInTheDocument();
+  });
+});
+
+describe("Pay now", () => {
+  it("is offered only on the card the pay button would pay (the newest open one), and pays that card", async () => {
+    const m = await mountRun();
+    await m.run("mint");
+    const first = (await lastDecision(m)).id;
+    await m.run("mint");
+    const second = (await lastDecision(m)).id;
+    expect(screen.getByRole("button", { name: "Pay now" })).toBeInTheDocument();
+    await act(async () => {
+      window.location.hash = `#/wally?d=${first}`;
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    await screen.findByRole("button", { name: "Back" });
+    expect(screen.getByRole("heading", { name: "Wally made a one-off card" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pay now" })).toBeNull();
+    await act(async () => {
+      window.location.hash = `#/wally?d=${second}`;
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    await m.user.click(await screen.findByRole("button", { name: "Pay now" }));
+    await screen.findByText("Charged the exact HK$259.");
+    const cards = (await m.mock.snapshot()).cards;
+    expect(cards.find((c) => c.decision_id === second)?.state).toBe("USED");
+    expect(cards.find((c) => c.decision_id === first)?.state).toBe("ACTIVE");
   });
 });

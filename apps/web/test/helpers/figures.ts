@@ -31,3 +31,30 @@ export function numsWithoutChip(root: Element): string[] {
   });
   return missing;
 }
+
+/**
+ * Wally's screen words its amounts inside sentences ("It costs HK$550 with shipping, but only HK$541 is left"), so it
+ * follows the surface rule of docs/04 instead of the Num rule: a figure sits on a surface (hero, card, story, list)
+ * that shows a provenance chip of its own. Returns the figures whose surfaces show none.
+ */
+export function figuresOutsideChipSurface(root: Element): string[] {
+  const missing: string[] = [];
+  const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const text = node.textContent ?? "";
+    const owner = node.parentElement;
+    // A listing's own title ("Ankle socks, 3 pairs") in the top bar is the shop's text, not a figure the app asserts.
+    if (!/\d/.test(text) || !owner || owner.closest("[data-chip],textarea,input,script,style,.w-topbar__title,.w-topbar__subtitle")) continue;
+    let up: Element | null = owner;
+    let covered = false;
+    while (up && up !== root) {
+      if (up.querySelector("[data-chip]")) {
+        covered = true;
+        break;
+      }
+      up = up.parentElement;
+    }
+    if (!covered) missing.push(text.trim());
+  }
+  return missing;
+}

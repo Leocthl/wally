@@ -2,7 +2,8 @@
 // button, the service worker staying off, and haptics through the Haptics plugin. Fake windows only, no Capacitor import.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { haptic, HAPTIC_PATTERNS, type HapticKind, type HapticWindow } from "../src/ui/haptics";
-import { backAction, installBackButton, isHomeHash, isNative, nativePlugin, type BackWindow } from "../src/pwa/native";
+import { ROUTE_NAMES, parseHash } from "../src/hooks/useRoute";
+import { backAction, HOME_ROUTES, installBackButton, isHomeHash, isNative, nativePlugin, type BackWindow } from "../src/pwa/native";
 import { shouldRegister } from "../src/pwa/register";
 
 const nativeWindow = (plugins: Readonly<Record<string, unknown>> = {}) => ({ Capacitor: { isNativePlatform: () => true, Plugins: plugins } });
@@ -53,6 +54,14 @@ describe("back button", () => {
   it("treats the empty hash, #/budget and #/booth as home", () => {
     for (const hash of ["", "#", "#/", "#/budget", "#/budget?x=1", "#/booth"]) expect(isHomeHash(hash), hash).toBe(true);
     for (const hash of ["#/seal", "#/run", "#/evidence", "#/budget-old"]) expect(isHomeHash(hash), hash).toBe(false);
+  });
+
+  it("home is exactly the names the app's route table shows as Budget", () => {
+    for (const name of HOME_ROUTES) expect(parseHash(`#/${name}`).route.name, name).toBe("budget");
+    for (const name of ROUTE_NAMES.filter((n) => n !== "budget")) {
+      expect(HOME_ROUTES, name).not.toContain(name);
+      expect(isHomeHash(`#/${name}`), name).toBe(false);
+    }
   });
 
   it("exits at home, steps back with history, and jumps home without it", () => {

@@ -2,7 +2,7 @@
 // except in a native shell that has saved a booth Mac (LAN mode): that address is tried first.
 // Otherwise the page asks the booth server for /api/info and uses it when it answers as the server (live mode: Laya
 // judge, Qwen or rule planner). No answer, a static host, a timeout, a missing pairing token or an odd answer: on-device
-// mode, with a visible note. The mock is a UI-test double only; the page never falls back to it.
+// mode, with a visible note. The mock is a UI-test double only: the page never falls back to it, and runs it only for ?api=mock.
 import { browserStores, captureTokenFromUrl, readServer, readToken, TOKEN_HEADER } from "../http/connection";
 import { HttpApiClient } from "../http/HttpApiClient";
 import { isNative } from "../../pwa/native";
@@ -56,9 +56,22 @@ export async function probeInfo(server: string | null = null, token: string | nu
   return res.ok ? ((await res.json()) as unknown) : null;
 }
 
+/** How often the test double sweeps escalations that ran out of time (UI only, ASSUMED). */
+export const MOCK_SWEEP_EVERY_MS = 1_000;
+
+/** `?api=mock` is for tests and demos of the screens alone: the instant UI double, with no network call at all (not even the probe). */
+export function mockForced(search: string): boolean {
+  return new URLSearchParams(search).get("api") === "mock";
+}
+
 /** The client for this page load, and whether the on-device note should show. */
 export async function pickClient(): Promise<{ readonly api: ApiClient; readonly onDevice: boolean }> {
   captureTokenFromUrl();
+  if (mockForced(window.location.search)) {
+    // Loaded only on request: the booth build never carries the double in its first chunk.
+    const { MockApiClient } = await import("../MockApiClient");
+    return { api: new MockApiClient({ sweepEveryMs: MOCK_SWEEP_EVERY_MS }), onDevice: false };
+  }
   const env: unknown = import.meta.env["VITE_API"];
   const stores = browserStores();
   const server = isNative() ? readServer(stores) : null; // a browser page talks to the origin it came from

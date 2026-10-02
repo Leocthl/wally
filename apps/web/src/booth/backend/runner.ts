@@ -55,7 +55,8 @@ export class ScenarioRunner {
       step = { outcome: "ERROR", note: err instanceof Error ? err.message : "unknown error" };
     }
     const note = step.note ?? (step.outcome === "ERROR" ? tracker.errorOf(runId) : undefined) ?? this.#judgeNote(runId);
-    emit({ type: "run.finished", runId, outcome: step.outcome, at: iso(clock.now()), ...(note === undefined ? {} : { note }) });
+    const repeat = step.duplicate === true && step.decisionId !== undefined ? { duplicateOf: step.decisionId } : {};
+    emit({ type: "run.finished", runId, outcome: step.outcome, at: iso(clock.now()), ...(note === undefined ? {} : { note }), ...(step.code === undefined ? {} : { code: step.code }), ...repeat });
     tracker.end(runId);
     return {
       runId,

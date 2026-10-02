@@ -5,9 +5,17 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ON_DEVICE_NOTE } from "../src/api/local/info";
 import { OnDeviceNote } from "../src/api/local/OnDeviceNote";
-import { localForced, selectApi } from "../src/api/local/select";
+import { localForced, mockForced, selectApi } from "../src/api/local/select";
 
 const probeOf = (answer: unknown) => vi.fn(() => (answer instanceof Error ? Promise.reject(answer) : Promise.resolve(answer)));
+
+describe("mockForced", () => {
+  it("is only for ?api=mock, and never reaches the network", () => {
+    expect(mockForced("?api=mock")).toBe(true);
+    expect(mockForced("?x=1&api=mock")).toBe(true);
+    for (const search of ["", "?api=local", "?api=http", "?api=mocking", "?mock=1"]) expect(mockForced(search), search).toBe(false);
+  });
+});
 
 describe("localForced", () => {
   it.each([

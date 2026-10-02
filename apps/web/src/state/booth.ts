@@ -27,6 +27,10 @@ export interface RunView {
   readonly cardEvents: readonly { readonly event: CardEvent; readonly beat: CardBeat }[];
   readonly outcome?: RunOutcome;
   readonly note?: string;
+  /** Stable reason the run ended as it did (DUPLICATE, NO_PROPOSAL:<reason>, UNKNOWN_REQUEST...), so a screen words it itself. */
+  readonly code?: string;
+  /** The run repeated a live cart: the earlier decision's id. Nothing new was decided, minted or charged. */
+  readonly duplicateOf?: string;
   readonly finished: boolean;
 }
 
@@ -121,7 +125,14 @@ function reduceRun(state: BoothState, event: Extract<TraceEvent, { runId: string
       case "card.event":
         return { ...r, cardEvents: [...r.cardEvents, { event: event.event, beat: event.beat }] };
       case "run.finished":
-        return { ...r, finished: true, outcome: event.outcome, ...(event.note ? { note: event.note } : {}) };
+        return {
+          ...r,
+          finished: true,
+          outcome: event.outcome,
+          ...(event.note ? { note: event.note } : {}),
+          ...(event.code ? { code: event.code } : {}),
+          ...(event.duplicateOf ? { duplicateOf: event.duplicateOf } : {}),
+        };
       default:
         return r;
     }
@@ -129,6 +140,21 @@ function reduceRun(state: BoothState, event: Extract<TraceEvent, { runId: string
   if (event.type === "card.minted") return { ...state, runs, cards: [...state.cards, event.card] };
   if (event.type === "card.event") return { ...state, runs, cards: applyCardEvent(state.cards, event.event) };
   return { ...state, runs };
+}
+
+/** The log of the budget the state holds: the packet names it; before any packet, the newest entry or the head does. */
+function logIdOf(state: BoothState): string | undefined {
+  return state.packet?.log_id ?? state.log.entries.at(-1)?.log_id ?? state.log.head?.log_id;
+}
+
+/**
+ * A new seal starts a new log and a new set of cards on the engine side, so the first event that names another log
+ * (the log entry, the packet or the seal itself, whichever the client sends first) starts the state over: nothing of
+ * the earlier budget carries over. An empty state, or one about this log already, is kept as it is.
+ */
+function inBudget(state: BoothState, logId: string): BoothState {
+  const held = logIdOf(state);
+  return held === undefined || held === logId ? state : initialState();
 }
 
 export function reduce(state: BoothState, action: BoothAction): BoothState {
@@ -140,15 +166,17 @@ export function reduce(state: BoothState, action: BoothAction): BoothState {
     case "reset":
       return initialState();
     case "mandate.sealed":
-      return { ...state, mandate: action.mandate, intentText: action.mandate.intent_text, packet: action.packet, revoked: false };
+      return { ...inBudget(state, action.packet.log_id), mandate: action.mandate, intentText: action.mandate.intent_text, packet: action.packet, revoked: false };
     case "mandate.revoked":
       return { ...state, revoked: true };
     case "run.started":
       return { ...state, runs: [...state.runs, { runId: action.runId, scenario: action.scenario, startedAt: action.at, stages: {}, decisions: [], cardEvents: [], finished: false }] };
-    case "log":
-      return { ...state, log: appendLog(state.log, action.entry) };
+    case "log": {
+      const base = inBudget(state, action.entry.log_id);
+      return { ...base, log: appendLog(base.log, action.entry) };
+    }
     case "packet":
-      return { ...state, packet: action.packet };
+      return { ...inBudget(state, action.packet.log_id), packet: action.packet };
     case "escalation":
       return { ...state, escalations: upsertEscalation(state.escalations, action.escalation) };
     case "stage":

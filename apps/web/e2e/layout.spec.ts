@@ -30,7 +30,7 @@ test("every control is at least 44 px on Budget, in the Ask sheet, on Wally and 
   await expect(page.getByRole("dialog")).toBeVisible();
   expect(await undersized(page, ".w-sheet")).toEqual([]);
   await page.locator('.w-sheet [data-scenario="unverified"]').click();
-  await expect(page.getByRole("alert").filter({ hasText: "ESCALATED R9" })).toBeVisible();
+  await expect(page.locator('[data-screen="wally"]').getByRole("heading", { name: "Needs your OK" })).toBeVisible();
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("region", { name: "Wally needs your OK" })).toBeVisible();
   expect(await undersized(page)).toEqual([]);
@@ -54,7 +54,7 @@ test("the screens do not scroll sideways at 320 and 360 px", async ({ page }) =>
     }
     await page.goto("/?api=mock#/budget");
     await page.locator('main [data-scenario="overflow"]').click();
-    await expect(page.getByRole("alert").filter({ hasText: "STOPPED R3" })).toBeVisible();
+    await expect(page.locator('[data-screen="wally"]').getByRole("alert").filter({ hasText: "Stopped before paying" })).toBeVisible();
     expect(await sideways(page), `wally after a stop at ${width}`).toBeLessThanOrEqual(0);
   }
 });
@@ -63,7 +63,7 @@ test("the stop is above the fold on a phone after a stop", async ({ page, isMobi
   test.skip(!isMobile, "phone project only");
   await page.goto("/?api=mock#/budget");
   await page.locator('main [data-scenario="flagged"]').click();
-  await expect(page.getByRole("alert").filter({ hasText: "STOPPED R9" })).toBeInViewport();
+  await expect(page.locator('[data-screen="wally"]').getByRole("alert").filter({ hasText: "Stopped before paying" })).toBeInViewport();
 });
 
 test("every route renders with the SIMULATED note in the top bar", async ({ page }) => {
