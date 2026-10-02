@@ -173,8 +173,10 @@ describe("KNOWN DEFECT S-RAIL-3 (I2): the logged charge is the merchant's claim,
   });
 });
 
-describe("KNOWN DEFECT S-RAIL-4: the merchant lock is not bound to the approved merchant", () => {
-  it.fails("mint refuses a lock other than decision.cart.merchant.domain", () => {
+// FIXED (lane s-fix-core): RailSim refuses a lock other than the approved cart's domain (NOT_APPROVED) and locks to
+// that domain when none is given; it also refuses an APPROVE that still carries a FAIL rule.
+describe("S-RAIL-4 (fixed): the merchant lock is bound to the approved merchant", () => {
+  it("mint refuses a lock other than decision.cart.merchant.domain", () => {
     expect(LOCK_RUN.minted).toBe(false);
   });
 });

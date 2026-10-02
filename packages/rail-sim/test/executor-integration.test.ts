@@ -153,11 +153,13 @@ describe("R12 drift, revocation and wrong merchant through the executor", () => 
     expect(await r.cardEvents()).toHaveLength(1);
   });
 
-  it("wrong merchant: declined by the lock (SIMULATED); without a lock it pays and the executor flags it", async () => {
+  // Changed (lane s-fix-core, audit S-RAIL-4): without an explicit lock the rail locks the card to the approved
+  // merchant, so the wrong merchant is declined either way (core's executor test covers the anomaly on a lock-free rail).
+  it("wrong merchant: declined by the lock (SIMULATED), also when no lock was asked for", async () => {
     const locked = await rig({ mode: "wrong_merchant" });
     expect(await locked.checkout()).toMatchObject({ status: "DECLINED", event: { decline_code: "MERCHANT_MISMATCH" }, anomalies: [] });
-    const open = await rig({ mode: "wrong_merchant" }, { lock: false });
-    expect(await open.checkout()).toMatchObject({ status: "AUTHORISED", anomalies: ["MERCHANT_DOMAIN_MISMATCH"] });
+    const unasked = await rig({ mode: "wrong_merchant" }, { lock: false });
+    expect(await unasked.checkout()).toMatchObject({ status: "DECLINED", event: { decline_code: "MERCHANT_MISMATCH" } });
   });
 
   it("preauth: the hold above the quote is a false block on an exact-limit card [F2]", async () => {

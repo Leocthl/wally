@@ -1,14 +1,15 @@
 // RailSim: the SIMULATED rail. Single-use card semantics [F1] behind RailPort. No real card exists here:
 // a card is an opaque handle plus a random last4, every record and event says simulated (I8).
 import type { CardRecord, Decision } from "@laisee/core/generated";
-import { MintError, type AuthoriseRequest, type CardEvent, type MintRequest, type RailPort } from "@laisee/core/ports";
+import { MintError, type AuthoriseRequest, type CardEvent, type Clock, type MintRequest, type RailPort } from "@laisee/core/ports";
 import { formatIssues, validateCardEvent, validateCardRecord } from "@laisee/core/schema";
 import { authorisedEvent, declinedEvent, evaluateAuthorise, lifecycleEvent, requestPrint } from "./authorise-rules";
 import { ID_COLLISION_RETRIES, RAIL_SIM_DEFAULTS, UNKNOWN_CARD_ID } from "./config";
 import { DEFAULT_DECLINE_TABLE, describeDecline, type DeclineCode, type DeclineInfo, type DeclineTable } from "./decline-table";
 import { RailSimError } from "./errors";
 import { cryptoRandom, createIdSource, type IdSource, type RandomSource } from "./ids";
-import { approvedLimit, assertApprovalConsistent, assertCeiling, assertSlotFree, cardExpiry, type MintLimits } from "./mint-rules";
+import { assertLockBound, requestedLock } from "./lock";
+import { approvedLimit, assertApprovalConsistent, assertCeiling, assertLimitIsTotal, assertSlotFree, cardExpiry, type Approval, type MintLimits } from "./mint-rules";
 import {
   EMPTY_STATE,
   activeCount,
@@ -40,6 +41,12 @@ export interface RailSimOptions {
   readonly ids?: IdSource;
   /** Waits out a deferred decline's delay_ms. Absent: deferred declines return at once. */
   readonly sleep?: (ms: number) => Promise<void>;
+  /**
+   * The rail's own clock. Expiry (card and packet) is judged at the latest of this clock, every request time the rail
+   * has seen and the request's `now`, so time never runs backwards for the rail and a stale `now` cannot charge an
+   * expired card. Absent: the latest request time seen.
+   */
+  readonly clock?: Clock;
 }
 
 function positiveInt(value: number, name: string): number {
@@ -62,7 +69,10 @@ export class RailSim implements RailPort {
   readonly #random: RandomSource;
   readonly #ids: IdSource;
   readonly #sleep: ((ms: number) => Promise<void>) | undefined;
+  readonly #clock: Clock | undefined;
   #state: RailState = EMPTY_STATE;
+  /** Latest time the rail has seen, ms; expiry is never judged earlier than this. */
+  #highWaterMs = Number.NEGATIVE_INFINITY;
 
   constructor(options: RailSimOptions = {}) {
     this.#limits = Object.freeze({
@@ -75,6 +85,7 @@ export class RailSim implements RailPort {
     this.#random = options.random ?? cryptoRandom();
     this.#ids = options.ids ?? createIdSource(this.#random);
     this.#sleep = options.sleep;
+    this.#clock = options.clock;
   }
 
   /** The limits in force (F1, F30 unless overridden). */
@@ -107,15 +118,18 @@ export class RailSim implements RailPort {
 
   async mint(req: MintRequest): Promise<CardRecord> {
     assertDate(req.now, "now");
+    const atMs = this.#advance(req.now);
     const approval = approvedLimit(req.decision);
     const { decision, limitMinor } = approval;
+    const lock = requestedLock(decision, req.merchantLock);
     const existing = this.#mintedFor(decision.id);
-    if (existing !== undefined) return this.#repeatMint(existing, decision, limitMinor, req);
+    if (existing !== undefined) return this.#repeatMint(existing, approval, lock, req);
+    assertLockBound(lock, decision);
     assertCeiling(limitMinor, this.#limits);
     assertApprovalConsistent(approval);
-    const expiresAt = cardExpiry(decision, req.ttlMs, req.now, this.#limits);
+    const expiresAt = cardExpiry(decision, req.ttlMs, req.now, atMs, this.#limits);
     assertSlotFree(activeCount(this.#state), this.#limits);
-    const card = this.#newCard(decision, limitMinor, expiresAt, req);
+    const card = this.#newCard(decision, limitMinor, expiresAt, lock, req);
     this.#state = addCard(this.#state, card);
     return card;
   }
@@ -131,8 +145,9 @@ export class RailSim implements RailPort {
       if (seen.print !== print) throw new RailSimError("IDEMPOTENCY_KEY_REUSED", "the key was already used for a different request");
       return seen.event;
     }
+    const atMs = this.#advance(req.now);
     const card = this.#cardByHandle(req.handle);
-    const decline = card === undefined ? "UNKNOWN_HANDLE" : evaluateAuthorise(card, req);
+    const decline = card === undefined ? "UNKNOWN_HANDLE" : evaluateAuthorise(card, req, atMs);
     if (decline !== null) return this.#decline(card?.id ?? UNKNOWN_CARD_ID, req, decline, print);
     if (card === undefined) throw new RailSimError("INTERNAL", "authorised a card that does not exist");
     return this.#charge(card, req, print);
@@ -140,6 +155,7 @@ export class RailSim implements RailPort {
 
   async void(cardId: string, now: Date): Promise<CardEvent> {
     assertDate(now, "now");
+    this.#advance(now);
     const card = this.#state.cards.get(cardId);
     if (card === undefined) throw new RailSimError("UNKNOWN_CARD", `no card ${cardId}`);
     if (card.state !== "ACTIVE") {
@@ -152,9 +168,28 @@ export class RailSim implements RailPort {
 
   async expireDue(now: Date): Promise<CardEvent[]> {
     assertDate(now, "now");
-    const due = [...this.#state.cards.values()].filter((c) => c.state === "ACTIVE" && Date.parse(c.expires_at) <= now.getTime());
+    const atMs = this.#advance(now);
+    const due = [...this.#state.cards.values()].filter((c) => c.state === "ACTIVE" && Date.parse(c.expires_at) <= atMs);
     this.#state = due.reduce((state, card) => setCardState(state, card.id, "EXPIRED"), this.#state);
     return due.map((card) => lifecycleEvent(card.id, "EXPIRED", now));
+  }
+
+  /** The event recorded for this idempotency key, charge or decline, or null. Never charges (audit H5). */
+  async eventFor(idempotencyKey: string): Promise<CardEvent | null> {
+    return this.#state.byKey.get(idempotencyKey)?.event ?? null;
+  }
+
+  /** The rail's time for this request: never earlier than its clock or any time it has already seen. */
+  #advance(now: Date): number {
+    const clockMs = this.#clock === undefined ? Number.NEGATIVE_INFINITY : this.#clockMs(this.#clock);
+    this.#highWaterMs = Math.max(this.#highWaterMs, now.getTime(), clockMs);
+    return this.#highWaterMs;
+  }
+
+  #clockMs(clock: Clock): number {
+    const t: unknown = clock.now();
+    if (!(t instanceof Date) || Number.isNaN(t.getTime())) throw new RailSimError("INVALID_CONFIG", "the rail clock returned an invalid Date");
+    return t.getTime();
   }
 
   #mintedFor(decisionId: string): CardRecord | undefined {
@@ -167,18 +202,23 @@ export class RailSim implements RailPort {
     return cardId === undefined ? undefined : this.#state.cards.get(cardId);
   }
 
-  /** A repeat for the same decision: same CardRecord as minted, nothing new. Different terms: ALREADY_MINTED. */
-  #repeatMint(existing: CardRecord, decision: Decision, limitMinor: number, req: MintRequest): CardRecord {
+  /**
+   * A repeat for the same decision mints nothing new and returns the card as it is NOW (a used card says USED, so a
+   * caller never logs a spent card as ACTIVE). Different terms: ALREADY_MINTED; a limit that is not the total: I2.
+   */
+  #repeatMint(existing: CardRecord, approval: Approval, lock: string, req: MintRequest): CardRecord {
+    const { decision, limitMinor } = approval;
+    assertLimitIsTotal(approval);
     const same =
       existing.limit_minor === limitMinor &&
       existing.mandate_id === decision.mandate_id &&
-      existing.merchant_lock === req.merchantLock &&
+      existing.merchant_lock === lock &&
       existing.purpose === req.purpose;
     if (!same) throw new MintError("ALREADY_MINTED", `SIMULATED rail: decision ${decision.id} already has a card with other terms`);
-    return Object.freeze({ ...existing, state: "ACTIVE" });
+    return existing;
   }
 
-  #newCard(decision: Decision, limitMinor: number, expiresAt: Date, req: MintRequest): CardRecord {
+  #newCard(decision: Decision, limitMinor: number, expiresAt: Date, lock: string, req: MintRequest): CardRecord {
     const candidate: CardRecord = {
       id: this.#unused(() => this.#ids.cardId(), (id) => this.#state.cards.has(id), "card id"),
       decision_id: decision.id,
@@ -190,7 +230,7 @@ export class RailSim implements RailPort {
       minted_at: req.now.toISOString(),
       expires_at: expiresAt.toISOString(),
       state: "ACTIVE",
-      ...(req.merchantLock === undefined ? {} : { merchant_lock: req.merchantLock }),
+      merchant_lock: lock,
       ...(req.purpose === undefined ? {} : { purpose: req.purpose }),
       simulated: true,
     };

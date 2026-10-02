@@ -58,10 +58,27 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
     expect(card.last4).toMatch(/^[0-9]{4}$/);
   });
 
-  it("omits merchant_lock and purpose when not requested", async () => {
-    const { card } = await mintCard();
-    expect(card).not.toHaveProperty("merchant_lock");
+  // Changed (lane s-fix-core, audit S-RAIL-4): the lock is never absent; it defaults to the approved cart's domain.
+  it("locks to the approved merchant when no lock is asked for, and omits purpose when not requested", async () => {
+    const { card, decision } = await mintCard();
+    expect(card.merchant_lock).toBe(decision.cart.merchant.domain);
     expect(card).not.toHaveProperty("purpose");
+  });
+
+  it("refuses a lock for any merchant but the approved one (NOT_APPROVED), and a malformed lock (INVALID_REQUEST)", async () => {
+    const rail = makeRail();
+    const base = { decision: approvedDecision(), ttlMs: CARD_TTL_MS, now: NOW };
+    expect(await mintCode(rail.mint({ ...base, merchantLock: "evil-shop.example" }))).toBe("NOT_APPROVED");
+    await expect(rail.mint({ ...base, merchantLock: "Evil.example/x" })).rejects.toMatchObject({ code: "INVALID_REQUEST" });
+    expect(rail.cards).toHaveLength(0);
+  });
+
+  it("refuses an APPROVE that still carries a failing rule (a relabelled DENY or ESCALATE)", async () => {
+    const rail = makeRail();
+    const ok = approvedDecision();
+    const failing = { ...ok, rules: [...ok.rules, { id: "R6", result: "FAIL", verdict: "DENY", inputs: {}, comparator: "in", template_id: "R6.off_mandate" }] };
+    expect(await mintCode(rail.mint({ decision: failing as never, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("NOT_APPROVED");
+    expect(rail.cards).toHaveLength(0);
   });
 
   it("never mints for DENY, ESCALATE or a missing limit (NOT_APPROVED)", async () => {
@@ -202,14 +219,23 @@ describe("mint: idempotent by decision.id", () => {
     expect(rail.cards).toHaveLength(1);
   });
 
-  it("a repeat after the card was used still returns the record as minted (state ACTIVE)", async () => {
+  // Changed (lane s-fix-core, audit LOW): a repeat returns the card as it is now; "ACTIVE" for a spent card let a caller
+  // log a USED card as live.
+  it("a repeat after the card was used returns its current state (USED) and mints nothing", async () => {
     const rail = makeRail();
     const decision = approvedDecision({ totalMinor: 1_000 });
     const first = await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW });
     await rail.authorise({ handle: first.handle, amountMinor: 1_000, merchantDomain: MERCHANT, now: NOW, idempotencyKey: "used_once" });
-    expect(await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW })).toEqual(first);
-    expect(rail.card(first.id)?.state).toBe("USED");
+    expect(await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW })).toEqual({ ...first, state: "USED" });
     expect(rail.cards).toHaveLength(1);
+  });
+
+  it("a repeat whose limit is not the cart total is NOT_APPROVED (I2 holds for repeats too)", async () => {
+    const rail = makeRail();
+    const decision = approvedDecision({ totalMinor: 1_000 });
+    await rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW });
+    const tampered = { ...decision, cart: { ...decision.cart, total_minor: 999, subtotal_minor: 999, items: [{ ...decision.cart.items[0], unit_price_minor: 999 }] } };
+    expect(await mintCode(rail.mint({ decision: tampered as never, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("NOT_APPROVED");
   });
 
   it("ALREADY_MINTED only when the repeat asks for different terms", async () => {
@@ -220,7 +246,7 @@ describe("mint: idempotent by decision.id", () => {
     expect(await mintCode(rail.mint({ ...base, merchantLock: "other-shop.example" }))).toBe("ALREADY_MINTED");
     expect(await mintCode(rail.mint({ ...base, purpose: "crt_test000002" }))).toBe("ALREADY_MINTED");
     const { merchantLock: _lock, ...noLock } = base;
-    expect(await mintCode(rail.mint(noLock))).toBe("ALREADY_MINTED");
+    expect(await mintCode(rail.mint(noLock))).toBe("OK"); // no lock = the approved merchant's lock: the same terms (S-RAIL-4)
     const bigger = approvedDecision({ totalMinor: 30_000 });
     expect(await mintCode(rail.mint({ ...base, decision: { ...bigger, id: decision.id } }))).toBe("ALREADY_MINTED");
     expect(rail.cards).toHaveLength(1);

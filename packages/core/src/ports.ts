@@ -135,6 +135,12 @@ export interface RailPort {
   /** ACTIVE cards only; a used card is final [F2]. */
   void(cardId: string, now: Date): Promise<CardEvent>;
   expireDue(now: Date): Promise<CardEvent[]>;
+  /**
+   * Optional extra (audit H5): the CardEvent the rail itself recorded for this idempotency key (a charge or a
+   * decline), or null when no request used the key. Never charges. When present, the executor logs this event and
+   * never the merchant's copy; without it the executor replays the claim through authorise with the same key.
+   */
+  eventFor?(idempotencyKey: string): Promise<CardEvent | null>;
 }
 
 // ---------- Merchant (SIMULATED stub in rail-sim; core never imports rail-sim) ----------
