@@ -57,7 +57,7 @@ describe("escalation answers (A-23)", () => {
     const r = await sealed();
     const esc = await escalate(r);
     const { signEscalationAnswer } = await import("../src/log");
-    const forged = signEscalationAnswer({ decision_id: esc.id, choice: "APPROVE", answered_at: r.clock.now() }, r.keys.engine);
+    const forged = signEscalationAnswer({ decision_id: esc.id, mandate_id: esc.mandate_id, cart: esc.cart, choice: "APPROVE", answered_at: r.clock.now() }, r.keys.engine);
     expect(await r.orchestrator.answerEscalation(forged)).toMatchObject({ ok: false, code: "INVALID_ANSWER" });
     const tampered = { ...r.answer(esc.id, "DENY"), choice: "APPROVE" as const };
     expect(await r.orchestrator.answerEscalation(tampered)).toMatchObject({ ok: false, code: "INVALID_ANSWER" });

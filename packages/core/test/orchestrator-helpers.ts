@@ -2,11 +2,12 @@
 // planner, judge, rail, merchant and store. SIMULATED storyline data [F20-F23].
 import { ENGINE_CONFIG } from "../src/config";
 import { createEngine } from "../src/engine";
-import type { ListingRecord, LogEntry, MandateCredential, ProposeCartInput, Revocation } from "../src/generated";
+import type { Decision, ListingRecord, LogEntry, MandateCredential, ProposeCartInput, Revocation } from "../src/generated";
 import { appendEntry, signEscalationAnswer, signRevocation } from "../src/log";
 import { createOrchestrator, type Orchestrator, type OrchestratorDeps, type OrchestratorEvent, type PlannerFactory } from "../src/orchestrator";
 import type { EscalationAnswer, JudgePort, LogStore, MerchantPort, RailPort } from "../src/ports";
 import { FakeClock, FakeJudge, FakeMerchant, FakePlanner, FakeRail, MemoryLogStore } from "../src/testing";
+import { loadFixture } from "../src/testing/fixtures";
 import { lookupOf, sequentialCartIds } from "./cart-helpers";
 import { demoCredential, demoKeys, type DemoKeys } from "./log-helpers";
 
@@ -102,6 +103,13 @@ export function rig(options: RigOptions = {}): Rig {
   const events: OrchestratorEvent[] = [];
   orchestrator.subscribe((e) => events.push(e));
   const entries = () => store.read(LOG_ID);
+  // An answer is bound to the decision it answers (laisee.resolve.v2): sign it over the logged decision's mandate and cart.
+  const decisionOf = (decisionId: string): Decision | undefined => {
+    for (const e of events) if (e.type === "log" && e.entry.kind === "DECISION" && e.entry.payload.id === decisionId) return e.entry.payload;
+    return undefined;
+  };
+  // An id no logged decision carries is refused as UNKNOWN_ESCALATION before the binding is read, so any cart will do.
+  const UNKNOWN_BINDING = { mandate_id: "mnd_demoM0", cart: loadFixture("carts/attempt-1.json", "cart") };
   return {
     orchestrator,
     events,
@@ -113,7 +121,11 @@ export function rig(options: RigOptions = {}): Rig {
     rail,
     entries,
     kinds: async () => (await entries()).map((e) => e.kind),
-    answer: (decisionId, choice, at = clock.now()) => signEscalationAnswer({ decision_id: decisionId, choice, answered_at: at }, keys.delegator),
+    answer: (decisionId, choice, at = clock.now()) => {
+      const logged = decisionOf(decisionId);
+      const binding = logged === undefined ? UNKNOWN_BINDING : { mandate_id: logged.mandate_id, cart: logged.cart };
+      return signEscalationAnswer({ decision_id: decisionId, ...binding, choice, answered_at: at }, keys.delegator);
+    },
     revocation: (at = clock.now()) => signRevocation({ mandate_id: "mnd_demoM0", revoked_at: at, reason: "test revoke (SIMULATED)" }, keys.delegator),
   };
 }

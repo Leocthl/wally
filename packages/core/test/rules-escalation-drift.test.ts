@@ -4,7 +4,7 @@ import { ENGINE_CONFIG } from "../src/config";
 import { cartSha256 } from "../src/log";
 import type { EscalationAnswer } from "../src/ports";
 import { evaluateR11, evaluateR12 } from "../src/rules";
-import { CART_A1, M0, PACKET_AFTER_A1, at, packetWith } from "./engine-helpers";
+import { CART_A1, CART_A4, M0, PACKET_AFTER_A1, at, packetWith } from "./engine-helpers";
 
 const ESC_ID = "dec_escalated0001";
 const EXPIRES = "2026-10-03T02:13:00.000Z";
@@ -22,7 +22,7 @@ const answer = (patch: Partial<EscalationAnswer> = {}): EscalationAnswer => ({
 
 describe("R11 escalation answered in time, else DENY", () => {
   const evaluate = (resolution: Parameters<typeof evaluateR11>[0]["resolution"], now = at("2026-10-03T02:12:40Z"), p = packet) =>
-    evaluateR11({ mandate: M0, packet: p, resolution, now, config: ENGINE_CONFIG });
+    evaluateR11({ mandate: M0, packet: p, cart: CART_A1, resolution, now, config: ENGINE_CONFIG });
 
   it("is SKIPPED outside an escalation", () => {
     expect(evaluate(undefined).result).toEqual({ id: "R11", result: "SKIPPED", inputs: {} });
@@ -43,6 +43,8 @@ describe("R11 escalation answered in time, else DENY", () => {
 
   it.each([
     ["decision_id_mismatch", answer({ decision_id: "dec_someoneElse01" })],
+    ["mandate_id_mismatch", answer({ mandate_id: "mnd_otherMandate1" })],
+    ["cart_sha256_mismatch", answer({ cart_sha256: cartSha256(CART_A4) })],
     ["signer_mismatch", answer({ signer: "did:key:z6MkMalloryXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" })],
     ["invalid_choice", answer({ choice: "MAYBE" as never })],
     ["answered_late", answer({ answered_at: EXPIRES })],

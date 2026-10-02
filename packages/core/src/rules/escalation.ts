@@ -1,14 +1,18 @@
-// R11: an escalation must be answered inside its window [F31], by the delegator, for that decision.
-// No valid answer => DENY R11.expired, which resolves the earlier ESCALATE (S5). Signature checks on
-// the answer happen before decide (orchestrator); here the engine checks binding and timing only.
+// R11: an escalation must be answered inside its window [F31], by the delegator, for that decision, that mandate
+// and that cart (laisee.resolve.v2: mandate_id, cart_sha256). No valid answer => DENY R11.expired, which resolves
+// the earlier ESCALATE (S5). Signature checks on the answer happen before decide (orchestrator); here the engine
+// checks binding and timing only.
 import { THRESHOLD_REFS, type EngineConfig } from "../config";
-import type { Mandate, PacketState } from "../generated";
+import { cartFingerprint } from "../engine/hash";
+import type { Cart, Mandate, PacketState } from "../generated";
 import type { EscalationAnswer, EscalationResolution } from "../ports";
 import { MS_PER_S, failed, parseTime, passed, skipped, timeOf, type RuleResult } from "./result";
 
 export interface R11Input {
   readonly mandate: Mandate;
   readonly packet: PacketState;
+  /** The cart being decided; a valid answer names its fingerprint (cart_sha256). */
+  readonly cart: Cart;
   readonly resolution: EscalationResolution | undefined;
   readonly now: Date;
   readonly config: EngineConfig;
@@ -26,10 +30,21 @@ export interface R11Outcome {
 
 const isRecord = (v: unknown): v is Readonly<Record<string, unknown>> => v !== null && typeof v === "object" && !Array.isArray(v);
 
-function answerProblem(answer: unknown, resolves: string, delegator: string, expiresMs: number): string | null {
+/** Fingerprint of the cart being decided; null when it cannot be canonicalised (then no answer binds to it). */
+function fingerprintOf(cart: Cart): string | null {
+  try {
+    return cartFingerprint(cart);
+  } catch {
+    return null;
+  }
+}
+
+function answerProblem(answer: unknown, resolves: string, mandate: Mandate, cartSha256: string | null, expiresMs: number): string | null {
   if (!isRecord(answer)) return "malformed_answer";
   if (answer["decision_id"] !== resolves) return "decision_id_mismatch";
-  if (answer["signer"] !== delegator) return "signer_mismatch";
+  if (answer["mandate_id"] !== mandate.id) return "mandate_id_mismatch";
+  if (cartSha256 === null || answer["cart_sha256"] !== cartSha256) return "cart_sha256_mismatch";
+  if (answer["signer"] !== mandate.delegator) return "signer_mismatch";
   if (answer["choice"] !== "APPROVE" && answer["choice"] !== "DENY") return "invalid_choice";
   const answeredMs = parseTime(answer["answered_at"]);
   if (answeredMs === null) return "invalid_time";
@@ -39,7 +54,7 @@ function answerProblem(answer: unknown, resolves: string, delegator: string, exp
 const SKIPPED: R11Outcome = { result: skipped("R11"), answer: null, expiresAt: null, windowPassed: false };
 
 /** R11: PASS for a valid in-time answer; otherwise DENY R11.expired with the reason in inputs. */
-export function evaluateR11({ mandate, packet, resolution, now, config }: R11Input): R11Outcome {
+export function evaluateR11({ mandate, packet, cart, resolution, now, config }: R11Input): R11Outcome {
   if (resolution === undefined) return SKIPPED;
   const { resolves, answer } = resolution;
   const nowMs = timeOf(now);
@@ -59,7 +74,7 @@ export function evaluateR11({ mandate, packet, resolution, now, config }: R11Inp
     const inputs = windowPassed ? { ...base, answered: false } : { ...base, answered: false, answer_problem: "window_open" };
     return outcome(deny(inputs), null);
   }
-  const problem = expiresMs === null ? "invalid_time" : answerProblem(answer, resolves, mandate.delegator, expiresMs);
+  const problem = expiresMs === null ? "invalid_time" : answerProblem(answer, resolves, mandate, fingerprintOf(cart), expiresMs);
   if (problem !== null) return outcome(deny({ ...base, answered: true, answer_problem: problem }), null);
   const inputs = { ...base, answered: true, choice: answer.choice, answered_at: answer.answered_at };
   return outcome(passed({ ...spec, inputs }), answer);

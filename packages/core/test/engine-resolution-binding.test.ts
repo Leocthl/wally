@@ -5,6 +5,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { createEngine, engine } from "../src/engine";
 import type { Cart, Decision, PacketState } from "../src/generated";
+import { cartSha256 } from "../src/log";
 import { foldPacket } from "../src/packet";
 import type { DecideContext, Engine, EscalationAnswer, EscalationResolution } from "../src/ports";
 import { validateDecision } from "../src/schema";
@@ -25,12 +26,22 @@ function escalated(cart: Cart = UNVERIFIED): { decision: Decision; packet: Packe
   return { decision, packet, expiresAt: decision.escalation?.expires_at ?? "" };
 }
 
-const answer = (decisionId: string, choice: "APPROVE" | "DENY" = "APPROVE", answeredAt = "2026-10-03T02:12:30Z"): EscalationAnswer => ({
+// laisee.resolve.v2: the answer names the mandate and the fingerprint of the cart the delegator was shown (unsigned
+// here: the engine checks binding and timing, the orchestrator verifies the signature).
+const answer = (
+  decisionId: string,
+  choice: "APPROVE" | "DENY" = "APPROVE",
+  answeredAt = "2026-10-03T02:12:30Z",
+  patch: Partial<EscalationAnswer> = {},
+): EscalationAnswer => ({
   decision_id: decisionId,
+  mandate_id: M0.id,
+  cart_sha256: cartSha256(UNVERIFIED),
   choice,
   answered_at: answeredAt,
   signer: M0.delegator,
   signature: "A".repeat(86),
+  ...patch,
 });
 
 function decideResolution(packet: PacketState, cart: Cart, resolution: EscalationResolution, ctx: DecideContext = SIGNED, now = IN_WINDOW): Decision {
@@ -144,6 +155,25 @@ describe("resolution binding failures are DENY R11 with answer_problem naming th
     const { decision, packet } = escalated();
     const d = decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: answer("dec_someOtherEsc01"), escalated: decision });
     expect(problemOf(d)).toBe("decision_id_mismatch");
+  });
+
+  it("mandate_id_mismatch: an answer signed for another mandate never approves", () => {
+    const { decision, packet } = escalated();
+    const reply = answer(decision.id, "APPROVE", undefined, { mandate_id: "mnd_otherMandate1" });
+    const d = decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: reply, escalated: decision });
+    expect(d).toMatchObject({ outcome: "DENY", explanation: { template_id: "R11.expired" } });
+    expect(d.approved_limit_minor).toBeUndefined();
+    expect(problemOf(d)).toBe("mandate_id_mismatch");
+  });
+
+  it("cart_sha256_mismatch: an answer naming another cart's fingerprint never approves, even when escalated and cart line up", () => {
+    const { decision, packet } = escalated();
+    const reply = answer(decision.id, "APPROVE", undefined, { cart_sha256: cartSha256({ ...CART_A4, scameter: NOT_CHECKED }) });
+    const d = decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: reply, escalated: decision });
+    expect(d).toMatchObject({ outcome: "DENY", explanation: { template_id: "R11.expired" } });
+    expect(d.approved_limit_minor).toBeUndefined();
+    expect(problemOf(d)).toBe("cart_sha256_mismatch");
+    expect(d.escalation).toMatchObject({ state: "DENIED" });
   });
 
   it("a DENY answer with every binding in place is still DENY (state DENIED)", () => {
