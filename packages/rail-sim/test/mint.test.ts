@@ -88,6 +88,8 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
       { ...ok, packet: { ...ok.packet, status: "REVOKED" } }, // I6 backstop
       { ...ok, packet: { ...ok.packet, status: "EXPIRED" } },
       { ...ok, mandate_id: "mnd_otherMandate1" },
+      { ...ok, cart: { ...ok.cart, mandate_id: "mnd_otherMandate1" } }, // the cart belongs to another mandate
+      { ...ok, packet: { ...ok.packet, mandate_id: "mnd_otherMandate1" } }, // the packet belongs to another mandate
     ];
     for (const decision of cases) {
       expect(await mintCode(rail.mint({ ...req, decision: decision as never }))).toBe("NOT_APPROVED");
@@ -103,6 +105,16 @@ describe("mint: one single-use card per APPROVE (F1, I1, I2)", () => {
     expect((await rail.mint({ decision: at, ttlMs: CARD_TTL_MS, now: NOW })).limit_minor).toBe(ceilingMinor);
     expect(await mintCode(rail.mint({ decision: over, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("OVER_CEILING");
     expect(rail.cards).toHaveLength(1);
+  });
+
+  it("the ceiling is checked before the engine-bug backstops, so OVER_CEILING names the rail rule", async () => {
+    const rail = makeRail({ ceilingMinor: 50_000 });
+    const decision = approvedDecision({ totalMinor: 60_000, remainingMinor: 1_000 });
+    expect(await mintCode(rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("OVER_CEILING");
+    const tampered = { ...approvedDecision({ totalMinor: 10_000 }), approved_limit_minor: 50_001 };
+    expect(await mintCode(rail.mint({ decision: tampered, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("OVER_CEILING");
+    const within = { ...approvedDecision({ totalMinor: 10_000 }), approved_limit_minor: 20_000 };
+    expect(await mintCode(rail.mint({ decision: within, ttlMs: CARD_TTL_MS, now: NOW }))).toBe("NOT_APPROVED");
   });
 
   it("MAX_ACTIVE at the active-card maximum [F1]; a used, voided or expired card frees a slot", async () => {
@@ -296,8 +308,8 @@ describe("T-I2: minted limit equals the approved total and is <= min(remaining, 
           const rail = makeRail({}, 5);
           const decision = approvedDecision({ totalMinor: total, remainingMinor: remaining });
           const code = await mintCode(rail.mint({ decision, ttlMs: CARD_TTL_MS, now: NOW }));
-          if (total > remaining) expect(code).toBe("NOT_APPROVED");
-          else if (total > ceiling) expect(code).toBe("OVER_CEILING");
+          if (total > ceiling) expect(code).toBe("OVER_CEILING");
+          else if (total > remaining) expect(code).toBe("NOT_APPROVED");
           else {
             expect(code).toBe("OK");
             const [card] = rail.cards;

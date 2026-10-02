@@ -8,7 +8,7 @@ import { ID_COLLISION_RETRIES, RAIL_SIM_DEFAULTS, UNKNOWN_CARD_ID } from "./conf
 import { DEFAULT_DECLINE_TABLE, describeDecline, type DeclineCode, type DeclineInfo, type DeclineTable } from "./decline-table";
 import { RailSimError } from "./errors";
 import { cryptoRandom, createIdSource, type IdSource, type RandomSource } from "./ids";
-import { approvedLimit, assertCeiling, assertSlotFree, cardExpiry, type MintLimits } from "./mint-rules";
+import { approvedLimit, assertApprovalConsistent, assertCeiling, assertSlotFree, cardExpiry, type MintLimits } from "./mint-rules";
 import {
   EMPTY_STATE,
   activeCount,
@@ -107,10 +107,12 @@ export class RailSim implements RailPort {
 
   async mint(req: MintRequest): Promise<CardRecord> {
     assertDate(req.now, "now");
-    const { decision, limitMinor } = approvedLimit(req.decision);
+    const approval = approvedLimit(req.decision);
+    const { decision, limitMinor } = approval;
     const existing = this.#mintedFor(decision.id);
     if (existing !== undefined) return this.#repeatMint(existing, decision, limitMinor, req);
     assertCeiling(limitMinor, this.#limits);
+    assertApprovalConsistent(approval);
     const expiresAt = cardExpiry(decision, req.ttlMs, req.now, this.#limits);
     assertSlotFree(activeCount(this.#state), this.#limits);
     const card = this.#newCard(decision, limitMinor, expiresAt, req);
@@ -172,7 +174,7 @@ export class RailSim implements RailPort {
       existing.mandate_id === decision.mandate_id &&
       existing.merchant_lock === req.merchantLock &&
       existing.purpose === req.purpose;
-    if (!same) throw new MintError("ALREADY_MINTED", `decision ${decision.id} already has a card with other terms`);
+    if (!same) throw new MintError("ALREADY_MINTED", `SIMULATED rail: decision ${decision.id} already has a card with other terms`);
     return Object.freeze({ ...existing, state: "ACTIVE" });
   }
 
