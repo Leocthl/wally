@@ -1,6 +1,7 @@
 // The three typed decisions. Each asks Laya one rotation-averaged choice, reports it through the tracer and
 // applies the abstention rule. An abstention or failure is a value; the loop turns it into null.
-import type { ItemFamily, PlannerCandidate } from "./candidates";
+import { slugify, type ItemFamily, type PlannerCandidate } from "./candidates";
+import { hasEvidence } from "./evidence";
 import type { PlannerConfig } from "./config";
 import type { LayaClient } from "./laya-client";
 import { matchingVariants } from "./variants";
@@ -36,9 +37,26 @@ async function ask<T>(ctx: DecisionContext, question: Question<T>): Promise<Deci
   return option === undefined ? abstain(`${question.spec.id}: unknown label ${choice}`) : { kind: "chosen", value: option.value };
 }
 
-export function decideItem(ctx: DecisionContext, families: readonly ItemFamily[], substitute: boolean): Promise<Decision<ItemFamily>> {
-  const kept = pruneFamilies(ctx.request, families, ctx.config.maxOptions);
-  return ask(ctx, itemQuestion(ctx.request, kept, substitute));
+/**
+ * Which item. Code decides what it can: no item named by the request means no proposal, one named item is
+ * taken as is, and only a real choice between items the request names goes to Laya. After a budget stop
+ * (`substitute`) the request may name none of the cheaper items; then Laya ranks them all and the margin
+ * decides.
+ */
+export async function decideItem(ctx: DecisionContext, families: readonly ItemFamily[], substitute: boolean): Promise<Decision<ItemFamily>> {
+  const named = families.filter((f) => hasEvidence(ctx.request, f));
+  const pool = named.length > 0 ? named : substitute ? families : [];
+  const [only, ...others] = pool;
+  if (only === undefined || (others.length === 0 && named.length === 0)) {
+    ctx.tracer.emitForced("item_forced", NONE_LABEL);
+    return abstain("no listed item is named in the request");
+  }
+  if (others.length === 0) {
+    ctx.tracer.emitForced("item_forced", slugify(only.baseName));
+    return { kind: "chosen", value: only };
+  }
+  const kept = pruneFamilies(ctx.request, pool, ctx.config.maxOptions);
+  return ask(ctx, itemQuestion(ctx.request, kept, named.length === 0));
 }
 
 export interface VariantChoice {

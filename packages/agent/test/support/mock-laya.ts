@@ -58,7 +58,7 @@ function requestOf(state: unknown): string {
   return "";
 }
 
-/** Keyword scorer: weight = small floor + shared tokens with the request; the none option has a fixed baseline. */
+/** Keyword scorer: weight = small floor + (shared tokens with the request) squared; the none option has a fixed baseline. */
 export const keywordScorer: Scorer = ({ questionId, criteria, state }) => {
   if (questionId === "next_action") {
     return Object.fromEntries(Object.keys(criteria).map((label) => [label, NEXT_ACTION_WEIGHTS[label] ?? 0.05]));
@@ -67,7 +67,7 @@ export const keywordScorer: Scorer = ({ questionId, criteria, state }) => {
   const weights = Object.entries(criteria).map(([label, description]): [string, number] => {
     if (label === NONE_LABEL) return [label, NONE_BASELINE];
     const shared = tokens(`${label.replace(/_/g, " ")} ${description}`).filter((t) => wanted.has(t));
-    return [label, 0.05 + new Set(shared).size];
+    return [label, 0.05 + new Set(shared).size ** 2];
   });
   return Object.fromEntries(weights);
 };

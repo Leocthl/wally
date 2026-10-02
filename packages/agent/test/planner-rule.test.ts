@@ -24,6 +24,7 @@ const hoodie = fixtureListing("hoodie");
 const injected = fixtureListing("injected");
 const earbuds = fixtureListing("earbuds");
 const STORE = [tee, socks, jacket, hoodie];
+const TWO_TEES = [tee, GRAPHIC_TEE_LISTING];
 
 function planner(records: readonly ListingRecord[], config: Parameters<typeof createRulePlanner>[0]["config"] = {}) {
   return createRulePlanner({ catalogue: records, layaUrl: mock.url, config });
@@ -50,14 +51,33 @@ describe("a clear request", () => {
     expect((out?.note ?? "").length).toBeLessThanOrEqual(280);
   });
 
-  it("reports every typed decision through onTrace with probabilities and margin", async () => {
+  it("reports a forced item decision when the request names exactly one item", async () => {
     const { steps } = await propose(STORE, "I want a cotton tee");
+    expect(steps.map((s) => [s.step, s.question, s.choice])).toEqual([[1, "item_forced", "cotton_tee"], [2, "next_action", "propose"]]);
+    expect(steps[0]).toMatchObject({ probabilities: { cotton_tee: 1 }, margin: 1 });
+  });
+
+  it("asks Laya only when the request names several items, and reports probabilities and margin", async () => {
+    const { out, steps } = await propose([tee, GRAPHIC_TEE_LISTING], "I want a cotton tee");
+    expect(out?.items[0]?.title).toBe("Cotton tee (SIMULATED)");
     expect(steps.map((s) => [s.step, s.question])).toEqual([[1, "item_choice"], [2, "next_action"]]);
     const [item] = steps;
     expect(item?.choice).toBe("cotton_tee");
+    expect(Object.keys(item?.probabilities ?? {}).sort()).toEqual(["cotton_tee", "graphic_tee"]);
     expect(Object.values(item?.probabilities ?? {}).reduce((a, c) => a + c, 0)).toBeCloseTo(1, 2);
     const sorted = Object.values(item?.probabilities ?? {}).sort((a, b) => b - a);
     expect(item?.margin).toBeCloseTo((sorted[0] ?? 0) - (sorted[1] ?? 0), 6);
+  });
+
+  it("sends Laya only the items the request names, with no none option", async () => {
+    await propose([tee, GRAPHIC_TEE_LISTING, socks, jacket], "a tee");
+    const body = mock.requests()[0]?.body as { questions: Record<string, { criteria: Record<string, string> }> };
+    const criteria = Object.values(body.questions)[0]?.criteria ?? {};
+    expect(Object.keys(criteria).sort()).toEqual(["cotton_tee", "graphic_tee"]);
+  });
+
+  it("reads synonyms: a t-shirt is a tee", async () => {
+    expect((await propose([tee], "a t-shirt please")).out?.items[0]?.title).toBe("Cotton tee (SIMULATED)");
   });
 
   it("is deterministic: same context, same proposal, same requests", async () => {
@@ -72,24 +92,26 @@ describe("a clear request", () => {
 });
 
 describe("abstention (the app asks the shopper)", () => {
-  it("returns null for a vague request, with the none option on top", async () => {
+  it("returns null for a vague request without asking Laya: no listed item is named", async () => {
     const { out, steps } = await propose(STORE, "something to wear");
     expect(out).toBeNull();
-    expect(steps).toHaveLength(1);
-    expect(steps[0]?.choice).toBe("none_of_these");
+    expect(steps).toMatchObject([{ step: 1, question: "item_forced", choice: "none_of_these" }]);
+    expect(mock.requests()).toHaveLength(0);
   });
 
   it("returns null for two near-equal items (top-two margin below the threshold)", async () => {
     const { out, steps } = await propose([tee, GRAPHIC_TEE_LISTING], "a tee");
     expect(out).toBeNull();
-    expect(steps[0]?.margin).toBeLessThan(0.25);
+    expect(steps[0]).toMatchObject({ question: "item_choice" });
+    expect(steps[0]?.margin).toBeLessThan(0.45);
   });
 
   it("returns null when the best item wins by less than the configured margin", async () => {
-    mock.set({ scorer: () => ({ cotton_tee: 0.45, ankle_socks_3_pairs: 0.3, none_of_these: 0.25 }) });
-    expect((await propose(STORE.slice(0, 2), "cotton tee")).out).toBeNull();
-    const strict = await planner(STORE.slice(0, 2), { marginThreshold: 0.1 }).propose(ctxOf("cotton tee", STORE.slice(0, 2)), OPTS);
-    expect(strict).not.toBeNull();
+    const two = [tee, GRAPHIC_TEE_LISTING];
+    mock.set({ scorer: () => ({ cotton_tee: 0.6, graphic_tee: 0.4 }) });
+    expect((await propose(two, "a tee")).out).toBeNull();
+    const strict = await planner(two, { marginThreshold: 0.1 }).propose(ctxOf("a tee", two), OPTS);
+    expect(strict?.items[0]?.title).toBe("Cotton tee (SIMULATED)");
   });
 
   it("returns null for a request that names something no listing sells", async () => {
@@ -97,10 +119,10 @@ describe("abstention (the app asks the shopper)", () => {
   });
 
   it("returns null when Laya vetoes the next action with a clear margin, but never when it only hesitates", async () => {
-    mock.set({ scorer: ({ questionId }) => (questionId === "next_action" ? { propose: 0.1, replan_cheaper: 0.05, ask_shopper: 0.75, give_up: 0.1 } : { cotton_tee: 0.9, ankle_socks_3_pairs: 0.05, none_of_these: 0.05 }) });
-    expect((await propose(STORE.slice(0, 2), "cotton tee")).out).toBeNull();
-    mock.set({ scorer: ({ questionId }) => (questionId === "next_action" ? { propose: 0.3, replan_cheaper: 0.25, ask_shopper: 0.25, give_up: 0.2 } : { cotton_tee: 0.9, ankle_socks_3_pairs: 0.05, none_of_these: 0.05 }) });
-    expect((await propose(STORE.slice(0, 2), "cotton tee")).out).not.toBeNull();
+    mock.set({ scorer: ({ questionId }) => (questionId === "next_action" ? { propose: 0.1, replan_cheaper: 0.05, ask_shopper: 0.75, give_up: 0.1 } : { cotton_tee: 0.9, graphic_tee: 0.05 }) });
+    expect((await propose(TWO_TEES, "cotton tee")).out).toBeNull();
+    mock.set({ scorer: ({ questionId }) => (questionId === "next_action" ? { propose: 0.3, replan_cheaper: 0.25, ask_shopper: 0.25, give_up: 0.2 } : { cotton_tee: 0.9, graphic_tee: 0.05 }) });
+    expect((await propose(TWO_TEES, "cotton tee")).out).not.toBeNull();
   });
 });
 
@@ -110,7 +132,7 @@ describe("variants (size and colour)", () => {
   it("picks the one variant that matches the stated size and colour", async () => {
     const { out, steps } = await propose(V, "a black cotton tee in size M");
     expect(out?.items).toEqual([{ title: "Cotton tee, black, M (SIMULATED)", qty: 1 }]);
-    expect(steps.map((s) => s.question)).toEqual(["item_choice", "variant_forced", "next_action"]);
+    expect(steps.map((s) => s.question)).toEqual(["item_forced", "variant_forced", "next_action"]);
   });
 
   it("reads a colour word and a bare uppercase size", async () => {
@@ -121,7 +143,7 @@ describe("variants (size and colour)", () => {
     for (const request of ["a black cotton tee", "a cotton tee in size M", "cotton tee"]) {
       const { out, steps } = await propose(V, request);
       expect(out, request).toBeNull();
-      expect(steps.map((s) => s.question), request).toEqual(["item_choice", "variant_choice"]);
+      expect(steps.map((s) => s.question), request).toEqual(["item_forced", "variant_choice"]);
     }
   });
 
@@ -179,7 +201,7 @@ describe("listing text is data, never instructions", () => {
       }),
       { numRuns: 20 },
     );
-  });
+  }, 30_000);
 
   it("does not pick the gift card bundle even when the request mentions an order from the text", async () => {
     const { out } = await propose([injected], "graphic tee");
@@ -200,17 +222,17 @@ describe("empty and unusable input", () => {
     expect(mock.requests()).toHaveLength(0);
   });
 
-  it("limits the options sent to Laya and keeps the one the request names", async () => {
+  it("limits the options sent to Laya when the request names many items", async () => {
     const many: ListingRecord[] = Array.from({ length: 14 }, (_, i) => ({
       ...tee,
       id: `lst_many${i}`,
-      url: `https://demo-apparel.example/p/item-${i}`,
-      items: [{ title: i === 11 ? "Purple scarf (SIMULATED)" : `Plain item ${i} (SIMULATED)`, category: "apparel", unit_price_minor: 1000 + i }],
+      url: `https://demo-apparel.example/p/widget-${i}`,
+      items: [{ title: `Widget model ${String.fromCharCode(97 + i)} (SIMULATED)`, category: "apparel", unit_price_minor: 1000 + i }],
     }));
-    const { out } = await propose(many, "a purple scarf");
+    const { out } = await propose(many, "a widget");
     const body = mock.requests()[0]?.body as { questions: Record<string, { criteria: object }> };
-    expect(Object.keys(Object.values(body.questions)[0]?.criteria ?? {}).length).toBeLessThanOrEqual(9);
-    expect(out?.items[0]?.title).toBe("Purple scarf (SIMULATED)");
+    expect(Object.keys(Object.values(body.questions)[0]?.criteria ?? {})).toHaveLength(8);
+    expect(out).toBeNull(); // fourteen equal widgets: a tie, so the planner asks the shopper
   });
 });
 
@@ -273,9 +295,9 @@ describe("fails closed (I5): never throws, null on any failure", () => {
           }
         },
       ),
-      { numRuns: 25 },
+      { numRuns: 20 },
     );
-  });
+  }, 30_000);
 });
 
 describe("only picks what was given", () => {

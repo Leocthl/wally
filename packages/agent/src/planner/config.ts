@@ -5,7 +5,9 @@ export interface PlannerConfig {
   /**
    * Smallest gap between the top two averaged probabilities that still counts as a decision.
    * ASSUMED starting point, no register row yet (requested in the lane report). Tuned on the running
-   * Laya server on 2026-10-02: clear requests scored 0.45 to 0.98, vague or tied requests 0.0 to 0.2.
+   * Laya server on 2026-10-02, 16 item questions over 7 invented apparel items, not an evaluation:
+   * explicit requests scored 0.59 to 0.82 or more, tied ones (two tees, "socks or a hoodie") 0.12 to 0.36.
+   * 0.45 sits in the gap.
    */
   readonly marginThreshold: number;
   /** Most typed decisions (traced steps) in one propose or alternatives call. Lane brief; no register row yet. */
@@ -23,7 +25,7 @@ export interface PlannerConfig {
 }
 
 export const DEFAULT_PLANNER_CONFIG: PlannerConfig = {
-  marginThreshold: 0.25,
+  marginThreshold: 0.45,
   stepCap: 6,
   maxOptions: 8,
   maxRequestChars: 1_000,

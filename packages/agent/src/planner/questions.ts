@@ -43,6 +43,11 @@ export function pruneFamilies(request: string, families: readonly ItemFamily[], 
   return kept.sort((a, b) => a.index - b.index).map((k) => k.family);
 }
 
+/**
+ * Items only, no none option: the evidence gate already established that the request names each of them,
+ * and on the running server a none option made the top-two margin depend on how many items were listed.
+ * `substitute` is the wording after a budget stop, when the request names none of the cheaper items.
+ */
 export function itemQuestion(request: string, families: readonly ItemFamily[], substitute: boolean): Question<ItemFamily> {
   const labels = uniqueLabels(families.map((f) => slugify(f.baseName)));
   const options = families.map((value, i) => ({ label: labels[i] ?? slugify(value.baseName), value }));
@@ -53,10 +58,7 @@ export function itemQuestion(request: string, families: readonly ItemFamily[], s
       instructions: substitute
         ? "Which listed item is the closest substitute for what the shopper asked for?"
         : "Which item is the shopper asking for?",
-      criteria: {
-        ...Object.fromEntries(options.map((o) => [o.label, o.value.baseName])),
-        [NONE_LABEL]: substitute ? "none of the listed items is close to what the shopper asked for" : "unclear or no listed item matches",
-      },
+      criteria: Object.fromEntries(options.map((o) => [o.label, o.value.baseName])),
       state: { request },
     },
   };
