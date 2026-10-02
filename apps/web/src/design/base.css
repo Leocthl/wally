@@ -1,0 +1,91 @@
+/* Base styles: reset, type, focus, touch targets, reduced motion. Tokens come from tokens.css (docs/04). */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* No scroll anchoring: when the result grows above the buttons, the page must not slide away from the StopBanner. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-anchor: none; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: var(--fs-0);
+  line-height: var(--lh-body);
+  font-variant-numeric: var(--num);
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+:lang(zh-HK) {
+  font-family: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", var(--font-sans);
+  line-height: var(--lh-zh);
+}
+
+/* Register semantics that both registers need. */
+[data-register="packet"] { --on-accent: var(--on-vermilion); --rule: var(--brass-line); }
+[data-register="ledger"] { --on-accent: var(--ledger-surface); --rule: var(--line-strong); }
+
+[data-register] { color: var(--fg); }
+
+h1, h2, h3, h4, p { margin: 0; }
+h1 { font-size: var(--fs-2); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-1); line-height: var(--lh-tight); }
+h3 { font-size: var(--fs-0); line-height: var(--lh-tight); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* No 300 ms tap delay or double-tap zoom on controls (mobile-native). */
+button, a, summary, label, select, [role="tab"] { touch-action: manipulation; }
+
+/* 44px targets, 8px apart (docs/04 Accessibility). */
+button, [role="button"], select, .tap {
+  min-height: var(--tap);
+  min-width: var(--tap);
+}
+
+/* The box itself stays small; its label is the 44 px target (.tap). */
+input[type="checkbox"], input[type="radio"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--vermilion);
+  flex: none;
+}
+
+input[type="text"], input[type="number"], input:not([type]), select, textarea {
+  font-size: 1rem; /* 16px: stops iOS zooming on focus */
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+textarea { resize: vertical; width: 100%; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mono { font-family: var(--font-mono); }
+.soft { color: var(--fg-soft); }
+
+/* Transitions use duration tokens, which tokens.css zeroes under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}

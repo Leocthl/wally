@@ -1,0 +1,77 @@
+/* tokens.css. Ratios in comments are light/dark, from the contrast script.
+   light-dark() needs a current browser: test the demo laptop and phone. */
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+:root {
+  /* PACKET */
+  --paper:        light-dark(#FBF4E8, #1C1410);
+  --paper-raised: light-dark(#FFFBF3, #2A1E18);
+  --ink:          light-dark(#2A1C16, #F6EBDC);  /* on paper 15.1/15.4 */
+  --ink-soft:     light-dark(#5E4838, #CDB9A5);  /* 7.8/9.6 */
+  --vermilion:    light-dark(#A32F18, #EE7A5C);  /* text and UI on paper 6.5/6.5 */
+  --on-vermilion: light-dark(#FFF6E8, #2A0F08);  /* on --vermilion 6.6/6.5 */
+  --brass-text:   light-dark(#6F5309, #E0BD62);  /* 6.6/10.0 */
+  --brass-line:   light-dark(#8F6E14, #C9A24B);  /* UI on paper 4.4/7.6 */
+  --brass-fill:   light-dark(#C9A24B, #8F6E14);  /* decorative, never under text */
+  --meter-track:  light-dark(#EADBC0, #3A2B22);  /* --vermilion on track 5.2/4.9 */
+
+  /* LEDGER */
+  --ledger-bg:       light-dark(#F2F5F7, #0E141A);
+  --ledger-surface:  light-dark(#FFFFFF, #161E26);
+  --ledger-ink:      light-dark(#14202B, #E8EDF2);  /* on bg 15.1/15.7 */
+  --ledger-ink-soft: light-dark(#44515D, #A9B6C2);  /* 7.4/9.0 */
+  --line-strong:     light-dark(#6F7B86, #7A8896);  /* control borders 3.95/5.1 */
+  --hairline:        light-dark(#D6DCE2, #2B3641);  /* decorative only */
+  --chart-b0:        light-dark(#44515D, #A9B6C2);  /* hatched; 8.1/8.1 on surface */
+  --chart-b1:        light-dark(#1B4C9B, #9DBEFF);  /* 8.2/9.0 */
+  --chart-b2:        light-dark(#14202B, #E8EDF2);  /* 16.5/14.3 */
+  --focus:           light-dark(#1B4C9B, #9DBEFF);  /* ring on any surface 7.5/9.7 */
+
+  /* STATE: text and icon on own tint and on all four surfaces, 5.5 or better */
+  --minted:       light-dark(#14663A, #63D08F);
+  --minted-bg:    light-dark(#E2F3E7, #12301F);
+  --stopped:      light-dark(#B3261E, #FF8F85);
+  --stopped-bg:   light-dark(#FCE8E6, #3B1714);
+  --on-stop:      light-dark(#FFFFFF, #2B0A07);   /* banner text on --stopped 6.5/8.3 */
+  --escalated:    light-dark(#8A5200, #F4B650);
+  --escalated-bg: light-dark(#FFEFCF, #3A2A0C);
+  --pending:      light-dark(#505C67, #A9B6C2);
+  --pending-bg:   light-dark(#E8ECEF, #222B34);
+
+  /* PROVENANCE chips: text on own tint, 6.8 or better */
+  --obs:  light-dark(#0B5963, #6FD0DB);  --obs-bg:  light-dark(#DDF1F3, #0F3036);
+  --meas: light-dark(#1B4C9B, #9DBEFF);  --meas-bg: light-dark(#E4ECFB, #172B52);
+  --asm:  light-dark(#5A4726, #DCC79A);  --asm-bg:  light-dark(#F1EBDB, #352B17);
+  --sim:  light-dark(#FFFFFF, #14202B);  --sim-bg:  light-dark(#24303B, #E8EDF2);  /* 13.5/14.0 */
+
+  /* Type: 1.25 scale; fs-5 to fs-7 are numerals and presenter sizes */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --num: tabular-nums lining-nums;                /* font-variant-numeric */
+  --fs-s: 0.8125rem;  --fs-0: 1rem;      --fs-1: 1.25rem;   --fs-2: 1.5625rem;
+  --fs-3: 1.9375rem;  --fs-4: 2.4375rem; --fs-5: 3.0625rem; --fs-6: 3.8125rem; --fs-7: 4.75rem;
+  --lh-tight: 1.15; --lh-body: 1.5; --lh-zh: 1.7;
+
+  /* Space, shape */
+  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
+  --sp-5: 1.5rem;  --sp-6: 2rem;   --sp-7: 3rem;    --sp-8: 4rem;
+  --tap: 2.75rem;                                 /* 44px minimum target */
+  --r-packet: 14px; --r-ledger: 2px; --r-chip: 4px;
+  --shadow-packet: 0 1px 0 rgb(0 0 0 / .06), 0 8px 18px -10px rgb(42 28 22 / .35);
+
+  /* Motion */
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-stamp: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --dur-seal: 420ms; --dur-mint: 320ms; --dur-stop: 200ms; --dur-expire: 800ms;
+  --dur-hold: 1200ms;                             /* functional, kept under reduced motion */
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; }
+}
+
+[data-register="packet"] { --bg: var(--paper); --surface: var(--paper-raised); --fg: var(--ink);
+  --fg-soft: var(--ink-soft); --accent: var(--vermilion); --radius: var(--r-packet); --font-data: var(--font-sans); }
+[data-register="ledger"] { --bg: var(--ledger-bg); --surface: var(--ledger-surface); --fg: var(--ledger-ink);
+  --fg-soft: var(--ledger-ink-soft); --accent: var(--ledger-ink); --radius: var(--r-ledger); --font-data: var(--font-mono); }

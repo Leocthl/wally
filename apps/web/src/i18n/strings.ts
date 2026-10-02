@@ -1,0 +1,98 @@
+// UI strings, EN first with a zh-HK second line (docs/04 Microcopy). Glossary terms only (00-context): mandate, packet,
+// seal, cart, decision, mint, stop, escalation, revoke, rail, planner, judge. No digits here: figures go through Num.
+// zh-HK lines are drafts for the native read owed in C-12.
+import { label } from "./label";
+
+export const S = {
+  appName: label("Lai See Agent", "利是 Agent"),
+  tagline: label("A sealed packet. The agent checks the shop first.", "封好的利是，代理先查店舖。"),
+  railBadge: label("SIMULATED rail. No money moves.", "模擬發卡層，沒有款項轉移"),
+  footer: label("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.", "原型作品。與 HKT、Tap & Go 及 Mastercard 並無關連。"),
+  replayed: label("Replayed: recorded answers, no network", "重播：使用錄製答案，無需網絡"),
+
+  navBooth: label("Booth", "展位"),
+  navSeal: label("Seal", "封利是"),
+  navRun: label("Run", "運行"),
+  navPacket: label("Packet", "利是"),
+  navLog: label("Log", "紀錄"),
+  navPresenter: label("Presenter", "講者模式"),
+
+  sealButton: label("Seal packet", "封利是"),
+  sealed: label("Packet sealed", "利是已封"),
+  sealHint: label("The chips are the rules that get enforced. The sentence is for reading.", "晶片是實際執行的規則，句子只作閱讀。"),
+  sentenceLabel: label("Your mandate, in plain words", "用日常語言寫下授權"),
+  chipsLabel: label("Compiled rules", "已編譯規則"),
+  sealAgain: label("Sealing starts a new packet and a new log.", "重新封好會開始新的利是與新的紀錄。"),
+  sealBlocked: label("Fix the highlighted chip to seal.", "請先修正標示的晶片才可封好。"),
+
+  packetLeft: label("Packet left", "剩餘利是"),
+  packetSize: label("Packet", "利是總額"),
+  heldOnCards: label("Held on cards", "卡上預留"),
+  spent: label("Spent", "已使用"),
+  mintedNote: label("One-off card, limit equals the cart total", "一次性卡，額度等於購物車總額"),
+  noCards: label("No cards yet. A card exists only after an approved cart.", "未有卡片。購物車獲批後才會發卡。"),
+  cardsTitle: label("One-off cards", "一次性卡"),
+  lockedTo: label("Locked to", "鎖定商戶"),
+  validUntil: label("Valid until", "有效至"),
+  limit: label("Limit", "額度"),
+
+  cartTitle: label("Cart", "購物車"),
+  shipping: label("Shipping", "運費"),
+  fees: label("Fees", "費用"),
+  fx: label("FX fee", "匯兌費"),
+  total: label("Total", "總額"),
+  totalNote: label("R3 compares this figure.", "R3 以此數字比較。"),
+  seller: label("Seller check", "賣家檢查"),
+  listingTitle: label("Listing text (untrusted data)", "商品頁文字（不受信任資料）"),
+
+  decisionTitle: label("Decision", "決定"),
+  judgeTitle: label("Judge", "判斷器"),
+  rulesTitle: label("Rules checked", "已檢查規則"),
+  outcomeApprove: label("APPROVED", "已批准"),
+  outcomeMinted: label("MINTED", "已發卡"),
+  outcomeStopped: label("STOPPED", "已攔截"),
+  outcomeEscalated: label("ESCALATED", "待確認"),
+  outcomePending: label("PENDING", "處理中"),
+
+  laneplanner: label("Planner", "規劃器"),
+  lanejudge: label("Judge", "判斷器"),
+  laneengine: label("Engine", "規則引擎"),
+  lanerail: label("Rail", "發卡層"),
+  runIdle: label("Pick a scenario. The trace appears here.", "選一個情境，追蹤會顯示在這裡。"),
+
+  scenariosTitle: label("Try a scenario", "試試情境"),
+  trickTitle: label("Try to trick the agent", "試試呃代理"),
+  trickHint: label("Write a listing description. The planner and judge treat it as data, never as orders.", "寫一段商品描述。規劃器與判斷器只當它是資料，不會當作指令。"),
+  trickSend: label("Send to the agent", "交給代理"),
+  trickStandIn: label("Mock mode: a keyword stand-in reads this text, not Laya.", "模擬模式：由關鍵字替身讀取文字，不是 Laya。"),
+  reset: label("Reset", "重設"),
+
+  escalationTitle: label("Waiting for you", "等待你回覆"),
+  approve: label("Approve", "批准"),
+  deny: label("Deny", "拒絕"),
+  escalationOpen: label("Answer before the window ends, or R11 stops it.", "請在時限內回覆，否則 R11 會攔截。"),
+  escalationExpired: label("No answer in time. Stopped by R11.", "逾時未覆，已由 R11 攔截。"),
+  revokeTitle: label("Revoke the mandate", "撤銷授權"),
+  revokeHold: label("Press and hold to revoke. Release early to cancel.", "按住以撤銷，提早放開即取消。"),
+  revokeDone: label("Revoked. Unused cards are voided.", "已撤銷，未用的卡已作廢。"),
+  revokeButton: label("Hold to revoke", "按住撤銷"),
+
+  logTitle: label("Decision log", "決定紀錄"),
+  logEmpty: label("No entries yet.", "未有紀錄。"),
+  verify: label("Verify", "驗證"),
+  tamper: label("Tamper", "竄改"),
+  restore: label("Restore", "還原"),
+  verifyOk: label("Chain intact", "紀錄鏈完整"),
+  tamperedNote: label("A tampered copy is shown. The stored log is untouched.", "顯示的是竄改後的副本，原紀錄未受影響。"),
+  notChecked: label("Not checked in mock mode: signatures", "模擬模式未檢查：簽名"),
+
+  presenterStep: label("Step", "下一步"),
+  presenterReset: label("Reset", "重設"),
+  presenterMode: label("Mode", "模式"),
+  modeSimulated: label("SIMULATED", "模擬"),
+  modeReal: label("REAL", "真實"),
+  modeRealOff: label("no capture yet", "未有擷取紀錄"),
+  presenterDone: label("End of script", "腳本完結"),
+} as const;
+
+export type StringKey = keyof typeof S;

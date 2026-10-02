@@ -1,0 +1,37 @@
+/* Provenance chips and figures (docs/04 Provenance chips). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-chip);
+  font-family: var(--font-sans);
+  font-size: var(--fs-s);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.chip--obs { color: var(--obs); background: var(--obs-bg); border: 1px solid var(--obs); }
+.chip--meas { color: var(--meas); background: var(--meas-bg); border: 1px solid var(--meas); }
+.chip--asm { color: var(--asm); background: var(--asm-bg); border: 1px dashed var(--asm); }
+/* SIMULATED: inverse fill, hatched edge, the largest chip. */
+.chip--sim {
+  color: var(--sim);
+  background: var(--sim-bg);
+  border: 1px solid var(--sim-bg);
+  outline: 2px dashed var(--sim-bg);
+  outline-offset: 1px;
+  padding: 2px var(--sp-3);
+  font-size: var(--fs-s);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.num { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); font-variant-numeric: var(--num); }
+.num__v { font-family: var(--font-data); font-weight: 600; }
+.num--unknown { color: var(--fg-soft); font-style: italic; }
+
+.chip-scope { display: block; }
+.chip-scope__chips { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); margin-bottom: var(--sp-2); }
