@@ -182,6 +182,26 @@ describe("verifyChain: delegator material (step 7)", () => {
   });
 });
 
+describe("verifyChain: every log appendEntry writes verifies (T-I7, property)", () => {
+  it("passes for random sequences of decisions, card events, revocation and expiry", async () => {
+    const keys = demoKeys();
+    const steps = demoSteps(keys);
+    // Step 7 answers the ESCALATE of step 6, so a 7 is kept only after some 6.
+    const picks = fc.array(fc.constantFrom(1, 2, 3, 4, 5, 6, 7, 8, 9), { maxLength: 10 }).map((xs) => {
+      const firstEscalate = xs.indexOf(6);
+      return xs.filter((x, i) => x !== 7 || (firstEscalate >= 0 && i > firstEscalate));
+    });
+    await fc.assert(
+      fc.asyncProperty(picks, async (sequence) => {
+        const log = await buildLog([steps[0]!, ...sequence.map((i) => steps[i]!)], keys);
+        const result = verifyChain(asJson(log.entries), keys.publicKeys, log.checkpoint);
+        return result.ok && result.head.seq === sequence.length;
+      }),
+      { numRuns: 25 },
+    );
+  }, 60_000);
+});
+
 describe("verifyChain: structure", () => {
   it("seq 0 must be MANDATE_SEALED and nothing else may be", () => {
     const e = fresh();

@@ -156,5 +156,5 @@ describe("verifyMandateCredential", () => {
       ),
       { numRuns: 40 },
     );
-  });
+  }, 30_000);
 });

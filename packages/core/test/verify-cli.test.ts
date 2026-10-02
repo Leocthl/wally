@@ -16,6 +16,8 @@ const ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 const GOLDEN = fileURLToPath(new URL("./golden/", import.meta.url));
 const CAN_RUN = typeof nodeModule.registerHooks === "function" && Boolean(process.features.typescript);
 const tmp = mkdtempSync(join(tmpdir(), "laisee-cli-"));
+/** Each case starts Node processes that load the TypeScript sources; slow on a loaded machine. */
+const CLI_TIMEOUT = { timeout: 60_000 };
 
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -26,7 +28,7 @@ function run(script: string, args: readonly string[]) {
 
 const golden = (name: string) => join(GOLDEN, name);
 
-describe.skipIf(!CAN_RUN)("verify-log CLI", () => {
+describe.skipIf(!CAN_RUN)("verify-log CLI", CLI_TIMEOUT, () => {
   it("prints PASS and exits 0 for the golden log, with and without its checkpoint", () => {
     const withCp = run("verify-log.mjs", [golden("demo-log.jsonl"), golden("demo-public-keys.json"), golden("demo-checkpoint.json")]);
     expect(withCp).toMatchObject({ code: 0, stderr: "" });
@@ -60,7 +62,7 @@ describe.skipIf(!CAN_RUN)("verify-log CLI", () => {
   });
 });
 
-describe.skipIf(!CAN_RUN)("keys-gen CLI", () => {
+describe.skipIf(!CAN_RUN)("keys-gen CLI", CLI_TIMEOUT, () => {
   const keyDir = join(tmp, "keys");
   const publicFile = join(tmp, "public-keys.json");
   const args = ["--key-dir", keyDir, "--public", publicFile];

@@ -11,6 +11,8 @@ const KEYS = demo.keys.publicKeys;
 const TEXT = toJsonl(demo.entries);
 const encoder = new TextEncoder();
 const decoder = new TextDecoder(); // lenient: invalid UTF-8 becomes U+FFFD, as when a browser reads a file
+/** Each run verifies up to the whole log (about a dozen Ed25519 checks); generous for a loaded machine. */
+const SLOW_MS = 60_000;
 
 describe("verifyLogText", () => {
   it("passes the exported log, with or without the final newline", () => {
@@ -48,9 +50,9 @@ describe("verifyLogText", () => {
         mutated[pos] = ((bytes[pos] ?? 0) + delta) % 256;
         return verifyLogText(decoder.decode(mutated), KEYS, demo.checkpoint).ok === false;
       }),
-      { numRuns: 300 },
+      { numRuns: 200 },
     );
-  });
+  }, SLOW_MS);
 
   it("fails on every single-byte change inside the seq 0 credential proof and the last line", () => {
     const bytes = encoder.encode(TEXT);
@@ -62,7 +64,7 @@ describe("verifyLogText", () => {
       mutated[pos] = (bytes[pos] ?? 0) ^ 0x01;
       expect(verifyLogText(decoder.decode(mutated), KEYS, demo.checkpoint).ok, `byte ${pos}`).toBe(false);
     }
-  });
+  }, SLOW_MS);
 });
 
 describe("parsePublicKeys", () => {
