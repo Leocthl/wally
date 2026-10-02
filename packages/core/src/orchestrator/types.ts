@@ -120,6 +120,24 @@ export interface SubmitRequest {
   readonly checkout?: CheckoutMode;
   /** Correlation id; default ids.runId(). */
   readonly runId?: string;
+  /**
+   * Default false: a cart that repeats a live one (same cart fingerprint, docs/02 section 6) returns the earlier decision
+   * with `duplicate: true` and decides, mints and charges nothing new. true = decide it afresh (a booth button, a
+   * harness burst, a shopper who really wants another one). Every rule still applies to the new decision.
+   */
+  readonly allowRepeat?: boolean;
+}
+
+/** "See cheaper options" after a budget stop (R3, R4): the same request and listings, a planner pick that fits. */
+export interface AlternativesRequest {
+  /** The DENY decision with template R3.over_remaining or R4.over_cap. */
+  readonly decisionId: string;
+  /** Overrides the request text this orchestrator remembers for that decision. */
+  readonly requestText?: string;
+  /** Listings to choose among; default the ones of the stopped submit (remembered by this orchestrator, in memory only). */
+  readonly listings?: readonly ListingRecord[];
+  readonly checkout?: CheckoutMode;
+  readonly runId?: string;
 }
 
 export interface CheckoutRequest {
@@ -139,7 +157,7 @@ export interface AnswerOptions extends OperationOptions {
 
 // ---------- Results ----------
 
-export type OperationName = "seal" | "submit" | "answer" | "checkout" | "revoke" | "tick";
+export type OperationName = "seal" | "submit" | "alternatives" | "answer" | "checkout" | "revoke" | "tick";
 
 export type OrchestratorErrorCode =
   | "NOT_SEALED"
@@ -156,6 +174,8 @@ export type OrchestratorErrorCode =
   | "LOG_APPEND_FAILED"
   | "ENGINE_FAILED"
   | "DUPLICATE_DECISION"
+  /** suggestAlternatives: the decision is unknown, is not a DENY by R3 or R4, or its listings are not known. */
+  | "NOT_APPLICABLE"
   /** The re-fold right before mint said no: packet not ACTIVE, approval resolved or already minted, or not a clean APPROVE. */
   | "MINT_ABORTED"
   /** The stored log failed verification against the pinned keys or the last published checkpoint. */
@@ -246,15 +266,24 @@ export interface DecidedResult {
   readonly escalation: EscalationView | null;
   /** checkout "auto" after a mint. */
   readonly checkout: CheckoutResult | null;
+  /**
+   * The cart repeated a live one: this is the earlier decision (and its card or open escalation) read back from the log.
+   * Nothing new was decided, minted or charged, and no checkout ran.
+   */
+  readonly duplicate?: true;
+  /** suggestAlternatives: the stopped decision this run was a cheaper pick for. */
+  readonly alternativeTo?: string;
 }
 
-export type NoProposalReason = "planner_null" | "planner_timeout" | "planner_error";
+/** no_alternative: suggestAlternatives found the planner without alternatives, or it returned none. */
+export type NoProposalReason = "planner_null" | "planner_timeout" | "planner_error" | "no_alternative";
 
 export interface NoProposalResult {
   readonly ok: true;
   readonly runId: string;
   readonly outcome: "NO_PROPOSAL";
   readonly reason: NoProposalReason;
+  readonly alternativeTo?: string;
 }
 
 export interface InvalidCartResult {
@@ -263,6 +292,7 @@ export interface InvalidCartResult {
   readonly outcome: "INVALID_CART";
   readonly code: InvalidCartCode;
   readonly detail: string;
+  readonly alternativeTo?: string;
 }
 
 export type SubmitResult = DecidedResult | NoProposalResult | InvalidCartResult | OperationFailure;
@@ -359,6 +389,11 @@ export interface Orchestrator {
   seal(credential: unknown): Promise<SealResult>;
   /** Planner -> cart builder -> judge || fold -> decide -> DECISION -> mint -> CARD_MINTED (APPROVE only). */
   submit(request: SubmitRequest): Promise<SubmitResult>;
+  /**
+   * After a DENY by R3 or R4: asks the planner for a pick that fits what is left, then runs the same pipeline as submit
+   * (cart builder, judge, engine, log, mint). Any other decision is NOT_APPLICABLE. The result carries `alternativeTo`.
+   */
+  suggestAlternatives(request: AlternativesRequest): Promise<SubmitResult>;
   /** Executor checkout of one card; callable repeatedly (DM2: overshoot decline, exact charge, replay CARD_USED). */
   checkout(request: CheckoutRequest): Promise<CheckoutResult>;
   /** Verify a signed escalation answer, decide the resolution, append it; an APPROVE mints. */

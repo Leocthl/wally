@@ -62,9 +62,10 @@ describe("A2-04: approvals cannot over-commit the packet", () => {
     await r.orchestrator.seal(credential(r.keys));
     r.propose(P_A1, P_A1);
     const listing = priced(TEE, 50_000);
+    // allowRepeat: the same cart twice is otherwise one decision (orchestrator-idempotent.test.ts); here both must be decided
     const results = (await Promise.all([
-      r.orchestrator.submit({ requestText: "a", listings: [listing] }),
-      r.orchestrator.submit({ requestText: "b", listings: [listing] }),
+      r.orchestrator.submit({ requestText: "a", listings: [listing], allowRepeat: true }),
+      r.orchestrator.submit({ requestText: "b", listings: [listing], allowRepeat: true }),
     ])) as DecidedResult[];
     expect(results.map((x) => x.outcome).sort()).toEqual(["APPROVE", "DENY"]);
     expect(r.rail.cards).toHaveLength(1);

@@ -7,6 +7,7 @@ import { createExclusive } from "../executor/queue";
 import { OrchestratorConfigError, resolveConfig } from "./config";
 import { checkoutCard } from "./checkout";
 import { PACKET_QUEUE_KEY, StepError, describe, sealedOrThrow, type Ctx } from "./context";
+import { alternativesSteps } from "./alternatives";
 import { createEmitter, createReporter, type Run } from "./events";
 import { answerSteps } from "./escalation";
 import { revokeInQueue } from "./revoke";
@@ -23,7 +24,7 @@ function submitOutcome(result: SubmitResult): Finished {
   if (!result.ok) return { outcome: "ERROR", code: result.code };
   if (result.outcome === "NO_PROPOSAL") return { outcome: "INFO", code: `NO_PROPOSAL:${result.reason}` };
   if (result.outcome === "INVALID_CART") return { outcome: "INFO", code: `INVALID_CART:${result.code}` };
-  return { outcome: result.outcome };
+  return { outcome: result.outcome, ...(result.duplicate === true ? { code: "DUPLICATE" } : {}) };
 }
 
 function checkoutOutcome(result: CheckoutResult): Finished {
@@ -80,7 +81,7 @@ export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
     executor: executorFor(deps),
     report: createReporter(emitter, deps.clock, deps.ids),
     queue: createExclusive(),
-    memory: { sealed: null, emittedThrough: -1, checkpoint: null },
+    memory: { sealed: null, emittedThrough: -1, checkpoint: null, stops: new Map() },
   };
   const inQueue = <T>(task: () => Promise<T>): Promise<T> => ctx.queue(PACKET_QUEUE_KEY, task);
   return {
@@ -91,6 +92,10 @@ export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
     submit: (request) => {
       const run = ctx.report.start("submit", request?.runId);
       return operate(ctx, run, () => submitSteps(ctx, run, request), submitOutcome);
+    },
+    suggestAlternatives: (request) => {
+      const run = ctx.report.start("alternatives", request?.runId);
+      return operate(ctx, run, () => alternativesSteps(ctx, run, request), submitOutcome);
     },
     checkout: (request) => {
       const run = ctx.report.start("checkout", request?.runId);

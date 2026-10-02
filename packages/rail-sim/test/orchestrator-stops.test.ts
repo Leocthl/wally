@@ -20,9 +20,9 @@ async function sealed(mode: Parameters<typeof integration>[0] = "honest", validU
   return r;
 }
 
-async function submit(r: Integration, proposal: ProposeCartInput, listing: ListingRecord): Promise<DecidedResult> {
+async function submit(r: Integration, proposal: ProposeCartInput, listing: ListingRecord, allowRepeat = false): Promise<DecidedResult> {
   r.propose(proposal);
-  const result = await r.orchestrator.submit({ requestText: "shopper request", listings: [listing] });
+  const result = await r.orchestrator.submit({ requestText: "shopper request", listings: [listing], ...(allowRepeat ? { allowRepeat } : {}) });
   expect(result.ok).toBe(true);
   return result as DecidedResult;
 }
@@ -105,12 +105,12 @@ describe("T-S6 velocity burst and expired mandate (R7, R2)", () => {
   it("more than the allowed mints in the window [F32] is DENY R7.velocity", async () => {
     const r = await sealed();
     for (let i = 0; i < ENGINE_CONFIG.velocity.max_mints; i += 1) {
-      const minted = await submit(r, P_A4, SOCKS);
+      const minted = await submit(r, P_A4, SOCKS, true); // the same cart each time, on purpose: a repeat is otherwise one decision
       expect(minted.outcome).toBe("APPROVE");
       expect(await r.orchestrator.checkout({ cardId: minted.card?.id ?? "" })).toMatchObject({ status: "AUTHORISED" }); // frees the slot (R8)
       r.clock.advance(60_000);
     }
-    expect(await submit(r, P_A4, SOCKS)).toMatchObject({ outcome: "DENY", card: null, decision: { explanation: { template_id: "R7.velocity" } } });
+    expect(await submit(r, P_A4, SOCKS, true)).toMatchObject({ outcome: "DENY", card: null, decision: { explanation: { template_id: "R7.velocity" } } });
     await expectVerifies(r);
   });
 

@@ -3,6 +3,7 @@
 export { createOrchestrator } from "./create";
 export { ORCHESTRATOR_DEFAULTS, OrchestratorConfigError, purposeOf } from "./config";
 export type {
+  AlternativesRequest,
   AnswerOptions,
   AnswerResult,
   CardEventCause,

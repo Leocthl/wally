@@ -81,9 +81,10 @@ describe("H4: an approval not minted yet cannot be over-committed", () => {
     const r = await sealed();
     const pricey: ListingRecord = { ...LISTING_TEE, items: [{ ...LISTING_TEE.items[0], unit_price_minor: 50000 }] } as ListingRecord;
     r.planners.push(PROPOSAL_A1, PROPOSAL_A1);
+    // allowRepeat: the same cart twice is otherwise one decision (orchestrator-idempotent.test.ts); here both must be decided
     const results = await Promise.all([
-      r.orchestrator.submit({ requestText: "a tee", listings: [pricey] }),
-      r.orchestrator.submit({ requestText: "a tee", listings: [pricey] }),
+      r.orchestrator.submit({ requestText: "a tee", listings: [pricey], allowRepeat: true }),
+      r.orchestrator.submit({ requestText: "a tee", listings: [pricey], allowRepeat: true }),
     ]);
     expect(results.map((x) => (x.ok && "outcome" in x ? x.outcome : x.ok)).sort()).toEqual(["APPROVE", "DENY"]);
     expect((r.rail as FakeRail).cards).toHaveLength(1);

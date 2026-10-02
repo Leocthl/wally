@@ -104,7 +104,7 @@ export async function integration(mode: MerchantMode = "honest", wrap?: Merchant
     planner: () => {
       const [next = null, ...rest] = queue;
       queue = rest;
-      return new FakePlanner([next]);
+      return new FakePlanner([next], [next]); // the queued entry serves a submit or a suggestAlternatives call
     },
     judge,
     rail,
