@@ -71,8 +71,24 @@ describe("R1 binding (controls)", () => {
   });
 });
 
-describe("KNOWN DEFECT S-R1-1: R1 checks ids only, so a widened Mandate passes with mandateProofValid: true", () => {
-  it.fails("R1 fails when the mandate's budget or expiry differ from the packet folded from the credential", () => {
+// FIXED (lane s-fix-core): R1 also binds the packet's budget, currency and expiry and the cart's currency to the Mandate
+// (inputs.binding names the mismatch), so a widened copy no longer rides on the credential's proof flag.
+describe("S-R1-1 (fixed): R1 binds the Mandate to the packet folded from the credential", () => {
+  it("R1 fails when the mandate's budget or expiry differ from the packet folded from the credential", () => {
     expect(WIDE_DECISION.outcome).not.toBe("APPROVE");
+    expect(WIDE_DECISION.rules.find((r) => r.id === "R1")).toMatchObject({ result: "FAIL", inputs: { binding: "budget_mismatch" } });
+  });
+});
+
+// Residual, kept red on purpose: PacketState carries no fingerprint of the rules, so a copy that widens only the
+// categories (same budget, currency and expiry) still passes R1. The orchestrator is not exposed (it builds the
+// Mandate from the logged credential); closing it in the engine needs a rules hash in PacketState or the credential
+// in DecideContext (schema and port changes, lead-owned).
+const CATEGORIES_ONLY: Mandate = { ...M0, rules: { ...M0.rules, categories: ["apparel", "electronics"], seller_check: { require_capture: false } } };
+const CATEGORIES_ONLY_DECISION = engine.decide(CATEGORIES_ONLY, PACKET_INITIAL, GADGET, JUDGE_TEE, NOW, undefined, PROOF_OK);
+
+describe("KNOWN RESIDUAL S-R1-1b: a categories-only widening is invisible to R1", () => {
+  it.fails("R1 fails for a Mandate whose categories differ from the sealed credential", () => {
+    expect(CATEGORIES_ONLY_DECISION.outcome).not.toBe("APPROVE");
   });
 });

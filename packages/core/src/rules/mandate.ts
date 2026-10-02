@@ -1,5 +1,5 @@
-// R1 mandate signature valid (proof result supplied by the caller, ADR-0007) and R2 not revoked,
-// not expired. Pure: no I/O, no clock (now is an argument).
+// R1 mandate signature valid (proof result supplied by the caller, ADR-0007) and bound to the packet and cart; R2
+// not revoked, not expired. Pure: no I/O, no clock (now is an argument).
 import type { Cart, Mandate, PacketState } from "../generated";
 import { failed, judged, parseTime, passed, timeOf, type RuleResult } from "./result";
 
@@ -11,10 +11,27 @@ export interface R1Input {
   readonly proofValid: unknown;
 }
 
+/** Same instant for two RFC 3339 strings; false when either does not parse (fail closed). */
+function sameInstant(a: unknown, b: unknown): boolean {
+  const left = parseTime(a);
+  return left !== null && left === parseTime(b);
+}
+
+/**
+ * The packet is folded from the sealed credential, so its budget, currency and expiry are the credential's. A Mandate
+ * object that disagrees with them was not built from that credential (audit S-R1-1): `mandateProofValid` speaks for
+ * the credential, never for a caller's copy of it. Rules the packet does not carry (categories, merchants) cannot be
+ * checked here; the orchestrator builds the Mandate from the logged credential itself.
+ */
 function bindingOf(mandate: Mandate, packet: PacketState, cart: Cart): string {
+  const budget = mandate.rules.budget;
   if (cart.mandate_id !== mandate.id) return "mandate_mismatch";
   if (cart.agent !== mandate.agent) return "agent_mismatch";
   if (packet.mandate_id !== mandate.id) return "packet_mismatch";
+  if (packet.budget_minor !== budget.amount_minor) return "budget_mismatch";
+  if (packet.currency !== budget.currency) return "currency_mismatch";
+  if (cart.currency !== budget.currency) return "cart_currency_mismatch";
+  if (!sameInstant(packet.expires_at, mandate.valid_until)) return "expiry_mismatch";
   return "ok";
 }
 

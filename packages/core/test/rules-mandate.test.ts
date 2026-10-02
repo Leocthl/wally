@@ -32,6 +32,26 @@ describe("R1 mandate signature valid (delegator key)", () => {
     expect(r).toMatchObject({ result: "FAIL", verdict: "DENY", template_id: "R1.invalid_signature" });
     expect(r.inputs["binding"]).toBe(binding);
   });
+
+  // Audit S-R1-1: the packet is folded from the sealed credential; a Mandate that disagrees with it is not that credential.
+  const widened = { ...M0, rules: { ...M0.rules, budget: { amount_minor: 10_000_000, currency: "HKD" as const } } };
+  it.each([
+    ["budget_mismatch", { mandate: widened }],
+    ["budget_mismatch", { packet: packetWith(PACKET_INITIAL, { budget_minor: 79_999 }) }],
+    ["currency_mismatch", { packet: packetWith(PACKET_INITIAL, { currency: "USD" as never }) }],
+    ["cart_currency_mismatch", { cart: { ...CART_A1, currency: "USD" as never } }],
+    ["expiry_mismatch", { mandate: { ...M0, valid_until: "2099-12-31T00:00:00Z" } }],
+    ["expiry_mismatch", { packet: packetWith(PACKET_INITIAL, { expires_at: "not a time" }) }],
+  ])("denies a mandate the packet was not folded from (%s)", (binding, patch) => {
+    const r = evaluateR1({ ...base, ...patch, proofValid: true });
+    expect(r).toMatchObject({ result: "FAIL", verdict: "DENY", template_id: "R1.invalid_signature" });
+    expect(r.inputs["binding"]).toBe(binding);
+  });
+
+  it("accepts the same expiry instant written another way", () => {
+    const packet = packetWith(PACKET_INITIAL, { expires_at: "2026-10-31T15:59:59.000Z" });
+    expect(evaluateR1({ ...base, packet, proofValid: true }).result).toBe("PASS");
+  });
 });
 
 describe("R2 not revoked, not expired", () => {

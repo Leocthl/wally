@@ -1,7 +1,10 @@
 // Orchestrator pipeline with fakes (A-26): seal, submit, the order DECISION before mint (I1, I7), no proposal and
 // invalid carts make no Decision, I4 at the planner boundary, events in order, snapshot without handles.
 import { describe, expect, it, vi } from "vitest";
-import type { OrchestratorEvent } from "../src/orchestrator";
+import { createEngine } from "../src/engine";
+import type { Decision } from "../src/generated";
+import type { DecidedResult, OrchestratorEvent } from "../src/orchestrator";
+import type { Engine } from "../src/ports";
 import { FakeRail } from "../src/testing";
 import { LISTING_JACKET, LISTING_SOCKS, LISTING_TEE, PROPOSAL_A1, PROPOSAL_A3, PROPOSAL_A4 } from "./cart-helpers";
 import { rig } from "./orchestrator-helpers";
@@ -125,8 +128,26 @@ describe("submit", () => {
     expect(ctx).toEqual({ intentText: "socks please", listings: [{ url: LISTING_TEE.url, text: "" }, { url: LISTING_SOCKS.url, text: "" }] });
   });
 
-  it("a cart id reused at the same instant would duplicate a decision id: refused before the append", async () => {
+  // Changed (lane s-fix-core, audit LOW): the decision id now digests the outcome and the cart fingerprint too. A cart id
+  // reused at one instant used to give the APPROVE and the later DENY one id (refused as a duplicate); they are two
+  // decisions and now get two ids. The duplicate guard itself is kept and tested below with an engine that repeats itself.
+  it("a cart id reused at the same instant gives a second decision with its own id", async () => {
     const r = rig({ cartIds: () => "crt_sameid0001" });
+    await r.orchestrator.seal(r.credential);
+    r.planners.push(PROPOSAL_A3, PROPOSAL_A3);
+    const first = await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] });
+    const second = await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] });
+    expect(first).toMatchObject({ ok: true, outcome: "APPROVE" });
+    expect(second).toMatchObject({ ok: true, outcome: "DENY", decision: { explanation: { template_id: "R3.over_remaining" } } });
+    expect((second as DecidedResult).decision.id).not.toBe((first as DecidedResult).decision.id);
+    expect((await r.kinds()).filter((k) => k === "DECISION")).toHaveLength(2);
+  });
+
+  it("a decision whose id is already in the log is refused before the append", async () => {
+    const real = createEngine();
+    let last: Decision | null = null;
+    const repeating: Engine = { decide: (...args) => (last ??= real.decide(...args)), decideCheckout: (input) => real.decideCheckout(input) };
+    const r = rig({ engine: repeating });
     await r.orchestrator.seal(r.credential);
     r.planners.push(PROPOSAL_A3, PROPOSAL_A3);
     expect(await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] })).toMatchObject({ ok: true });
