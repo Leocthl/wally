@@ -6,12 +6,15 @@ import type { Executor, ExecutorDeps } from "@laisee/core/executor";
 import { appendEntry, headCheckpoint, logIdForMandate } from "@laisee/core/log";
 import type { CardEvent, LogStore, MerchantPort, RailPort, Signer } from "@laisee/core/ports";
 import { MemoryLogStore } from "@laisee/core/testing";
+import { foldPacket } from "@laisee/core/packet";
 import { verifyChain } from "@laisee/core/verify";
 import { RAIL } from "../config";
 import { delegatorSigner, engineSigner } from "../keys";
 import type { Scenario } from "../types";
 import type { CheckoutReport, LogAudit, World } from "../systems/types";
+import { SEAL_AGO_S } from "../scenario/history";
 import { ScenarioClock } from "./clock";
+import { writeHistory } from "./history-log";
 import { sealMandate, type Sealed } from "./seal";
 
 /** The three implementations a governed world is built from; each has a fresh instance per scenario. */
@@ -75,17 +78,21 @@ async function auditLog(store: LogStore, logId: string, engineDid: string, deleg
 export function governedWorlds(parts: GovernedParts): (scenario: Scenario) => Promise<World> {
   const sealOnce = sealer(delegatorSigner());
   return async (scenario) => {
-    const clock = new ScenarioClock(new Date(scenario.now));
+    const nowMs = Date.parse(scenario.now);
+    const clock = new ScenarioClock(new Date(nowMs - SEAL_AGO_S * 1000));
     const store = new MemoryLogStore();
     const engine = engineSigner();
     const logId = logIdForMandate(scenario.mandate.id);
     const sealed = sealOnce(scenario);
     await appendEntry(store, engine, logId, "MANDATE_SEALED", sealed.credential, clock.now());
+    await writeHistory({ store, engine, delegator: delegatorSigner(), logId }, scenario);
+    clock.set(new Date(nowMs));
     const rail = parts.createRail(scenario);
     const executor = parts.createExecutor({ merchant: parts.createMerchant(rail, scenario), rail, store, signer: engine, appendEntry, clock });
     return {
       mandateProofValid: sealed.proofValid,
       setTime: (at) => clock.set(at),
+      packet: async () => foldPacket(await store.read(logId), clock.now()),
       mint: (decision, merchantLock, purpose) => rail.mint({ decision, ttlMs: RAIL.cardTtlMs, now: clock.now(), merchantLock, purpose }),
       async checkout(decision, card): Promise<CheckoutReport> {
         return reportOf(await executor.checkout({ logId, decision, card }));

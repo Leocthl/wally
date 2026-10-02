@@ -24,6 +24,7 @@ export function ungovernedWorlds(parts: UngovernedParts): (scenario: Scenario) =
     return {
       mandateProofValid: undefined,
       setTime: (at) => clock.set(at),
+      packet: async () => null,
       mint: (decision, merchantLock, purpose) => rail.mint({ decision, ttlMs: 0, now: clock.now(), merchantLock, purpose }),
       async checkout(decision: Decision, card: CardRecord): Promise<CheckoutReport> {
         const n = (attempts.get(card.id) ?? 0) + 1;

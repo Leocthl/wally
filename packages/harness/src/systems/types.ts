@@ -1,6 +1,7 @@
 // The record every system under test returns for one scenario, plus the ports the systems are built from.
-import type { CardRecord, Decision, RuleId, TemplateId } from "@laisee/core/generated";
+import type { CardRecord, Decision, EscalationAnswer, LogEntry, PacketState, Revocation, RuleId, TemplateId } from "@laisee/core/generated";
 import type { LaiseeEngine } from "@laisee/core/engine";
+import type { Orchestrator } from "@laisee/core/orchestrator";
 import type { CardEvent, JudgePort, MerchantQuote } from "@laisee/core/ports";
 import type { Timer } from "../timer";
 import type { ChoiceClient } from "../judge/choice-client";
@@ -53,6 +54,14 @@ export interface EventSummary {
   readonly declineCode: DeclineCode | null;
 }
 
+/** What B2 did when the engine escalated: it asked the shopper, and the simulated shopper answered. */
+export interface EscalationSummary {
+  /** The shopper's answer: APPROVE for a purchase the label wants, DENY for one it must stop. */
+  readonly answer: "APPROVE" | "DENY";
+  /** The decision outcome after the answer. */
+  readonly resolvedTo: DecisionOutcome;
+}
+
 export interface RunOutcome {
   readonly scenarioId: string;
   readonly baseline: Baseline;
@@ -74,6 +83,8 @@ export interface RunOutcome {
   /** Set when a component threw; the scenario then counts as stopped (I5). */
   readonly error: string | null;
   readonly log: LogAudit | null;
+  /** The questions the shopper was asked, in order. Only B2 has an escalation path; the others stop on an ESCALATE. */
+  readonly escalations: readonly EscalationSummary[];
 }
 
 export interface SystemUnderTest {
@@ -100,6 +111,8 @@ export interface World {
   /** R1 input: the sealed credential's proof verified. undefined where there is no credential (the ungoverned baseline). */
   readonly mandateProofValid: boolean | undefined;
   setTime(at: Date): void;
+  /** The packet as the log folds it now: what the next decision must be made against. null where there is no log. */
+  packet(): Promise<PacketState | null>;
   mint(decision: Decision, merchantLock: string, purpose: string): Promise<CardRecord>;
   checkout(decision: Decision, card: CardRecord): Promise<CheckoutReport>;
   /** The VOIDED event, or null when the card could not be voided (a used card is final [F2]). */
@@ -110,9 +123,28 @@ export interface World {
   audit(): Promise<LogAudit | null>;
 }
 
+/**
+ * B2's world: the product's own pipeline for one scenario. A real orchestrator over a real signed log, with the scenario's
+ * history already written into it, a SIMULATED rail and merchant, a recorded planner and the judge for this scenario. The
+ * simulated delegator holds the one key that may answer an escalation or revoke the mandate.
+ */
+export interface OrchestratedWorld {
+  readonly orchestrator: Orchestrator;
+  setTime(at: Date): void;
+  /** The delegator's signed answer to an escalation. */
+  answer(decisionId: string, choice: "APPROVE" | "DENY"): EscalationAnswer;
+  /** The delegator's signed revocation of the mandate. */
+  revocation(): Revocation;
+  /** Entries from the decision on: the sealed credential and the seeded history are not in it. */
+  entries(): Promise<readonly LogEntry[]>;
+  audit(): Promise<LogAudit>;
+}
+
 /** Everything the factory supplies. Each member is a real implementation behind factory.ts. */
 export interface Components {
   readonly engine: LaiseeEngine;
+  /** B2: the real orchestrator. */
+  readonly orchestrated: (scenario: Scenario, judge: JudgePort) => Promise<OrchestratedWorld>;
   /** B1 and B2: RailSim, MerchantStub, core's executor, a signed log. */
   readonly governed: (scenario: Scenario) => Promise<World>;
   /** B0: a card on file with no limit, the same merchant stub, no executor, no log. */
