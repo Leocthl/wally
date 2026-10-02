@@ -135,7 +135,8 @@ describe("renderMarkdown", () => {
     expect(docsLint(markdown)).toEqual([]);
   });
 
-  it("the corpus README passes the same checks", () => {
+  it("the corpus README and the judge README pass the same checks", () => {
     expect(docsLint(readFileSync(join(DEFAULT_CORPUS_DIR, "README.md"), "utf8"))).toEqual([]);
+    expect(docsLint(readFileSync(new URL("../src/judge/README.md", import.meta.url), "utf8"))).toEqual([]);
   });
 });
