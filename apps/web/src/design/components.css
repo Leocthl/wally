@@ -203,3 +203,18 @@ p.bi, div.bi { display: flex; }
 .stop-banner__text .chip, .beat .chip { margin-left: var(--sp-1); }
 .log__table td > div + div { margin-top: 2px; }
 .log__table td, .log__table th { padding: var(--sp-2) var(--sp-2); }
+
+/* Compact meter: numerals beside the envelope, so a phone sees the scenario buttons without scrolling past a huge drawing. */
+.packet-meter--m {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, 10.5rem);
+  grid-template-areas: "cap env" "big env" "facts facts";
+  column-gap: var(--sp-4);
+  align-items: center;
+}
+.packet-meter--m .packet-meter__caption { grid-area: cap; }
+.packet-meter--m .packet-meter__big { grid-area: big; margin: var(--sp-1) 0; }
+.packet-meter--m .packet-meter__envelope { grid-area: env; max-width: none; }
+.packet-meter--m .packet-meter__facts { grid-area: facts; }
+.packet-meter--m .packet-meter__track { height: 0.875rem; }
+.packet-meter-scope { padding: var(--sp-3) var(--sp-4); }

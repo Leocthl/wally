@@ -72,13 +72,14 @@ export function RunPanel(): ReactElement {
   const reduced = useReducedMotion();
   const wide = useWide();
   const runId = run?.runId;
+  const decisionId = decision?.id;
   useEffect(() => {
     // On a phone, keep the result above the fold after a press when it is out of sight (docs/04 Phone: StopBanner above
     // the fold). Wide screens show every panel at once, so they never scroll by themselves.
     const el = top.current;
     if (wide || !runId || !el || typeof el.scrollIntoView !== "function") return;
     if (el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
-  }, [runId, reduced, wide]);
+  }, [runId, decisionId, reduced, wide]);
   return (
     <section ref={top} className="run" data-register="ledger" aria-label="Run" aria-live="off">
       {run ? <Banner run={run} /> : null}

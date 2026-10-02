@@ -1,7 +1,8 @@
 /* Base styles: reset, type, focus, touch targets, reduced motion. Tokens come from tokens.css (docs/04). */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* No scroll anchoring: when the result grows above the buttons, the page must not slide away from the StopBanner. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-anchor: none; }
 
 body {
   margin: 0;
