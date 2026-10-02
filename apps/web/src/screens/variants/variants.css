@@ -1,0 +1,7 @@
+/* Dev-only variant harness (#/styleguide/variants/*). Tokens only. */
+.vr-scene { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-2) var(--sp-4); padding: var(--sp-3) var(--gutter); background: var(--c-surface-sunken); border-bottom: 1px solid var(--c-line); }
+.vr-scene__buttons, .vr-scene__settings { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.vr-scene__btn { min-height: var(--tap); padding: 0 var(--sp-3); border: 1px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; }
+.vr-scene__btn:disabled { opacity: 0.5; cursor: progress; }
+.vr-loading { padding: var(--sp-6); text-align: center; color: var(--c-ink-muted); }
+.vr-note { margin: var(--sp-3) 0 0; color: var(--c-ink-muted); font-size: var(--text-sm); }
