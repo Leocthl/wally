@@ -24,5 +24,5 @@ export {
   type RuleVerdict,
 } from "./result";
 
-/** Rules whose FAIL no escalation answer can override. */
+/** Hard rules: their DENY survives any escalation answer. R4's ask_above ESCALATE is the one answerable FAIL here. */
 export const HARD_RULES = Object.freeze(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R12"] as const);

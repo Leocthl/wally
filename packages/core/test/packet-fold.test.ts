@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { LogEntry } from "../src/generated";
 import { PacketFoldError, foldPacket } from "../src/packet";
 import { validatePacketState } from "../src/schema";
+import { PROPERTY_SEED } from "./engine-arbitraries";
 import { CREDENTIAL, LOG_ID, append, card, cardEvent, escalateDecision, resolvingDecision, sealedLog } from "./packet-helpers";
 
 const NOW = new Date("2026-10-03T02:30:00Z");
@@ -140,7 +141,7 @@ describe("foldPacket invariants (fast-check)", () => {
         expect(p.committed_minor).toBe(p.active_cards.reduce((s, c) => s + c.limit_minor, 0));
         expect(Number.isSafeInteger(p.remaining_minor)).toBe(true);
       }),
-      { numRuns: 150 },
+      { numRuns: 150, seed: PROPERTY_SEED },
     );
   });
 
@@ -151,6 +152,7 @@ describe("foldPacket invariants (fast-check)", () => {
         const released = limits.reduce<LogEntry[]>((log, _l, i) => append(log, "CARD_EVENT", cardEvent(card(i + 1, 0, "2026-10-03T02:05:00Z").id, i % 2 ? "VOIDED" : "EXPIRED", "2026-10-03T02:06:00Z"), "2026-10-03T02:06:00Z"), minted);
         expect(foldPacket(released, NOW)).toMatchObject({ committed_minor: 0, spent_minor: 0, remaining_minor: 80000 });
       }),
+      { seed: PROPERTY_SEED },
     );
   });
 

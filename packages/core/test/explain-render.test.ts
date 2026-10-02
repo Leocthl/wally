@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { TEMPLATE_IDS, formatDuration, formatHkd, formatHkt, formatProbability, render } from "../src/explain";
 import type { TemplateId } from "../src/ports";
+import { PROPERTY_SEED } from "./engine-arbitraries";
 
 describe("formatHkd (integer cents to HK$)", () => {
   it.each([
@@ -26,6 +27,7 @@ describe("formatHkd (integer cents to HK$)", () => {
         const [whole = "", cents = "00"] = digits.split(".");
         expect(BigInt(whole) * 100n + BigInt(cents)).toBe(BigInt(minor));
       }),
+      { seed: PROPERTY_SEED },
     );
   });
 });
@@ -113,6 +115,7 @@ describe("render (pure, from template id + recorded inputs)", () => {
         expect(typeof text).toBe("string");
         expect(text.length).toBeGreaterThan(0);
       }),
+      { seed: PROPERTY_SEED },
     );
   });
 
