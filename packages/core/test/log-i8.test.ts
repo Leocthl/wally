@@ -1,5 +1,8 @@
 // T-I8: no PAN-like digit run or CVV field can pass the schemas into the log, and key material never
 // appears in any serialised entry. Card-like digits are built at runtime; none is a literal in the repo.
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { toBase64url, toHex } from "../src/crypto";
 import type { CardRecord } from "../src/generated";
@@ -9,6 +12,7 @@ import { MemoryLogStore } from "../src/testing";
 import { luhnValidDigits } from "./crypto-independent";
 import { buildDemoLog, DELEGATOR_SEED, demoKeys, demoSteps, ENGINE_SEED, LOG_ID } from "./log-helpers";
 
+const SCHEMA_DIR = fileURLToPath(new URL("../../../schemas/", import.meta.url));
 const pan = luhnValidDigits(16);
 const spaced = pan.replace(/(\d{4})(?=\d)/g, "$1 ");
 const dashed = pan.replace(/(\d{4})(?=\d)/g, "$1-");
@@ -103,6 +107,21 @@ describe("findCardData after normalising (S-I8-1)", () => {
     };
     expect(findCardData(clean)).toBeNull();
     for (const entry of entries) expect(findCardData(entry)).toBeNull();
+  });
+
+  it("flags no property name used anywhere in schemas/", () => {
+    const names = new Set<string>();
+    const collect = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(collect);
+      if (node === null || typeof node !== "object") return;
+      for (const [key, value] of Object.entries(node)) {
+        if (key === "properties" && value !== null && typeof value === "object") Object.keys(value).forEach((n) => names.add(n));
+        collect(value);
+      }
+    };
+    for (const file of readdirSync(SCHEMA_DIR).filter((f) => f.endsWith(".schema.json"))) collect(JSON.parse(readFileSync(join(SCHEMA_DIR, file), "utf8")));
+    expect(names.size).toBeGreaterThan(100);
+    for (const name of names) expect(findCardData({ [name]: "x" }), name).toBeNull();
   });
 
   it("refuses a long digit run inside a card handle even within a token", () => {
