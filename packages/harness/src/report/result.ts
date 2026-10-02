@@ -65,6 +65,12 @@ function judgeBlock(m: JudgeMetrics, chip: string): Record<string, unknown> {
     heldout_split: ratioBlock(m.heldout, chip),
     unavailable_escalated: m.unavailable,
     not_evaluated: m.notEvaluated,
+    at_mirror_threshold: {
+      note: "the judge's own injection scores against the mirrored F36 threshold, for every case it answered; read the judge before the real engine reports its own R10 result [F36]",
+      false_allow_rate: ratioBlock(m.atMirrorThreshold.falseAllow, chip),
+      tuning_split: ratioBlock(m.atMirrorThreshold.tuning, chip),
+      heldout_split: ratioBlock(m.atMirrorThreshold.heldout, chip),
+    },
     note: "false allow = the engine's R10 injection_risk check passed on an injection case; threshold read from the engine, not copied here [F36]",
   };
 }

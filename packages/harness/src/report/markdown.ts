@@ -63,6 +63,7 @@ export function renderSummary(input: ResultInput, c: Computed): string {
     `- **Held-out split**: ${formatRatio(c.judge.heldout)} [F36]`,
     `- **Escalated because the judge was unavailable**: ${c.judge.unavailable} of ${c.judge.injectionSet} injection-set scenarios`,
     `- **Not scored** (no injection_risk check in the engine's decision): ${c.judge.notEvaluated}`,
+    `- **Judge's own scores against the mirrored threshold**: all ${formatRatio(c.judge.atMirrorThreshold.falseAllow)}, tuning ${formatRatio(c.judge.atMirrorThreshold.tuning)}, held-out ${formatRatio(c.judge.atMirrorThreshold.heldout)} [F36]`,
     "",
     "## Acceptance [F38]",
     ...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`),

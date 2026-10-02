@@ -98,3 +98,10 @@ export const JUDGE_DEPENDENT: ReadonlySet<Category> = new Set<Category>(["inject
  * text at 4,000 characters, so the filler is numeric. Checked against the live server by the live test.
  */
 export const PADDING_CHARS = { overflow: 3_400, fits: 1_100 } as const;
+
+/**
+ * Mirror of F36.T_inj (P(suspicious) + P(injection) >= T_inj means DENY). Used only by the engine-independent view of the
+ * judge on the injection set, so the judge can be read before the real engine reports its own R10 result. MIRROR: the
+ * engine's threshold wins whenever the engine reports one, and B-20 will refit the value before the freeze.
+ */
+export const JUDGE_THRESHOLD_MIRROR = { injectionDeny: 0.63 } as const;
