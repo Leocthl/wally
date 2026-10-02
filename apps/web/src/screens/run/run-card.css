@@ -11,6 +11,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .run-head--enter { animation: run-rise var(--dur-slow) var(--ease-out) both; }
   .run-head--enter .run-signed path { animation: run-draw var(--dur-ceremony) var(--ease-out) var(--dur-slow) both; }
+  .run-after--enter { animation: run-fade var(--dur-base) var(--ease-out) var(--dur-fast) both; }
 }
 @keyframes run-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 

@@ -55,15 +55,18 @@ export function Approved({ result, packet, fresh, headingRef, paying, canPay, on
         </div>
       </div>
       <OneOffCard card={result.card} shop={shopName(cart)} enter={fresh} declines={declinesOf(result)} />
-      {unpaid && canPay && (!result.busy || paying) ? (
-        <Button size="lg" block icon={<Icon name="lock" size={20} />} loading={paying} onClick={onPay}>{t(R.payNow)}</Button>
-      ) : null}
-      {packet ? <BudgetNow packet={packet} fromMinor={chain.current.packet.remaining_minor} animate={fresh} /> : null}
-      <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? total} />
-      <div className="run-actions">
-        <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyApproved)}</Button>
+      {/* Everything under the card fades in once the card is dealing in, so no button waits in an empty slot. */}
+      <div className={cx("run-after", fresh && "run-after--enter")}>
+        {unpaid && canPay && (!result.busy || paying) ? (
+          <Button size="lg" block icon={<Icon name="lock" size={20} />} loading={paying} onClick={onPay}>{t(R.payNow)}</Button>
+        ) : null}
+        {packet ? <BudgetNow packet={packet} fromMinor={chain.current.packet.remaining_minor} animate={fresh} /> : null}
+        <CardStory story={result.story} limitMinor={result.card?.limit_minor ?? total} />
+        <div className="run-actions">
+          <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyApproved)}</Button>
+        </div>
+        <Footnote />
       </div>
-      <Footnote />
     </div>
   );
 }

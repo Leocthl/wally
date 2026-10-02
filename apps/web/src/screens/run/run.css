@@ -12,7 +12,7 @@
 /* A long state ("Stopped before paying") wraps inside its row instead of running under the amount. */
 .run-history .w-row__subtitle { min-width: 0; }
 .run-history .w-tag { max-width: 100%; white-space: normal; text-align: left; }
-.run-stack { display: grid; gap: var(--sp-4); min-width: 0; }
+.run-stack, .run-after { display: grid; gap: var(--sp-4); min-width: 0; }
 .run-section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .run-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-size: var(--text-sm); color: var(--c-ink-muted); }
 .run-link { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--tap); color: var(--c-primary-ink); font-weight: var(--weight-semibold); text-decoration: none; }

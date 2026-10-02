@@ -51,7 +51,7 @@
 .oc--voided .oc__body, .oc--expired .oc__body { opacity: 0.5; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .oc--enter { animation: oc-deal var(--dur-slow) var(--ease-out-strong) var(--dur-press) both; }
+  .oc--enter { animation: oc-deal var(--dur-slow) var(--ease-out-strong) calc(var(--dur-press) / 2) both; }
   .oc--enter .oc__sheen { animation: oc-sheen var(--dur-sheen) var(--ease-out) var(--dur-slow) both; }
   .oc__stamp--land { animation: oc-land var(--dur-ceremony) var(--ease-stamp) both; }
 }
