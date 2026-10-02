@@ -1,5 +1,10 @@
 /* App shell, screens and layout. Mobile first: one column at 360 px, columns appear with room. */
-.shell { max-width: 80rem; margin: 0 auto; padding: 0 var(--sp-4) var(--sp-6); }
+.shell {
+  max-width: 80rem;
+  margin: 0 auto;
+  /* Clear of the notch and the home bar when the page is full screen (viewport-fit=cover). */
+  padding: 0 max(var(--sp-4), env(safe-area-inset-right)) max(var(--sp-6), env(safe-area-inset-bottom)) max(var(--sp-4), env(safe-area-inset-left));
+}
 .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-5); padding: var(--sp-4) 0; }
 .site-header h1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); margin-right: auto; }
 .site-header .nav { order: 2; }

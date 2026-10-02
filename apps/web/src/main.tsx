@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { MockApiClient } from "./api/MockApiClient";
 import "./design/tokens.css";
+import "./design/tokens-fallback.css";
 import "./design/base.css";
 import "./design/chips.css";
 import "./design/components.css";

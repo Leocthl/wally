@@ -34,6 +34,9 @@ h3 { font-size: var(--fs-0); line-height: var(--lh-tight); }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
+/* No 300 ms tap delay or double-tap zoom on controls (mobile-native). */
+button, a, summary, label, select, [role="tab"] { touch-action: manipulation; }
+
 /* 44px targets, 8px apart (docs/04 Accessibility). */
 button, [role="button"], select, .tap {
   min-height: var(--tap);

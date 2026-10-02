@@ -29,7 +29,7 @@ function statusText(view: StageView | undefined): string {
 function note(stage: Stage, run: RunView, info: ApiInfo | null): string {
   const stageNote = run.stages[stage]?.status === "skipped" ? run.stages[stage]?.note : undefined;
   if (stageNote) return stageNote;
-  if (stage === "planner") return `${info?.planner.provider ?? "planner"}${run.plannerNote ? `: ${run.plannerNote}` : ""}`;
+  if (stage === "planner") return `${run.planner?.provider ?? info?.planner.provider ?? "planner"}${run.plannerNote ? `: ${run.plannerNote}` : ""}`;
   if (stage === "judge") return run.judge ? `${run.judge.provider} · ${run.judge.model}` : "";
   if (stage === "engine") return run.decisions.at(-1)?.explanation?.template_id ?? (run.decisions.at(-1) ? "all rules pass" : "");
   return run.mintedCard ? "SIMULATED rail" : (run.stages.rail?.note ?? "");

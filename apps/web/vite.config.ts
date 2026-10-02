@@ -7,6 +7,8 @@ const API_PORT = 8787;
 const FIXTURES = fileURLToPath(new URL("../../data/fixtures", import.meta.url));
 
 export default defineConfig({
+  // Relative asset paths: the built booth runs from any folder or LAN address, with hash routes and no server rules.
+  base: "./",
   plugins: [react()],
   resolve: { alias: { "@fixtures": FIXTURES } },
   server: { host: "127.0.0.1", proxy: { "/api": `http://127.0.0.1:${API_PORT}` } },

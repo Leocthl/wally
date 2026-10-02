@@ -70,6 +70,16 @@ describe("design tokens (docs/04)", () => {
     expect(css).toContain(`--dur-hold: ${HOLD_MS}ms`);
   });
 
+  it("has a plain-colour fallback for every light-dark() token, in sync with tokens.css", () => {
+    const fallback = readFileSync(TOKENS_CSS.replace("tokens.css", "tokens-fallback.css"), "utf8");
+    expect(fallback).toContain("@supports not (color: light-dark(");
+    const [lightPart, darkPart] = fallback.split("@media (prefers-color-scheme: dark)");
+    for (const [name, pair] of tokens) {
+      expect(lightPart, `light ${name}`).toContain(`--${name}: ${pair.light};`);
+      expect(darkPart, `dark ${name}`).toContain(`--${name}: ${pair.dark};`);
+    }
+  });
+
   it("keeps the 44px touch target token", () => {
     expect(css).toContain("--tap: 2.75rem");
   });
