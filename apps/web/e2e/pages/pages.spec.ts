@@ -1,9 +1,10 @@
 // The GitHub Pages build in a real browser, served the way a project site is: under /wally/, with nothing at the origin
 // root. One persistent context walks the whole story in order (the service worker and its cache must survive from step to
 // step): the app boots on-device with no /api call, the worker registers under /wally/, the manifest and icons resolve
-// inside it, a Try asking card runs a purchase and shows the one-off card, the Proof link opens /wally/verifier/, and with
-// the server gone the app still boots from the worker's cache. Run by `pnpm --filter @laisee/web e2e:pages`, which builds
-// dist-pages first. Not part of the default e2e project list (playwright.config.ts ignores this folder).
+// inside it, a Try asking card runs a purchase and shows the one-off card, every screen's chunk loads, the Proof link opens
+// /wally/verifier/, and with the server gone the app still boots from the worker's cache. Run by
+// `pnpm --filter @laisee/web e2e:pages`, which builds dist-pages first. Not part of the default e2e project list
+// (playwright.config.ts ignores this folder). Uses 127.0.0.1:8801.
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { devices, expect, test, type BrowserContext, type Page } from "@playwright/test";
@@ -133,6 +134,15 @@ test("a Try asking card runs a purchase on-device and shows the one-off card", a
   await nav(page).getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
+});
+
+test("every screen opens from the mount: the lazy chunks of Wally, Receipts, Proof, Evidence, Seal and Presenter load", async () => {
+  // Hash routes only: the document stays /wally/, so each screen's chunk is the proof that relative dynamic imports resolve.
+  for (const route of ["wally", "receipts", "proof", "evidence", "seal", "presenter", "budget"]) {
+    await page.goto(`${app}#/${route}`);
+    await expect(page.locator("#root h1, #root [data-screen]").first(), route).toBeVisible();
+    await expect(page, route).toHaveURL(`${app}#/${route}`);
+  }
 });
 
 test("Proof links to /wally/verifier/ and that page loads and verifies its demo log", async () => {

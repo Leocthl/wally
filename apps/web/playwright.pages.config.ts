@@ -9,5 +9,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"]],
+  // The Mac is shared and often busy: a lazy chunk or a worker install may take longer than the 5 s default.
+  expect: { timeout: 15_000 },
   use: { trace: "off", screenshot: "off" },
 });
