@@ -19,7 +19,8 @@
     "harness": "pnpm --filter @laisee/harness harness",
     "keys:gen": "node scripts/keys-gen.mjs",
     "verify-log": "node scripts/verify-log.mjs",
-    "demo:reset": "node -e \"console.log('demo:reset is TBD (lane X, after X-10)')\""
+    "demo:reset": "node scripts/demo-reset.mjs",
+    "demo": "node scripts/booth-check.mjs --build-if-needed && pnpm --filter @laisee/web api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -162,7 +162,8 @@ export function composeBooth(opts: ComposeOptions): Booth {
     backend,
     settings,
     async start() {
-      await backend.start();
+      // A failed preset seal is logged, not fatal: the API stays up and the UI seals M0 itself (never a blank screen).
+      await backend.start().catch((err: unknown) => logger.error(`could not seal the preset mandate at start: ${err instanceof Error ? err.message : "unknown error"}`));
       const tickMs = opts.tickMs === undefined ? TICK_MS : opts.tickMs;
       if (tickMs !== null) {
         timer = setInterval(() => void backend.tick(), tickMs);

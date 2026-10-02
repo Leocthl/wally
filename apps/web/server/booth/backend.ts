@@ -49,6 +49,9 @@ export interface BackendDeps {
 
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
 
+/** Before the first successful seal: nothing sealed, so the UI seals the preset itself. */
+const EMPTY_SNAPSHOT: BoothSnapshot = { mandate: null, intentText: null, packet: null, cards: [], log: { entries: [], head: null, tampered: null }, escalations: [] };
+
 export class OrchestratorBackend implements BoothBackend {
   readonly #d: BackendDeps;
   readonly #tracker = new RunTracker();
@@ -221,6 +224,7 @@ export class OrchestratorBackend implements BoothBackend {
   }
 
   snapshot(): Promise<BoothSnapshot> {
+    if (this.#session === null) return Promise.resolve(EMPTY_SNAPSHOT);
     return this.#op(async (session) => {
       const snap = await session.orchestrator.snapshot();
       // CardView has no handle (I8); the UI types call it CardRecord and never read the handle.
@@ -238,6 +242,7 @@ export class OrchestratorBackend implements BoothBackend {
   }
 
   getLog(): Promise<LogView> {
+    if (this.#session === null) return Promise.resolve(EMPTY_SNAPSHOT.log);
     return this.#op(async (session) => {
       const snap = await session.orchestrator.snapshot();
       return this.#view(snap.log, snap.head);
