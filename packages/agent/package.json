@@ -15,5 +15,9 @@
   },
   "dependencies": {
     "@laisee/core": "workspace:*"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2",
+    "tsx": "^4.23.15"
   }
 }
