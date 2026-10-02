@@ -49,7 +49,7 @@ padded_listing:    ESCALATE R10.unavailable (usage.truncated)       # judge-depe
 flagged_seller:    DENY R9 (S2)             # deterministic (capture state)
 off_category:      DENY R6 (earbuds [F29]) # deterministic
 fees:              DENY R3 on the total incl. fees [F3]            # deterministic (HKD only; the cart builder refuses FX)
-duplicate:         expected: one Decision, one mint (02 §6). B2 approves twice today: known gap   # deterministic
+duplicate:         a repeat of a live cart returns the earlier Decision, one mint (02 §6); the harness submits with allowRepeat   # deterministic
 replay:            second charge on a used token declines CARD_USED            # deterministic
 wrong_merchant:    MERCHANT_MISMATCH (SIMULATED merchant lock)                 # deterministic
 rail_timeout:      retry with the same idempotency key, one charge             # deterministic

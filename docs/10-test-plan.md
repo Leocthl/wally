@@ -10,7 +10,7 @@
 | T-I2 | Minted limit equals approved total, <= min(remaining, ceiling [F1]) |
 | T-I3 | No judge output turns DENY or ESCALATE into APPROVE |
 | T-I4 | Planner output is one `propose_cart`, no credential or description; lint bans signing imports |
-| T-I5 | Injected model, rail or log failure (timeout, throw, malformed output): DENY or ESCALATE, no mint, no double charge |
+| T-I5 | Injected model, rail or log failure (timeout, throw, bad output): DENY or ESCALATE, no mint, no double charge |
 | T-I6 | No mint after revoke or expiry, including races |
 | T-I7 | One signed entry per decision; `verifyChain` passes |
 | T-I8 | No PAN-like digit run or CVV field in logs, fixtures, prompts |
@@ -28,9 +28,9 @@
 ## Contract and component checks
 | Check (task) | Expected |
 |---|---|
-| Credential (A-32; R1) | Published W3C, RFC 8785, RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1. One `it.fails` probe stays red: a caller-built Mandate widening only the categories passes engine R1 (see 08) |
+| Credential (A-32; R1) | Published W3C, RFC 8785, RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1. One `it.fails` probe stays red: a Mandate widening only the categories passes engine R1 (see 08) |
 | Rail (A-33, A-34) | Replay → `CARD_USED`; other domain → `MERCHANT_MISMATCH`; timeout, same-key retry: one charge |
-| Orchestrator, executor (A-23, A-26) | One queue; failure → `{ ok: false }`, no mint; re-fold before mint; `LOG_EXISTS`; checkout after revoke DENIED; unlogged card refused; wrong-cart or unsigned answer → DENY R11; booth server guards and caps |
+| Orchestrator, executor (A-23, A-26) | One queue; failure → `{ ok: false }`, no mint; a live repeat returns the earlier decision; cheaper options only after R3 or R4; re-fold before mint; `LOG_EXISTS`; checkout after revoke DENIED; unlogged card refused; wrong-cart or unsigned answer → DENY R11 |
 | JudgePort (B-04, B-14) | laya, jev, replay on a mock: timeout, error, malformed, unknown option, truncation fail closed; padding → ESCALATE [F26] |
 | Planners, compiler (B-18, M-03, M-04) | Same input, same proposal; small margin abstains; `local` off-catalogue or failed → none; compiler failure → fallback |
 
@@ -45,4 +45,4 @@
 | T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright, on-device build); verifier fails after tamper; booth smoke (X-17): every scenario offline, no key, Laya stopped → ESCALATE |
 
 ## CI (X-03)
-- **Steps**: `gen-types --check` (types, precompiled validators), `typecheck`, `lint` (import boundaries), `test`, `coverage` (core [F44]), `docs-check`. A red step blocks merge to `main`.
+- **Steps**: `gen-types --check` (types, precompiled validators), `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`.

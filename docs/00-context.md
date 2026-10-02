@@ -118,7 +118,7 @@
 | Escalation state | `OPEN`, `APPROVED`, `DENIED`, `EXPIRED` |
 | Judge questions | `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` |
 | Judge provider | `laya` (default, local), `jev` (hosted, optional), `replay` (recorded answers for CI and the booth fallback) |
-| Planner provider | `rule` (default, Laya decision loop), `local` (Qwen), `replay` (recorded fixtures; CI default). `claude` is removed |
+| Planner provider | `rule` (Laya decision loop), `local` (Qwen), `replay` (recorded fixtures; CI default); the booth server's `auto` picks one at start. `claude` is removed |
 | Client mode | `http` (booth server), `local` (on-device, recorded answers), `mock` (tests only) |
 | Money | integer minor units (HKD cents), currency `HKD` |
 
@@ -138,7 +138,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ```
 - **Ports in `core`**: `PlannerPort`, `JudgePort`, `RailPort`, `MerchantPort`, `LogStore`, `Clock`, plus a `Signer`. `agent` and `rail-sim` implement them, `apps/web` composes. No package cycles. Exact signatures: 02 §18.
 - **Packet accounting**: an APPROVE holds its limit (inside `committed_minor`) until its card is logged, a later decision resolves it, or the packet is revoked or expires. Then the card commits its limit; `VOIDED`/`EXPIRED` release it; `AUTHORISED` settles the charged amount and releases the difference.
-- **Orchestrator**: one per packet; `seal`, `submit`, `checkout`, `answerEscalation`, `revoke`, `tick`, `snapshot`, `subscribe`; one serialised queue; the log is the only state. A failure returns `{ ok: false, code }` and fails closed (I5). The delegator did:key is pinned at construction.
+- **Orchestrator**: one per packet; `seal`, `submit`, `suggestAlternatives`, `checkout`, `answerEscalation`, `revoke`, `tick`, `snapshot`, `subscribe`; one serialised queue; the log is the only state. A repeat of a live cart returns the earlier decision unless `allowRepeat`. A failure returns `{ ok: false, code }` and fails closed (I5). The delegator did:key is pinned at construction.
 - **Judge starts as soon as the cart is built**, in parallel with the fold. The engine is the only producer of a Decision.
 
 ### Packages and lanes
