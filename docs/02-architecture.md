@@ -225,14 +225,14 @@ sequenceDiagram
 
 | Component | Package | Responsibility |
 |---|---|---|
-| **Orchestrator** | core | One per packet, one queue: seal, submit, checkout, answerEscalation, revoke, tick; timers; the log is the only state |
+| **Orchestrator** | core | One per packet, one queue: seal, submit, suggestAlternatives, checkout, answerEscalation, revoke, tick; timers; the log is the only state |
 | **Cart builder, executor** | core | Cart priced from the listing record only, HKD only [F3]; checkout re-quote (R12) |
 | **Engine, crypto, log** | core | Pure `decide`, `decideCheckout` (R1-R12); `foldPacket`; JCS, Ed25519, did:key, `verifyChain` |
 | **Planner, compiler** | agent | Planners `rule`, `local`, `replay`; sentence-to-rules compiler |
 | **Judge adapters** | agent | `SystemOneJudge` (laya, jev), replay judge |
 | **Laya, Qwen** | services | Judge on 127.0.0.1:8808 [F11c]; `llama-server` on 127.0.0.1:8809 for planner and compiler [F27, F63] |
 | **rail-sim** | rail-sim | `RailPort` + merchant stub, F1 semantics |
-| **Web, verifier, harness** | apps, harness | React PWA, Hono booth server; offline verifier; seeded replays ([05](05-evidence-plan.md)) |
+| **Web, verifier, harness** | apps, harness | React PWA, Hono booth server [F64]; offline verifier [F66]; seeded replays ([05](05-evidence-plan.md)) |
 
 ## 4. Trust boundaries
 
@@ -261,8 +261,6 @@ sequenceDiagram
 
 ## 6. Data model
 
-- **Source of truth**: `schemas/`. Money = integer HKD cents; time = RFC 3339 UTC.
-
 | Schema | AP2 analogue [F12] | Logged as |
 |---|---|---|
 | MandateCredential | Intent mandate | `MANDATE_SEALED` payload |
@@ -272,7 +270,7 @@ sequenceDiagram
 
 - **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet is revoked or expires; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`. A failed mint keeps its hold until revoke or expiry (accepted).
 - **Resolution**: an answer, R11 expiry or R12 drift makes a new Decision with `resolves`; an answer must bind to the escalated cart, the pinned delegator and a verified signature, else DENY R11.
-- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. **Known gap**: the same cart submitted twice gets two APPROVEs and two cards; a fix is scheduled.
+- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED) or an open ESCALATE; `allowRepeat` decides afresh (booth buttons, harness).
 
 ## 7. Rule catalogue
 
@@ -295,7 +293,7 @@ sequenceDiagram
 
 ## 8. Explanation templates
 
-- Ids `<rule>.<variant>`: [00-context](00-context.md). `render(templateId, inputs, locale)` is pure (no I/O, clock or LLM). Example: `R3.over_remaining` → "Stopped by R3. Total HK$550 is over the HK$541 left." [F22]
+- Ids `<rule>.<variant>`: [00-context](00-context.md). `render(templateId, inputs, locale)` is pure (no I/O, clock or LLM).
 
 ## 9. Judge adapter
 
@@ -382,7 +380,7 @@ verifyChain(entries, publicKeys, headCheckpoint?)  -> ok + head | first failing 
 |---|---|---|
 | **Prompt injection** | Planner reads no descriptions (`includeListingText` is a measurement flag, off), holds no keys (I4); R10 | Judge misses [F36]; shown text moved Qwen in 2/31 cases [F68]; image text unchecked |
 | **Price change** | Limit = total (I2); re-quote → R12 + void; short TTL [F30] | Pre-auth → false block [F2] |
-| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise`; R8; verifier refuses a second card per APPROVE | **Known gap**: one cart submitted twice is approved twice (2/84 stop cases through [F69]); bounded by R3, R7, R8 |
+| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise` and `submit`; R8; verifier refuses a second card per APPROVE | `allowRepeat` opts out on purpose; the harness result predates idempotent submit [F69]; bounded by R3, R7, R8 |
 | **Revocation race** | Per-packet queue; revoke voids ACTIVE tokens; later carts, checkouts DENY R2 | A used card is final [F2] |
 | **Log tampering, replay** | Hash chain; signatures bind `log_id`, `seq`, mandate, cart; checkpoint; verifier step 9 | Engine-key holder rewrites after the last checkpoint; unlogged events unseen |
 | **Key custody** | Delegator pinned in orchestrator and verifier; roles separate | Demo shortcut (§11); no rotation |
@@ -406,24 +404,23 @@ data/               fixtures (SIMULATED), captures (OBSERVED), results (MEASURED
 docs/
 ```
 
-- **TypeScript + pnpm workspaces** (`@laisee/*`); `core` owns the ports, no cycles.
 - **JSON Schema first**: generated types; ajv validators compiled ahead of time, so no page needs `eval` (strict CSP on the verifier); `gen-types --check` guards stale output.
 - **Append-only JSONL**, no database; a restart on an existing log is refused (`LOG_EXISTS`); `pnpm demo:reset` starts clean. Models run over loopback HTTP outside the TypeScript packages (ADR-0006, ADR-0008, ADR-0009).
-- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info`, else falls back); on-device `local` (real engine, orchestrator, rail-sim, signers in the page; recorded answers, so typed text makes the judge ERROR and escalate); `mock` (tests only). The service worker skips `/api`.
+- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); on-device `local` (real engine, orchestrator, rail-sim, signers in the page; recorded answers, so typed text makes the judge ERROR and escalate); `mock` (tests only). The service worker skips `/api`.
 
 ## 14. Planner
 
-- **Providers** (`PLANNER_PROVIDER`): `rule` (default), `local`, `replay` (CI, booth fallback); `claude` is removed. All return no proposal on failure (I5), read structured fields only, set no money (I4).
+- **Providers** (`PLANNER_PROVIDER`): `rule`, `local`, `replay` (CI, booth fallback); the booth server defaults to `auto`: `local` if Qwen's `/health` answers in 1.5 s [F64], else `rule` if Laya's does, else `replay`, chosen once at start. `claude` is removed. All return no proposal on failure (I5), read structured fields only, set no money (I4).
 - **`rule`**: the Laya decision loop in a deterministic harness, not a generative LLM: typed choices (item, variant, next action) logged with probabilities; small margins abstain [F47]; step cap [F46].
 - **`local`**: Qwen3.5-9B reads English, Chinese or Cantonese and returns one grammar-constrained JSON answer; enums come from the supplied catalogue; code clamps quantity and guards near-ties [F58]. On 25 calls: wrong item in 0/26 scenarios; author-written cases, no held-out set [F68]. Qwen never gates a decision (ADR-0009).
-- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: `local` and the compiler are built and tested in `@laisee/agent`; the booth server refuses `PLANNER_PROVIDER=local` and the Seal screen uses the rule-based compile (TASKS X-10).
+- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: `POST /api/compile` serves the compiler; the Seal screen does not call it yet.
 
 ## 15. Env config
 
 ```text
 JUDGE_PROVIDER=laya|jev|replay     JUDGE_MODE=enforce|shadow (default enforce)
 LAYA_BASE_URL=http://127.0.0.1:8808    LAYA_MODEL=typed-decisions    LAYA_ALLOW_REMOTE=1 (listing text then leaves the Mac)    LAYA_API_KEY=
-PLANNER_PROVIDER=rule|local|replay (default rule; CI and booth fallback: replay)
+PLANNER_PROVIDER=auto|rule|local|replay (default auto, see §14; CI and booth fallback: replay)
 PLANNER_BASE_URL=http://127.0.0.1:8809    PLANNER_MODEL=qwen3.5-9b-q4km    PLANNER_ALLOW_REMOTE=1 (the request then leaves the Mac)
 QWEN_MODEL=9b|4b (serve)   QWEN_MODELS="9b 4b" (setup: which weights to fetch)   QWEN_SKIP_VERIFY=1 (skip the SHA-256 check)   QWEN_SPEC=mtp|off
 JEV_BASE_URL=  JEV_MODEL=jev-1.13.0 [F11b]  TYPESAFE_API_KEY=      optional: hosted jev
@@ -438,7 +435,7 @@ pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <
 pnpm --filter @laisee/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
 services/{laya,qwen}/{setup,serve,stop}.sh
 GET  /api/health /info /snapshot /log /export /events (SSE)
-POST /api/seal /scenario/:id /propose /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only)
+POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only)
 ```
 
 - **No variable is required**; no key. Secrets in `.env` only (gitignored).
@@ -538,7 +535,8 @@ declare function render(templateId: TemplateId, inputs: Record<string, unknown>,
 // ids, scameter, appendEntry, delegatorDid (required, pinned), executor?, config?. Every method resolves; none rejects.
 interface Orchestrator {
   seal(credential: unknown): Promise<SealResult>;                       // R1 first; LOG_EXISTS if the log has entries
-  submit(req: { requestText: string; listings: ListingRecord[]; checkout?: "auto" | "none" }): Promise<SubmitResult>;
+  submit(req: { requestText: string; listings: ListingRecord[]; checkout?: "auto" | "none"; allowRepeat?: boolean }): Promise<SubmitResult>; // a live repeat returns the earlier decision with duplicate: true
+  suggestAlternatives(req: { decisionId: string }): Promise<SubmitResult>;   // after a DENY by R3 or R4; else NOT_APPLICABLE; result carries alternativeTo
   checkout(req: { cardId: string; idempotencyKey?: string }): Promise<CheckoutResult>;   // AUTHORISED | DECLINED | DRIFT | DENIED | TIMEOUT
   answerEscalation(signedAnswer: unknown): Promise<AnswerResult>;
   revoke(signedRevocation: unknown): Promise<RevokeResult>;
