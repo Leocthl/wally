@@ -21,3 +21,8 @@ apps/web/test-results/
 apps/*/test-results/
 playwright-report/
 .metadata_never_index
+
+# Submission artefacts (video, deck) are large and never committed; API keys never committed
+submission/
+*.key
+elevenlabs*
