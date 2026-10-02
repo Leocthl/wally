@@ -1,0 +1,31 @@
+{
+  "fixture": "planner/quantity-request",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for quantity-request (replay backend). the request states a quantity. Request: \"I want 2 packs of ankle socks\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "quantity-request",
+    "listing_ids": [
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/socks",
+      "items": [
+        {
+          "title": "Ankle socks, 3 pairs (SIMULATED)",
+          "qty": 2
+        }
+      ],
+      "note": "Closest listed item to the request: Ankle socks, 3 pairs."
+    },
+    "trace": {
+      "provider": "laya",
+      "question": "item_forced",
+      "probabilities": {
+        "ankle_socks_3_pairs": 1
+      },
+      "choice": "ankle_socks_3_pairs"
+    }
+  }
+}

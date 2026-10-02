@@ -1,0 +1,23 @@
+{
+  "fixture": "planner/ambiguous-request",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for ambiguous-request (replay backend). ambiguous request, no item stands out so the planner asks the shopper. Request: \"something to wear\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "ambiguous-request",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": null,
+    "trace": {
+      "provider": "laya",
+      "question": "item_forced",
+      "probabilities": {
+        "none_of_these": 1
+      },
+      "choice": "none_of_these"
+    }
+  }
+}

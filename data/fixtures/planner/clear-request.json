@@ -1,0 +1,33 @@
+{
+  "fixture": "planner/clear-request",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for clear-request (replay backend). clear request: two tees fit the words, Laya picks the cotton tee by a wide margin. Request: \"I want a cotton tee\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "clear-request",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_injectedTee",
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/tee",
+      "items": [
+        {
+          "title": "Cotton tee (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Closest listed item to the request: Cotton tee."
+    },
+    "trace": {
+      "provider": "laya",
+      "question": "item_choice",
+      "probabilities": {
+        "cotton_tee": 0.7941,
+        "graphic_tee": 0.2059
+      },
+      "choice": "cotton_tee"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "fixture": "planner/over-budget-alternative",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for over-budget-alternative (replay backend). replan after the R3 stop: the cheaper item that fits what is left. Request: \"something cheaper, like ankle socks\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "over-budget-alternative",
+    "listing_ids": [
+      "lst_demoJacket",
+      "lst_demoTee",
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/socks",
+      "items": [
+        {
+          "title": "Ankle socks, 3 pairs (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Closest cheaper item to the request: Ankle socks, 3 pairs."
+    },
+    "trace": {
+      "provider": "laya",
+      "question": "next_action_forced",
+      "probabilities": {
+        "replan_cheaper": 1
+      },
+      "choice": "replan_cheaper"
+    }
+  }
+}

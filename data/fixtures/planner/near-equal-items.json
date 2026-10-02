@@ -1,0 +1,23 @@
+{
+  "fixture": "planner/near-equal-items",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for near-equal-items (replay backend). two tees fit the request equally well, so the planner asks the shopper. Request: \"a tee\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "near-equal-items",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_injectedTee"
+    ],
+    "proposal": null,
+    "trace": {
+      "provider": "laya",
+      "question": "item_choice",
+      "probabilities": {
+        "cotton_tee": 0.5,
+        "graphic_tee": 0.5
+      },
+      "choice": "cotton_tee"
+    }
+  }
+}
