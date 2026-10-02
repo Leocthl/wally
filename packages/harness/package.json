@@ -10,10 +10,14 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "harness": "tsx src/cli.ts"
   },
   "dependencies": {
     "@laisee/core": "workspace:*",
     "@laisee/rail-sim": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }

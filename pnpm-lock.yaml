@@ -248,6 +248,10 @@ importers:
       '@laisee/rail-sim':
         specifier: workspace:*
         version: link:../rail-sim
+    devDependencies:
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
 
   packages/rail-sim:
     dependencies:
