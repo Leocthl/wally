@@ -3,11 +3,17 @@
 // here next to the reading of the register or docs/02 section 7 that supports it; a row that cannot cite a reading says so.
 // The generator places the same values inside its scenarios (equality at R3, R4, R5, the capture age on its limit, an
 // expiry at validUntil), so the labelled sweep and this file must agree.
+//
+// R1 binds the packet to the mandate (budget, currency, expiry) and the cart to the mandate (agent, currency), because the
+// packet is folded from the sealed credential and a copy that disagrees was not built from it. Every fixture here is therefore
+// a consistent pair: a helper that changes the budget changes it in both, and `decide` refuses an inconsistent fixture with
+// a plain message instead of letting R1 deny it and hide the rule under test. The R1 rows build inconsistent ones on purpose.
 import { describe, expect, it } from "vitest";
 import { ENGINE_CONFIG } from "@laisee/core/config";
 import { engine } from "@laisee/core/engine";
 import type { Cart, Decision, Mandate, PacketState } from "@laisee/core/generated";
 import { MintError, type JudgeRecord } from "@laisee/core/ports";
+import { evaluateR2 } from "@laisee/core/rules";
 import { CLEAN_ANSWERS } from "@laisee/core/testing";
 import { RailSim, seededRandom } from "@laisee/rail-sim";
 import { RAIL, SELLER_CHECK, VELOCITY } from "../src/config";
@@ -30,16 +36,52 @@ const BASE: Case = { mandate: SEED.mandate, packet: SEED.packet, cart: SEED.cart
 
 // ---------- immutable builders: each returns a new Case ----------
 
-const decide = (c: Case): Decision => engine.decide(c.mandate, c.packet, c.cart, c.judge, c.now, undefined, { mandateProofValid: true });
+const decideRaw = (c: Case): Decision => engine.decide(c.mandate, c.packet, c.cart, c.judge, c.now, undefined, { mandateProofValid: true });
+
+const sameInstant = (a: string, b: string): boolean => Date.parse(a) === Date.parse(b);
+
+/** What R1 binds, as plain findings: empty when the packet and the cart belong to the mandate. */
+function bindingProblems(c: Case): readonly string[] {
+  const budget = c.mandate.rules.budget;
+  return [
+    c.packet.budget_minor !== budget.amount_minor ? `packet budget ${c.packet.budget_minor} differs from the mandate's ${budget.amount_minor}` : null,
+    c.packet.currency !== budget.currency ? "packet currency differs from the mandate's" : null,
+    !sameInstant(c.packet.expires_at, c.mandate.valid_until) ? `packet expiry ${c.packet.expires_at} differs from the mandate's ${c.mandate.valid_until}` : null,
+    c.cart.currency !== budget.currency ? "cart currency differs from the mandate's" : null,
+    c.cart.agent !== c.mandate.agent || c.cart.mandate_id !== c.mandate.id || c.packet.mandate_id !== c.mandate.id ? "cart or packet names another mandate or agent" : null,
+    c.packet.budget_minor !== c.packet.committed_minor + c.packet.spent_minor + c.packet.remaining_minor ? "packet budget is not committed + spent + remaining" : null,
+  ].filter((p): p is string => p !== null);
+}
+
+/** The engine's decision for a fixture that is a consistent pair; an inconsistent one is a bug in the test, said plainly. */
+function decide(c: Case): Decision {
+  const problems = bindingProblems(c);
+  if (problems.length > 0) throw new Error(`inconsistent fixture (R1 would deny it before the rule under test): ${problems.join("; ")}`);
+  return decideRaw(c);
+}
+
+const verdictFrom = (d: Decision): string => (d.outcome === "APPROVE" ? "APPROVE" : `${d.outcome} ${d.explanation?.template_id ?? "?"}`);
 
 /** "APPROVE", or the outcome with the primary reason: the pair the generator labels every stop with. */
-function verdictOf(c: Case): string {
-  const d = decide(c);
-  return d.outcome === "APPROVE" ? "APPROVE" : `${d.outcome} ${d.explanation?.template_id ?? "?"}`;
-}
+const verdictOf = (c: Case): string => verdictFrom(decide(c));
 
 const withPacket = (c: Case, over: Partial<PacketState>): Case => ({ ...c, packet: { ...c.packet, ...over } });
 const withMandate = (c: Case, over: Partial<Mandate>): Case => ({ ...c, mandate: { ...c.mandate, ...over } });
+
+/** A budget for the mandate and the packet together; what is spent follows, so budget = committed + spent + remaining holds. */
+function withBudget(c: Case, amountMinor: number): Case {
+  const spent = amountMinor - c.packet.committed_minor - c.packet.remaining_minor;
+  if (spent < 0) throw new RangeError(`a budget of ${amountMinor} cannot hold ${c.packet.committed_minor} committed and ${c.packet.remaining_minor} remaining`);
+  const budget = { ...c.mandate.rules.budget, amount_minor: amountMinor };
+  return { ...c, mandate: { ...c.mandate, rules: { ...c.mandate.rules, budget } }, packet: { ...c.packet, budget_minor: amountMinor, spent_minor: spent } };
+}
+
+/** What the packet has left, with what is spent following from it. */
+function withRemaining(c: Case, remainingMinor: number): Case {
+  const spent = c.packet.budget_minor - c.packet.committed_minor - remainingMinor;
+  if (spent < 0) throw new RangeError(`${remainingMinor} remaining does not fit a budget of ${c.packet.budget_minor}`);
+  return { ...c, packet: { ...c.packet, remaining_minor: remainingMinor, spent_minor: spent } };
+}
 const withRules = (c: Case, over: Partial<Mandate["rules"]>): Case => withMandate(c, { rules: { ...c.mandate.rules, ...over } });
 
 /** Same cart priced at exactly `total`: one item, quantity 1, the unit price absorbs the difference. */
@@ -60,7 +102,7 @@ const iso = (ms: number): string => new Date(ms).toISOString();
 const secondsBefore = (s: number): string => iso(NOW.getTime() - s * 1000);
 
 /** Plenty of money, no per-purchase rule: only the limit under test can bind. */
-const ROOMY: Case = withPerPurchase(withPacket(BASE, { remaining_minor: 150_000, budget_minor: 300_000, committed_minor: 0, spent_minor: 150_000 }), undefined);
+const ROOMY: Case = withPerPurchase(withRemaining(withBudget(BASE, 300_000), 150_000), undefined);
 
 describe("the base case is clean", () => {
   it("approves with nothing binding, so every row below isolates one limit", () => {
@@ -72,9 +114,9 @@ describe("R3 total <= remaining, R5 total <= rail ceiling [F1.ceiling]: equal pa
   it.each([
     ["total equals remaining", withTotal(ROOMY, 150_000), "APPROVE"],
     ["total is one minor unit over remaining", withTotal(ROOMY, 150_001), "DENY R3.over_remaining"],
-    ["remaining equals the ceiling and the total equals both", withTotal(withPacket(ROOMY, { remaining_minor: RAIL.ceilingMinor }), RAIL.ceilingMinor), "APPROVE"],
-    ["total is one minor unit over the ceiling with money to spare", withTotal(withPacket(ROOMY, { remaining_minor: RAIL.ceilingMinor + 5_000 }), RAIL.ceilingMinor + 1), "DENY R5.over_ceiling"],
-    ["total over both remaining and ceiling: R3 comes first", withTotal(withPacket(ROOMY, { remaining_minor: RAIL.ceilingMinor }), RAIL.ceilingMinor + 1), "DENY R3.over_remaining"],
+    ["remaining equals the ceiling and the total equals both", withTotal(withRemaining(ROOMY, RAIL.ceilingMinor), RAIL.ceilingMinor), "APPROVE"],
+    ["total is one minor unit over the ceiling with money to spare", withTotal(withRemaining(ROOMY, RAIL.ceilingMinor + 5_000), RAIL.ceilingMinor + 1), "DENY R5.over_ceiling"],
+    ["total over both remaining and ceiling: R3 comes first", withTotal(withRemaining(ROOMY, RAIL.ceilingMinor), RAIL.ceilingMinor + 1), "DENY R3.over_remaining"],
   ] as const)("%s", (_name, c, expected) => {
     expect(verdictOf(c)).toBe(expected);
   });
@@ -84,7 +126,7 @@ describe("R4 per-purchase rules: the cap is min(hard cap, floor(share of remaini
   const hard = { hard_cap_minor: 30_000 };
   const ask = { ask_above_minor: 20_000 };
   const share = { share_of_remaining_bp: 2_500 };
-  const odd = withPacket(ROOMY, { remaining_minor: 100_003 }); // 25% of this is 25,000.75: the cap must round down
+  const odd = withRemaining(ROOMY, 100_003); // 25% of this is 25,000.75: the cap must round down
 
   it.each([
     ["hard cap: equal passes", withTotal(withPerPurchase(ROOMY, hard), 30_000), "APPROVE"],
@@ -96,7 +138,7 @@ describe("R4 per-purchase rules: the cap is min(hard cap, floor(share of remaini
     ["ask_above: one over escalates", withTotal(withPerPurchase(ROOMY, ask), 20_001), "ESCALATE R4.ask_above"],
     ["over the cap and over ask_above: over_cap, not ask_above (DENY outranks ESCALATE)", withTotal(withPerPurchase(ROOMY, { ...hard, ...ask }), 30_001), "DENY R4.over_cap"],
     ["between ask_above and the cap: ask_above", withTotal(withPerPurchase(ROOMY, { ...hard, ...ask }), 25_000), "ESCALATE R4.ask_above"],
-    ["over remaining and over ask_above: R3 DENY outranks R4 ESCALATE", withTotal(withPerPurchase(withPacket(ROOMY, { remaining_minor: 25_000 }), ask), 25_001), "DENY R3.over_remaining"],
+    ["over remaining and over ask_above: R3 DENY outranks R4 ESCALATE", withTotal(withPerPurchase(withRemaining(ROOMY, 25_000), ask), 25_001), "DENY R3.over_remaining"],
   ] as const)("%s", (_name, c, expected) => {
     expect(verdictOf(c)).toBe(expected);
   });
@@ -111,13 +153,55 @@ describe("R2 not expired: the credential ceases to be valid at validUntil, and t
     ["now is one millisecond before validUntil", ending(BASE, 1), "APPROVE"],
     ["now equals validUntil (the same reading as RailSim, which needs expiry > now)", ending(BASE, 0), "DENY R2.expired"],
     ["now is one second after validUntil, packet still reads ACTIVE", ending(BASE, -1_000), "DENY R2.expired"],
-    ["the packet ends first: the earlier of the two ends governs", withPacket(withMandate(BASE, { valid_until: iso(NOW.getTime() + 3_600_000) }), { expires_at: iso(NOW.getTime()) }), "DENY R2.expired"],
     ["now equals validFrom", withMandate(BASE, { valid_from: iso(NOW.getTime()) }), "APPROVE"],
     ["now is one millisecond before validFrom", withMandate(BASE, { valid_from: iso(NOW.getTime() + 1) }), "DENY R2.expired"],
     ["packet flagged EXPIRED stops even with a future validUntil", withPacket(BASE, { status: "EXPIRED" }), "DENY R2.expired"],
     ["packet REVOKED stops with its own reason", withPacket(BASE, { status: "REVOKED" }), "DENY R2.revoked"],
   ] as const)("%s", (_name, c, expected) => {
     expect(verdictOf(c)).toBe(expected);
+  });
+});
+
+describe("R2 on its own reads the earlier of the mandate's end and the packet's end", () => {
+  it("a packet that ends first is expired at its own end", () => {
+    const c = withPacket(withMandate(BASE, { valid_until: iso(NOW.getTime() + 3_600_000) }), { expires_at: iso(NOW.getTime()) });
+    // The rule is asked directly: the engine never gets here with such a pair, R1 refuses it first (next block).
+    const r2 = evaluateR2({ mandate: c.mandate, packet: c.packet, now: c.now });
+    expect(r2).toMatchObject({ id: "R2", result: "FAIL", verdict: "DENY", template_id: "R2.expired" });
+  });
+
+  it("a mandate that ends first is expired at its own end", () => {
+    const c = withPacket(withMandate(BASE, { valid_until: iso(NOW.getTime()) }), { expires_at: iso(NOW.getTime() + 3_600_000) });
+    expect(evaluateR2({ mandate: c.mandate, packet: c.packet, now: c.now })).toMatchObject({ result: "FAIL", template_id: "R2.expired" });
+  });
+});
+
+describe("R1 binds the packet and the cart to the mandate: a copy that disagrees with the credential is refused before any other rule", () => {
+  const R1 = "DENY R1.invalid_signature";
+  const ends = (ms: number): string => iso(Date.parse(BASE.mandate.valid_until) + ms);
+  it.each([
+    ["the packet's budget differs from the mandate's by one minor unit", withPacket(BASE, { budget_minor: BASE.packet.budget_minor + 1 })],
+    ["the packet's currency differs", withPacket(BASE, { currency: "USD" as never })],
+    ["the packet's expiry is a second later than the mandate's", withPacket(BASE, { expires_at: ends(1_000) })],
+    ["the packet's expiry is a second earlier than the mandate's", withPacket(BASE, { expires_at: ends(-1_000) })],
+    ["the cart's currency differs", { ...BASE, cart: { ...BASE.cart, currency: "USD" as never } }],
+    ["the cart names another agent", { ...BASE, cart: { ...BASE.cart, agent: "did:key:zSomeoneElse" } }],
+    ["the cart names another mandate", { ...BASE, cart: { ...BASE.cart, mandate_id: "mnd_other000" } }],
+    ["the packet names another mandate", withPacket(BASE, { mandate_id: "mnd_other000" })],
+  ] as const)("%s", (_name, c) => {
+    expect(bindingProblems(c).length, "the fixture really is inconsistent").toBeGreaterThan(0);
+    expect(verdictFrom(decideRaw(c))).toBe(R1);
+  });
+
+  it("is the primary reason even when another rule also fails, because R1 comes first in rule order", () => {
+    const c = withTotal(withPacket(ROOMY, { budget_minor: ROOMY.packet.budget_minor + 1 }), 150_001); // over remaining as well
+    expect(verdictFrom(decideRaw(c))).toBe(R1);
+  });
+
+  it("compares instants, not strings: the same expiry written with milliseconds binds", () => {
+    const same = iso(Date.parse(BASE.mandate.valid_until)); // 2026-...Z written as 2026-...00.000Z
+    expect(same).not.toBe(BASE.mandate.valid_until);
+    expect(verdictOf(withPacket(BASE, { expires_at: same }))).toBe("APPROVE");
   });
 });
 
@@ -216,7 +300,7 @@ describe("R10 thresholds [F36, F50] read from the config: at the threshold the s
 
 describe("the rail agrees with the engine at its own limits (RailSim, SIMULATED)", () => {
   const approvedAt = (total: number): Decision => {
-    const d = decide(withTotal(withPacket(ROOMY, { remaining_minor: RAIL.ceilingMinor }), total));
+    const d = decide(withTotal(withRemaining(ROOMY, RAIL.ceilingMinor), total));
     if (d.outcome !== "APPROVE") throw new Error(`expected an approval at ${total}, got ${verdictOf(withTotal(ROOMY, total))}`);
     return d;
   };
