@@ -31,13 +31,31 @@ export interface ParsedHash {
 
 /** Query keys the shell itself uses. Screens may add their own keys. */
 export const PARAM = {
-  /** #/wally?decision=<id>: show this decision's result (Recent rows, the escalation banner). */
-  decision: "decision",
+  /** #/wally?d=<id> and #/receipts?d=<id>: show this decision (Recent rows, the escalation banner, Receipts). */
+  decision: "d",
   /** #/budget?focus=console: scroll to the cards and Cancel this budget. */
   focus: "focus",
   /** #/seal?mode=topup|edit: open Seal prefilled from the current rules. */
   mode: "mode",
 } as const;
+
+/** The first links used `decision` for the same thing; incoming links with it still work and are rewritten to `d`. */
+const DECISION_ALIAS = "decision";
+const DECISION_ID = /^[A-Za-z0-9_-]{1,80}$/;
+
+/** The decision id in a route's params (`d`, or the old `decision`), or null when absent or not a plain id (untrusted input). */
+export function decisionIdOf(params: RouteParams): string | null {
+  const raw = params[PARAM.decision] ?? params[DECISION_ALIAS];
+  return raw !== undefined && DECISION_ID.test(raw) ? raw : null;
+}
+
+/** Folds the old `decision` key into `d`. `changed` says the address should be rewritten. */
+function withDecisionAlias(params: RouteParams): { readonly params: RouteParams; readonly changed: boolean } {
+  const alias = params[DECISION_ALIAS];
+  if (alias === undefined) return { params, changed: false };
+  const rest = Object.fromEntries(Object.entries(params).filter(([key]) => key !== DECISION_ALIAS));
+  return { params: PARAM.decision in rest ? rest : { ...rest, [PARAM.decision]: alias }, changed: true };
+}
 
 function isRouteName(name: string): name is RouteName {
   return (ROUTE_NAMES as readonly string[]).includes(name);
@@ -54,19 +72,33 @@ export function routeHref(name: RouteName, params: RouteParams = {}): string {
   return `#/${name}${query ? `?${query}` : ""}`;
 }
 
-/** "#/wally?decision=dec_1" -> wally with { decision: "dec_1" }. Unknown names fall back to Budget, never a blank page. */
+/** "#/wally?d=dec_1" -> wally with { d: "dec_1" } (the old "?decision=dec_1" reads the same). Unknown names fall back to Budget, never a blank page. */
 export function parseHash(hash: string): ParsedHash {
   const body = hash.replace(/^#\/?/, "");
   const [path = "", query = ""] = body.split("?", 2);
   const name = (path.split("/")[0] ?? "").toLowerCase();
-  const params = readParams(query);
+  const { params, changed } = withDecisionAlias(readParams(query));
   const legacy = LEGACY_REDIRECTS[name];
   if (legacy) {
     const merged = { ...params, ...(legacy.params ?? {}) };
     return { route: { name: legacy.name, params: merged }, redirect: routeHref(legacy.name, merged) };
   }
-  if (isRouteName(name)) return { route: { name, params }, redirect: null };
+  if (isRouteName(name)) return { route: { name, params }, redirect: changed ? routeHref(name, params) : null };
   return { route: { name: ALIASES[name] ?? "budget", params }, redirect: null };
+}
+
+/** The decision id a hash names, whichever screen it is on; null when none. */
+export function decisionIdFromHash(hash: string): string | null {
+  return decisionIdOf(parseHash(hash).route.params);
+}
+
+/** Where a decision's result lives: Wally's screen pinned to it, and its receipt. */
+export function wallyHref(decisionId: string): string {
+  return routeHref("wally", { [PARAM.decision]: decisionId });
+}
+
+export function receiptHref(decisionId: string): string {
+  return routeHref("receipts", { [PARAM.decision]: decisionId });
 }
 
 // ---- a tiny store over location.hash, so every reader sees the same Route object until the hash changes ----

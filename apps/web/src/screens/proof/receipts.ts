@@ -1,6 +1,7 @@
 // Receipts: one plain record per signed log entry (the list on #/receipts). Pure functions only: the screen turns these
 // fields into words in the current language. Amounts stay integer minor units; times stay ISO strings.
 import type { LogEntry } from "../../api/types";
+import { decisionIdFromHash } from "../../hooks/useRoute";
 
 export type ReceiptState =
   | "sealed"
@@ -182,13 +183,9 @@ export function dayLabel(key: string, now: Date): DayLabel {
   return Number.isNaN(date.getTime()) ? { kind: "unknown" } : { kind: "date", date };
 }
 
-const DECISION_ID = /^[A-Za-z0-9_-]{1,80}$/;
-
-/** #/receipts?d=<decisionId>; null when absent or not an id. */
+/** #/receipts?d=<decisionId> (the old ?decision= reads the same); null when absent or not an id. */
 export function decisionFromHash(hash: string): string | null {
-  const query = hash.split("?")[1] ?? "";
-  const d = new URLSearchParams(query).get("d");
-  return d !== null && DECISION_ID.test(d) ? d : null;
+  return decisionIdFromHash(hash);
 }
 
 /** The DECISION receipt for an id, else the first entry linked to it. */

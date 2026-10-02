@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/App";
-import { parseHash, routeHref } from "../src/hooks/useRoute";
+import { decisionIdFromHash, PARAM, parseHash, receiptHref, routeHref, wallyHref } from "../src/hooks/useRoute";
 import { ErrorBoundary } from "../src/shell/ErrorBoundary";
 import { THEME_KEY } from "../src/shell/theme";
 import { bootApp, go, screenReady } from "./helpers/app";
@@ -45,9 +45,25 @@ describe("route table", () => {
   });
 
   it("carries query params both ways", () => {
-    const href = routeHref("wally", { decision: "dec_mock0007" });
-    expect(href).toBe("#/wally?decision=dec_mock0007");
-    expect(parseHash(href).route).toEqual({ name: "wally", params: { decision: "dec_mock0007" } });
+    const href = routeHref("wally", { [PARAM.decision]: "dec_mock0007" });
+    expect(href).toBe("#/wally?d=dec_mock0007");
+    expect(parseHash(href)).toEqual({ route: { name: "wally", params: { d: "dec_mock0007" } }, redirect: null });
+    expect(wallyHref("dec_mock0007")).toBe(href);
+    expect(receiptHref("dec_mock0007")).toBe("#/receipts?d=dec_mock0007");
+  });
+
+  it("reads the first links' ?decision= as d, and rewrites the address to d", () => {
+    expect(parseHash("#/wally?decision=dec_1")).toEqual({ route: { name: "wally", params: { d: "dec_1" } }, redirect: "#/wally?d=dec_1" });
+    expect(parseHash("#/receipts?decision=dec_1&x=2")).toEqual({ route: { name: "receipts", params: { x: "2", d: "dec_1" } }, redirect: "#/receipts?x=2&d=dec_1" });
+    expect(parseHash("#/wally?d=dec_2&decision=dec_1")).toEqual({ route: { name: "wally", params: { d: "dec_2" } }, redirect: "#/wally?d=dec_2" });
+    expect(decisionIdFromHash("#/wally?decision=dec_1")).toBe("dec_1");
+    expect(decisionIdFromHash("#/receipts?d=dec_3")).toBe("dec_3");
+  });
+
+  it("ignores a decision id that is not a plain id", () => {
+    for (const bad of ["#/wally?d=", "#/wally?d=%3Cscript%3E", "#/wally?d=a%20b", `#/wally?d=${"x".repeat(81)}`, "#/wally?decision=../etc", "#/wally"]) {
+      expect(decisionIdFromHash(bad), bad).toBeNull();
+    }
   });
 
   it("replaces a legacy address in the app without adding history", async () => {

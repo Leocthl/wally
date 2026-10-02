@@ -7,6 +7,7 @@ import { ChipScope } from "../../components/ChipScope";
 import { NumText } from "../../components/Num";
 import { SIMULATED } from "../../domain/provenance";
 import { useBoothContext } from "../../hooks/useBooth";
+import { receiptHref } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { useLocale, type Locale } from "../../ui/locale";
@@ -96,7 +97,7 @@ export function ReceiptsScreen(): ReactElement {
     setOpenSeq(seq);
     setShownSeq(seq);
     const id = latest.current.find((r) => r.seq === seq)?.decisionId;
-    if (id) replaceHash(`#/receipts?d=${encodeURIComponent(id)}`);
+    if (id) replaceHash(receiptHref(id));
   }, []);
   const deepLink = useDeepLink(receipts, open);
   const close = useCallback(() => {

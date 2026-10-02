@@ -5,6 +5,7 @@ import type { Decision, LogEntry } from "../../../api/types";
 import { ChipScope } from "../../../components/ChipScope";
 import { Num, NumText } from "../../../components/Num";
 import { SIMULATED, type Prov } from "../../../domain/provenance";
+import { wallyHref } from "../../../hooks/useRoute";
 import { UI } from "../../../i18n/ui";
 import { Button } from "../../../ui/Button";
 import { cx } from "../../../ui/cx";
@@ -83,7 +84,7 @@ export function ReceiptSheet({ open, receipt, entry, onClose, onOpenDecision, ap
           </p>
         ) : null}
         {receipt.decisionId ? (
-          <a className="w-btn w-btn--secondary w-btn--md w-btn--block rc-open" href={`#/wally?d=${encodeURIComponent(receipt.decisionId)}`} onClick={onClose}>
+          <a className="w-btn w-btn--secondary w-btn--md w-btn--block rc-open" href={wallyHref(receipt.decisionId)} onClick={onClose}>
             <span className="w-btn__icon"><Icon name="sparkle" size={20} /></span>
             <span className="w-btn__label">{t(R.openInWally)}</span>
           </a>

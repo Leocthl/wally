@@ -40,7 +40,7 @@ test("runs Normal purchase from Try asking and shows it in Recent and on the bud
   await expect(first).toContainText("Approved");
   await expect(first).toContainText("HK$259");
   await first.click();
-  await expect(page).toHaveURL(/#\/wally\?decision=dec_/);
+  await expect(page).toHaveURL(/#\/wally\?d=dec_/);
 });
 
 test("About switches the language to 繁 and the theme to dark, and remembers both", async ({ page }) => {
