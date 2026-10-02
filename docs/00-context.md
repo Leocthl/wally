@@ -1,10 +1,12 @@
 # 00 Context
 
 ## Event
-- **HacKU 2026**: HKU Computer Science Association, 48h inter-university hackathon, HKU Main Campus [F13]
-- **Track**: FinTech, "Give a Machine a Wallet - Agentic Commerce" (HKT-sponsored)
-- **Showcase**: 2026-10-04, pitching round 16:00-17:30 [F14], closing ceremony 18:00-19:00 [F13]
-- **Unknown**: per-team pitch length [F14], prizes and judging weights [F15], pre-existing code rule [F16], HKT sandbox access [F17]. The track title and HKT sponsorship are on no public page we read; they come from the team's track statement [F17]
+- **HacKU 2026**: HKU Computer Science Association with HKIAIA, 48h inter-university hackathon, HKU Main Campus [F13]
+- **Track**: FinTech, directed track "Give a Machine a Wallet - Agentic Commerce", sponsored by HKT. Our team declared it [F13, F17]
+- **Clock**: code freeze 2026-10-04 13:00 HKT; no repository changes after it [F16]. Wall-clock plan [F41]
+- **Format**: every team gets a booth; judges watch or try the demo, 5 min per team (3 pitch + 2 Q&A). Only the top 8 pitch on stage, 5 + 2 [F14]
+- **Submit**: pitch deck, public GitHub link, prototype video (3 min) or live link, declaration of problem statement and extra awards [F18]
+- **Unknown**: HKT sandbox, API or mentor access [F17]
 - **Product**: Lai See Agent (利是 Agent), a sealed-budget mandate engine for AI shopping agents. Not affiliated with HKT, Tap & Go or Mastercard
 
 ## Statement digest
@@ -21,7 +23,21 @@
 | E5 | Every rate, fee and points value observed and timestamped |
 
 - **Directions we use (DIR1-11)**: 1 plain-language mandate; 2 adaptive cap; 3 expiry; 4 checkout stopped when shipping pushes the total past the cap; 5 revocation mid-transaction; 6 escalation that expires unanswered; 7 log a third party can verify without trusting the operator; 8 "why" answered from the recorded rule, not post-hoc prose; 9 injected listing text; 10 replay harness reporting overspend rate; 11 who holds the loss when a purchase should not have happened
-- **Out of scope**: rewards optimisation, multi-merchant comparison, agent-to-agent negotiation
+- **Not in our scope** (the statement allows them as centres of work; we chose the enforcement territory): rewards optimisation, multi-merchant comparison, agent-to-agent negotiation
+
+## What gets scored
+| Judge | Criterion | Weight | Our answer |
+|---|---|---|---|
+| HKT award | Problem-solution fit | 25% [F15] | one decision, one delegator, evidence E1-E5 |
+| HKT award | Technical execution, working prototype | 25% [F15] | real engine, signed log, verifier, harness; the planner replans after a stop |
+| HKT award | UX and desirability, especially Gen Z | 20% [F15] | mobile-first sealed-packet flow, EN + zh-HK |
+| HKT award | Security and trust design | 15% [F15] | delegation credential (DID-VC), policy engine, consent by escalation, hash-chained log, fail closed |
+| HKT award | Feasibility of integration with any payment means | 15% [F15] | single-use tokens on SUC semantics [F1]; RailPort portability in 09 |
+| Technical judges at the booth | 6 criteria, 5 marks each [F15] | 30 marks | a demo a judge can drive in 5 min [F14] |
+| Pitching judges (top 8) | 6 criteria, 5 marks each [F15] | 30 marks | 5 + 2 min script in 07 |
+
+- **HKT's workshop lists the evidence it wants** [F19]: signed delegation credential, ALLOW/DENY verifier output, a denied out-of-policy purchase, revocation, approve/reject/escalate, a single-use token with a blocked replay, failure injection without a duplicate payment, an audit timeline. The demo shows each.
+- **Code rules** [F16]: written during the 48h, open source credited (README + THIRD_PARTY.md), AI assistants fine, the team can explain core logic and architecture.
 
 ## Decisions
 | ID | Decision | Alternative recorded in |
@@ -30,12 +46,15 @@
 | D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Option: teen on Plus(ii) [F2] with a parent-sealed packet (parent → teen → agent, caps compose: agent <= teen packet <= parent funding). Minors are not the headline | ADR-0005 |
 | D3 | Chain: signed mandate → planner (Claude, untrusted) → judge (Jev, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
 | D4 | Invariants I1-I8 (below). Explanations render from rule templates + recorded inputs, never LLM prose | ADR-0002 |
-| D5 | Jev is a typed probabilistic gate, not the agent. Fallback provider with the same schema, shadow mode first, report only latency and cost we measure | ADR-0001 |
+| D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); llm fallback with the same schema; shadow mode first; report only latency and cost we measure | ADR-0001 |
 | D6 | Upgrades: U1 decrementing sealed packet; U2 mint-on-approval; U3 seller-risk gate before minting; U4 rail simulator calibrated on one real decline + 10-shop readiness probe | ADR-0003 |
 | D7 | No issuing API found [F1]: rail is SIMULATED and labelled so everywhere. A processed payment cannot be cancelled [F2]: demo revocation before mint or before first use; after payment use dispute + loss rule | ADR-0003 |
 | D8 | Contingency only: if the H10 trigger fires [F41], switch to Track 4 "overnight desk that escalates" | 08 |
-| D9 | Cut order, first to go: teen chain, screenshot intake (stretch, only if under 2 h), reconciliation, did:key (keep Ed25519), harness 200 → 100 [F37], Scameter → manual capture only | 03 |
+| D9 | Cut order, first to go: teen chain, screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is no longer cut: HKT's workshop centres on DID-VC [F19] | 03 |
 | D10 | First-2-hour kill tests: real-card decline [F40]; shop probe [F39]; ask an HKT mentor whether a delegate SUC API is planned [F17] | 03, 05 |
+| D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
+| D12 | Local-first, no API keys to run the demo: judge = Laya on 127.0.0.1; planner = PlannerPort with `replay`, `rule` and `local` (Qwen3 via llama.cpp, download pending approval [F27]) backends; `claude` stays an optional backend | ADR-0008 |
+| D13 | Booth first: the demo is built for a judge who drives it for 5 min [F14]; the finalist pitch reuses it. Single-use token semantics include a blocked replay and a SIMULATED merchant lock [F19] | 06, 07 |
 
 ## Canonical IDs
 - **One name per thing.** Use these exactly. Do not rename or renumber.
@@ -90,18 +109,20 @@
 | Decision outcome | `APPROVE`, `DENY`, `ESCALATE` |
 | Log entry kind | `MANDATE_SEALED`, `DECISION`, `CARD_MINTED`, `CARD_EVENT`, `MANDATE_REVOKED`, `PACKET_EXPIRED` |
 | Card event | `AUTHORISED`, `DECLINED`, `VOIDED`, `EXPIRED` |
+| Decline code | `OVER_LIMIT`, `CARD_USED`, `CARD_VOIDED`, `CARD_EXPIRED`, `UNKNOWN_HANDLE`, `MERCHANT_MISMATCH` (SIMULATED: SUC has no merchant lock [F1]) |
 | Card state | `ACTIVE`, `USED`, `VOIDED`, `EXPIRED` |
 | Packet status | `ACTIVE`, `EXHAUSTED`, `EXPIRED`, `REVOKED` |
 | Escalation state | `OPEN`, `APPROVED`, `DENIED`, `EXPIRED` |
 | Judge questions | `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` |
-| Judge provider | `jev`, `llm` |
+| Judge provider | `laya` (default, local), `jev` (hosted, optional), `llm` (fallback) |
+| Planner provider | `replay`, `rule`, `local`, `claude` |
 | Money | integer minor units (HKD cents), currency `HKD` |
 
 ### Pipeline contract v0
 ```
-seal      Delegator signs Mandate → log MANDATE_SEALED → PacketState (folded from the log)
+seal      Delegator signs the AgentDelegationCredential (VC 2.0) → log MANDATE_SEALED → PacketState (folded from the log)
 propose   Planner (untrusted; only tool: propose_cart) → Cart
-assess    judge.assess(cart, listing, scameterCapture) → JudgeRecord               // Jev or llm fallback; never throws, status OK | TIMEOUT | ERROR
+assess    judge.assess(cart, listing, scameterCapture) → JudgeRecord               // laya (local), jev or llm; never throws, status OK | TIMEOUT | ERROR
 decide    engine.decide(mandate, packet, cart, judgeResult, now) → Decision       // pure, deterministic, R1-R12
 record    log.append(DECISION)                                                     // I7, before any side effect
 mint      on APPROVE: rail.mint(limit = cart.total, ttl) → CardRecord; log.append(CARD_MINTED)
@@ -119,7 +140,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | Lane | Scope | Paths (npm scope `@laisee/*`) |
 |---|---|---|
 | A | policy + rail | `packages/core` (schemas→types, packet math, R1-R12, engine, crypto, log, orchestrator), `packages/rail-sim` |
-| B | agent + Jev | `packages/agent` (planner, judge adapters jev + llm, shadow mode) |
+| B | agent + judge | `packages/agent` (planner backends, judge adapters laya/jev + llm, shadow mode), `services/laya` (local judge server scripts) |
 | C | UI + verifier | `apps/web` (UI + thin API), `apps/verifier` (offline page) |
 | D | evidence + pitch | `packages/harness`, `data/`, `docs/05`-`07`, `docs/09` |
 | X | cross-lane | `schemas/`, fixtures in `data/fixtures/`, CI |
@@ -128,7 +149,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | ID | Moment | Covers |
 |---|---|---|
 | DM1 | Seal mandate M0: sentence → compiled rule chips → Seal. M0 has no separate per-purchase cap, so R3 is the binding rule | SR2, E1, E4 |
-| DM2 | Attempt 1: mint HK$259 [F21]; packet meter shows HK$541 left. Overshoot beat on the live card: merchant stub in `overshoot` mode charges above the quote, rail declines `OVER_LIMIT` (limit held, S1 rail variant, SIMULATED); then the exact charge is authorised | SR1, SR3, E2 |
+| DM2 | Attempt 1: mint HK$259 [F21]; packet meter shows HK$541 left. Overshoot beat on the live card: merchant stub in `overshoot` mode charges above the quote, rail declines `OVER_LIMIT` (limit held, S1 rail variant, SIMULATED); then the exact charge is authorised; then the same card is replayed and declined `CARD_USED` (blocked replay [F19]) | SR1, SR3, E2 |
 | DM3 | Attempt 2: seller flagged, stopped by R9 (S2); the card never exists | SR4, E2 |
 | DM4 | Attempt 3: HK$550 [F22] > HK$541 left, stopped by R3 (S1); no card exists | E2, E4 |
 | DM5 | Attempt 3b: injected listing text, stopped by R10 (S3) | E2, DIR9 |
@@ -162,20 +183,20 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ## Assumptions to confirm
 - [ ] **Team** is 3-4 and writes TypeScript; at least one member reads zh-HK for copy review
 - [ ] **Someone holds** a Tap & Go Plus(ii) or Pro account (needed for the real-card test and F1 re-capture)
-- [ ] **Jev key** available or obtainable in the first hour; otherwise fallback provider only [F41]. Access is waitlisted and no hackathon credits were found [F11b]
-- [ ] **Jev data**: only public listing text and cart fields go to a US-hosted vendor, never PAN/CVV or personal data (I8) [F11b]
+- [x] **Judge runs locally** (Laya on 127.0.0.1): no key, no vendor, listing text never leaves the Mac. Hosted Jev stays optional [F11c]
+- [ ] **Local planner** model: Qwen3-4B Q4_K_M from Qwen's official Hugging Face org needs the user's download approval [F27]
 - [ ] **Scameter**: manual, human-paced captures only. No terms on automated use were found and the Important Notice limits reproduction [F6]. The engine reads captures and never queries live
 - [ ] **Dates**: no Mastercard or Visa announcement date goes on a slide until re-captured [F7a, F7b]
-- [ ] **Pitch slot** about 5 min [F14]; prize structure unknown [F15]
-- [ ] **Pre-existing code** rule: we start from an empty repo; open-source libraries are fine until told otherwise [F16]
+- [x] **Track declaration** submitted (confirmed by the user) [F13]
+- [x] **Format, prizes, rubric, code rules** read from the organiser pack [F14-F16]
 - [ ] **HKT** mentor or sandbox reachable at the venue [F17]
-- [ ] **Anthropic API key** and budget for planner and fallback judge calls
+- [ ] **Optional**: SenseTime Raccoon award needs a declaration and real use of Raccoon [F15]; decide before the submission form closes
 - [ ] **Rail is SIMULATED**; the judges accept this when labelled and calibrated on one real decline
 - [ ] **Demo stops** are S2, S1, S3 live; thresholds [F36] and the HK$800 storyline [F20-F23] are the lead's defaults
 - [ ] **Name** "Lai See Agent" is acceptable to all
 
 ## Non-goals
-- **No** rewards or cashback optimisation, multi-merchant comparison, agent-to-agent negotiation
+- **No** rewards or cashback optimisation, multi-merchant comparison, agent-to-agent negotiation (our scope choice, not a statement rule)
 - **No** real card issuing, no PAN/CVV handling by software, no live money movement
 - **No** minors as the headline; teen chain is an extension that is cut first
 - **No** legal advice; the loss rule is a proposal under the T&C [F2]
@@ -198,15 +219,15 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ## Glossary
 | Term | Meaning |
 |---|---|
-| **Mandate** | Signed delegation (AP2-shaped [F12]): plain-language sentence + compiled rules + budget + expiry |
+| **Mandate** | The delegation: plain-language sentence + compiled rules + budget + expiry. Signed as an AgentDelegationCredential (VC 2.0, AP2-shaped [F12]) |
 | **Packet** | Sealed decrementing budget derived from the mandate and the log (U1) |
 | **Seal** | Delegator signs the mandate with their key |
 | **Cart** | Agent-proposed purchase: merchant, items, subtotal, shipping, fees, FX, total |
 | **Decision** | Engine output for one cart: APPROVE, DENY or ESCALATE + rule results |
 | **Mint** | Create a one-off card whose limit equals the approved total (U2) |
 | **Stop** | A DENY, an unanswered ESCALATE, or a revoke; catalogue S1-S6 |
-| **Planner** | Untrusted Claude agent; may only call `propose_cart` |
-| **Judge** | Typed probabilistic gate (Jev, or LLM fallback); can only tighten a decision |
+| **Planner** | Untrusted agent (local LLM, rule parser or replay; Claude optional); may only call `propose_cart` |
+| **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or LLM fallback); can only tighten a decision |
 | **Policy engine** | Deterministic code that applies R1-R12 and is the only source of a Decision |
 | **Rail** | Card issuing layer; SIMULATED, mirrors Single Use Card semantics [F1] |
 | **Log / Verifier** | Signed hash-chained decision log / offline page that checks it |
