@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "lint": "eslint .",
     "test": "vitest run",
+    "coverage": "pnpm --filter @laisee/core test:coverage",
     "build": "pnpm -r build",
     "gen:types": "node scripts/gen-types.mjs",
     "docs:check": "python3 scripts/docs-check.py",
