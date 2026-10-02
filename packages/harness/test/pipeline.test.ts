@@ -7,6 +7,7 @@ import { MintError, type RailPort } from "@laisee/core/ports";
 import { MerchantStub } from "@laisee/rail-sim";
 import { createComponents } from "../src/factory";
 import { labelAgreement } from "../src/metrics/agreement";
+import { createB1Gate } from "../src/systems/b1";
 import { governedWorlds } from "../src/worlds/governed";
 import { pick, scenarios, system, systems } from "./support/rig";
 import { SWEEP_MS } from "./support/timeouts";
@@ -33,12 +34,39 @@ describe("B1 on the fixed seed set, real engine, rail, merchant and executor", (
     expect(misses).toEqual([]);
   }, SWEEP_MS);
 
-  it("has no judge and no seller check: it approves injected and flagged carts that pass R1-R8", async () => {
+  it("has no judge and no seller check: it approves injected and flagged carts that pass R1-R8, and the rail mints them", async () => {
     for (const s of [pick("injected_text", "inj_clean_cart"), pick("flagged_seller", "flagged")]) {
       const out = await B1.run(s);
       expect(out.judge, s.id).toBeNull();
       expect(out.decision.outcome, s.id).toBe("APPROVE");
+      expect(out.mintBlocked, `${s.id}: the rail must not refuse B1's approval`).toBeNull();
+      expect(out.mints, s.id).toHaveLength(1);
+      expect(out.authorisedCount, s.id).toBe(1);
     }
+  });
+
+  it("hands the rail an APPROVE that carries no FAIL rule: R9 and R10 are SKIPPED, not failed, and the id is B1's own", async () => {
+    const components = createComponents();
+    const gate = createB1Gate({ components });
+    for (const s of [pick("flagged_seller", "flagged"), pick("flagged_seller", "stale_capture"), pick("injected_text", "inj_clean_cart")]) {
+      const world = await components.governed(s);
+      const made = await gate.decide(s, world, 0);
+      const approved = made.forRail;
+      if (approved === null) throw new Error(`${s.id}: B1 should approve it`);
+      expect(approved.rules.filter((r) => r.result === "FAIL"), s.id).toEqual([]);
+      expect(approved.rules.filter((r) => r.id === "R9" || r.id === "R10").every((r) => r.result === "SKIPPED"), s.id).toBe(true);
+      expect(made.entry, "what is logged is what the rail gets").toBe(approved);
+      expect(made.facts.decisionId).toBe(approved.id);
+    }
+  });
+
+  it("keeps the engine's own decision when B1 stops: the stop reason is a rule it evaluates", async () => {
+    const components = createComponents();
+    const gate = createB1Gate({ components });
+    const s = pick("shipping_overflow", "over_remaining_clear");
+    const made = await gate.decide(s, await components.governed(s), 0);
+    expect(made.forRail).toBeNull();
+    expect(made.facts).toMatchObject({ outcome: "DENY", rule: "R3", templateId: "R3.over_remaining" });
   });
 
   it("has no path to ask the shopper: an ESCALATE is a stop", async () => {

@@ -1,8 +1,9 @@
 // B1: rules R1-R8 and R12 plus the rail limit, no judge. It reuses the engine's own rule results and folds the outcome
 // over R1-R8 only; R9 (seller check) and R10 (judge) are left out by definition. R12 runs in the executor, as in B2.
-import type { LaiseeEngine } from "@laisee/core/engine";
-import type { Decision } from "@laisee/core/generated";
+import { canonicalJson, sha256Hex, type LaiseeEngine } from "@laisee/core/engine";
+import type { Decision, RuleResult } from "@laisee/core/generated";
 import type { JudgeRecord } from "@laisee/core/ports";
+import { skipped } from "@laisee/core/rules";
 import { CLEAN_ANSWERS } from "@laisee/core/testing";
 import { cartOfSubmission } from "../scenario/cart";
 import type { Scenario } from "../types";
@@ -23,10 +24,22 @@ export const NO_JUDGE: JudgeRecord = {
 
 const KEPT = (id: string): boolean => id !== "R9" && id !== "R10";
 
+/** B1 does not evaluate R9 or R10, so its Decision says SKIPPED for them, whatever the engine found: an APPROVE carries no FAIL. */
+function notEvaluated(rule: RuleResult): RuleResult {
+  return KEPT(rule.id) ? rule : skipped(rule.id, { baseline: "B1", note: "this baseline does not evaluate the rule" }, rule.check);
+}
+
+/** An id for the Decision B1 makes, not the engine's: the engine's id belongs to the verdict it reached (outcome is in the digest). */
+function baselineId(engineId: string): string {
+  const digest = sha256Hex(canonicalJson({ baseline: "B1", derived_from: engineId, outcome: "APPROVE" }));
+  return `dec_${engineId.slice("dec_".length, "dec_".length + 12)}${digest.slice(0, 16)}`;
+}
+
 /** The engine's Decision with its outcome recomputed over R1-R8: the Decision B1 hands to the rail on APPROVE. */
 function approvedByRules(decision: Decision, limitMinor: number): Decision {
-  const { explanation: _explanation, escalation: _escalation, ...rest } = decision;
-  return { ...rest, outcome: "APPROVE", approved_limit_minor: limitMinor };
+  const { explanation: _explanation, escalation: _escalation, rules, ...rest } = decision;
+  const [first, ...others] = rules;
+  return { ...rest, id: baselineId(decision.id), rules: [notEvaluated(first), ...others.map(notEvaluated)], outcome: "APPROVE", approved_limit_minor: limitMinor };
 }
 
 /** R12 at checkout through the engine: a DENY that resolves the approval, or null when the price stands. */
@@ -48,7 +61,7 @@ export function createB1Gate(deps: Pick<SystemDeps, "components">): Gate {
       const template = folded.primary?.template_id ?? null;
       const approved = folded.outcome === "APPROVE" ? approvedByRules(decision, cart.total_minor) : null;
       return {
-        facts: { outcome: folded.outcome, rule: folded.primary?.id ?? ruleOfTemplate(template ?? undefined), templateId: template, decisionId: decision.id },
+        facts: { outcome: folded.outcome, rule: folded.primary?.id ?? ruleOfTemplate(template ?? undefined), templateId: template, decisionId: approved?.id ?? decision.id },
         entry: approved ?? decision,
         forRail: approved,
         judge: null,
