@@ -3,7 +3,7 @@
 // averaged back into canonical order. One attempt, no retries, a deadline from the caller (F34). Any failure,
 // timeout, malformed answer or truncated input comes back as a TIMEOUT or ERROR record, which R10 escalates (I5).
 import type { JudgeProvider } from "@laisee/core/generated";
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
+import type { JudgeInput, JudgeRecord } from "@laisee/core/ports";
 import {
   DEFAULT_LAYA_MODEL,
   HEALTH_PATH,
@@ -19,8 +19,9 @@ import { sendRequest, type FetchLike } from "./http";
 import { planRows } from "./plan";
 import { failureRecord, okRecord, type RecordBase } from "./record";
 import { buildJudgeState } from "./state";
-import { callFailure, callSystemOne, type CallFailure, type CallOutcome } from "./system-one-call";
+import { callFailure, callSystemOne, type CallContext, type CallFailure, type CallOutcome } from "./system-one-call";
 import type { ParsedResponse } from "./parse";
+import type { WarmUpOptions, WarmUpResult, WarmableJudge } from "./warm-up";
 import { combineWindowAnswers, splitListing, type WindowPlan, type WindowingOptions } from "./windows";
 
 export interface SystemOneJudgeOptions {
@@ -45,7 +46,7 @@ export interface SystemOneJudgeOptions {
 
 const usableTimeout = (ms: number): boolean => Number.isFinite(ms) && ms > 0;
 
-export class SystemOneJudge implements JudgePort {
+export class SystemOneJudge implements WarmableJudge {
   readonly provider: JudgeProvider;
   readonly #options: SystemOneJudgeOptions;
   readonly #fetch: FetchLike;
@@ -77,15 +78,35 @@ export class SystemOneJudge implements JudgePort {
     }
   }
 
-  async #run(input: JudgeInput, deadline: Deadline): Promise<{ call: CallOutcome; version: string | null }> {
-    const windowing = this.#options.windowing;
-    const plan: WindowPlan =
-      windowing === undefined || windowing === false
-        ? { ok: true, parts: [{ text: input.listingText, index: 0, total: 1 }] }
-        : splitListing(input.listingText, windowing);
-    if (!plan.ok) return { call: callFailure("ERROR", "input_too_large", "the listing needs more windows than allowed", { inputTruncated: true }), version: null };
-    const checkpointLookup = this.#lookupCheckpoint(deadline);
-    const ctx = {
+  /**
+   * One full-size request on a throwaway state, to load the model and learn the checkpoint version before the
+   * first real decision. Never throws; the answers are discarded.
+   */
+  async warmUp(opts: WarmUpOptions): Promise<WarmUpResult> {
+    const started = this.#clock();
+    const elapsed = (): number => Math.max(0, Math.round(this.#clock() - started));
+    if (!usableTimeout(opts.timeoutMs) || opts.signal?.aborted === true) return { ok: false, latencyMs: elapsed() };
+    const deadline = createDeadline(opts.timeoutMs, opts.signal);
+    try {
+      const lookup = this.#lookupCheckpoint(deadline);
+      const call = await callSystemOne(this.#context(deadline), {
+        mandate: "warm up",
+        rules: "categories: apparel",
+        cart: "1 x warm up",
+        scameter: "no record found",
+        listing: { title: "warm up", description: "warm up" },
+      });
+      await lookup;
+      return { ok: call.ok, latencyMs: elapsed() };
+    } catch {
+      return { ok: false, latencyMs: elapsed() };
+    } finally {
+      deadline.dispose();
+    }
+  }
+
+  #context(deadline: Deadline): CallContext {
+    return {
       fetchImpl: this.#fetch,
       baseUrl: this.#options.baseUrl,
       model: this.#options.model,
@@ -94,6 +115,17 @@ export class SystemOneJudge implements JudgePort {
       requireUsage: this.provider === "laya",
       deadline,
     };
+  }
+
+  async #run(input: JudgeInput, deadline: Deadline): Promise<{ call: CallOutcome; version: string | null }> {
+    const windowing = this.#options.windowing;
+    const plan: WindowPlan =
+      windowing === undefined || windowing === false
+        ? { ok: true, parts: [{ text: input.listingText, index: 0, total: 1 }] }
+        : splitListing(input.listingText, windowing);
+    if (!plan.ok) return { call: callFailure("ERROR", "input_too_large", "the listing needs more windows than allowed", { inputTruncated: true }), version: null };
+    const checkpointLookup = this.#lookupCheckpoint(deadline);
+    const ctx = this.#context(deadline);
     const parsed: ParsedResponse[] = [];
     for (const part of plan.parts) {
       const state = buildJudgeState(input, part);

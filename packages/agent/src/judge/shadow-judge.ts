@@ -4,14 +4,20 @@ import type { JudgeProvider } from "@laisee/core/generated";
 import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
 import { errorMessage } from "./guards";
 import { failureRecord } from "./record";
+import { isWarmable, type WarmUpOptions, type WarmUpResult, type WarmableJudge } from "./warm-up";
 
-export class ShadowJudge implements JudgePort {
+export class ShadowJudge implements WarmableJudge {
   readonly provider: JudgeProvider;
   readonly #inner: JudgePort;
 
   constructor(inner: JudgePort) {
     this.#inner = inner;
     this.provider = inner.provider;
+  }
+
+  /** Forwards to the real judge; a judge with nothing to warm is already ready. */
+  async warmUp(opts: WarmUpOptions): Promise<WarmUpResult> {
+    return isWarmable(this.#inner) ? this.#inner.warmUp(opts) : { ok: true, latencyMs: 0 };
   }
 
   async assess(input: JudgeInput, opts: { timeoutMs: number; signal?: AbortSignal }): Promise<JudgeRecord> {

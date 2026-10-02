@@ -25,7 +25,7 @@
 - **State**: mandate, categories, cart line, Scameter state, and the listing as a nested object. The listing text is untrusted data and never goes into a question's `instructions`.
 - **Windows** (stretch, off): `windowing: DEFAULT_WINDOWING` judges long listings in overlapping windows. The fit report shows why it is off.
 - **Latency** is the measured wall time of the call. A replay reports its lookup time, not the recorded one.
-- **Warm up** the server after a restart: the first call took 2,568 ms [F26], which is over F34.
+- **Warm up** after a Laya restart: the first call took 2,568 ms [F26], which is over F34, so the first decision would TIMEOUT. Call `judge.warmUp({ timeoutMs })` once at start (`isWarmable` checks for it); it never throws and reports `ok` and the measured time.
 
 ## Tools
 - **Corpus**: `data/judge-corpus/` (SIMULATED, labelled, single annotator).
