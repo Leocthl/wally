@@ -46,6 +46,8 @@ export interface ExportView {
   readonly log: string;
   readonly publicKeys: unknown;
   readonly checkpoint: unknown;
+  /** A budget from Mum's: her credential, for inspection. It is not in the log. */
+  readonly parentCredential?: unknown;
 }
 
 type Exporter = () => Promise<ExportView>;
@@ -60,13 +62,15 @@ export function readExport(raw: unknown): ExportView {
   if (raw === null || typeof raw !== "object") throw new Error("export is not an object");
   const v = raw as Record<string, unknown>;
   if (typeof v["log"] !== "string" || v["publicKeys"] === null || typeof v["publicKeys"] !== "object") throw new Error("export is missing the log or the keys");
-  return { log: v["log"], publicKeys: v["publicKeys"], checkpoint: v["checkpoint"] ?? null };
+  const parent = v["parentCredential"];
+  return { log: v["log"], publicKeys: v["publicKeys"], checkpoint: v["checkpoint"] ?? null, ...(parent !== null && typeof parent === "object" ? { parentCredential: parent } : {}) };
 }
 
 interface Files {
   readonly log: string;
   readonly keys: string;
   readonly checkpoint: string;
+  readonly parent?: string;
 }
 
 function useFiles(open: boolean, exporter: Exporter): { readonly files: Files | null; readonly failed: boolean } {
@@ -90,6 +94,7 @@ function useFiles(open: boolean, exporter: Exporter): { readonly files: Files | 
           log: url(view.log.endsWith("\n") ? view.log : `${view.log}\n`, "application/jsonl"),
           keys: url(`${JSON.stringify(view.publicKeys, null, 2)}\n`, "application/json"),
           checkpoint: url(`${JSON.stringify(view.checkpoint, null, 2)}\n`, "application/json"),
+          ...(view.parentCredential === undefined ? {} : { parent: url(`${JSON.stringify(view.parentCredential, null, 2)}\n`, "application/json") }),
         });
       })
       .catch(() => alive && setFailed(true));
@@ -110,6 +115,7 @@ export function ExportSheet({ open, onClose, exporter }: { readonly open: boolea
         [files.log, "wally-receipts.jsonl", P.exportLog, "receipt"],
         [files.keys, "wally-public-keys.json", P.exportKeys, "lock"],
         [files.checkpoint, "wally-checkpoint.json", P.exportCheckpoint, "check"],
+        ...(files.parent === undefined ? [] : ([[files.parent, "parent-credential.json", UI.family.exportParent, "shieldCheck"]] as const)),
       ] as const)
     : [];
   return (
@@ -123,6 +129,7 @@ export function ExportSheet({ open, onClose, exporter }: { readonly open: boolea
             <span className="w-btn__icon"><Icon name="download" size={20} /></span>
           </a>
         ))}
+        {files?.parent === undefined ? null : <p className="pf-export__note">{t(UI.family.exportParentNote)}</p>}
       </div>
     </Sheet>
   );

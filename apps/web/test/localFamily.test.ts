@@ -121,6 +121,16 @@ describe("sealing under Mum", () => {
     expect(await client.family()).toMatchObject({ allocatedMinor: 0 });
   });
 
+  it("cancelling a family budget gives Mum's share back", async () => {
+    const { client } = await sealedOwn();
+    await client.seal(budget(80_000));
+    expect(await client.family()).toMatchObject({ allocatedMinor: 80_000 });
+    await client.revoke();
+    expect(await client.family()).toMatchObject({ allocatedMinor: 0, remainingMinor: 100_000 });
+    await client.seal(budget(100_000)); // the whole ceiling is Mum's to give again
+    expect(await client.family()).toMatchObject({ allocatedMinor: 100_000 });
+  });
+
   it("refuses every other way a child can widen Mum's rules, citing the rule", async () => {
     const { client } = await sealedOwn();
     const withRules = (rules: Partial<SealRequest["rules"]>): SealRequest => ({ ...budget(50_000), rules: { ...budget(50_000).rules, ...rules } });

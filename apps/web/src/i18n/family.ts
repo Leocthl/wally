@@ -18,6 +18,9 @@ export const FAMILY = {
   fromMum: label("From Mum's budget", "來自媽媽的預算"), // NEEDS-REVIEW
   /** After a refused seal (the "Ask for more than Mum allows" card): the cap sentence, then this. */
   refusedNote: label("Nothing was sealed. Your budget stays as it was.", "冇鎖定任何預算，你的預算保持不變。"), // NEEDS-REVIEW
+  /** Export receipts: Mum's credential as its own file, and what the offline page can and cannot check. */
+  exportParent: label("Mum's credential (JSON)", "媽媽的憑證（JSON）"), // NEEDS-REVIEW
+  exportParentNote: label("Mum's credential is checked when the budget is sealed and is not in the receipts. The offline page checks the receipts only and can't check this link; open this file to read Mum's rules.", "媽媽的憑證喺鎖定預算時檢查，並不在收據之內。離線頁面只檢查收據，檢查唔到呢個連結；可打開此檔案查看媽媽的規則。"), // NEEDS-REVIEW
   /** The same, when Mum's ceiling could not be read. */
   refused: label("Mum's budget doesn't allow that. Nothing was sealed.", "媽媽的預算唔容許咁做，冇鎖定任何預算。"), // NEEDS-REVIEW
 } as const;

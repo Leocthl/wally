@@ -11,8 +11,10 @@ import { MockApiClient } from "../src/api/MockApiClient";
 import type { ApiInfo, FamilySummary, Mandate, PacketState, RunSummary, ScenarioId, SealRequest, SealResult } from "../src/api/types";
 import { BudgetHero } from "../src/screens/home/BudgetHero";
 import { LocaleProvider } from "../src/ui/locale";
+import { ProofScreen } from "../src/screens/proof/ProofScreen";
 import { bootApp, go, screenReady } from "./helpers/app";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
+import { delegate, instantMock, mountScreen, seed } from "./helpers/proofHarness";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -230,10 +232,11 @@ describe("a budget from Mum's", () => {
     remaining_minor: 80_000,
     active_cards: [],
     mint_times: [],
+    open_escalations: [],
     expires_at: "2026-10-31T15:59:59Z",
     folded_through_seq: 0,
     computed_at: "2026-10-03T02:00:00Z",
-  } as PacketState;
+  };
   const mandate: Mandate = {
     id: "mnd_mei00001",
     delegator: "did:key:z6MkMeiKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -293,5 +296,34 @@ describe("Try asking", () => {
     expect(api.ran).toEqual(["family_over"]);
     expect((await api.snapshot()).mandate?.id).toBe(before.mandate?.id);
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
+  });
+});
+
+describe("Export receipts", () => {
+  async function exportSheet(parentCredential?: unknown) {
+    const { api, clock } = instantMock();
+    await seed(api, clock, ["normal"]);
+    const exportLog = async () => ({
+      log: '{"seq":0}',
+      publicKeys: { engine: ["did:key:z1"], delegator: "did:key:z2" },
+      checkpoint: { log_id: "l", seq: 0, entry_hash: "a" },
+      ...(parentCredential === undefined ? {} : { parentCredential }),
+    });
+    const { user } = await mountScreen(<ProofScreen />, delegate(api, { exportLog }), { hash: "#/proof" });
+    await user.click(await screen.findByRole("button", { name: "Export receipts" }));
+    return within(await screen.findByRole("dialog", { name: "Export for the offline verifier" }));
+  }
+
+  it("a budget from Mum's adds her credential as parent-credential.json, and says the offline page cannot check the link", async () => {
+    const sheet = await exportSheet({ issuer: "did:key:z6MkMum", id: "urn:laisee:mandate:mnd_mumP0001" });
+    await waitFor(() => expect(sheet.getAllByRole("link")).toHaveLength(4));
+    expect(sheet.getByRole("link", { name: /Mum's credential \(JSON\)/ })).toHaveAttribute("download", "parent-credential.json");
+    expect(sheet.getByText(/can't check this link/)).toBeInTheDocument();
+  });
+
+  it("a budget of my own still exports three files and no note", async () => {
+    const sheet = await exportSheet();
+    await waitFor(() => expect(sheet.getAllByRole("link")).toHaveLength(3));
+    expect(sheet.queryByText(/can't check this link/)).toBeNull();
   });
 });

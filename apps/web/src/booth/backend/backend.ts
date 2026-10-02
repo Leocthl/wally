@@ -283,6 +283,7 @@ export class OrchestratorBackend implements BoothBackend {
       const signed = signRevocation({ mandate_id: session.mandateId, revoked_at: now, ...(req.reason === undefined ? {} : { reason: req.reason }) }, this.#deps.delegator);
       const result = await session.orchestrator.revoke(signed, { runId: this.#deps.newId("run") });
       if (!result.ok) throw new BoothError(result.code === "INVALID_REVOCATION" ? 400 : 500, result.code, result.message);
+      session.familyKit?.ledger.release(session.familyKit.parentId, session.mandateId); // a cancelled budget never mints: Mum's share is free again
       if (result.failedCardIds.length > 0) this.#d.logger.error(`revoke: the rail could not void ${result.failedCardIds.join(", ")}`);
       return { revokedAt: result.revokedAt, voidedCardIds: result.voidedCardIds };
     });
