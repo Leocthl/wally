@@ -1,0 +1,37 @@
+{
+  "name": "@laisee/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ports, generated types, validators, policy engine, crypto, log and verifier (lane A)",
+  "type": "module",
+  "exports": {
+    "./ports": "./src/ports.ts",
+    "./config": "./src/config/index.ts",
+    "./generated": "./src/generated/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./rules": "./src/rules/index.ts",
+    "./engine": "./src/engine/index.ts",
+    "./explain": "./src/explain/index.ts",
+    "./packet": "./src/packet/index.ts",
+    "./crypto": "./src/crypto/index.ts",
+    "./vc": "./src/vc/index.ts",
+    "./log": "./src/log/index.ts",
+    "./verify": "./src/verify/index.ts",
+    "./orchestrator": "./src/orchestrator/index.ts",
+    "./executor": "./src/executor/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./testing/fixtures": "./src/testing/fixtures.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2"
+  }
+}
