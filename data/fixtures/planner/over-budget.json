@@ -1,0 +1,32 @@
+{
+  "fixture": "planner/over-budget",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for over-budget (replay backend). the planner proposes the jacket; the engine stops it at HK$550 against HK$541 left (R3). Request: \"a denim jacket\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "over-budget",
+    "listing_ids": [
+      "lst_demoJacket",
+      "lst_demoTee",
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-streetwear.example/p/jacket",
+      "items": [
+        {
+          "title": "Denim jacket (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Closest listed item to the request: Denim jacket."
+    },
+    "trace": {
+      "provider": "laya",
+      "question": "item_forced",
+      "probabilities": {
+        "denim_jacket": 1
+      },
+      "choice": "denim_jacket"
+    }
+  }
+}

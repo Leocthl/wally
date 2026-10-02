@@ -1,0 +1,13 @@
+{
+  "fixture": "planner/empty-candidates",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for empty-candidates (replay backend). a shop link with no listing record: no candidates, no proposal. Request: \"a cotton tee\". Recorded from the rule planner against the offline test mock of Laya, not the live server; trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "empty-candidates",
+    "listing_ids": [
+      "lst_unknownShop"
+    ],
+    "proposal": null
+  }
+}
