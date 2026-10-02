@@ -4,6 +4,7 @@ import fc from "fast-check";
 import type { Cart, JudgeRecord, Mandate, PacketState } from "../src/generated";
 import type { DecideContext, EscalationAnswer, EscalationResolution } from "../src/ports";
 import { CART_A1, M0, PACKET_INITIAL, cartWithTotal } from "./engine-helpers";
+import { escalateDecision } from "./packet-helpers";
 
 /** Fixed fast-check seed so CI runs are reproducible (explored with random seeds during development). */
 export const PROPERTY_SEED = 20_261_004;
@@ -143,9 +144,23 @@ export const resolutionArb: fc.Arbitrary<EscalationResolution | undefined> = fc.
   { nil: undefined },
 );
 
+/** How a generated resolution relates to the scenario cart: bound to it, bound to another cart, or unbound. */
+export type Binding = "same_cart" | "other_cart" | "missing";
+export const bindingArb: fc.Arbitrary<Binding> = fc.constantFrom<Binding>("same_cart", "same_cart", "other_cart", "missing");
+
+/** Attaches the escalated decision the orchestrator reads from the log: id = resolves, OPEN, on `cart` or on another cart. */
+export function bindResolution(resolution: EscalationResolution | undefined, binding: Binding, cart: Cart, packet: PacketState): EscalationResolution | undefined {
+  if (resolution === undefined || binding === "missing") return resolution;
+  const expiresAt = packet.open_escalations.find((e) => e.decision_id === resolution.resolves)?.expires_at ?? iso(T0 + DAY_MS);
+  const escalatedCart = binding === "same_cart" ? cart : { ...cart, merchant: { ...cart.merchant, name: `${cart.merchant.name} (other)` } };
+  return { ...resolution, escalated: { ...escalateDecision(resolution.resolves, expiresAt), cart: escalatedCart } };
+}
+
 export const ctxArb: fc.Arbitrary<DecideContext | undefined> = fc.oneof(
+  fc.constant({ mandateProofValid: true, answerSignatureValid: true }),
+  fc.constant({ mandateProofValid: true, answerSignatureValid: true }),
   fc.constant({ mandateProofValid: true }),
-  fc.constant({ mandateProofValid: true }),
+  fc.constant({ mandateProofValid: true, answerSignatureValid: false }),
   fc.constant({ mandateProofValid: false }),
   fc.constant({}),
   fc.constant(undefined),
