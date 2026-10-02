@@ -44,7 +44,8 @@ for (const scheme of ["light", "dark"] as const) {
       await scan(page, `why sheet ${scheme}`);
       await page.keyboard.press("Escape");
 
-      await tryAsking(page, "mint");
+      // "normal" pays at once, so the card shows its PAID stamp; the ready card is the presenter-only mint step.
+      await tryAsking(page, "normal");
       await expect(page.getByRole("article", { name: "One-off card" })).toBeVisible();
       await scan(page, `wally one-off card ${scheme}`);
 

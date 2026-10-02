@@ -36,7 +36,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .run-stop__card--enter { animation: run-rise var(--dur-slow) var(--ease-out) both; }
-  .run-path--enter .run-path__disc { animation: run-disc var(--dur-base) var(--ease-spring) both; animation-delay: calc(var(--i) * var(--dur-press) + var(--dur-fast)); }
+  .run-path--enter .run-path__disc { animation: run-disc var(--dur-base) var(--ease-out) both; animation-delay: calc(var(--i) * var(--dur-press) + var(--dur-fast)); }
   .run-path--enter .run-path__cell[data-status="stop"] .run-path__disc { animation-name: run-disc-stop; }
   .run-path--enter .run-path__cell::before { animation: run-fade var(--dur-base) var(--ease-out) both; animation-delay: calc(var(--i) * var(--dur-press) + var(--dur-fast)); }
 }

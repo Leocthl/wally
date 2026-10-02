@@ -1,9 +1,11 @@
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { devNodeStubs } from "./src/dev/nodeStubs";
 import { wallyPwa } from "./src/pwa/vitePlugin";
 
-const API_PORT = 8787;
+/** The booth server the dev proxy forwards /api to. WALLY_API_PORT points a worktree at its own booth server. */
+const API_PORT = Number(process.env["WALLY_API_PORT"] ?? 8787);
 /** SIMULATED fixtures shared with core (read only). The MockApiClient bundles them so the booth runs with no network. */
 const FIXTURES = fileURLToPath(new URL("../../data/fixtures", import.meta.url));
 /** Harness and judge-fit results and the human evidence files (read only), bundled so the Evidence screen needs no network. */
@@ -14,7 +16,7 @@ export default defineConfig({
   // Relative asset paths: the built booth runs from any folder or LAN address, with hash routes and no server rules.
   base: "./",
   // PWA (lane m-design): wallyPwa emits sw.js with the hashed precache list; public/ holds the manifest and icons.
-  plugins: [react(), wallyPwa({ publicDir: fileURLToPath(new URL("./public", import.meta.url)) })],
+  plugins: [devNodeStubs(), react(), wallyPwa({ publicDir: fileURLToPath(new URL("./public", import.meta.url)) })],
   resolve: { alias: { "@fixtures": FIXTURES, "@results": RESULTS, "@evidence-data": EVIDENCE } },
   server: { host: "127.0.0.1", proxy: { "/api": `http://127.0.0.1:${API_PORT}` } },
   test: {

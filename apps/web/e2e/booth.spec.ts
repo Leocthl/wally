@@ -104,6 +104,9 @@ test("Try to trick Wally: orders are stopped; a plain listing is approved", asyn
 test("Needs your OK: the Budget banner leads to the question and Approve makes the card", async ({ page }) => {
   await press(page, "unverified");
   await expect(wally(page).getByRole("heading", { name: "Needs your OK" })).toBeVisible();
+  // The question is a modal sheet: close it (the quiet card keeps the question open) before leaving for Budget.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Needs your OK" })).toBeHidden();
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   const banner = page.getByRole("region", { name: "Wally needs your OK" });
   await banner.getByRole("link", { name: /Review/ }).click();

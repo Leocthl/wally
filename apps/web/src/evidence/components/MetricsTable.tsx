@@ -17,7 +17,7 @@ export function MetricsTable({ run }: { readonly run: HarnessRun }): ReactElemen
   const keys = rateKeys(run);
   const chips = BASELINES.flatMap((b) => Object.values(run.baselines[b]?.rates ?? {}).map((r) => r.chip));
   return (
-    <section className="ev-table" aria-labelledby="ev-table-title">
+    <section className="ev-table">
       <h3 id="ev-table-title"><Tx text={E.tableTitle} /></h3>
       <EvScope chips={chips}>
         <div className="ev-table__scroll" tabIndex={0} role="region" aria-labelledby="ev-table-title">

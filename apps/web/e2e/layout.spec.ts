@@ -31,6 +31,8 @@ test("every control is at least 44 px on Budget, in the Ask sheet, on Wally and 
   expect(await undersized(page, ".w-sheet")).toEqual([]);
   await page.locator('.w-sheet [data-scenario="unverified"]').click();
   await expect(page.locator('[data-screen="wally"]').getByRole("heading", { name: "Needs your OK" })).toBeVisible();
+  expect(await undersized(page, ".w-sheet")).toEqual([]); // the consent sheet's own answers
+  await page.keyboard.press("Escape"); // close the sheet; the question stays open on its quiet card
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("region", { name: "Wally needs your OK" })).toBeVisible();
   expect(await undersized(page)).toEqual([]);
