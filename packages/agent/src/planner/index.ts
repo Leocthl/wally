@@ -6,6 +6,8 @@ export const PLANNER_PROVIDERS: readonly PlannerProvider[] = ["rule", "replay"];
 export const DEFAULT_PLANNER_PROVIDER: PlannerProvider = "rule";
 
 export { DEFAULT_LAYA_URL, DEFAULT_PLANNER_CONFIG, PlannerConfigError, type PlannerConfig } from "./config";
+export { createPlanner, layaUrlFromEnv, plannerProviderFromEnv, type CreatePlannerOptions } from "./factory";
 export { createRulePlanner, type RulePlannerOptions } from "./rule-planner";
+export { ALTERNATIVE_SUFFIX, createReplayPlanner, loadReplayRecords, type ReplayPlannerOptions } from "./replay-planner";
 export { parseColours, parseQuantity, parseSizes, MAX_QTY, type QuantityResult } from "./parse-request";
 export { candidatesFromListing, parseTitle, type PlannerCandidate } from "./candidates";
