@@ -7,7 +7,7 @@
 .sg-controls { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .sg-toc { display: flex; flex-wrap: wrap; gap: 0 var(--sp-1); margin: 0 calc(-1 * var(--sp-3)); }
 .sg-toc a { display: inline-flex; align-items: center; flex: none; min-height: var(--tap); padding: 0 var(--sp-2); border-radius: var(--r-pill); color: var(--c-ink-muted); font-size: var(--text-sm); font-weight: var(--weight-semibold); text-decoration: none; }
-.sg-toc a:hover { background: var(--c-surface-sunken); color: var(--c-ink); }
+@media (hover: hover) and (pointer: fine) { .sg-toc a:hover { background: var(--c-surface-sunken); color: var(--c-ink); } }
 
 .sg-section { padding-top: var(--sp-6); scroll-margin-top: var(--sp-4); }
 .sg-section__title { font-size: var(--text-2xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); }

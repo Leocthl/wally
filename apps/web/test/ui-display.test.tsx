@@ -23,7 +23,7 @@ describe("figures", () => {
     const m = screen.getByRole("meter", { name: "Budget left" });
     expect(m).toHaveAttribute("aria-valuetext", "HK$541 of HK$800");
     expect(m).toHaveAttribute("aria-valuenow", "54100");
-    expect(m.querySelector<HTMLElement>(".w-progress__fill")?.style.width).toBe("67.63%");
+    expect(m.querySelector<HTMLElement>(".w-progress__fill")?.style.getPropertyValue("--p")).toBe("0.6763");
   });
 
   it("Ring keeps its centre content and hides the drawing", () => {

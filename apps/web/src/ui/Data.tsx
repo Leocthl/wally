@@ -1,6 +1,6 @@
 // Figures: ProgressBar, Ring and Stat. The value text is the caller's formatted figure (HK$ with separators); the
 // bar and ring carry it in aria-valuetext, so a screen reader hears the amount, not a percentage.
-import type { ReactElement, ReactNode } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import "../design/ui/data.css";
 import { cx } from "./cx";
 
@@ -40,7 +40,7 @@ export function ProgressBar({ value, max, label, valueText, tone = "primary", ro
       aria-valuenow={Math.min(Math.max(value, 0), max)}
       aria-valuetext={valueText}
     >
-      <span className="w-progress__fill" style={{ width: `${(ratio * 100).toFixed(2)}%` }} />
+      <span className="w-progress__fill" style={{ "--p": ratio.toFixed(4) } as CSSProperties} />
     </div>
   );
 }

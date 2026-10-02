@@ -40,7 +40,6 @@
 .home-section__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); }
 .home-section__title--sm { font-size: var(--text-md); letter-spacing: 0; }
 .home-section__action { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--sp-2); border-radius: var(--r-pill); color: var(--c-primary-ink); font-weight: var(--weight-semibold); text-decoration: none; }
-.home-section__action:hover { background: var(--c-primary-tint); }
 .home-section__empty { color: var(--c-ink-muted); }
 .home-recent .w-row__title { font-size: var(--text-md); }
 
@@ -66,7 +65,6 @@
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
-.home-try__card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
 .home-try__card:active { background: var(--c-surface-sunken); }
 .home-try__card:disabled { cursor: progress; opacity: 0.55; }
 .home-try__icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; margin-bottom: var(--sp-1); border-radius: var(--r-md); }
@@ -116,3 +114,8 @@
 .console-hold__button[data-motion="reduced"][data-step="4"] .console-hold__fill { transform: scaleX(1); }
 .console-hold__hint { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 .console-dialog__icon { display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--c-stop-tint); color: var(--c-stop-ink); }
+
+@media (hover: hover) and (pointer: fine) {
+  .home-section__action:hover { background: var(--c-primary-tint); }
+  .home-try__card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
+}

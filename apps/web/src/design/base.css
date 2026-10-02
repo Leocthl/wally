@@ -90,6 +90,8 @@ input[type="text"], input[type="number"], input[type="search"], input:not([type]
 }
 
 textarea { resize: vertical; width: 100%; }
+/* A drag grip is a desktop widget: touch screens get the field at its size and let the page scroll. */
+@media (pointer: coarse) { textarea { resize: none; } }
 
 :focus-visible {
   outline: 3px solid var(--focus);

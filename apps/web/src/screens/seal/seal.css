@@ -21,7 +21,8 @@
 .seal-examples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
 .seal-examples__label { margin-right: var(--sp-1); font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--c-ink-muted); letter-spacing: var(--track-caps); text-transform: uppercase; }
 .seal-example { min-height: var(--tap); padding: 0 var(--sp-4); border: 1px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-primary-ink); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; }
-.seal-example:hover, .seal-example:active { background: var(--c-primary-tint); }
+.seal-example:active { background: var(--c-primary-tint); }
+@media (hover: hover) and (pointer: fine) { .seal-example:hover { background: var(--c-primary-tint); } }
 .seal-note { color: var(--c-ink-muted); font-size: var(--text-sm); }
 .seal-note:empty { display: none; }
 .seal-read { display: grid; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--c-info-tint); color: var(--c-ink); }
@@ -55,6 +56,8 @@
 
 /* The action stays in reach at the bottom of the screen. */
 .seal-actions { position: sticky; bottom: 0; z-index: var(--z-raised); display: grid; gap: var(--sp-2); margin: 0 calc(-1 * var(--sp-1)); padding: var(--sp-3) var(--sp-1) max(var(--sp-3), var(--safe-bottom)); background: var(--c-bg); }
+/* Scroll edge: content fades out above the bar instead of being cut by a hard line (no blur: the branding guard bans glass). */
+.seal-actions::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sp-5); background: linear-gradient(to top, var(--c-bg), transparent); pointer-events: none; }
 
 /* Meet Wally */
 .seal-meet { display: grid; justify-items: center; gap: var(--sp-4); padding-top: var(--sp-4); text-align: center; }

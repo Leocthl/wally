@@ -1,11 +1,13 @@
-/* Sheet and Dialog. The scrim dims the page; panels are solid (no glass). Reduced motion: no slide, no fade. */
+/* Sheet and Dialog. The scrim dims the page; panels are solid (no glass). Entering and leaving are transitions, so a
+   sheet that is grabbed mid-motion stays where the finger is. Reduced motion: every duration here is 0. */
 .w-overlay { position: fixed; inset: 0; z-index: var(--z-sheet); display: flex; }
 .w-overlay--dialog { z-index: var(--z-dialog); align-items: center; justify-content: center; padding: max(var(--sp-4), var(--safe-top)) max(var(--sp-4), var(--safe-right)) max(var(--sp-4), var(--safe-bottom)) max(var(--sp-4), var(--safe-left)); }
 .w-overlay--sheet { align-items: flex-end; justify-content: center; }
 /* The scrim and the sheet surface run past the bottom edge: iOS Safari's floating toolbar and the keyboard can leave
    a strip below a fixed overlay, which would otherwise show the page undimmed. */
-.w-scrim { position: absolute; inset: 0 0 -50vh 0; background: var(--c-scrim); animation: w-fade-in var(--dur-base) var(--ease-out) both; }
-.w-overlay[data-phase="closing"] .w-scrim { animation: w-fade-out var(--dur-sheet) var(--ease-out) both; }
+.w-scrim { position: absolute; inset: 0 0 -50vh 0; background: var(--c-scrim); opacity: 1; transition: opacity var(--dur-base) var(--ease-out); }
+.w-overlay[data-phase="closing"] .w-scrim { opacity: 0; transition-duration: var(--dur-exit); }
+@starting-style { .w-scrim { opacity: 0; } }
 
 .w-sheet {
   position: relative;
@@ -20,13 +22,22 @@
   color: var(--c-ink);
   box-shadow: var(--shadow-3);
   overscroll-behavior: contain;
-  animation: w-sheet-in var(--dur-sheet) var(--ease-out) both;
+  transform: translateY(0);
+  transition: transform var(--dur-sheet) var(--ease-drawer);
 }
+@starting-style { .w-sheet { transform: translateY(100%); } }
 .w-sheet:focus { outline: none; }
 .w-sheet::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% - 1px); height: 50vh; background: var(--c-surface-raised); pointer-events: none; }
-.w-overlay[data-phase="closing"] .w-sheet { animation: w-sheet-out var(--dur-sheet) var(--ease-in-out) both; }
-.w-sheet[data-dragging="true"] { animation: none; transition: none; }
-.w-sheet__grab { display: grid; place-items: center; height: 1.5rem; margin: 0 calc(-1 * var(--sp-5)); touch-action: none; cursor: grab; }
+/* Leaving: ease-out and quicker than arriving; from a drag it starts at the live offset (the inline transform is cleared in the same frame). */
+.w-overlay[data-phase="closing"] .w-sheet { transform: translateY(100%); transition-duration: var(--dur-exit); transition-timing-function: var(--ease-out); }
+/* While a finger holds the sheet nothing eases: it follows 1:1. Letting go without closing returns it with a soft spring. */
+.w-overlay[data-dragging="true"] .w-sheet, .w-overlay[data-dragging="true"] .w-scrim { transition: none; }
+.w-sheet[data-settling="true"] { transition-duration: var(--dur-settle); transition-timing-function: var(--ease-settle); }
+.w-overlay:has(.w-sheet[data-settling="true"]) .w-scrim { transition-duration: var(--dur-settle); }
+/* The handle and the title row are one drag surface, 24 px of handle plus the row. */
+.w-sheet__top { flex: none; touch-action: none; cursor: grab; }
+.w-sheet__top:active { cursor: grabbing; }
+.w-sheet__grab { display: grid; place-items: center; height: 1.5rem; margin: 0 calc(-1 * var(--sp-5)); }
 .w-sheet__handle { width: 2.5rem; height: 0.3125rem; border-radius: var(--r-pill); background: var(--c-line-strong); }
 .w-sheet__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 .w-sheet__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
@@ -44,10 +55,13 @@
   color: var(--c-ink);
   box-shadow: var(--shadow-2);
   text-align: center;
-  animation: w-pop-in var(--dur-base) var(--ease-spring) both;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
+@starting-style { .w-dialog { opacity: 0; transform: scale(0.96); } }
 .w-dialog:focus { outline: none; }
-.w-overlay[data-phase="closing"] .w-dialog { animation: w-fade-out var(--dur-sheet) var(--ease-out) both; }
+.w-overlay[data-phase="closing"] .w-dialog { opacity: 0; transform: scale(0.98); transition-duration: var(--dur-exit); }
 .w-dialog__icon { display: grid; place-items: center; margin-bottom: var(--sp-3); }
 .w-dialog__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .w-dialog__body { margin-top: var(--sp-2); color: var(--c-ink-muted); }

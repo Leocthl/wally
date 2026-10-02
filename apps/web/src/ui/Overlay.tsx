@@ -1,13 +1,15 @@
 // Sheet (bottom sheet with a drag handle) and Dialog (centred). Both: portal to <body>, scrim click and Escape close,
 // focus moves in and is trapped, focus returns to the opener, the page behind does not scroll, safe-area aware.
-// Exit animations last --dur-sheet (0 ms under reduced motion), then the node unmounts.
-import { useEffect, useId, useRef, useState, type PointerEvent, type ReactElement, type ReactNode, type RefObject } from "react";
+// Entering is a CSS transition from @starting-style, leaving is the same transition run the other way (--dur-exit, 0 ms
+// under reduced motion), then the node unmounts. A dragged sheet leaves or settles from where the finger let go.
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import "../design/ui/overlay.css";
 import { UI } from "../i18n/ui";
 import { IconButton } from "./Button";
 import { cx } from "./cx";
 import { useFocusTrap } from "./hooks/useFocusTrap";
+import { clearDragStyles, useSheetDrag } from "./hooks/useSheetDrag";
 import { Icon } from "./icons";
 import { useLocale } from "./locale";
 
@@ -15,7 +17,7 @@ type Phase = "open" | "closing" | "closed";
 
 function exitMs(): number {
   if (typeof window === "undefined" || typeof getComputedStyle !== "function") return 0;
-  const raw = getComputedStyle(document.documentElement).getPropertyValue("--dur-sheet").trim();
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--dur-exit").trim();
   const n = Number.parseFloat(raw);
   if (!Number.isFinite(n)) return 0;
   return raw.endsWith("ms") ? n : n * 1000;
@@ -60,37 +62,6 @@ function useModal({ open, onClose, panel }: ModalFrameProps): Phase {
   return phase;
 }
 
-const DRAG_CLOSE_PX = 96;
-
-function useDragToClose(panel: RefObject<HTMLDivElement | null>, onClose: () => void): { readonly onPointerDown: (e: PointerEvent<HTMLDivElement>) => void } {
-  const start = useRef<number | null>(null);
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
-    const el = panel.current;
-    if (!el) return;
-    start.current = e.clientY;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    el.dataset.dragging = "true";
-    const move = (ev: globalThis.PointerEvent): void => {
-      if (start.current === null) return;
-      el.style.transform = `translateY(${Math.max(0, ev.clientY - start.current)}px)`;
-    };
-    const up = (ev: globalThis.PointerEvent): void => {
-      const dy = start.current === null ? 0 : ev.clientY - start.current;
-      start.current = null;
-      delete el.dataset.dragging;
-      el.style.transform = "";
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      if (dy > DRAG_CLOSE_PX) onClose();
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
-  };
-  return { onPointerDown };
-}
-
 export interface SheetProps {
   readonly open: boolean;
   readonly onClose: () => void;
@@ -103,20 +74,27 @@ export interface SheetProps {
 export function Sheet({ open, onClose, title, description, children, footer }: SheetProps): ReactElement | null {
   const panel = useRef<HTMLDivElement>(null);
   const phase = useModal({ open, onClose, panel });
-  const drag = useDragToClose(panel, onClose);
+  const drag = useSheetDrag(panel, onClose);
   const id = useId();
   const { t } = useLocale();
+  // A drag that closed the sheet left its offset on the panel; the exit transition starts from it, then the styles go.
+  useLayoutEffect(() => {
+    if (phase === "closing" && panel.current) clearDragStyles(panel.current);
+  }, [phase]);
   if (phase === "closed") return null;
   return createPortal(
     <div className="w-overlay w-overlay--sheet" data-phase={phase}>
       <div className="w-scrim" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className="w-sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-desc` : undefined} tabIndex={-1}>
-        <div className="w-sheet__grab" onPointerDown={drag.onPointerDown} aria-hidden="true" title={t(UI.dragToClose)}>
-          <span className="w-sheet__handle" />
-        </div>
-        <div className="w-sheet__head">
-          <h2 id={`${id}-title`} className="w-sheet__title">{title}</h2>
-          <IconButton label={t(UI.close)} icon={<Icon name="close" />} onClick={onClose} />
+        {/* The handle and the title row are one drag surface (the close button stays a button). */}
+        <div className="w-sheet__top" {...drag} title={t(UI.dragToClose)}>
+          <div className="w-sheet__grab" aria-hidden="true">
+            <span className="w-sheet__handle" />
+          </div>
+          <div className="w-sheet__head">
+            <h2 id={`${id}-title`} className="w-sheet__title">{title}</h2>
+            <IconButton label={t(UI.close)} icon={<Icon name="close" />} onClick={onClose} />
+          </div>
         </div>
         {description ? <p id={`${id}-desc`} className="w-sheet__desc">{description}</p> : null}
         <div className="w-sheet__body">{children}</div>

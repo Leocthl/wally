@@ -32,6 +32,7 @@
 .w-field__adorn--end { gap: var(--sp-1); }
 .w-field__box--area { align-items: stretch; padding: var(--sp-2) var(--sp-3); }
 .w-field__box > .w-field__input--area { resize: vertical; min-height: 6rem; padding: var(--sp-1); }
+@media (pointer: coarse) { .w-field__box > .w-field__input--area { resize: none; } }
 .w-field__hint { font-size: var(--text-sm); color: var(--c-ink-muted); }
 .w-field__error { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-stop-ink); }
 
@@ -81,8 +82,8 @@
   background: var(--c-surface);
   color: var(--c-primary-ink);
   box-shadow: var(--shadow-1);
-  transition: left var(--dur-base) var(--ease-spring);
+  transition: transform var(--dur-base) var(--ease-pop);
 }
 .w-switch__control[aria-checked="true"]::before { background: var(--c-primary); border-color: var(--c-primary); }
-.w-switch__control[aria-checked="true"] .w-switch__thumb { left: calc(100% - 1.75rem); }
+.w-switch__control[aria-checked="true"] .w-switch__thumb { transform: translateY(-50%) translateX(1.25rem); } /* track 3.25 - thumb 1.5 - 2 x inset 0.25 */
 .w-switch__control:disabled { cursor: not-allowed; opacity: 0.6; }
