@@ -1,0 +1,19 @@
+{
+  "name": "@laisee/agent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Planner backends and judge adapters (lane B). No signing code, no rail (I4)",
+  "type": "module",
+  "exports": {
+    "./judge": "./src/judge/index.ts",
+    "./planner": "./src/planner/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@laisee/core": "workspace:*"
+  }
+}

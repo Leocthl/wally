@@ -1,0 +1,29 @@
+{
+  "name": "@laisee/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Booth UI (Vite + React) and thin Node API (Hono) under server/ (lane C, wiring by lane X)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "tsx watch server/main.ts",
+    "api": "tsx server/main.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.3",
+    "@laisee/core": "workspace:*",
+    "hono": "^4.13.12",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tsx": "^4.23.15",
+    "vite": "^8.3.2"
+  }
+}

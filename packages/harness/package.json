@@ -1,0 +1,19 @@
+{
+  "name": "@laisee/harness",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Seeded replay harness, B0/B1/B2 metrics (lane D). Reuses core and rail-sim, never copies them",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@laisee/core": "workspace:*",
+    "@laisee/rail-sim": "workspace:*"
+  }
+}
