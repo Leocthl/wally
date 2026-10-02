@@ -27,6 +27,9 @@
 .home-hero__kicker { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--c-on-hero); line-height: var(--lh-snug); }
 .home-hero__stat { margin-top: var(--sp-3); }
 .home-hero__stat .w-stat__value { font-size: clamp(var(--text-4xl), 13vw, var(--text-5xl)); }
+/* The rolling digits sit in a window with room above and below for the roll (NumberFlow's mask); pull the box back so the
+   figure keeps the spacing the plain text had. */
+.home-hero__stat .w-stat__value { margin-block: -0.2em; }
 .home-hero__stat .fig, .home-hero .w-stat__sub .fig { color: inherit; }
 .home-hero__meter { margin-top: var(--sp-4); }
 .home-hero__minis { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin-top: var(--sp-3); }
