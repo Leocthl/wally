@@ -59,6 +59,8 @@ const SWAPPED = (() => {
   return engine.decide(M0, packet, CART_SWAPPED, JUDGE_TEE, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id) }, PROOF_OK);
 })();
 
+// Still open: engine side (packages/core/src/rules/escalation.ts, lane e-orch). The answer now carries cart_sha256,
+// so R11 can refuse it when answer.cart_sha256 !== cartFingerprint(cart) or answer.mandate_id !== mandate.id.
 describe("KNOWN DEFECT S-ESC-1: an APPROVE answer is not bound to the cart the delegator saw", () => {
   it.fails("decide() refuses to apply the answer for decision E (cart A) to a different cart B", () => {
     // Today: outcome APPROVE, approved_limit_minor 60000, merchant other-shop.example, R9 cleared_by delegator.

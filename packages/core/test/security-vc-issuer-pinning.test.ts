@@ -75,6 +75,7 @@ describe("R1 binding (controls)", () => {
   });
 });
 
+// Still open: engine side (packages/core/src/rules/mandate.ts R1, lane e-orch), outside the crypto lane.
 describe("KNOWN DEFECT S-R1-1: R1 checks ids only, so a widened Mandate passes with mandateProofValid: true", () => {
   it.fails("R1 fails when the mandate's budget or expiry differ from the packet folded from the credential", () => {
     expect(WIDE_DECISION.outcome).not.toBe("APPROVE");
