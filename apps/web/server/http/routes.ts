@@ -6,7 +6,7 @@ import type { Context, Hono } from "hono";
 import type { BoothBackend } from "../backend";
 import { readJsonObject, type JsonObject } from "./body";
 import { BoothError, errorBody, type BoothErrorStatus } from "./errors";
-import { checkPostOrigin, isJsonContentType, isLoopbackHost } from "./guards";
+import { checkPostOrigin, isAllowedHost, isJsonContentType, isLoopbackHostname } from "./guards";
 import type { SseHub } from "./sse";
 import {
   parseAnswerRequest,
@@ -30,6 +30,8 @@ export interface RouteOptions {
   readonly maxBodyBytes: number;
   readonly maxListingTextChars: number;
   readonly logger: Logger;
+  /** Default loopback only. */
+  readonly hostAllowed?: (hostname: string) => boolean;
 }
 
 export const EVENT_SEQ_HEADER = "x-event-seq";
@@ -49,8 +51,8 @@ function hostOf(c: Context): string | undefined {
   }
 }
 
-function guardRequest(c: Context): Response | null {
-  if (!isLoopbackHost(hostOf(c))) return fail(c, 403, "FORBIDDEN_HOST", "this API answers loopback hosts only");
+function guardRequest(c: Context, hostAllowed: (hostname: string) => boolean): Response | null {
+  if (!isAllowedHost(hostOf(c), hostAllowed)) return fail(c, 403, "FORBIDDEN_HOST", "this API answers loopback hosts only");
   if (c.req.method !== "POST") return null;
   const verdict = checkPostOrigin(c.req.header("origin"), c.req.header("sec-fetch-site"));
   if (verdict !== "ok") return fail(c, 403, "FORBIDDEN_ORIGIN", "this API accepts requests from this machine's own pages only");
@@ -69,7 +71,7 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
   const be = (): BoothBackend => opts.backend();
 
   app.use("/api/*", async (c, next) => {
-    const refused = guardRequest(c);
+    const refused = guardRequest(c, opts.hostAllowed ?? isLoopbackHostname);
     if (refused !== null) return refused;
     return next();
   });

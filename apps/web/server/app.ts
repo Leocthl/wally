@@ -1,11 +1,11 @@
-// Hono app for the booth: the API under /api (http/routes.ts) and, when given, the built UI at / and the offline
-// verifier page at /verifier/ (static.ts). No feature logic here: the backend does the work.
+// Hono app for the booth: the API under /api (http/routes.ts) plus optional extra routes (the Node composition adds
+// the built UI and the verifier page, static.ts). No feature logic here: the backend does the work. This file and
+// http/* use web-standard APIs only (no node: imports), so a browser "local mode" can reuse them later.
 import { Hono } from "hono";
 import type { BoothBackend } from "./backend";
 import { BoothError, errorBody } from "./http/errors";
 import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
-import { registerStaticRoutes, type StaticRoots } from "./static";
 
 /**
  * ASSUMED: request body cap. The largest real body is a visitor listing of MAX_LISTING_TEXT_CHARS characters; JSON
@@ -25,7 +25,10 @@ export interface HttpAppOptions {
   readonly logger?: Logger;
   readonly maxBodyBytes?: number;
   readonly maxListingTextChars?: number;
-  readonly staticRoots?: StaticRoots;
+  /** Which Host names the API answers. Default: loopback only (a LAN option would widen this, off by default). */
+  readonly hostAllowed?: (hostname: string) => boolean;
+  /** Registered after the API routes, e.g. static files (Node composition only). */
+  readonly extraRoutes?: (app: Hono) => void;
 }
 
 export function createHttpApp(opts: HttpAppOptions): Hono {
@@ -37,8 +40,9 @@ export function createHttpApp(opts: HttpAppOptions): Hono {
     logger,
     maxBodyBytes: opts.maxBodyBytes ?? MAX_BODY_BYTES,
     maxListingTextChars: opts.maxListingTextChars ?? MAX_LISTING_TEXT_CHARS,
+    ...(opts.hostAllowed === undefined ? {} : { hostAllowed: opts.hostAllowed }),
   });
-  if (opts.staticRoots !== undefined) registerStaticRoutes(app, opts.staticRoots);
+  opts.extraRoutes?.(app);
   app.notFound((c) => c.json(errorBody("NOT_FOUND", "not found"), 404));
   app.onError((err, c) => errorResponse(err, c, logger));
   return app;

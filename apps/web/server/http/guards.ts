@@ -11,11 +11,13 @@ function hostnameOf(authority: string): string | null {
   }
 }
 
-/** Host header (authority) names a loopback host, any port. */
-export function isLoopbackHost(host: string | undefined | null): boolean {
+export const isLoopbackHostname = (hostname: string): boolean => LOOPBACK_HOSTNAMES.has(hostname.toLowerCase());
+
+/** Host header (authority) names an allowed host (default: loopback), any port. */
+export function isAllowedHost(host: string | undefined | null, allowed: (hostname: string) => boolean = isLoopbackHostname): boolean {
   if (host === undefined || host === null || host === "" || /[\s/@]/.test(host)) return false;
   const name = hostnameOf(host);
-  return name !== null && LOOPBACK_HOSTNAMES.has(name);
+  return name !== null && allowed(name);
 }
 
 /** Origin header is an http(s) loopback origin. "null" (sandboxed frames, file://) is refused. */
