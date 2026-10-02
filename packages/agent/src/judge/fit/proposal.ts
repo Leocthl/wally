@@ -1,6 +1,6 @@
 // data/results/judge-thresholds-proposal.json: what the lead copies into the register (F36, F50) and core config.
 // This tool never edits either. Pure: the caller passes the clock and the pinned checkpoint revision.
-import type { Rate, SplitEval, TuneReport } from "./tune-report";
+import { sellerGateNote, type Rate, type SplitEval, type TuneReport } from "./tune-report";
 
 export interface ThresholdProposal {
   readonly generated_at: string;
@@ -58,6 +58,7 @@ export function buildProposal(r: TuneReport, opts: { readonly generatedAt: strin
       "Chinese input stays unvalidated: the checkpoint is English-derived.",
       "Long listings past one row still ESCALATE by design (I5); window judging stays off.",
       "Thresholds and wording go together: these values hold for the wording variant named here only.",
+      ...(sellerGateNote(h.atProposed) === null ? [] : [`Stop reasons: ${sellerGateNote(h.atProposed) ?? ""}`]),
     ],
   };
 }

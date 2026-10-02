@@ -85,6 +85,11 @@ describe("renderTuneMarkdown", () => {
     expect(docsLint(markdown)).toEqual([]);
   });
 
+  it("breaks the legit cases not approved down by cause and says when the seller gate carries no stops", () => {
+    expect(markdown).toContain("truncated by design (I5) 1");
+    expect(markdown).toMatch(/seller gate stopped 0 of 0 high-risk held-out cases/);
+  });
+
   it("states the F38 result, every variant and the window decision", () => {
     expect(markdown).toContain("Not met: short by");
     expect(markdown).toContain("| v0 |");
@@ -105,5 +110,9 @@ describe("buildProposal", () => {
   it("proposes no T_esc when escalate_or_proceed carries no signal", () => {
     expect(proposal.thresholds.t_esc).toBeNull();
     expect(proposal.caveats.length).toBeGreaterThan(3);
+  });
+
+  it("adds the stop-reason caveat when the seller gate stops few high-risk held-out cases", () => {
+    expect(proposal.caveats.some((c) => c.includes("R10.seller_risk"))).toBe(true);
   });
 });

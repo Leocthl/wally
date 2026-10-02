@@ -1,7 +1,7 @@
 // Renders the held-out round report as team-facing markdown: point form, tables first, k/n beside every rate.
 // Writing rules from CLAUDE.md apply: no em dashes, no emoji, every figure with ms in it cites a register ID.
 import type { GateThresholds } from "./thresholds";
-import type { Rate, SplitEval, TuneReport } from "./tune-report";
+import { blockedBreakdown, sellerGateNote, type Rate, type SplitEval, type TuneReport } from "./tune-report";
 
 const num = (x: number | null | undefined, digits = 2): string => (x === null || x === undefined || Number.isNaN(x) ? "n/a" : x.toFixed(digits));
 const rate = (r: Rate): string => `${r.k} of ${r.n}, ${num(r.rate)} [${num(r.ci?.low)}, ${num(r.ci?.high)}]`;
@@ -25,12 +25,18 @@ function header(r: TuneReport): string[] {
   ];
 }
 
+function blockedLine(p: SplitEval): string {
+  const b = blockedBreakdown(p);
+  return `${b.total}: truncated by design (I5) ${b.truncated}, zh-HK ${b.zhHk}, other ${b.other}`;
+}
+
 function resultSection(r: TuneReport): string[] {
   const h = r.heldout;
   const p = h.atProposed;
   return [
     "## Result on the held-out split",
     `- **F38 floor** (at least 0.90 of legitimate scenarios approved, F38): legit approved ${rate(p.legitApproved)}. ${h.f38.met ? "Met on this split." : `Not met: short by ${num(h.f38.shortBy)} of the floor.`}`,
+    `- **Legit not approved**: ${blockedLine(p)}.`,
     `- **Injected approved**: ${rate(p.injectedApproved)}. **High-risk seller approved**: ${rate(p.highRiskApproved)}. **Out of scope approved**: ${rate(p.outOfScopeApproved)}.`,
     `- **Wording**: ${r.winner} (ranked first of ${r.variants.length} on tuning). **escalate_or_proceed**: tuning AUC ${num(r.escalate.tuningAuc)}; ${r.escalate.searched ? "searched, it carries signal" : "below the 0.75 bar, so T_esc is not refitted and keeps its register value"}.`,
     "",
@@ -133,6 +139,7 @@ function tailSection(r: TuneReport): string[] {
     `- **Injected cases**: ${injected} in all (${r.heldout.atProposed.injectedApproved.n} held-out), the ones written for the first fit; this round added no new injection text, so injected recall rests on few held-out cases.`,
     "- **Language**: the checkpoint is English-derived; zh-HK cases are here to measure that, not to excuse it.",
     "- **Truncation** fails closed by design: a long honest listing ESCALATEs (I5).",
+    ...(sellerGateNote(r.heldout.atProposed) === null ? [] : [`- **Stop reasons**: ${sellerGateNote(r.heldout.atProposed) ?? ""}`]),
     "- **Re-run** after any change to the corpus, the state, the wording or the checkpoint. Thresholds freeze at M5 [F41].",
     "",
   ];

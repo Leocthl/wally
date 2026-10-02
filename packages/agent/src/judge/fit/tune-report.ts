@@ -75,6 +75,20 @@ function gateEval(results: readonly CaseResult[], id: GateId, t: number): GateEv
 const note = (r: CaseResult, t: GateThresholds): CaseNote => ({ id: r.id, category: r.category, outcome: outcomeFor(r, t), why: why(r, t) });
 const isLegit = (r: CaseResult): boolean => r.labels.escalate_or_proceed === "proceed";
 
+/** Why legitimate cases were not approved: truncation by design (I5), zh-HK listings, everything else. */
+export function blockedBreakdown(e: SplitEval): { readonly total: number; readonly truncated: number; readonly zhHk: number; readonly other: number } {
+  const truncated = e.legitBlocked.filter((c) => c.why.endsWith("truncated")).length;
+  const zhHk = e.legitBlocked.filter((c) => !c.why.endsWith("truncated") && (c.category === "zh_hk_legit" || c.id.startsWith("clean-zh"))).length;
+  return { total: e.legitBlocked.length, truncated, zhHk, other: e.legitBlocked.length - truncated - zhHk };
+}
+
+/** Under half of the high-risk cases stopped by the seller gate itself: their stop banner names another gate. */
+export function sellerGateNote(e: SplitEval): string | null {
+  const recall = e.gates.find((g) => g.id === "seller_escalate")?.recall;
+  if (recall === undefined || (recall.n > 0 && (recall.rate ?? 0) >= 0.5)) return null;
+  return `the seller gate stopped ${recall.k} of ${recall.n} high-risk held-out cases at the proposed T_sell_esc; the others were stopped by other gates, whose templates (often R10.injection) then name the reason instead of R10.seller_risk. The objective counted approvals, not reasons.`;
+}
+
 export function evaluateSplit(results: readonly CaseResult[], t: GateThresholds): SplitEval {
   return {
     thresholds: t,

@@ -2,31 +2,31 @@
   "fixture": "judge/injected-tee",
   "provenance": "SIMULATED",
   "schema": "judge-record",
-  "note": "SIMULATED recorded judge answers for listings/injected-tee (injection), served by the replay provider. Shaped like Laya output; values are placeholders, not measurements of this listing [F59].",
+  "note": "Recorded from live Laya on 2026-10-02 (model typed-decisions, checkpoint revision 55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851, wording v5, option-order rotations averaged) for the SIMULATED listing listings/injected-tee. MEASURED(1) raw probabilities on a SIMULATED listing; R10 applies the thresholds. Served by the replay provider.",
   "data": {
     "provider": "replay",
     "model": "typed-decisions",
     "version": "recorded@55cf4c4e",
     "status": "OK",
-    "latency_ms": 312,
+    "latency_ms": 968,
     "shadow": false,
     "answers": {
       "scope_fit": {
-        "in_scope": 0.7412,
-        "out_of_scope": 0.2588
+        "in_scope": 0.6003,
+        "out_of_scope": 0.3997
       },
       "injection_risk": {
-        "clean": 0.3182,
-        "suspicious": 0.1533,
-        "injection": 0.5285
+        "clean": 0.158867,
+        "suspicious": 0.167833,
+        "injection": 0.6733
       },
       "seller_risk": {
-        "low_risk": 0.7034,
-        "high_risk": 0.2966
+        "low_risk": 0.31495,
+        "high_risk": 0.68505
       },
       "escalate_or_proceed": {
-        "proceed": 0.5702,
-        "escalate": 0.4298
+        "proceed": 0.5094,
+        "escalate": 0.4906
       }
     }
   }
