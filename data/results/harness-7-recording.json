@@ -5,12 +5,11 @@
     "model": "typed-decisions",
     "revision": "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851",
     "device": "Apple M5 Pro, 48 GB, mps",
-    "recordedAt": "2026-10-02T16:26:40.922Z",
-    "commit": "f0797a8f9a999b8f841b4c9af12b3e3e319c8b44",
+    "recordedAt": "2026-10-02T20:12:00.326Z",
+    "commit": "da2c8149109faf887e0fa910662d0beb489c5b44",
     "seed": 7,
     "n": 150,
-    "hostLoad1m": 5,
-    "provisional": "judge question wording v5 is not yet declared frozen; re-record once it is"
+    "hostLoad1m": 1.3
   },
   "answers": {
     "11de7d187b77f8aa9ccec37576ce1f757a3db4316e32ea29a314a8cc56567e35.0": {
@@ -53,7 +52,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 200.23316700000004
+      "latencyMs": 419.32729200000006
     },
     "f7ca961a3f1dbccb1be896a3fc579e40033daf9290854ec34ab3bb039cc6d15d.0": {
       "answers": {
@@ -95,7 +94,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 204.73466700000006
+      "latencyMs": 398.12149999999997
     },
     "8444ab8e2278e2e7b9de2a6062fef139f2f3c6cec1df8eb1354368737c82a633.0": {
       "answers": {
@@ -137,7 +136,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 210.58670799999982
+      "latencyMs": 394.01245900000004
     },
     "0a3cb70f33c5cf47a769b7a4bc38cd39789ebe1199294e1297dbbde5aee0dead.0": {
       "answers": {
@@ -179,7 +178,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.48166700000002
+      "latencyMs": 183.9564580000001
     },
     "dafa66378f7d24d1af5c93360cc1a90f2b23dfa99169ec3e698bf527e695a4e7.0": {
       "answers": {
@@ -221,7 +220,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.83787500000017
+      "latencyMs": 367.22141599999986
     },
     "011e16165d716004a0527f827e5efd175b5c9f522292afa1b04fb9fc9ebce464.0": {
       "answers": {
@@ -263,7 +262,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.23008299999992
+      "latencyMs": 350.75854100000015
     },
     "9b6c419314aba780bfc2ad8aea8b139423075db4a058300c505c1413a5f4d8ef.0": {
       "answers": {
@@ -305,7 +304,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.5098750000002
+      "latencyMs": 219.24441699999988
     },
     "a8d4c20c09d37d0da9749d207822be62279227deeb1d4b6fbf854a836578f2ea.0": {
       "answers": {
@@ -347,7 +346,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.76479199999994
+      "latencyMs": 187.1162920000006
     },
     "94197778a4080af255522764d6c560afd10475ca3c66e770749f2abfb686ceb5.0": {
       "answers": {
@@ -389,7 +388,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 217.48333299999967
+      "latencyMs": 422.2972499999996
     },
     "3d254775f99d08b0e5391a8ce094ee438e23f00cd959872727c9ee1b8fcfeb6f.0": {
       "answers": {
@@ -431,7 +430,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 805.0579579999999
+      "latencyMs": 1234.1356670000005
     },
     "ebbd77a73f4385c4d2fb09a7b24d6eda33ae21cfa719e479ef38a6f94cf34bfe.0": {
       "answers": {
@@ -473,7 +472,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 211.55091600000014
+      "latencyMs": 404.7657500000005
     },
     "18712bb46b407e587f1e8d0cab6c05fab8c69ef065cc6b3a71c4a1c9f4802f22.0": {
       "answers": {
@@ -515,7 +514,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 209.27649999999994
+      "latencyMs": 383.1203339999993
     },
     "10e6142f58a7bd174b695c38ee7f6072b84ac1612f01b8f6bc9e1fd399e449b4.0": {
       "answers": {
@@ -557,7 +556,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 216.12287500000002
+      "latencyMs": 251.65237499999967
     },
     "1e30ee134977bf4d1e589a0d7c4fd1fdc4bdf7c7b3ea72400d064f4efd064c24.0": {
       "answers": {
@@ -599,7 +598,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 201.00537500000064
+      "latencyMs": 226.21591600000102
     },
     "1e30ee134977bf4d1e589a0d7c4fd1fdc4bdf7c7b3ea72400d064f4efd064c24.1": {
       "answers": {
@@ -641,7 +640,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.54054199999973
+      "latencyMs": 420.5827499999996
     },
     "5ba007eae75ef488011a3ae050d59535ee7f41fdd9479015c1ec6350648105c6.0": {
       "answers": {
@@ -683,7 +682,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.32454099999995
+      "latencyMs": 384.4405829999996
     },
     "419d45e5c60162c7144f05da16f065a4988601649fc0ea68e1b8708c12645c24.0": {
       "answers": {
@@ -725,7 +724,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.83912500000042
+      "latencyMs": 372.8520410000001
     },
     "4bfde66183b83652faa5cd0d1e8b198a0a2f5771d10761798013f5b85506ef4c.0": {
       "answers": {
@@ -767,7 +766,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.36483300000054
+      "latencyMs": 299.56083300000137
     },
     "79cde650b036a3215bab5f22ae463dc7ab767aa60150ed4fe0564cf17a2480e1.0": {
       "answers": {
@@ -809,7 +808,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.2586250000004
+      "latencyMs": 200.83362500000112
     },
     "43a4f5936afa9dc3b83d38f47a88218db5f8b9f72ce7b4f168c2658586e039fe.0": {
       "answers": {
@@ -851,7 +850,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 196.44941700000163
+      "latencyMs": 194.15241699999933
     },
     "f1c545f9d8f1bdf68f307f8c8795b6815fc77d0365c397d6ffec9a3f96087ead.0": {
       "answers": {
@@ -893,7 +892,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 167.66175000000112
+      "latencyMs": 164.76945800000067
     },
     "a2f3eda84e3eb77851be9246be49fcabd359871984555d1cf9ea9923339df928.0": {
       "answers": {
@@ -935,7 +934,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.77937500000007
+      "latencyMs": 187.60854199999994
     },
     "05fe871f0c32e0e09e739bf62239b63c49339cd84e7273c4160280c07b1a163b.0": {
       "answers": {
@@ -977,7 +976,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.2032909999998
+      "latencyMs": 190.05854200000067
     },
     "03c2ff75ec9dcaeb28dcd4b68b127f7a4b0992b82544db4c38a7b52147115613.0": {
       "answers": {
@@ -1019,7 +1018,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 202.5867079999989
+      "latencyMs": 202.2440000000006
     },
     "79194adced25340314e7c311bec4a77322c51d90244fba07afa100ff86a468dd.0": {
       "answers": {
@@ -1061,7 +1060,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.93712499999856
+      "latencyMs": 185.13904099999854
     },
     "fec06c0e078b023acc52332488669e7ea396e6712abe07e0c2c02cec0b0426f3.0": {
       "answers": {
@@ -1103,7 +1102,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 187.26516700000138
+      "latencyMs": 184.26787499999955
     },
     "cf7015b25effe7db4271405dd4b70ba13528c3b36aa184b8ce96391a48cca29e.0": {
       "answers": {
@@ -1145,7 +1144,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 199.86574999999903
+      "latencyMs": 196.6647499999999
     },
     "6b10c389b543b6c0c3daa6f19cfa635cbfd381f8d18c4f33dd36db72ea1b60b4.0": {
       "answers": {
@@ -1187,7 +1186,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 778.5671250000014
+      "latencyMs": 797.3390829999989
     },
     "31d74648db7590ee7ca35c712b71658f50f5b3b2bad5b8974817452c64283aa9.0": {
       "answers": {
@@ -1229,7 +1228,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.68687499999942
+      "latencyMs": 189.99441599999773
     },
     "9153b9976bf2419f594392839fea5484dd071550716d9664ac9323d374750340.0": {
       "answers": {
@@ -1271,7 +1270,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.69216699999924
+      "latencyMs": 189.83058300000266
     },
     "bf443c3a568380f8c341f71f4ecc6f5ee50f86fd3239e6bb1f4692b4357f7730.0": {
       "answers": {
@@ -1313,7 +1312,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 208.52149999999892
+      "latencyMs": 207.8606660000005
     },
     "c3e1cf07a695b5821515c18a8d5ec31549ee2fe81c194c71c61b35e301a70a28.0": {
       "answers": {
@@ -1355,7 +1354,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.6455420000002
+      "latencyMs": 191.4248329999973
     },
     "c3e1cf07a695b5821515c18a8d5ec31549ee2fe81c194c71c61b35e301a70a28.1": {
       "answers": {
@@ -1397,7 +1396,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.252625000001
+      "latencyMs": 190.19966700000077
     },
     "678e04dca98347949705557b6289451ca7d9324826f35e094872ae48506f80e0.0": {
       "answers": {
@@ -1439,7 +1438,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 187.75262499999917
+      "latencyMs": 185.1750409999986
     },
     "b27786261792a16940db57925ca3e5aa2081db7d24afb4a2c0b25f462c19dece.0": {
       "answers": {
@@ -1481,7 +1480,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.99420800000007
+      "latencyMs": 194.82224999999744
     },
     "6a0941b32eb7eee33462ad6b66529e3a5c1729656cc68f3e6ca3a4abad54fac2.0": {
       "answers": {
@@ -1523,7 +1522,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.40879099999984
+      "latencyMs": 190.42316700000083
     },
     "8922bf064597adf43f1b743631d6f35f673311b597005ef1a3ad14794f89010b.0": {
       "answers": {
@@ -1565,7 +1564,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.3673749999998
+      "latencyMs": 185.71174999999857
     },
     "1b4851ae447c1517171ffffa0f1fbf8eed2f5fae2acd6af159538f750e1b49bf.0": {
       "answers": {
@@ -1607,7 +1606,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.01608399999895
+      "latencyMs": 185.43616699999984
     },
     "7b8fc09c6fd0afa22b5e9a7bc6b64792d6f2d335613c58bdf431693797a37c9c.0": {
       "answers": {
@@ -1649,7 +1648,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.1551670000008
+      "latencyMs": 184.53262499999983
     },
     "559251421220f357c9fa47736576796715c846226ae6637a03535a645691c87b.0": {
       "answers": {
@@ -1691,7 +1690,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 203.70175000000017
+      "latencyMs": 199.38133300000118
     },
     "c219ebceafeab74fc7d117ccabb71f58b99a9ef8ac6bbe5f9b722511e0f70de5.0": {
       "answers": {
@@ -1733,7 +1732,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 201.09058300000106
+      "latencyMs": 198.87945799999943
     },
     "504f94c4cfc4b2b17ccd3f5a97dfb0012047eca4c82408f4f74efcbaf413c0f2.0": {
       "answers": {
@@ -1775,7 +1774,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.8563749999994
+      "latencyMs": 184.50016700000197
     },
     "e6ff48221586d2e83f557bd06ff12c3f5effc2ea1b04578f5fe23e437f2fb16d.0": {
       "answers": {
@@ -1817,7 +1816,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 202.73691699999836
+      "latencyMs": 196.9086669999997
     },
     "579b331843b8c2e0a19c22c21765a6210123fa6a902f64573ca0e594dc2ca8fa.0": {
       "answers": {
@@ -1859,7 +1858,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.63187499999913
+      "latencyMs": 185.06541699999798
     },
     "796cd44d57778c7038b41a4ace51869bff2eaa2ab1d57ad0a212342e7a2dc17b.0": {
       "answers": {
@@ -1901,7 +1900,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.5462090000001
+      "latencyMs": 182.83133299999827
     },
     "1569d0732dbabbe8c41da750080fb304aaff6885a5097dc7d6908c81beae28a9.0": {
       "answers": {
@@ -1943,7 +1942,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 201.85070800000176
+      "latencyMs": 197.58945900000253
     },
     "6afe8202e4c42b5889f47ea2d05f7ef4a7777685c00975a97ed5360c01f3ff61.0": {
       "answers": {
@@ -1985,7 +1984,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 495.8720839999987
+      "latencyMs": 504.1931250000016
     },
     "9df42293e806f31e3169149d2799aab4b36ceeb4c5fc6b5de2f7bd81ff30b51c.0": {
       "answers": {
@@ -2027,7 +2026,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 196.43887499999983
+      "latencyMs": 194.93991599999936
     },
     "5a5c7c86a54ca2ccf0c0be4c5064b495a7407e91744e85c4926f43e69ed45370.0": {
       "answers": {
@@ -2069,7 +2068,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.04699999999866
+      "latencyMs": 194.56945800000176
     },
     "6137e1fbc1ad3719e49dd9e566364a7af1487c0c0bdc153adc11177e63990b63.0": {
       "answers": {
@@ -2111,7 +2110,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 206.39829200000167
+      "latencyMs": 200.07083400000192
     },
     "0cdd90ee4b1428779a86b7d6e879a9963c8190f7b8ee4e963d037937cde78af0.0": {
       "answers": {
@@ -2153,7 +2152,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.0785419999993
+      "latencyMs": 188.17116600000008
     },
     "6b8cdde6498c5335a37d1b54a04e14e35da60bd54b4877b393c7d222d49ef0ff.0": {
       "answers": {
@@ -2195,7 +2194,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 185.02529200000208
+      "latencyMs": 180.88308399999733
     },
     "e8e9130101b97255917bea0173943a9916a8c6c490983751f6131a33afae5394.0": {
       "answers": {
@@ -2237,7 +2236,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.2229589999988
+      "latencyMs": 205.7329580000005
     },
     "fc898149ae8558ff9d269fbe548b6c394c9ae7129eae73191d9d37e2dc2ce117.0": {
       "answers": {
@@ -2279,7 +2278,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 199.4422080000004
+      "latencyMs": 191.92008299999725
     },
     "d026fe4fd58941d6c34852b47e7b18e035014bcd891ea8fb1bb1e9c7ae0d31f3.0": {
       "answers": {
@@ -2321,7 +2320,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 203.95362500000192
+      "latencyMs": 208.68445799999972
     },
     "9fcae0308f4da0c523c9f3ddf2f3852f7647e6c15783f09d7974189317a2b19c.0": {
       "answers": {
@@ -2363,7 +2362,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 210.4851660000022
+      "latencyMs": 205.29208300000028
     },
     "347e78286038da51a582944964acbca0185578aef1016dd7881dc1710f3653b2.0": {
       "answers": {
@@ -2405,7 +2404,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 206.64683299999888
+      "latencyMs": 201.16879100000006
     },
     "2dc9773fcae5a32432e20d8927df32b575dc7f35e6f74c76403cd84169d59811.0": {
       "answers": {
@@ -2447,7 +2446,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 195.49433300000237
+      "latencyMs": 189.62804200000028
     },
     "9a78dc32a468cf2e0c85a7ebbc7244428af6b793567ddd0b9918c1a642b885c9.0": {
       "answers": {
@@ -2489,7 +2488,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.12916699999914
+      "latencyMs": 188.71479199999885
     },
     "de4671c8551f276f0627582121bb3244a8222eca7faf8070428ae0150dd11d22.0": {
       "answers": {
@@ -2531,7 +2530,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.8652089999996
+      "latencyMs": 192.9527909999997
     },
     "6dff50fd8609a14c9d15f3ff1448e382121a1f58fb08f12970769fc0ae9dc23f.0": {
       "answers": {
@@ -2573,7 +2572,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 185.92029199999888
+      "latencyMs": 182.39029200000004
     },
     "58a587c99c9d02dc5f8a1537eee2429f0653cb6bbe476a990fdf849a3fc1b15f.0": {
       "answers": {
@@ -2615,7 +2614,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.323042
+      "latencyMs": 190.46258300000045
     },
     "a5588fee97d24be54910b59abed8a84e931e558ff13d12b9c6964bcfb92e233a.0": {
       "answers": {
@@ -2657,7 +2656,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 207.5377920000028
+      "latencyMs": 205.40499999999884
     },
     "78dc72c5063fd2eadd9d3df557c343d1dfb69ec9ef9ddf063fed2ac5b1e5f0d8.0": {
       "answers": {
@@ -2699,7 +2698,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 785.7377080000006
+      "latencyMs": 1472.055042
     },
     "e5371fd70a949e21585344678e2ae5ed86f5345cf83cce881d7ea444118190bd.0": {
       "answers": {
@@ -2741,7 +2740,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.03120800000033
+      "latencyMs": 304.01250000000437
     },
     "1a393e16c22850a2c7f56653e3ae95103604a1c79672e5ac72c2a0fb2550716b.0": {
       "answers": {
@@ -2783,7 +2782,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 181.98562500000116
+      "latencyMs": 183.12191700000403
     },
     "ff4120153277e33eebc7bf8e4e8f2a04feecd2ee431d6d7a44f3c32f3540cb95.0": {
       "answers": {
@@ -2825,7 +2824,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 200.4273749999993
+      "latencyMs": 410.1267089999965
     },
     "b61eed84b72ce4ce29ead34c8ef7f97ca02d39f74ce541bb7410b4b1b6c4d7c1.0": {
       "answers": {
@@ -2867,7 +2866,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.92641599999843
+      "latencyMs": 399.6454999999987
     },
     "b61eed84b72ce4ce29ead34c8ef7f97ca02d39f74ce541bb7410b4b1b6c4d7c1.1": {
       "answers": {
@@ -2909,7 +2908,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.65908400000262
+      "latencyMs": 398.92741700000624
     },
     "4f0007f521d9fcb5aa8d6b7da774227a3d2d23bec34cdb36549c2c8ac498e479.0": {
       "answers": {
@@ -2951,7 +2950,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 198.10458300000028
+      "latencyMs": 301.6583329999994
     },
     "82dd9bd8960bbe26bb872b7020837ef36b1bb1882d4b3475298927dd2330e7cd.0": {
       "answers": {
@@ -2993,7 +2992,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.59858299999905
+      "latencyMs": 189.92029200000252
     },
     "52f8deae74ef7ad2409bbb68d6f72f744784dbd9ac87ea90e3af44e76d9ad908.0": {
       "answers": {
@@ -3035,7 +3034,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 198.76437500000247
+      "latencyMs": 193.68541699999332
     },
     "c9e4e1043f19c54207f3b7302b79ba0cc683b0eb66f253ba6a89eba2b5e7bdf1.0": {
       "answers": {
@@ -3077,7 +3076,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.1763749999991
+      "latencyMs": 190.83299999999872
     },
     "9e353e5b2f8a82aced97ca43d57c969aacf1896e1355e0dbce24e117e8773c9a.0": {
       "answers": {
@@ -3119,7 +3118,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 183.2277499999982
+      "latencyMs": 184.15037499999744
     },
     "4a7d410583d375ded933f5b34bfb5c79f7017e15a62dd558481bf8d8af30d82e.0": {
       "answers": {
@@ -3161,7 +3160,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.3065409999981
+      "latencyMs": 190.45604199999798
     },
     "d530fe859f4f9a9f6b26b71b8e5eb4977a7fab344b764ed67b7756a15463ea5c.0": {
       "answers": {
@@ -3203,7 +3202,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 215.09079100000235
+      "latencyMs": 333.50774999999703
     },
     "83ce56bbf0640f3d0a967f03d620af723e8d80b50081d069c02479e89d828a29.0": {
       "answers": {
@@ -3245,7 +3244,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.18716700000004
+      "latencyMs": 373.93354199999885
     },
     "6ed8175e9b7e097ecbc1f0b33db0b2ce335856f6a7dea6668f58e8942f631535.0": {
       "answers": {
@@ -3287,7 +3286,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.7759589999987
+      "latencyMs": 389.27762499999517
     },
     "1126ff078f1b8cc77673bf54e7a6035c1da0be173a47fe6e69b80c002cb0d343.0": {
       "answers": {
@@ -3329,7 +3328,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.76983299999847
+      "latencyMs": 318.5063330000048
     },
     "b5260a3fded0d61183b503fd232f4a63ba11190ebddb8b87273302b1cea4620a.0": {
       "answers": {
@@ -3371,7 +3370,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.80724999999802
+      "latencyMs": 188.15237499999785
     },
     "b2b6ab8f84cba5cb490032e681d36c971411d82cd0410582fb55ea4c94031181.0": {
       "answers": {
@@ -3413,7 +3412,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.04241600000387
+      "latencyMs": 182.13549999999668
     },
     "707a19e004781f0acee36abe9cbe3216228cf9c36ab4682398e3f794d5d9684f.0": {
       "answers": {
@@ -3455,7 +3454,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 199.46554100000503
+      "latencyMs": 201.1090419999964
     },
     "af01049941df41219f2bc5d36b7e0ebdb4b204a07c7a0660ac6f060443c8fda8.0": {
       "answers": {
@@ -3497,7 +3496,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 773.1756660000028
+      "latencyMs": 795.3477080000011
     },
     "684e9194881026e165877becf4f8dea0c812009cce93ca6c8ea1e3b38d65737e.0": {
       "answers": {
@@ -3539,7 +3538,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.83495799999946
+      "latencyMs": 373.5762079999986
     },
     "7bbb47ab14f6643f23e14c4fc5a19b0db92f29bd15612eef5c35379271c0e7a6.0": {
       "answers": {
@@ -3581,7 +3580,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.69149999999354
+      "latencyMs": 389.3545000000013
     },
     "38da773ffb395e877d45865ea5b869c34805e037a07e4e3524870bf70c2c929e.0": {
       "answers": {
@@ -3623,7 +3622,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 206.8998750000028
+      "latencyMs": 330.52675000000454
     },
     "ac43f2d51dcdc8024e0f0299ad3699d071757eb2104ef9be7e5b8935de2ba0c2.0": {
       "answers": {
@@ -3665,7 +3664,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.5645000000004
+      "latencyMs": 187.05283300000156
     },
     "ac43f2d51dcdc8024e0f0299ad3699d071757eb2104ef9be7e5b8935de2ba0c2.1": {
       "answers": {
@@ -3707,7 +3706,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 187.01766700000007
+      "latencyMs": 190.1780409999992
     },
     "2116258884fd32736b4eea16f402e19566a15b9695a3ab3497aa165000046095.0": {
       "answers": {
@@ -3749,7 +3748,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 184.18499999999767
+      "latencyMs": 181.36858299999585
     },
     "3c9144398736d2120345d86d3a463e77e85a66d105f438b9c2fa714c4ae2e010.0": {
       "answers": {
@@ -3791,7 +3790,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.6264169999995
+      "latencyMs": 187.53774999999587
     },
     "b7bc030332e6cf5600f02465d07f2ae26f81a6e13f8350de6483700095ca5fb5.0": {
       "answers": {
@@ -3833,7 +3832,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.95195899999817
+      "latencyMs": 190.59408399999666
     },
     "01300435b38ce8280bcc28053cedc3670703cf2584dc16685c222e32c4652a2b.0": {
       "answers": {
@@ -3875,7 +3874,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.3191669999942
+      "latencyMs": 205.81033300000126
     },
     "047ab9271b1bb3c624df7719b7e4abc21246012931a6c7f70ed05053416d98d1.0": {
       "answers": {
@@ -3917,7 +3916,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.89512500000274
+      "latencyMs": 188.99895800000377
     },
     "6e5f03ac5e7ebf09add53b73e71b732163d43955562a8f91f1042abfb7e3c837.0": {
       "answers": {
@@ -3959,7 +3958,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.0408329999991
+      "latencyMs": 383.18616699999984
     },
     "f607c74cb553a8bddd0a90b2f34e4b4b5374940407716a64b3e57886d15d585b.0": {
       "answers": {
@@ -4001,7 +4000,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 181.90899999999965
+      "latencyMs": 379.81920899999386
     },
     "1f8f41adb5eb702fe13713a8f6b73a08466d71d925d91f30cf23bae787b56119.0": {
       "answers": {
@@ -4043,7 +4042,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.0587499999965
+      "latencyMs": 385.29445800000394
     },
     "0cea25e9deff2dded927fa83737748847d1f841af7a657f8268aa92061b5171c.0": {
       "answers": {
@@ -4085,7 +4084,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 182.301750000006
+      "latencyMs": 268.57329200000095
     },
     "6b5d751ec659e8f47976a329ddfb63a28759c83a7cc261ddc3231821d83b4355.0": {
       "answers": {
@@ -4127,7 +4126,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.8939160000009
+      "latencyMs": 185.7423340000023
     },
     "cd2620edcfee3367f1f1df8540f42b6b7e0634d8d81ca436a9a973dd70838401.0": {
       "answers": {
@@ -4169,7 +4168,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.62575000000652
+      "latencyMs": 184.28208399999858
     },
     "4fdba7407ea829fb869f9e0f756ad044603486729a51657224cbb0593edba429.0": {
       "answers": {
@@ -4211,7 +4210,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 196.89770799999678
+      "latencyMs": 195.1695000000036
     },
     "0964f356dd3071757cf69117d7897026bd39cd6c9f54b3c3a75a3e3f912cdb42.0": {
       "answers": {
@@ -4253,7 +4252,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 493.23966700000165
+      "latencyMs": 504.2797500000015
     },
     "b9a3e25af6c7f78f025113daee0e6126027e0ff937fdb0be7ceddc5c40aa384b.0": {
       "answers": {
@@ -4295,7 +4294,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.63237500000105
+      "latencyMs": 201.1797080000033
     },
     "d2dc5676a70b1dca317ed01eaef4e0d7bdf14bcb15ad3d9054ed89bcfd15c364.0": {
       "answers": {
@@ -4337,7 +4336,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.39591700000165
+      "latencyMs": 349.12033299999894
     },
     "ef1c9a379d7f904f76716fddf13028841c5ca02c29d9459ad08dc3baccad7456.0": {
       "answers": {
@@ -4379,7 +4378,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 199.46329100000003
+      "latencyMs": 408.83062499999505
     },
     "b6e7d89fffa9a585625b61ac8911f9e63668af3c74c317c12adc2cbb6032395f.0": {
       "answers": {
@@ -4421,7 +4420,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.77041699999972
+      "latencyMs": 371.6171669999967
     },
     "4a0a3ea991c292a38f2267dcdf13caf5da74a2e669fd74a9a4f630ff11580784.0": {
       "answers": {
@@ -4463,7 +4462,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.42783299999428
+      "latencyMs": 318.976582999996
     },
     "9298f396b8cedbc6f12baa7bb2f7dc94386f408293273da2853329febd7568bf.0": {
       "answers": {
@@ -4505,7 +4504,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.17324999999983
+      "latencyMs": 238.50345799999923
     },
     "8c1a8ec7325d30f6e819454777966f6fdeb1afbcb30da83dda85e200bc7c4faa.0": {
       "answers": {
@@ -4547,7 +4546,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 196.2084160000013
+      "latencyMs": 368.39970899999753
     },
     "be7063bd15a6dee4220d3cfb096f8adf329a457fd16a59b981308bcef48c7807.0": {
       "answers": {
@@ -4589,7 +4588,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.24033300000156
+      "latencyMs": 407.661500000002
     },
     "78e960cc149b24888b9d99620cbe504d7bc932c033493a782e4742718c9ae113.0": {
       "answers": {
@@ -4631,7 +4630,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.67383300000074
+      "latencyMs": 243.84199999999691
     },
     "a00db9a67a0f0c710ca2beef26a8ff9fc48d9cf80c04deffdd4dfc37c79e7856.0": {
       "answers": {
@@ -4673,7 +4672,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.893250000001
+      "latencyMs": 208.99429099999543
     },
     "129643a5edcf1d0f1f23e0b19d56d524fa96ae42c0823a1f24830655e1ea71c0.0": {
       "answers": {
@@ -4715,7 +4714,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 212.35083300000406
+      "latencyMs": 214.6329160000023
     },
     "153309c9d3549dfcef7120be70d489ed6b3d5f6eb6430a9028b7aaf2fee40fe8.0": {
       "answers": {
@@ -4757,7 +4756,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.52183299999888
+      "latencyMs": 194.05399999999645
     },
     "50927bc3e2c3b2b59a46cf337ff2430b519caf10bb7e01633612164a058c909c.0": {
       "answers": {
@@ -4799,7 +4798,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.79404200000135
+      "latencyMs": 188.6297080000004
     },
     "dd87de672aac254392a731b0525f8780ada4bdc0af588c7dcb11182916071147.0": {
       "answers": {
@@ -4841,7 +4840,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.22837499999878
+      "latencyMs": 194.32404099999985
     },
     "232070b41fc69d48e52bc6e85754e275fab02283e89cfa5b827ecc43d368093b.0": {
       "answers": {
@@ -4883,7 +4882,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 184.80416700000205
+      "latencyMs": 232.1917089999988
     },
     "50e0e9607cdb8e109c3cc8e7a48711d12dd3133dfb68620bff17e099ba4c9b12.0": {
       "answers": {
@@ -4925,7 +4924,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.716416999996
+      "latencyMs": 387.5434580000001
     },
     "78c289bb8075db7bbd7613aa72e1a37d3836d0bfb3770cf1eab8510aa6a5746d.0": {
       "answers": {
@@ -4967,7 +4966,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 205.29383299999608
+      "latencyMs": 439.2258329999968
     },
     "9cd9ff4e343fe9de345fd5172aa80df968b207b6602ce6ad24a961b251b763d8.0": {
       "answers": {
@@ -5009,7 +5008,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 765.1079590000008
+      "latencyMs": 1026.2851249999949
     },
     "c4f19751e3fce5cb4c33ece4f6b9e44c9081cb7ea3681c13fd591cc2d505d734.0": {
       "answers": {
@@ -5051,7 +5050,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.3348749999932
+      "latencyMs": 207.77070799999638
     },
     "b46c9820924db4c7a340ad90b38ed117cb33d8d30a0dbf74c654523012e863eb.0": {
       "answers": {
@@ -5093,7 +5092,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.15079100000003
+      "latencyMs": 199.65699999999197
     },
     "30dba88849761239afc4d6852133a245754dbbe7b6ac70f3ad21acc847dcd500.0": {
       "answers": {
@@ -5135,7 +5134,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 202.5250840000008
+      "latencyMs": 207.90929100000358
     },
     "a251881523559b10d0515313dac4c63440de35303b246912575c6d7ea35f0446.0": {
       "answers": {
@@ -5177,7 +5176,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 196.99295799999527
+      "latencyMs": 417.1325829999987
     },
     "a251881523559b10d0515313dac4c63440de35303b246912575c6d7ea35f0446.1": {
       "answers": {
@@ -5219,7 +5218,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.2624169999981
+      "latencyMs": 398.53933299999335
     },
     "44cc9001fad9883ff69db046c9fdb5e26c7a6b580726dee9de157be442047dac.0": {
       "answers": {
@@ -5261,7 +5260,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.03175000000192
+      "latencyMs": 401.8891670000012
     },
     "c0b8e29cc378cd72a5197c9d5b6b20bc60eaa3be613f74dc1d24347ad27a326c.0": {
       "answers": {
@@ -5303,7 +5302,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.6871669999964
+      "latencyMs": 358.1507089999941
     },
     "12c0f955b281a747cb15b01cb0dce153f82c2069848d4b6cacde25c70d0f369a.0": {
       "answers": {
@@ -5345,7 +5344,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 189.04341700000077
+      "latencyMs": 205.93362500000512
     },
     "94ffbd872686ed0f2dcb93754fd838cf45622e37eba7d252ef975cf6882613e1.0": {
       "answers": {
@@ -5387,7 +5386,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 198.48670799999672
+      "latencyMs": 213.18916699998954
     },
     "d3aced36ca221bfd825e82dfa7793ede73e3492beb60258615fb8fdb1f211b0b.0": {
       "answers": {
@@ -5429,7 +5428,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 202.458209000004
+      "latencyMs": 206.0940830000036
     },
     "396691191477e33ba6a0acf038fd476b2c99eb6b7d4ac46ced0e6e9ef00c615c.0": {
       "answers": {
@@ -5471,7 +5470,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 207.08329100000265
+      "latencyMs": 209.45074999998906
     },
     "14a645fe81e0c8c19de31f62abf9f4d06e4b8dcfb71e2cfc187c81d8d457c6ff.0": {
       "answers": {
@@ -5513,7 +5512,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.91433300000062
+      "latencyMs": 453.7175419999985
     },
     "e55013eaa130aa7f8756cd7c89098b1d6b269bde25a7ac7890d8d56871ae75c6.0": {
       "answers": {
@@ -5555,7 +5554,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 190.92179100000067
+      "latencyMs": 393.08670900001016
     },
     "cf31343798d64549426ae64a960c591017a39afe120165dfa0bcb37cbeb36475.0": {
       "answers": {
@@ -5597,7 +5596,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.90770799999882
+      "latencyMs": 459.2598750000034
     },
     "4290f6af3c48811817f3db830c981ff8031722f15fd0c115d51d272bc235caab.0": {
       "answers": {
@@ -5639,7 +5638,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 194.61350000000675
+      "latencyMs": 346.94004199998744
     },
     "b79e96cffecde48f1d49c9f41cb0dd8a851a7b4459175d716aab97a73816d907.0": {
       "answers": {
@@ -5681,7 +5680,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.7479170000006
+      "latencyMs": 205.79833299999882
     },
     "9a83d384806780cc8c1e7adcc7e8ca44b1ce38c3eb3fd51cc0b44107b30e5570.0": {
       "answers": {
@@ -5723,7 +5722,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 214.82287499999802
+      "latencyMs": 229.17025000001013
     },
     "ea43185a81a1b06fc57ff5634f2434ebe18ed0c9d2847dbc924ef66e14aa15a5.0": {
       "answers": {
@@ -5765,7 +5764,7 @@
         }
       },
       "truncated": true,
-      "latencyMs": 789.9210830000011
+      "latencyMs": 1149.6783339999965
     },
     "fe8952f79711abecc199e6b16779f3ca4a185f71075b234e76936ba47574b49c.0": {
       "answers": {
@@ -5807,7 +5806,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 183.6138340000034
+      "latencyMs": 414.17104200000176
     },
     "f5a8ab5f54fd88938ec212a1f7ac96e6e55ce786b5e2e496505ebb42b3a5d708.0": {
       "answers": {
@@ -5849,7 +5848,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 188.2322090000016
+      "latencyMs": 227.67466699999932
     },
     "9816f39d79b08b1d915fffcc24a45968a075636e048e4d998e0f9eb7f157970c.0": {
       "answers": {
@@ -5891,7 +5890,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 211.0926249999975
+      "latencyMs": 232.07129199999326
     },
     "2e6fd08f7658db146ab5f6d2a39cac54aa55c43787b36674f475a4f7dfa257cb.0": {
       "answers": {
@@ -5933,7 +5932,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 192.4329579999976
+      "latencyMs": 208.629958000005
     },
     "2e6fd08f7658db146ab5f6d2a39cac54aa55c43787b36674f475a4f7dfa257cb.1": {
       "answers": {
@@ -5975,7 +5974,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.10108400000172
+      "latencyMs": 202.20320800000627
     },
     "9272752f40179e98acf90a26c76c94fcc5ba1c80a5838311908279c233f433ed.0": {
       "answers": {
@@ -6017,7 +6016,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 191.4300000000003
+      "latencyMs": 202.01808300000266
     },
     "f2a6ec029e5157950f9ea7a3cb88c252ff6d8e58fb71c60779cbaca8a6f724ee.0": {
       "answers": {
@@ -6059,7 +6058,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 184.62804199999664
+      "latencyMs": 195.10033400000248
     },
     "931c9b660e05c7d928b3d7fa0822404d4201be05f618d52241bd5de5ba346af9.0": {
       "answers": {
@@ -6101,7 +6100,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 185.51516699999775
+      "latencyMs": 195.39487499999814
     },
     "a0fb15beabb522d90d9a9f7aafb8dea3e73797d5fa400c7a8b76e7c7e4b27750.0": {
       "answers": {
@@ -6143,7 +6142,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 187.22662500000297
+      "latencyMs": 198.36962500000664
     },
     "962e88d5b358a1357077de4cf803e425e0fe83ef0b87936aa9b12380145a6385.0": {
       "answers": {
@@ -6185,7 +6184,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 197.66066700000374
+      "latencyMs": 203.82891599999857
     },
     "b6cbe1bc8a07ef99215b8d74d1003a4dcbde574e0d0a9bdd5cccb4cc0187e9e0.0": {
       "answers": {
@@ -6227,7 +6226,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 207.00058299999364
+      "latencyMs": 211.08008299999346
     },
     "d601ba82da58136c487b454931ba67e6d30a58db9c2bec064db9069c03fb9813.0": {
       "answers": {
@@ -6269,7 +6268,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 214.82287499999802
+      "latencyMs": 208.59416700000293
     },
     "e6c6a6644aa224c7c503ed6b97639784d41908138bbd5dbe9b391f406c37e74a.0": {
       "answers": {
@@ -6311,7 +6310,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 202.4952090000006
+      "latencyMs": 203.68499999999767
     },
     "1bd3eeb4b381a9dcfb0af03142bd1b3526254bd3e3bbb5c96ffa484aff3a5226.0": {
       "answers": {
@@ -6353,7 +6352,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 200.80208400000265
+      "latencyMs": 201.03549999999814
     },
     "bfd10cb375a98712263ebc5cb05b7f5bd7d5c31cb81b8363e1022b920b8876d2.0": {
       "answers": {
@@ -6395,7 +6394,7 @@
         }
       },
       "truncated": false,
-      "latencyMs": 193.72804100000212
+      "latencyMs": 191.8602499999979
     }
   },
   "failures": {},
@@ -6404,7 +6403,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 146,
+      "latency_ms": 258,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6431,7 +6430,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 278,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6458,7 +6457,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 158,
+      "latency_ms": 277,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6485,7 +6484,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 263,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6512,7 +6511,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 145,
+      "latency_ms": 285,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6539,7 +6538,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 273,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6566,7 +6565,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 237,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6593,7 +6592,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 147,
+      "latency_ms": 371,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6620,7 +6619,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 170,
+      "latency_ms": 322,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6647,7 +6646,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 661,
+      "latency_ms": 1149,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -6656,7 +6655,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 158,
+      "latency_ms": 291,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6683,7 +6682,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 152,
+      "latency_ms": 257,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6710,7 +6709,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 154,
+      "latency_ms": 273,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6737,34 +6736,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.8121,
-          "out_of_scope": 0.1879
-        },
-        "injection_risk": {
-          "clean": 0.701567,
-          "suspicious": 0.160433,
-          "injection": 0.138
-        },
-        "seller_risk": {
-          "low_risk": 0.75775,
-          "high_risk": 0.24225
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.7063,
-          "escalate": 0.2937
-        }
-      }
-    },
-    "9b67a0eb223838a1c0be6b573aee96e5dca94ed8fa07a4f7183013efc3c5ef5f.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 290,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6791,7 +6763,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 265,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6818,7 +6790,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 201,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6845,7 +6817,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6872,7 +6844,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6899,7 +6871,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 134,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6926,7 +6898,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 126,
+      "latency_ms": 123,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6953,7 +6925,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -6980,7 +6952,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 142,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7007,7 +6979,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 145,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7034,7 +7006,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7061,7 +7033,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7088,7 +7060,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 139,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7115,7 +7087,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 641,
+      "latency_ms": 650,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -7124,7 +7096,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 143,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7151,7 +7123,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 136,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7178,7 +7150,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 153,
+      "latency_ms": 151,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7206,33 +7178,6 @@
       "model": "typed-decisions",
       "version": "55cf4c4e",
       "latency_ms": 136,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.74275,
-          "out_of_scope": 0.25725
-        },
-        "injection_risk": {
-          "clean": 0.687467,
-          "suspicious": 0.176933,
-          "injection": 0.135567
-        },
-        "seller_risk": {
-          "low_risk": 0.76085,
-          "high_risk": 0.23915
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.6972,
-          "escalate": 0.3028
-        }
-      }
-    },
-    "fcf8fbea585c57791692d7a0bddd9502b2242724d43c47b5de79d976934de4b3.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 138,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7286,7 +7231,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 147,
+      "latency_ms": 144,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7313,7 +7258,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7340,7 +7285,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7367,7 +7312,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 144,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7421,7 +7366,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 149,
+      "latency_ms": 146,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7448,7 +7393,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 148,
+      "latency_ms": 146,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7475,7 +7420,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 157,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7502,7 +7447,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 159,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7529,7 +7474,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7556,7 +7501,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7610,7 +7555,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 405,
+      "latency_ms": 386,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7637,7 +7582,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7664,7 +7609,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7691,7 +7636,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 149,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7745,7 +7690,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7772,7 +7717,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7799,7 +7744,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 139,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7826,7 +7771,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7853,7 +7798,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 145,
+      "latency_ms": 142,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7880,7 +7825,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 150,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7907,7 +7852,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 139,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -7934,7 +7879,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 136,
+      "latency_ms": 159,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8015,7 +7960,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8042,7 +7987,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 160,
+      "latency_ms": 153,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8069,7 +8014,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 643,
+      "latency_ms": 1214,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -8078,7 +8023,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8105,7 +8050,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 134,
+      "latency_ms": 256,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8132,7 +8077,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 150,
+      "latency_ms": 314,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8159,34 +8104,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.79425,
-          "out_of_scope": 0.20575
-        },
-        "injection_risk": {
-          "clean": 0.728667,
-          "suspicious": 0.147167,
-          "injection": 0.124133
-        },
-        "seller_risk": {
-          "low_risk": 0.79255,
-          "high_risk": 0.20745
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.7572,
-          "escalate": 0.2428
-        }
-      }
-    },
-    "0fe36baee42b9bd87bc79a564e3f3c6d6dce81906edd80fe229c739e1d48ecbd.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8213,7 +8131,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 147,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8240,7 +8158,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 139,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8267,7 +8185,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 140,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8294,7 +8212,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 138,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8321,7 +8239,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 155,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8348,7 +8266,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8375,7 +8293,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 171,
+      "latency_ms": 331,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8402,7 +8320,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 276,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8429,7 +8347,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 211,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8456,7 +8374,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 134,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8483,7 +8401,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8510,7 +8428,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8564,7 +8482,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 651,
+      "latency_ms": 992,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -8573,7 +8491,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 289,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8600,7 +8518,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 183,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8627,7 +8545,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 152,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8654,34 +8572,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 133,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.64625,
-          "out_of_scope": 0.35375
-        },
-        "injection_risk": {
-          "clean": 0.680267,
-          "suspicious": 0.188467,
-          "injection": 0.131267
-        },
-        "seller_risk": {
-          "low_risk": 0.74705,
-          "high_risk": 0.25295
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.69775,
-          "escalate": 0.30225
-        }
-      }
-    },
-    "15c5c91ee69a2e6b389fc4095fb852553294b8bbbb9ed16380d8696578233ddd.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 134,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8708,7 +8599,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8735,7 +8626,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8762,7 +8653,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 138,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8789,7 +8680,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8816,7 +8707,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 147,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8843,7 +8734,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 284,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8870,7 +8761,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 131,
+      "latency_ms": 249,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8897,7 +8788,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 150,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8924,7 +8815,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 131,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8951,7 +8842,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 136,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -8978,7 +8869,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9005,7 +8896,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 142,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9032,7 +8923,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 400,
+      "latency_ms": 412,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9059,7 +8950,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 134,
+      "latency_ms": 141,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9086,7 +8977,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 143,
+      "latency_ms": 289,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9113,7 +9004,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 147,
+      "latency_ms": 272,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9140,7 +9031,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 222,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9167,7 +9058,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 148,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9194,7 +9085,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 285,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9221,7 +9112,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 142,
+      "latency_ms": 271,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9248,7 +9139,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 301,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9275,7 +9166,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 252,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9302,7 +9193,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 150,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9329,7 +9220,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 152,
+      "latency_ms": 157,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9356,7 +9247,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 143,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9383,7 +9274,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 149,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9410,7 +9301,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 137,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9437,7 +9328,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 331,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9464,7 +9355,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 285,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9491,7 +9382,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 151,
+      "latency_ms": 300,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9518,7 +9409,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 647,
+      "latency_ms": 822,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -9527,7 +9418,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 153,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9554,7 +9445,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 145,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9581,7 +9472,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 148,
+      "latency_ms": 293,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9608,34 +9499,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.77235,
-          "out_of_scope": 0.22765
-        },
-        "injection_risk": {
-          "clean": 0.673867,
-          "suspicious": 0.1804,
-          "injection": 0.1457
-        },
-        "seller_risk": {
-          "low_risk": 0.73995,
-          "high_risk": 0.26005
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.67765,
-          "escalate": 0.32235
-        }
-      }
-    },
-    "06936e75f622da90e37d26be5bf0eef3401c778249b936608296656972af890c.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 282,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9662,7 +9526,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 306,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9689,7 +9553,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 298,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9716,7 +9580,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 150,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9743,7 +9607,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 158,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9770,7 +9634,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 149,
+      "latency_ms": 153,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9797,7 +9661,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 157,
+      "latency_ms": 249,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9824,7 +9688,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 144,
+      "latency_ms": 301,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9851,7 +9715,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 138,
+      "latency_ms": 299,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9878,7 +9742,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 136,
+      "latency_ms": 168,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9905,7 +9769,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 159,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9932,7 +9796,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 136,
+      "latency_ms": 149,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9959,7 +9823,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 168,
+      "latency_ms": 178,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -9986,7 +9850,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 638,
+      "latency_ms": 1365,
       "shadow": false,
       "status": "ERROR",
       "input_truncated": true
@@ -9995,7 +9859,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 135,
+      "latency_ms": 309,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10022,7 +9886,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
+      "latency_ms": 289,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10049,7 +9913,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 154,
+      "latency_ms": 169,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10076,34 +9940,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 140,
-      "shadow": false,
-      "status": "OK",
-      "answers": {
-        "scope_fit": {
-          "in_scope": 0.7451,
-          "out_of_scope": 0.2549
-        },
-        "injection_risk": {
-          "clean": 0.6836,
-          "suspicious": 0.183267,
-          "injection": 0.1331
-        },
-        "seller_risk": {
-          "low_risk": 0.74095,
-          "high_risk": 0.25905
-        },
-        "escalate_or_proceed": {
-          "proceed": 0.70385,
-          "escalate": 0.29615
-        }
-      }
-    },
-    "212a7f72800556e59fa9cb088fa174f78148e5ebdd495f339fc8dfb951e7dc9e.0": {
-      "provider": "laya",
-      "model": "typed-decisions",
-      "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 149,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10130,7 +9967,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 146,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10157,7 +9994,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 133,
+      "latency_ms": 138,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10184,7 +10021,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 137,
+      "latency_ms": 145,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10211,7 +10048,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 134,
+      "latency_ms": 145,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10238,7 +10075,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 146,
+      "latency_ms": 151,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10265,7 +10102,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 145,
+      "latency_ms": 143,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10292,7 +10129,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 157,
+      "latency_ms": 158,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10319,7 +10156,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 151,
+      "latency_ms": 153,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10346,7 +10183,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 152,
+      "latency_ms": 160,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10373,7 +10210,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 139,
+      "latency_ms": 142,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10400,7 +10237,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 159,
+      "latency_ms": 151,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10454,7 +10291,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 158,
+      "latency_ms": 164,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10481,7 +10318,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 149,
+      "latency_ms": 155,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10508,7 +10345,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 161,
+      "latency_ms": 266,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10535,7 +10372,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 162,
+      "latency_ms": 341,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10562,7 +10399,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 159,
+      "latency_ms": 357,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10589,7 +10426,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 162,
+      "latency_ms": 322,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10616,7 +10453,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 155,
+      "latency_ms": 364,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10643,7 +10480,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 158,
+      "latency_ms": 350,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10670,7 +10507,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 163,
+      "latency_ms": 355,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10697,7 +10534,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 159,
+      "latency_ms": 335,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10724,7 +10561,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 166,
+      "latency_ms": 175,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10751,7 +10588,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 167,
+      "latency_ms": 170,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10778,7 +10615,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 175,
+      "latency_ms": 169,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10805,7 +10642,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 169,
+      "latency_ms": 165,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10832,7 +10669,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 168,
+      "latency_ms": 171,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10859,7 +10696,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 176,
+      "latency_ms": 163,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10886,7 +10723,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 176,
+      "latency_ms": 163,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10913,7 +10750,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 169,
+      "latency_ms": 167,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10940,7 +10777,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 158,
+      "latency_ms": 162,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -10994,7 +10831,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 185,
+      "latency_ms": 169,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11021,7 +10858,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 167,
+      "latency_ms": 160,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11048,7 +10885,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 167,
+      "latency_ms": 155,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11102,7 +10939,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 154,
+      "latency_ms": 157,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11129,7 +10966,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 164,
+      "latency_ms": 167,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11156,7 +10993,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 155,
+      "latency_ms": 157,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11183,7 +11020,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 157,
+      "latency_ms": 160,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11210,7 +11047,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 150,
+      "latency_ms": 155,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11237,7 +11074,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 153,
+      "latency_ms": 160,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11264,7 +11101,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 154,
+      "latency_ms": 156,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11291,7 +11128,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 165,
+      "latency_ms": 160,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11318,7 +11155,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 167,
+      "latency_ms": 163,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11345,7 +11182,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 170,
+      "latency_ms": 156,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11372,7 +11209,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 166,
+      "latency_ms": 156,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11399,7 +11236,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 141,
+      "latency_ms": 133,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11426,7 +11263,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 133,
+      "latency_ms": 129,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11453,7 +11290,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 136,
+      "latency_ms": 135,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11480,7 +11317,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 160,
+      "latency_ms": 156,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11507,7 +11344,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 160,
+      "latency_ms": 158,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11534,7 +11371,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 159,
+      "latency_ms": 440,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11561,7 +11398,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 152,
+      "latency_ms": 321,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11588,7 +11425,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 154,
+      "latency_ms": 336,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11615,7 +11452,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 150,
+      "latency_ms": 370,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11642,7 +11479,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 156,
+      "latency_ms": 354,
       "shadow": false,
       "status": "OK",
       "answers": {
@@ -11669,7 +11506,7 @@
       "provider": "laya",
       "model": "typed-decisions",
       "version": "55cf4c4e",
-      "latency_ms": 164,
+      "latency_ms": 349,
       "shadow": false,
       "status": "OK",
       "answers": {
