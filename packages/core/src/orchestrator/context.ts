@@ -65,7 +65,7 @@ export interface LogState {
   readonly entries: readonly LogEntry[];
   readonly credential: MandateCredential;
   readonly mandate: Mandate;
-  /** verifyMandateCredential over the credential in the log (R1 input). */
+  /** verifyMandateCredential over the credential in the log, issuer pinned to the delegator (R1 input). */
   readonly proofValid: boolean;
   readonly packet: PacketState;
   /** APPROVE decisions whose card is not logged yet; only these may be minted (their limit is held in the packet). */
@@ -101,7 +101,7 @@ export async function readLogState(ctx: Ctx, logId: string, at: Date): Promise<L
   if (credential === null) throw new StepError("LOG_UNAVAILABLE", "the log has no MANDATE_SEALED at seq 0");
   try {
     const { packet, held } = foldLedger(entries, at);
-    const proofValid = verifyMandateCredential(credential).valid;
+    const proofValid = verifyMandateCredential(credential, { expectedIssuer: ctx.deps.delegatorDid }).valid;
     return { entries, credential, mandate: mandateFromCredential(credential), proofValid, packet, held };
   } catch (err) {
     throw new StepError("LOG_UNAVAILABLE", `the log could not be folded: ${describe(err)}`);

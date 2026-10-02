@@ -8,6 +8,7 @@ import { signMandateCredential, verifyMandateCredential } from "@laisee/core/vc"
 import { describe, expect, it, vi } from "vitest";
 import { AsyncSignError, memoryAsyncSigner, signWithAsync, type AsyncSigner } from "../src/api/local/signer";
 import { buildCredential } from "../src/booth/backend/session";
+import { REFERENCE_CART } from "../src/api/mock/fixtures";
 import { m0SealRequest } from "../src/api/mock/presets";
 
 function freshSigner(): Signer {
@@ -45,8 +46,9 @@ describe("signWithAsync over the sync core port", () => {
     const signer = memoryAsyncSigner(inner);
     const revocation = await signWithAsync(signer, (s) => signRevocation({ mandate_id: "mnd_ABCDEFGHIJ", revoked_at: CLOCK.now() }, s));
     expect(verifyRevocation(revocation, inner.did).valid).toBe(true);
-    const answer = await signWithAsync(signer, (s) => signEscalationAnswer({ decision_id: "dec_ABCDEFGHIJ", choice: "DENY", answered_at: CLOCK.now() }, s));
-    expect(verifyEscalationAnswer(answer, inner.did).valid).toBe(true);
+    const binding = { decision_id: "dec_ABCDEFGHIJ", mandate_id: "mnd_ABCDEFGHIJ", cart: REFERENCE_CART };
+    const answer = await signWithAsync(signer, (s) => signEscalationAnswer({ ...binding, choice: "DENY", answered_at: CLOCK.now() }, s));
+    expect(verifyEscalationAnswer(answer, inner.did, binding).valid).toBe(true);
   });
 
   it("hands the async signer exactly the bytes the core signs, once", async () => {

@@ -2,6 +2,8 @@
 // here covers the four event kinds the generator uses and follows core's foldPacket (commit on mint, release on void,
 // spent on a charge, mint times for every mint); worlds/history-log.ts writes the same events into a real log, and a test
 // folds that log with core's foldPacket and compares. Times are SIMULATED scenario-clock choices, not product thresholds.
+// Every past purchase is a logged APPROVE, so the verifier (step 9) holds it to the sealed terms: each purchase fits the
+// per-purchase terms and happens while the mandate is valid. The money spent may therefore be several purchases.
 import type { Mandate, PacketState } from "@laisee/core/generated";
 import { logIdForMandate } from "@laisee/core/log";
 import { RAIL } from "../config";
@@ -18,6 +20,13 @@ const RELEASED_LIMIT_MINOR = 1_000;
 /** A revocation, before the decision. */
 const REVOKED_AGO_S = 5 * 60;
 
+/** The mandate's per-purchase terms (R4); every past purchase obeys them. */
+export interface PurchaseTerms {
+  readonly hardCapMinor?: number;
+  readonly shareBp?: number;
+  readonly askAboveMinor?: number;
+}
+
 export interface HistorySpec {
   readonly tag: string;
   readonly budgetMinor: number;
@@ -25,6 +34,38 @@ export interface HistorySpec {
   readonly activeCardLimits: readonly number[];
   readonly mintAgesS: readonly number[];
   readonly revoked: boolean;
+  readonly perPurchase?: PurchaseTerms;
+  /** Seconds since the mandate's valid_until; positive once it has ended. The past happened while it was valid. */
+  readonly endedAgoS?: number;
+}
+
+/** Seconds between two purchases that make up the money spent: the next mint follows the previous charge. */
+const SPENT_GAP_S = 60;
+const BP_PER_WHOLE = 10_000;
+
+/** The most one purchase may cost with `remainingMinor` left: the hard cap, ask-above and the share of what remains. */
+function purchaseCap(remainingMinor: number, terms: PurchaseTerms | undefined): number {
+  const share = terms?.shareBp === undefined ? Number.POSITIVE_INFINITY : Math.floor((remainingMinor * terms.shareBp) / BP_PER_WHOLE);
+  return Math.min(remainingMinor, terms?.hardCapMinor ?? Number.POSITIVE_INFINITY, terms?.askAboveMinor ?? Number.POSITIVE_INFINITY, share);
+}
+
+/** The money spent as purchases that each fit the terms, each as big as they allow. One purchase when the terms allow it. */
+function spentAmounts(spentMinor: number, budgetMinor: number, terms: PurchaseTerms | undefined): readonly number[] {
+  const amounts: number[] = [];
+  for (let left = spentMinor, remaining = budgetMinor; left > 0; ) {
+    const amount = Math.min(left, purchaseCap(remaining, terms));
+    if (amount <= 0) throw new RangeError(`${spentMinor} of ${budgetMinor} cannot be spent in purchases that fit the per-purchase terms`);
+    amounts.push(amount);
+    left -= amount;
+    remaining -= amount;
+  }
+  return amounts;
+}
+
+/** A mandate that ended before its history would have happened: the whole history moves back to fall inside its validity. */
+function insideValidity(events: readonly HistoryEvent[], endedAgoS: number | undefined): readonly HistoryEvent[] {
+  if (endedAgoS === undefined || endedAgoS <= 0 || Math.min(...events.map((e) => e.agoS)) > endedAgoS) return events;
+  return events.map((e) => ({ ...e, agoS: e.agoS + endedAgoS }));
 }
 
 /** Oldest first, which is the order the log gets them in. Throws when the numbers cannot come from any history. */
@@ -33,16 +74,21 @@ export function historyOf(spec: HistorySpec): readonly HistoryEvent[] {
   const spent = spec.budgetMinor - committed - spec.remainingMinor;
   if (spent < 0) throw new RangeError(`remaining ${spec.remainingMinor} and active cards ${committed} exceed the budget ${spec.budgetMinor}`);
   const events: readonly HistoryEvent[] = [
-    ...(spent > 0 ? [{ kind: "spent" as const, cardId: `crd_${spec.tag}s0`, agoS: SPENT_AGO_S, amountMinor: spent }] : []),
+    ...spentAmounts(spent, spec.budgetMinor, spec.perPurchase).map((amountMinor, k) => ({
+      kind: "spent" as const,
+      cardId: `crd_${spec.tag}s${k}`,
+      agoS: SPENT_AGO_S - SPENT_GAP_S * k,
+      amountMinor,
+    })),
     ...spec.mintAgesS.map((agoS, k) => ({ kind: "released" as const, cardId: `crd_${spec.tag}r${k}`, agoS, limitMinor: RELEASED_LIMIT_MINOR })),
     ...spec.activeCardLimits.map((limitMinor, k) => ({ kind: "active" as const, cardId: `crd_${spec.tag}a${k}`, agoS: ACTIVE_AGO_S + 60 * k, limitMinor })),
     ...(spec.revoked ? [{ kind: "revoked" as const, agoS: REVOKED_AGO_S }] : []),
   ];
-  return [...events].sort((a, b) => b.agoS - a.agoS);
+  return insideValidity([...events].sort((a, b) => b.agoS - a.agoS), spec.endedAgoS);
 }
 
-/** Log entries one event writes: a mint and its charge or void are two, an ACTIVE card and a revocation are one. */
-const entriesOf = (event: HistoryEvent): number => (event.kind === "spent" || event.kind === "released" ? 2 : 1);
+/** Log entries one event writes: the APPROVE, the mint and (spent, released) the charge or void; a revocation is one. */
+const entriesOf = (event: HistoryEvent): number => (event.kind === "revoked" ? 1 : event.kind === "active" ? 2 : 3);
 
 /** When a card minted `agoS` before the decision expires: the card TTL after the mint [F30]. */
 export const cardExpiryIso = (nowMs: number, agoS: number): string => new Date(nowMs - agoS * 1000 + RAIL.cardTtlMs).toISOString();

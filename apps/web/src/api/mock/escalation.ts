@@ -1,5 +1,6 @@
 // Escalation lifecycle for the mock (S5): OPEN until the delegator answers or the window ends (R11).
 import type { Decision, EscalationAnswer } from "@laisee/core/generated";
+import { cartSha256 } from "@laisee/core/log";
 import { PLACEHOLDER_SIGNATURE } from "@laisee/core/testing";
 import { ruleIdOf } from "../../explain/renderStop";
 import type { EscalationView } from "../types";
@@ -59,8 +60,16 @@ export function answerOpenEscalation(s: MockSession, decisionId: string, choice:
   const record = s.escalations.get(decisionId);
   if (!record || record.view.state !== "OPEN") throw new Error(`escalation ${decisionId} is not open`);
   const mandate = s.requireMandate();
-  const answer: EscalationAnswer = { decision_id: decisionId, choice, answered_at: s.nowIso(), signer: mandate.delegator, signature: PLACEHOLDER_SIGNATURE };
   const before = prior(s, decisionId);
+  const answer: EscalationAnswer = {
+    decision_id: decisionId,
+    mandate_id: before.mandate_id,
+    cart_sha256: cartSha256(before.cart),
+    choice,
+    answered_at: s.nowIso(),
+    signer: mandate.delegator,
+    signature: PLACEHOLDER_SIGNATURE,
+  };
   const make = choice === "APPROVE" ? decideApproved : decideDenied;
   const decision = make(before, s.packet(), mandate, s.nextId("dec"), s.now(), answer);
   s.append("DECISION", decision);

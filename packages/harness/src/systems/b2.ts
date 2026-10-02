@@ -50,7 +50,7 @@ async function answerAll(world: OrchestratedWorld, scenario: Scenario, submits: 
   for (const result of submits) {
     if (!result.ok || result.outcome !== "ESCALATE" || result.decision.escalation?.state !== "OPEN") continue;
     const answer = scenario.label.legitimate ? "APPROVE" : "DENY";
-    asked.push({ answer, result: await world.orchestrator.answerEscalation(world.answer(result.decision.id, answer), { checkout: "none" }) });
+    asked.push({ answer, result: await world.orchestrator.answerEscalation(world.answer(result.decision, answer), { checkout: "none" }) });
   }
   return asked;
 }

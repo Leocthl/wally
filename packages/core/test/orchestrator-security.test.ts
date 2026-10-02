@@ -210,7 +210,8 @@ describe("pinned delegator", () => {
     const r = await sealed();
     r.planners.push(PROPOSAL_A1);
     const esc = (await r.orchestrator.submit({ requestText: "a tee", listings: [{ ...LISTING_TEE, scameter_ref: null }] })) as DecidedResult;
-    const forged = signEscalationAnswer({ decision_id: esc.decision.id, choice: "APPROVE", answered_at: r.clock.now() }, mallory);
+    const { id, mandate_id, cart } = esc.decision;
+    const forged = signEscalationAnswer({ decision_id: id, mandate_id, cart, choice: "APPROVE", answered_at: r.clock.now() }, mallory);
     expect(await r.orchestrator.answerEscalation(forged)).toMatchObject({ ok: false, code: "INVALID_ANSWER" });
     expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.decision.id, state: "OPEN" })]);
     expect(await r.orchestrator.answerEscalation(r.answer(esc.decision.id, "APPROVE"))).toMatchObject({ ok: true, outcome: "APPROVE" });

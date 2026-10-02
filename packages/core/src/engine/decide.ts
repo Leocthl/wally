@@ -83,9 +83,9 @@ function decidedAtOf(a: DecideArgs): string {
   return ms === null ? a.cart.proposed_at : new Date(ms).toISOString();
 }
 
-/** R11, then the resolution binding (escalated decision, cart fingerprint, answer signature): any failure => DENY R11. */
+/** R11 (answer binding and timing), then the resolution binding (escalated decision, cart fingerprint, answer signature): any failure => DENY R11. */
 function r11Of(config: EngineConfig, a: DecideArgs): R11Outcome {
-  const base = evaluateR11({ mandate: a.mandate, packet: a.packet, resolution: a.resolution, now: a.now, config });
+  const base = evaluateR11({ mandate: a.mandate, packet: a.packet, cart: a.cart, resolution: a.resolution, now: a.now, config });
   if (a.resolution === undefined) return base;
   const problem = bindingProblem(a.resolution, a.cart, a.ctx);
   return problem === null ? base : refusedR11(base, a.resolution, problem);

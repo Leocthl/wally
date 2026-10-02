@@ -133,7 +133,12 @@ export async function integration(mode: MerchantMode = "honest", wrap?: Merchant
     },
     logText,
     kinds: async () => (await store.read(LOG_ID)).map((e) => e.kind),
-    answer: (decisionId, choice) => signEscalationAnswer({ decision_id: decisionId, choice, answered_at: clock.now() }, k.delegator),
+    answer: (decisionId, choice) => {
+      // laisee.resolve.v2 binds the answer to the logged decision's mandate and cart.
+      const logged = events.flatMap((e) => (e.type === "log" && e.entry.kind === "DECISION" && e.entry.payload.id === decisionId ? [e.entry.payload] : []))[0];
+      if (logged === undefined) throw new Error(`rig: no logged decision ${decisionId}`);
+      return signEscalationAnswer({ decision_id: decisionId, mandate_id: logged.mandate_id, cart: logged.cart, choice, answered_at: clock.now() }, k.delegator);
+    },
     revocation: () => signRevocation({ mandate_id: "mnd_demoM0", revoked_at: clock.now(), reason: "lost phone (SIMULATED)" }, k.delegator),
     verify: (text) => verifyLogText(text, { engine: [k.engine.did], delegator: k.delegator.did }),
     close: () => rm(dir, { recursive: true, force: true }),

@@ -6,7 +6,7 @@
 import type { OrchestratorEvent } from "@laisee/core/orchestrator";
 import { toJsonl } from "@laisee/core/log";
 import { signEscalationAnswer, signRevocation } from "@laisee/core/log";
-import type { LogEntry } from "@laisee/core/generated";
+import type { Decision, LogEntry } from "@laisee/core/generated";
 import type { VerifyFailure } from "@laisee/core/ports";
 import { verifyChain } from "@laisee/core/verify";
 import type {
@@ -55,6 +55,8 @@ const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
 
 /** Orchestrator codes that mean "this escalation is not open any more" (answered, expired by R11, or unknown). */
 const CLOSED_ESCALATION_CODES: readonly string[] = ["UNKNOWN_ESCALATION", "INVALID_ANSWER", "ESCALATION_CLOSED"];
+
+const CLOSED_ESCALATION_MESSAGE = "This escalation is no longer open (answered, or stopped by R11).";
 
 /** Before the first successful seal: nothing sealed, so the UI seals the preset itself. */
 const EMPTY_SNAPSHOT: BoothSnapshot = { mandate: null, intentText: null, packet: null, cards: [], log: { entries: [], head: null, tampered: null }, escalations: [] };
@@ -210,19 +212,31 @@ export class OrchestratorBackend implements BoothBackend {
     });
   }
 
+  async #loggedDecision(session: Session, decisionId: string): Promise<Decision | undefined> {
+    const { log } = await session.orchestrator.snapshot();
+    for (const entry of log) if (entry.kind === "DECISION" && entry.payload.id === decisionId) return entry.payload;
+    return undefined;
+  }
+
   answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary> {
     return this.#op(async (session) => {
       const origin = this.#tracker.runOfDecision(req.decisionId);
       const runId = origin?.runId ?? this.#deps.newId("run");
       const scenario = origin?.scenario ?? "custom";
-      const answer = signEscalationAnswer({ decision_id: req.decisionId, choice: req.choice, answered_at: this.#deps.clock.now() }, this.#deps.delegator);
+      // laisee.resolve.v2 binds the answer to the escalated decision, its mandate and its cart; an id nothing logged is closed.
+      const escalated = await this.#loggedDecision(session, req.decisionId);
+      if (escalated === undefined) throw new BoothError(409, "ESCALATION_CLOSED", CLOSED_ESCALATION_MESSAGE);
+      const answer = signEscalationAnswer(
+        { decision_id: escalated.id, mandate_id: escalated.mandate_id, cart: escalated.cart, choice: req.choice, answered_at: this.#deps.clock.now() },
+        this.#deps.delegator,
+      );
       this.#tracker.begin(runId, scenario);
       try {
         const result = await session.orchestrator.answerEscalation(answer, { runId, checkout: "auto" });
         if (!result.ok) {
           const code: string = result.code;
           const closed = CLOSED_ESCALATION_CODES.includes(code);
-          throw new BoothError(closed ? 409 : 500, closed ? "ESCALATION_CLOSED" : result.code, closed ? "This escalation is no longer open (answered, or stopped by R11)." : result.message);
+          throw new BoothError(closed ? 409 : 500, closed ? "ESCALATION_CLOSED" : result.code, closed ? CLOSED_ESCALATION_MESSAGE : result.message);
         }
         this.#emit({ type: "run.finished", runId, outcome: result.outcome, at: iso(this.#deps.clock.now()) });
         return { runId, scenario, outcome: result.outcome, decisionId: result.decision.id };
