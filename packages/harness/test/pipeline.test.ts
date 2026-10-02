@@ -187,6 +187,15 @@ describe("fail closed (I5)", () => {
   });
 });
 
+describe("latency is a measurement of real calls only [F26]", () => {
+  it("an injected judge outage is not a latency sample: nothing was called", async () => {
+    const down = await B2!.run(pick("judge_down", "judge_down"));
+    const up = await B2!.run(pick("judge_down", "judge_up"));
+    expect(down.latencyMs).toBeNull();
+    expect(up.latencyMs).not.toBeNull();
+  });
+});
+
 describe("outcome record", () => {
   it("names its baseline, keeps latency only when asked, and is plain data", async () => {
     const s = pick("within_budget", "plain");

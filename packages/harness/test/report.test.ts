@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -99,6 +99,20 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
 
   it("round-trips through JSON without loss", () => {
     expect(JSON.parse(JSON.stringify(live.result))).toEqual(live.result);
+  });
+});
+
+describe("the committed result files pass the same lint", () => {
+  const dir = fileURLToPath(new URL("../../../data/results/", import.meta.url));
+  const files = existsSync(dir) ? readdirSync(dir).filter((f) => /^harness-\d+-(live|recorded)\.json$/.test(f)) : [];
+
+  it.skipIf(files.length === 0)("every harness-<seed>-<mode>.json under data/results carries n, seed and commit on each number", () => {
+    for (const f of files) {
+      const result = JSON.parse(readFileSync(join(dir, f), "utf8")) as Record<string, unknown>;
+      expect(lintReportedNumbers(result), f).toEqual([]);
+      expect(String(result["label"]), f).toMatch(/^(MEASURED|RECORDED)\(n=\d+, seed=\d+, commit=[0-9a-f]{7}\)$/);
+      expect(result["mode"] === "live" ? String(result["label"]).startsWith("MEASURED") : String(result["label"]).startsWith("RECORDED"), f).toBe(true);
+    }
   });
 });
 

@@ -168,7 +168,8 @@ export async function runPipeline(scenario: Scenario, gate: Gate, policy: Policy
   const { decisions, error } = await decideAll(scenario, gate, policy);
   if (error !== null) return summarise({ scenario, policy, decisions, work: empty, latencyMs: null, error });
   let work = await mintAll(decisions, scenario, rail, now);
-  const latencyMs = deps.measureLatency ? deps.timer() - t0 : null;
+  // Latency measures real calls: an outage injected by the judge_down category called nothing, so it is not a sample.
+  const latencyMs = deps.measureLatency && scenario.events.judgeFault === "none" ? deps.timer() - t0 : null;
   if (scenario.events.revoke === "after_mint" && policy.voidOnRevoke) work = await voidAll(work, rail, now);
   work = await payAll(work, scenario, policy, deps, rail, merchant, at);
   work = await replayCharge(work, scenario, merchant, at);
