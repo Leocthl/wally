@@ -1,6 +1,6 @@
 // One headline metric: the plain question first, then B0, B1, B2 in that order, then how B2 compares, worse or better.
 import type { ReactElement } from "react";
-import { Bi } from "../../components/Bi";
+import { Tx } from "./Tx";
 import { BASELINE_NAMES, type MetricSpec } from "../metrics";
 import { compareToB2 } from "../select";
 import { E } from "../strings";
@@ -23,7 +23,7 @@ export function chartLabel(question: string, rows: readonly { readonly ident: st
 }
 
 export function WiringStamp({ on }: { readonly on: boolean }): ReactElement | null {
-  return on ? <p className="ev-stamp" data-wiring-stamp><Bi text={E.wiringStamp} /></p> : null;
+  return on ? <p className="ev-stamp" data-wiring-stamp><Tx text={E.wiringStamp} /></p> : null;
 }
 
 export function RateChart({ spec, run, wiring }: { readonly spec: MetricSpec; readonly run: HarnessRun; readonly wiring: boolean }): ReactElement {
@@ -34,8 +34,8 @@ export function RateChart({ spec, run, wiring }: { readonly spec: MetricSpec; re
     <figure className="ev-chart" data-metric={spec.key}>
       <figcaption className="ev-chart__head">
         <WiringStamp on={wiring} />
-        <h3 className="ev-chart__q"><Bi text={spec.question} /></h3>
-        <p className="ev-chart__metric soft"><code data-ident>{spec.key}</code> <Bi text={spec.title} /></p>
+        <h3 className="ev-chart__q"><Tx text={spec.question} /></h3>
+        <p className="ev-chart__metric soft"><code data-ident>{spec.key}</code> <Tx text={spec.title} /></p>
       </figcaption>
       <EvScope chips={chipsOf(rows.map((r) => r.rate))}>
         <div className="ev-bars" role="img" aria-label={label}>

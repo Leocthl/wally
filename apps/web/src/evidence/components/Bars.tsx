@@ -1,7 +1,7 @@
 // One horizontal bar per baseline with k/n, the percentage and the Wilson interval, all inside one chipped figure.
 // Bars are HTML; the chart's text alternative is its aria-label plus the all-metrics table (docs/04 Accessibility).
 import type { ReactElement } from "react";
-import { Bi } from "../../components/Bi";
+import { Tx } from "./Tx";
 import type { LabelPair } from "../../i18n/label";
 import type { Comparison } from "../select";
 import { formatInterval, formatPct, wilson } from "../stats";
@@ -38,15 +38,15 @@ export function BarRow({ ident, name, rate, tone }: BarRowProps): ReactElement {
   return (
     <div className="ev-bar" data-baseline={tone} data-empty={rate === null || rate.n === 0}>
       <span className="ev-bar__name">
-        <span data-ident className="ev-bar__id">{ident}</span> <Bi text={name} />
+        <span data-ident className="ev-bar__id">{ident}</span> <Tx text={name} />
       </span>
       <span className="ev-bar__track" aria-hidden="true">
         {rate && rate.n > 0 ? <span className="ev-bar__fill" style={{ inlineSize: `${fill}%` }} /> : null}
         {ci ? <span className="ev-bar__ci" style={{ insetInlineStart: `${ci.low * 100}%`, inlineSize: `${(ci.high - ci.low) * 100}%` }} /> : null}
       </span>
       <span className="ev-bar__value">
-        {rate === null ? <Bi text={E.notInFile} className="soft" /> : <EvNum chip={rate.chip}>{rateText(rate)}</EvNum>}
-        {rate !== null && rate.n === 0 ? <> <Bi text={E.noCases} className="soft" /></> : null}
+        {rate === null ? <Tx text={E.notInFile} className="soft" /> : <EvNum chip={rate.chip}>{rateText(rate)}</EvNum>}
+        {rate !== null && rate.n === 0 ? <> <Tx text={E.noCases} className="soft" /></> : null}
       </span>
     </div>
   );
@@ -65,11 +65,11 @@ export function Verdict({ against, cmp, lowerIsBetter = true }: { readonly again
     <li className={`ev-verdict ev-verdict--${tone}`} data-verdict={tone} data-against={against}>
       <Mark />
       <span>
-        <span data-ident>B2</span> vs <span data-ident>{against}</span>: <Bi text={KIND_TEXT[cmp.kind]} />
-        {good ? <strong> <Bi text={E.better} /></strong> : null}
-        {bad ? <strong> <Bi text={E.worse} /></strong> : null}
-        {cmp.kind === "equal" ? <> <Bi text={E.same} /></> : null}
-        {cmp.overlap && cmp.kind !== "equal" ? <span className="ev-verdict__note"> <Bi text={E.overlap} /></span> : null}
+        <span data-ident>B2</span> vs <span data-ident>{against}</span>: <Tx text={KIND_TEXT[cmp.kind]} />
+        {good ? <strong> <Tx text={E.better} /></strong> : null}
+        {bad ? <strong> <Tx text={E.worse} /></strong> : null}
+        {cmp.kind === "equal" ? <> <Tx text={E.same} /></> : null}
+        {cmp.overlap && cmp.kind !== "equal" ? <span className="ev-verdict__note"> <Tx text={E.overlap} /></span> : null}
       </span>
     </li>
   );

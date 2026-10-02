@@ -139,6 +139,20 @@ export const UI = {
     },
   },
 
+  // Lane b-proof: #/evidence ("Why trust Wally?"). Figures stay in the evidence components with their chips.
+  evidenceUi: {
+    title: label("Why trust Wally?", "為甚麼可以信任 Wally？"), // NEEDS-REVIEW
+    lead: label("Results from our own test runs, with every count, interval and limit. Lower is better on every rate.", "我們自己測試運行的結果，列出每個數目、區間及限制。每個比率都是越低越好。"), // NEEDS-REVIEW
+    back: label("Proof", "證明"), // NEEDS-REVIEW
+    headlineTitle: label("In this run, the full pipeline against a model-only gate", "今次運行：完整流程對比純模型把關"), // NEEDS-REVIEW
+    headlineNote: label("Where the full pipeline is worse is shown as plainly as where it is better.", "完整流程較差的地方，會和較好的地方一樣清楚列出。"), // NEEDS-REVIEW
+    acceptanceShort: label("Targets", "目標"), // NEEDS-REVIEW
+    numbersTitle: label("The numbers", "數字"), // NEEDS-REVIEW
+    judgeSection: label("The judge on its own", "判斷器本身"), // NEEDS-REVIEW
+    humanSection: label("By hand, and seen with our own eyes", "人手操作及親眼所見"), // NEEDS-REVIEW
+    showing: label("Showing", "顯示"), // NEEDS-REVIEW
+  },
+
   // Lane b-proof: #/proof. The reason lines copy the offline verifier page's wording (apps/verifier/src/reasons.ts).
   proof: {
     title: label("Proof", "證明"), // NEEDS-REVIEW

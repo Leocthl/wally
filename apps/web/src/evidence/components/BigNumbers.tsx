@@ -1,7 +1,7 @@
 // Three headline numbers, model-only gate (B0) against the full pipeline (B2): overspend, over-limit mints and the cost
 // side, false blocks. Readable in about twenty seconds (DM8); k/n is the big numeral, the percentage never stands alone.
 import type { ReactElement } from "react";
-import { Bi } from "../../components/Bi";
+import { Tx } from "./Tx";
 import { BASELINE_NAMES, specOf } from "../metrics";
 import { compareToB2 } from "../select";
 import { formatInterval, formatPct } from "../stats";
@@ -18,15 +18,15 @@ function Figure({ b, rate }: { readonly b: BaselineId; readonly rate: Rate | nul
   const pct = rate ? formatPct(rate.k, rate.n) : null;
   return (
     <div className="ev-big__row" data-baseline={b}>
-      <span className="ev-big__who"><span data-ident className="ev-bar__id">{b}</span> <Bi text={BASELINE_NAMES[b]} /></span>
-      {rate === null ? <Bi text={E.notInFile} className="soft" /> : (
+      <span className="ev-big__who"><span data-ident className="ev-bar__id">{b}</span> <Tx text={BASELINE_NAMES[b]} /></span>
+      {rate === null ? <Tx text={E.notInFile} className="soft" /> : (
         <EvNum chip={rate.chip} className="ev-big__num">
           <span className="ev-big__kn">{`${rate.k}/${rate.n}`}</span>
           {pct === null ? null : <span className="ev-big__pct">{` ${pct}`}</span>}
           {pct === null ? null : <span className="ev-big__ci">{` CI ${formatInterval(rate.k, rate.n) ?? ""}`}</span>}
         </EvNum>
       )}
-      {rate !== null && rate.n === 0 ? <Bi text={E.noCases} className="soft" /> : null}
+      {rate !== null && rate.n === 0 ? <Tx text={E.noCases} className="soft" /> : null}
     </div>
   );
 }
@@ -38,7 +38,7 @@ function Card({ metric, run, wiring }: { readonly metric: string; readonly run: 
   return (
     <article className="ev-big__card" data-big={metric} aria-labelledby={`ev-big-${metric}`}>
       <WiringStamp on={wiring} />
-      <h3 id={`ev-big-${metric}`} className="ev-big__title"><Bi text={spec.title} /></h3>
+      <h3 id={`ev-big-${metric}`} className="ev-big__title"><Tx text={spec.title} /></h3>
       <EvScope chips={chipsOf([b0, b2])}>
         <Figure b="B0" rate={b0} />
         <Figure b="B2" rate={b2} />

@@ -1,8 +1,7 @@
 // Judge panel, in reading order: a one-line verdict computed from the file, before/after on the same held-out cases,
 // per gate with the seller note, the six demo listings, every wording variant, and the limits. SIMULATED corpus and one
 // annotator: never presented as a general accuracy. Reads judge-fit v1 and v2 (judgeFit.ts).
-import type { ReactElement, ReactNode } from "react";
-import { Bi } from "../../components/Bi";
+import type { ReactElement } from "react";
 import { ASSUMED_CHIP, SIMULATED_CHIP } from "../chip";
 import type { JudgeFit } from "../judgeFit";
 import { J } from "../judgeStrings";
@@ -12,16 +11,7 @@ import { rateText } from "./Bars";
 import { EvChip, EvNum, EvScope } from "./EvNum";
 import { JudgeLimits } from "./JudgeLimits";
 import { BeforeAfter, countText, Gates, Listings, Variants } from "./JudgeTables";
-
-/** A bilingual line with figures inside it; same DOM contract as Bi (EN first, zh-HK second with lang). */
-function Sentence({ en, zh, className }: { readonly en: ReactNode; readonly zh: ReactNode; readonly className?: string }): ReactElement {
-  return (
-    <p className={`bi ev-sentence ${className ?? ""}`.trim()}>
-      <span className="bi__en">{en}</span>
-      <span className="bi__zh" lang="zh-HK">{zh}</span>
-    </p>
-  );
-}
+import { Sentence, Tx } from "./Tx";
 
 function Verdict({ fit }: { readonly fit: JudgeFit }): ReactElement {
   const { legit, injected } = fit.evaluated.approvals;
@@ -35,8 +25,8 @@ function Verdict({ fit }: { readonly fit: JudgeFit }): ReactElement {
   return (
     <div className="ev-judge-verdict" data-judge-verdict data-met={met}>
       <Sentence en={<>{a.en} {n1} {b.en} {n2} {J.verdictC.en} {target} {J.verdictD.en} <strong>{end.en}</strong></>} zh={<>{a.zh} {n1}{b.zh} {n2}{J.verdictC.zh} {target} {J.verdictD.zh}<strong>{end.zh}</strong></>} />
-      {fitted ? null : <Bi as="p" text={J.sameCases} className="soft" />}
-      {fit.fileSaysF38Met !== null && fit.fileSaysF38Met !== met ? <Bi as="p" text={J.verdictDisagrees} className="ev-acc__short" /> : null}
+      {fitted ? null : <Tx as="p" text={J.sameCases} className="soft" />}
+      {fit.fileSaysF38Met !== null && fit.fileSaysF38Met !== met ? <Tx as="p" text={J.verdictDisagrees} className="ev-acc__short" /> : null}
     </div>
   );
 }
@@ -51,22 +41,25 @@ function SellerNote({ fit }: { readonly fit: JudgeFit }): ReactElement | null {
   return (
     <div className="ev-judge-note" data-seller-note>
       <Sentence en={<>{J.sellerA.en} {r} {J.sellerB.en} {h} {J.sellerC.en}</>} zh={<>{J.sellerA.zh} {r}{J.sellerB.zh} {h}{J.sellerC.zh}</>} />
-      {gate.recall.k === 0 && gate.recall.n > 0 ? <Bi as="p" text={J.sellerInert} /> : null}
+      {gate.recall.k === 0 && gate.recall.n > 0 ? <Tx as="p" text={J.sellerInert} /> : null}
     </div>
   );
 }
 
 export function JudgePanel({ fit, corpus }: { readonly fit: JudgeFit | null; readonly corpus: InjectionCorpus | null }): ReactElement {
-  if (fit === null) return <section className="ev-panel"><h3><Bi text={J.title} /></h3><Bi as="p" text={J.noFit} /></section>;
+  if (fit === null) return <section className="ev-panel"><h3 className="ev-panel__title"><Tx text={J.title} /></h3><Tx as="p" text={J.noFit} /></section>;
+  const variants = fit.variants.length > 0 && fit.tuningChip !== null;
   return (
-    <section className="ev-panel" aria-labelledby="ev-judge-title" data-judge-panel data-schema={fit.schema}>
-      <h3 id="ev-judge-title"><Bi text={J.title} /> <EvChip chip={SIMULATED_CHIP} /></h3>
-      <p className="soft"><code data-ident>{fit.file}</code> <code data-ident>{fit.schema}</code></p>
-      <EvScope chips={[fit.chip]}>
+    <section className="ev-panel ev-judge" aria-labelledby="ev-judge-title" data-judge-panel data-schema={fit.schema}>
+      <div className="ev-panel__head">
+        <h3 id="ev-judge-title" className="ev-panel__title"><Tx text={J.title} /></h3>
+        <EvChip chip={SIMULATED_CHIP} />
+      </div>
+      <EvScope chips={[fit.chip]} className="ev-judge__scope">
         <Verdict fit={fit} />
-        <Bi as="p" text={J.notAccuracy} className="ev-acc__short" />
+        <Tx as="p" text={J.notAccuracy} className="ev-acc__short" />
         <BeforeAfter fit={fit} />
-        <h4><Bi text={J.gatesTitle} /></h4>
+        <h4 className="ev-subtitle"><Tx text={J.gatesTitle} /></h4>
         <Gates fit={fit} />
         <SellerNote fit={fit} />
       </EvScope>
@@ -75,10 +68,16 @@ export function JudgePanel({ fit, corpus }: { readonly fit: JudgeFit | null; rea
           <code data-ident>injection_corpus</code> <EvNum chip={corpus.heldout.chip}>{rateText(corpus.heldout)}</EvNum>
         </p>
       ) : null}
-      <h4><Bi text={J.listingsTitle} /></h4>
+      <h4 className="ev-subtitle"><Tx text={J.listingsTitle} /></h4>
       <Listings fit={fit} />
-      <Variants fit={fit} />
+      {variants ? (
+        <details className="disclosure ev-disclosure" data-panel="variants">
+          <summary><Tx text={J.variantsTitle} /></summary>
+          <Variants fit={fit} heading={false} />
+        </details>
+      ) : null}
       <JudgeLimits fit={fit} />
+      <p className="ev-file"><code data-ident>{fit.file}</code> <code data-ident>{fit.schema}</code></p>
     </section>
   );
 }
