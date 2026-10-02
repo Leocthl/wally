@@ -1,5 +1,6 @@
-// The Ask sheet, opened by the raised tab button on every screen: the slot for the natural-language request, "Try to
-// trick Wally" (the text goes to api.propose as an untrusted listing description), and Try asking shortcuts.
+// The Ask sheet, opened by the raised tab button on every screen: the natural-language request (when the booth can take
+// one: api.ask), "Try to trick Wally" (the text goes to api.propose as an untrusted listing description), and Try
+// asking shortcuts.
 import { useId, useState, type FormEvent, type ReactElement } from "react";
 import type { ScenarioId } from "../api/types";
 import { BRAND } from "../brand";
@@ -12,13 +13,13 @@ import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
 import { Sheet } from "../ui/Overlay";
 import { TryAsking } from "../screens/home/TryAsking";
-import { useProposer, useScenarioRunner } from "./actions";
+import { useAsker, useProposer, useScenarioRunner } from "./actions";
 
-/**
- * SLOT (later wave): a natural-language request ("buy me a white tee under HK$150"). Wire it by passing `onAsk` to
- * <App>; the sheet then shows the field above the shortcuts. Until then nothing renders here.
- */
-export type AskWally = (request: string) => Promise<void>;
+/** The planner's request cap [F56]. The server checks it again after NFKC; the field just stops typing there. */
+const ASK_MAX_CHARS = 1_000;
+
+/** Sends a typed request to Wally (the Ask field). The shell's own asker is used unless <App> is given another. */
+export type AskWally = (request: string) => Promise<void> | void;
 
 function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; readonly busy: boolean }): ReactElement {
   const { t, locale } = useLocale();
@@ -53,25 +54,30 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
   );
 }
 
-/** SLOT body: shown only when a later wave passes onAsk to <App>. */
+/** The natural-language field: Wally reads the request, the rules decide. Shown when this booth can take a typed ask. */
 function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly busy: boolean; readonly onSent: () => void }): ReactElement {
   const { t } = useLocale();
+  const { info } = useBoothContext();
   const [text, setText] = useState("");
   const trimmed = text.trim();
   const submit = (e: FormEvent): void => {
     e.preventDefault();
     if (trimmed.length === 0 || busy) return;
     onSent();
-    void onAsk(trimmed);
+    void onAsk(trimmed.slice(0, ASK_MAX_CHARS));
   };
+  // On a device without a model the recorded planner knows its sample asks only: say so, small and plain.
+  const onDevice = info?.kind === "local";
   return (
     <form className="shell-askfield" onSubmit={submit} data-slot="ask-natural-language">
       <TextField
         variant="pill"
-        label={t(UI["shell.askPlaceholder"](BRAND.name))}
+        label={t(UI["shell.askFieldLabel"](BRAND.name))}
         hideLabel
-        placeholder={t(UI["shell.askPlaceholder"](BRAND.name))}
+        placeholder={t(UI["shell.askExample"])}
+        hint={onDevice ? t(UI["shell.askLiveHint"]) : undefined}
         enterKeyHint="send"
+        maxLength={ASK_MAX_CHARS}
         value={text}
         onChange={(e) => setText(e.target.value)}
         trailing={<IconButton type="submit" variant="primary" label={t(UI["shell.askSend"])} icon={<Icon name="arrowUp" />} disabled={busy || trimmed.length === 0} />}
@@ -83,15 +89,17 @@ function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly 
 export interface AskSheetProps {
   readonly open: boolean;
   readonly onClose: () => void;
-  /** SLOT for the natural-language request (later wave). Omitted: the field does not render. */
+  /** Another asker than the shell's own (api.ask), e.g. a test double. Without one, the field shows only when the booth can take a typed ask. */
   readonly onAsk?: AskWally;
 }
 
 export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement {
   const { t } = useLocale();
-  const { busy } = useBoothContext();
+  const { busy, info } = useBoothContext();
   const run = useScenarioRunner();
   const propose = useProposer();
+  const asker = useAsker();
+  const ask = onAsk ?? asker;
   const pick = (id: ScenarioId): void => {
     onClose();
     run(id);
@@ -103,7 +111,7 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
   return (
     <Sheet open={open} onClose={onClose} title={t(UI["shell.askTitle"](BRAND.name))} description={t(UI["shell.askLead"])}>
       <div className="shell-ask">
-        {onAsk ? <AskField onAsk={onAsk} busy={busy} onSent={onClose} /> : null}
+        {ask ? <AskField onAsk={ask} busy={busy} onSent={onClose} /> : info?.kind === "local" ? <p className="shell-ask__hint">{t(UI["shell.askLiveHint"])}</p> : null}
         {/* The trick box first: it is what only this sheet offers (Budget already lists the scenarios as cards). */}
         <TrickBox onSend={send} busy={busy} />
         <TryAsking onRun={pick} busy={busy} variant="pills" />

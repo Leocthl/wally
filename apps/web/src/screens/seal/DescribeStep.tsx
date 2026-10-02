@@ -1,12 +1,16 @@
 // Step two: the budget in a sentence (with example chips), then the rules as rows. The sentence fills the rows through
-// the deterministic compile; "Read my sentence" appears only when a later wave passes suggestRules. Nothing seals here.
+// the deterministic compile as it is typed; "Read my sentence" asks the booth's reader (suggestRules) and shows what it
+// read above the rows. When the reader is absent or fails, the rows keep what the deterministic compile filled. Nothing
+// seals here.
 import { useState, type FormEvent, type ReactElement } from "react";
+import type { CompileResult } from "../../api/types";
 import { UI } from "../../i18n/ui";
 import { Button } from "../../ui/Button";
 import { TextArea } from "../../ui/Form";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { EXAMPLES, type SealExample } from "./examples";
+import { ReadResult } from "./ReadResult";
 import { RulesEditor } from "./RulesEditor";
 import { applySentence, EMPTY_FORM, formFromRules, SENTENCE_MAX, type FieldName, type FormErrors, type RulesForm, type SuggestRules } from "./sealModel";
 
@@ -28,27 +32,37 @@ export interface DescribeStepProps {
 
 export function DescribeStep(props: DescribeStepProps): ReactElement {
   const { sentence, form, errors, shown, now, today, suggestRules, onSentence, onForm, onTouch, onNext, incomplete } = props;
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [reading, setReading] = useState(false);
   const [readFailed, setReadFailed] = useState(false);
+  const [read, setRead] = useState<CompileResult | null>(null);
 
   const pickExample = (ex: SealExample): void => {
-    const read = applySentence(EMPTY_FORM(now), ex.sentence.en, now);
-    onSentence(t(ex.sentence), read.form, read.complete);
+    const picked = applySentence(EMPTY_FORM(now), ex.sentence.en, now);
+    setRead(null);
+    onSentence(t(ex.sentence), picked.form, picked.complete);
   };
   const type = (text: string): void => {
-    const read = applySentence(form, text, now);
-    onSentence(text, read.form, read.complete);
+    const typed = applySentence(form, text, now);
+    setRead(null); // what the reader found was about the earlier words
+    onSentence(text, typed.form, typed.complete);
   };
   const readWithModel = async (): Promise<void> => {
     if (!suggestRules) return;
     setReading(true);
     setReadFailed(false);
     try {
-      const rules = await suggestRules(sentence);
-      if (rules) onForm({ ...formFromRules(rules, `${form.until}T00:00:00Z`), until: form.until });
-      else setReadFailed(true);
+      const result = await suggestRules(sentence, locale);
+      if (result) {
+        onForm(formFromRules(result.rules, result.validUntil));
+        setRead(result);
+      } else {
+        setRead(null);
+        setReadFailed(true);
+      }
     } catch {
+      // The booth could not read it (offline, busy, refused): the rows keep what the typed sentence filled in.
+      setRead(null);
       setReadFailed(true);
     } finally {
       setReading(false);
@@ -72,7 +86,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
           ))}
         </div>
         {suggestRules ? (
-          <Button variant="secondary" size="sm" icon={<Icon name="sparkle" size={18} />} loading={reading} onClick={() => void readWithModel()}>
+          <Button variant="secondary" size="sm" icon={<Icon name="sparkle" size={18} />} loading={reading} disabled={sentence.trim().length === 0} onClick={() => void readWithModel()}>
             {t(UI["seal.readSentence"])}
           </Button>
         ) : null}
@@ -80,6 +94,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
           {readFailed ? t(UI["seal.readFailed"]) : incomplete ? t(UI["seal.notFound"]) : ""}
         </p>
       </div>
+      {read ? <ReadResult result={read} /> : null}
       <section className="seal-rules-block" aria-labelledby="seal-rules-title">
         <h2 id="seal-rules-title" className="seal-h2">{t(UI["seal.rulesTitle"])}</h2>
         <p className="seal-lead">{t(UI["seal.rulesLead"])}</p>

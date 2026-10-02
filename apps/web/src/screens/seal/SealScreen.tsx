@@ -58,8 +58,20 @@ function Header({ title, onBack, step }: { readonly title: string; readonly onBa
   );
 }
 
-function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): ReactElement {
+/** The booth's own reader (api.compileRules) unless <App> was given another; none when the client cannot read a sentence. */
+function useSuggester(given: SuggestRules | undefined): SuggestRules | undefined {
+  const { api } = useBoothContext();
+  const compile = api.compileRules;
+  return useMemo<SuggestRules | undefined>(() => {
+    if (given) return given;
+    if (typeof compile !== "function") return undefined;
+    return (text, locale) => compile.call(api, { text, locale });
+  }, [given, api, compile]);
+}
+
+function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRules }): ReactElement {
   const booth = useBoothContext();
+  const suggestRules = useSuggester(given);
   const { t, locale } = useLocale();
   const mode = useRouteParam(PARAM.mode);
   const now = useMemo(() => new Date(), []);

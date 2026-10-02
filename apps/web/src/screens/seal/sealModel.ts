@@ -1,12 +1,16 @@
 // Seal form model (pure): the sentence is for reading, the rows are the rules that get signed. The deterministic compile
-// in booth/compile.ts reads a sentence into rows; a later wave can pass suggestRules (a model) for the same job. Nothing
+// in booth/compile.ts reads a sentence into rows as it is typed; suggestRules (the booth's reader) does the same job on
+// request and says what it read. Nothing
 // here seals: toSealRequest only builds the request after validate() finds nothing wrong.
-import type { CompiledRules, SealRequest } from "../../api/types";
+import type { AskLocale, CompileResult, CompiledRules, SealRequest } from "../../api/types";
 import { compileMandate } from "../../booth/compile";
 import { dollarsToMinor, minorToDollarsText } from "../../domain/money";
 
-/** SLOT (later wave): reads the sentence into rules, e.g. the Qwen compile. null when it cannot. Never seals. */
-export type SuggestRules = (text: string) => Promise<CompiledRules | null>;
+/**
+ * Reads the sentence into rules with the booth's reader (api.compileRules: the local model, or the fixed rules parser):
+ * rules, chip labels, notes and what it left out. null when it cannot. A suggestion only: it never seals.
+ */
+export type SuggestRules = (text: string, locale: AskLocale) => Promise<CompileResult | null>;
 
 export const CATEGORY_SLUGS = ["apparel", "footwear", "electronics", "groceries"] as const;
 

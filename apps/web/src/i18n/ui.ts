@@ -173,6 +173,14 @@ const RUN = {
   statusStopped: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
   statusNeedsOk: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
   simulatedCard: label("Simulated card. No money moves.", "模擬卡，沒有真錢轉移。"), // NEEDS-REVIEW
+
+  repeatApproved: label("You already have a one-off card for this. Nothing new was bought.", "你已經有一張呢樣嘢嘅一次性卡，冇再買新嘢。"), // NEEDS-REVIEW
+  repeatAsked: label("Wally already asked you about this. It is waiting for your answer.", "Wally 已經問過你，等緊你回覆。"), // NEEDS-REVIEW
+  repeatStopped: label("Wally already looked at this exact purchase and stopped it.", "Wally 已經睇過呢單購買，並攔截咗。"), // NEEDS-REVIEW
+  unknownAskTitle: label("Wally can't shop for that here", "喺呢度 Wally 買唔到呢樣"), // NEEDS-REVIEW
+  unknownAskBody: label("Live asks need the booth server. Try one of the cards on Budget instead.", "即時提問需要展位伺服器。請改試預算頁的卡。"), // NEEDS-REVIEW
+  noCheaperTitle: label("No cheaper option fits", "冇更平而合適的選擇"), // NEEDS-REVIEW
+  noCheaperBody: label("Nothing cheaper fits what is left in your budget.", "冇更平的貨品放得入你剩餘的預算。"), // NEEDS-REVIEW
 } as const;
 
 /** Lane b-shell strings (shell., home., seal., console.). Placeholders in braces take formatted figures as elements. */
@@ -186,6 +194,9 @@ const SHELL = {
   "shell.askLead": label("Pick one. Wally shops on a simulated store; fixed rules decide.", "揀一樣。Wally 喺模擬商店購物，由固定規則決定。"), // NEEDS-REVIEW
   "shell.askPlaceholder": (name: string): LabelPair => label(`Ask ${name} to buy...`, `叫 ${name} 幫你買...`), // NEEDS-REVIEW
   "shell.askSend": label("Send", "傳送"), // NEEDS-REVIEW
+  "shell.askExample": label("A plain white tee under HK$150", "我想買件白色T恤，預算一百五十蚊"), // NEEDS-REVIEW
+  "shell.askFieldLabel": (name: string): LabelPair => label(`Tell ${name} what you need`, `話俾 ${name} 知你想買乜`), // NEEDS-REVIEW
+  "shell.askLiveHint": label("Live asks need the booth server.", "即時提問需要展位伺服器。"), // NEEDS-REVIEW
   "shell.trickTitle": (name: string): LabelPair => label(`Try to trick ${name}`, `試吓呃 ${name}`), // NEEDS-REVIEW
   "shell.trickHint": label("Write a product description. Wally and the rules treat it as data, never as orders.", "寫一段商品描述。Wally 同規則只當佢係資料，唔會當係指令。"), // NEEDS-REVIEW
   "shell.trickLabel": label("Product description", "商品描述"), // NEEDS-REVIEW
@@ -336,6 +347,11 @@ const SHELL = {
   "seal.ex.groceries": label("Groceries, any seller", "雜貨，任何賣家"), // NEEDS-REVIEW
   "seal.readSentence": label("Read my sentence", "幫我讀句子"), // NEEDS-REVIEW
   "seal.readFailed": label("Wally couldn't read that. Set the rules below.", "Wally 讀唔明，請喺下面設定規則。"), // NEEDS-REVIEW
+  "seal.readTitle": label("What Wally understood", "Wally 讀到的內容"), // NEEDS-REVIEW
+  "seal.readModel": label("Read by Wally's on-device model.", "由 Wally 的本機模型讀取。"), // NEEDS-REVIEW
+  "seal.readRules": label("Read by fixed rules.", "由固定規則讀取。"), // NEEDS-REVIEW
+  "seal.readCheck": label("Check each rule below and change what is wrong. Nothing is sealed until you say so.", "請檢查下面每項規則，有錯就改。你確認前唔會封存。"), // NEEDS-REVIEW
+  "seal.readLeftOut": label("Left out of the suggestion", "未有放入建議"), // NEEDS-REVIEW
   "seal.notFound": label("Some rules weren't in your sentence. Check them below.", "句子未講齊所有規則，請喺下面檢查。"), // NEEDS-REVIEW
   "seal.rulesTitle": label("Rules Wally must follow", "Wally 必須遵守的規則"), // NEEDS-REVIEW
   "seal.rulesLead": label("These rules are what gets checked. The sentence is just for you.", "會被檢查的係呢啲規則；句子只係俾你參考。"), // NEEDS-REVIEW

@@ -12,6 +12,7 @@ import { BottomTabBar, type TabItem } from "../ui/Nav";
 import { Skeleton } from "../ui/Surface";
 import type { SuggestRules } from "../screens/seal/sealModel";
 import { AboutSheet } from "./AboutSheet";
+import { ASK_EVENT } from "./askEvent";
 import { AskSheet, type AskWally } from "./AskSheet";
 import { CantReach, ConnectionBanners } from "./Connection";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -117,6 +118,11 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
 
   const openAsk = useCallback(() => setAsking(true), []);
   const openAbout = useCallback(() => setAbout(true), []);
+  // Screens without a handle on the shell (Wally's idle and stopped states) ask for the sheet with a window event.
+  useEffect(() => {
+    window.addEventListener(ASK_EVENT, openAsk);
+    return () => window.removeEventListener(ASK_EVENT, openAsk);
+  }, [openAsk]);
   const skip = (e: MouseEvent<HTMLAnchorElement>): void => {
     e.preventDefault(); // "#main" is not a route
     document.getElementById("main")?.focus();

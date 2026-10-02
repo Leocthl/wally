@@ -19,9 +19,16 @@ const COPY: Readonly<Record<CalmKind, { readonly title: LabelPair; readonly body
   info: { title: R.infoTitle, body: R.infoBody, wally: "idle" },
 };
 
-export function Calm({ kind, onAsk, headingRef }: { readonly kind: CalmKind; readonly onAsk: () => void; readonly headingRef?: Ref<HTMLHeadingElement> }): ReactElement {
+/** Runs that ended for a known reason say it: a typed ask this device has no recording for, or no cheaper pick. */
+function copyFor(kind: CalmKind, code: string | undefined): { readonly title: LabelPair; readonly body: LabelPair; readonly wally: WallyState } {
+  if (code === "UNKNOWN_REQUEST" || code === "ON_DEVICE_UNKNOWN_REQUEST") return { title: R.unknownAskTitle, body: R.unknownAskBody, wally: "thinking" };
+  if (code === "NO_PROPOSAL:no_alternative") return { title: R.noCheaperTitle, body: R.noCheaperBody, wally: "thinking" };
+  return COPY[kind];
+}
+
+export function Calm({ kind, code, onAsk, headingRef }: { readonly kind: CalmKind; readonly code?: string | undefined; readonly onAsk: () => void; readonly headingRef?: Ref<HTMLHeadingElement> }): ReactElement {
   const { t } = useLocale();
-  const copy = COPY[kind];
+  const copy = copyFor(kind, code);
   return (
     <section className="run-calm" data-run-state={kind} role={kind === "error" ? "alert" : undefined}>
       <Wally state={copy.wally} size={kind === "idle" ? 132 : 112} decorative />

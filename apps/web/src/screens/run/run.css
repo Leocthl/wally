@@ -112,6 +112,8 @@
 .run-foot { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 .run-foot svg { flex: none; color: var(--c-ok-ink); }
 .run-sim { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
+.run-repeat { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
+.run-repeat svg { flex: none; color: var(--c-info-ink, var(--c-ink-muted)); }
 .run-nocard { display: flex; align-items: center; gap: var(--sp-3); font-weight: var(--weight-medium); }
 .run-nocard svg { flex: none; color: var(--c-ink-muted); }
 

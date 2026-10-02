@@ -66,7 +66,17 @@ export type TraceEvent =
   | { readonly type: "log"; readonly entry: LogEntry }
   | { readonly type: "packet"; readonly packet: PacketState }
   | { readonly type: "escalation"; readonly escalation: EscalationView }
-  | { readonly type: "run.finished"; readonly runId: string; readonly outcome: RunOutcome; readonly at: string; readonly note?: string };
+  | {
+      readonly type: "run.finished";
+      readonly runId: string;
+      readonly outcome: RunOutcome;
+      readonly at: string;
+      readonly note?: string;
+      /** Same as RunSummary.code. */
+      readonly code?: string;
+      /** Same as RunSummary.duplicate, with the earlier decision's id: nothing new was decided, minted or charged. */
+      readonly duplicateOf?: string;
+    };
 
 export type Unsubscribe = () => void;
 export type TraceListener = (event: TraceEvent) => void;
@@ -205,6 +215,22 @@ export interface ApiInfo {
   readonly realCapture: RealCapture | null;
 }
 
+/** data/public-keys.json shape, for the keys the backend signs with right now. */
+export interface PublicKeysView {
+  readonly note: string;
+  readonly engine: readonly string[];
+  readonly delegator: string;
+  readonly agent: string;
+}
+
+/** GET /api/export: everything the offline verifier page needs, pasted in as text. */
+export interface ExportView {
+  /** The stored log as JSONL (one JCS line per entry). Never the tampered copy. */
+  readonly log: string;
+  readonly publicKeys: PublicKeysView;
+  readonly checkpoint: Checkpoint | null;
+}
+
 export interface BoothSnapshot {
   readonly mandate: Mandate | null;
   readonly intentText: string | null;
@@ -229,6 +255,8 @@ export interface ApiClient {
   suggestAlternatives?(req: AlternativesRequest): Promise<RunSummary>;
   /** Sentence to rule chips for the Seal screen; a suggestion only, never sealed here. */
   compileRules?(req: CompileRulesRequest): Promise<CompileResult>;
+  /** The stored log and keys for the offline verifier (Receipts > Export). Offered by the booth server and the on-device client. */
+  exportLog?(): Promise<ExportView>;
   getLog(): Promise<LogView>;
   verify(): Promise<VerifyOutcome>;
   tamper(): Promise<LogView>;

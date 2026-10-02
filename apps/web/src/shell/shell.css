@@ -95,6 +95,7 @@
 .shell-trick__title { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .shell-trick__title svg { flex: none; color: var(--c-primary-ink); }
 .shell-askfield { display: block; }
+.shell-ask__hint { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 
 /* About sheet */
 .shell-about { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
