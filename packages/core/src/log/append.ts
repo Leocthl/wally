@@ -1,6 +1,7 @@
 // appendEntry (AppendEntry port, I7): builds the next entry from the store head, hashes and signs it with
-// the engine Signer, validates it, then appends. Any failure throws before the store is touched, so the
-// caller fails closed (I5) and performs no side effect.
+// the engine Signer, validates it, then appends. Card data (I8), oversized rule inputs and over-long lines are
+// refused. Any failure throws before the store is touched, so the caller fails closed (I5) and performs no
+// side effect.
 import { toBase64url } from "../crypto/bytes";
 import type { LogEntry, LogEntryKind, LogEntryOf, LogPayloadByKind, MandateCredential } from "../generated";
 import type { AppendEntry, Checkpoint, Signer } from "../ports";
@@ -11,6 +12,11 @@ import { LogError } from "./errors";
 import { entryHash, GENESIS_PREV_HASH, LOG_ENTRY_VERSION, logSigningMessage, payloadHash } from "./hashing";
 import { findCardData } from "./i8";
 import { assertLogId, logIdForMandate } from "./ids";
+import { toJsonlLine } from "./jsonl";
+import { decisionInputsProblem, lineProblem } from "./limits";
+
+/** Schema issues kept in an error message. */
+const MAX_ISSUES = 3;
 
 export interface BuildEntryArgs<K extends LogEntryKind> {
   readonly head: Checkpoint | null;
@@ -65,6 +71,8 @@ export function buildEntry<K extends LogEntryKind>(args: BuildEntryArgs<K>): Log
   checkPlacement(kind, seq, logId, payload);
   const finding = findCardData(payload);
   if (finding !== null) throw new LogError("CARD_DATA", `refused (I8): ${finding}`);
+  const oversized = kind === "DECISION" ? decisionInputsProblem(payload as LogPayloadByKind["DECISION"]) : null;
+  if (oversized !== null) throw new LogError("LIMIT", `refused: ${oversized}`);
   const header = {
     v: LOG_ENTRY_VERSION,
     log_id: logId,
@@ -78,7 +86,9 @@ export function buildEntry<K extends LogEntryKind>(args: BuildEntryArgs<K>): Log
   const hash = entryHash(header);
   const entry = { ...header, payload, entry_hash: hash, signature: toBase64url(signer.sign(logSigningMessage(hash))) };
   const check = validateLogEntry(entry);
-  if (!check.ok) throw new LogError("SCHEMA", formatIssues(check.errors));
+  if (!check.ok) throw new LogError("SCHEMA", formatIssues(check.errors.slice(0, MAX_ISSUES)));
+  const tooLong = lineProblem(toJsonlLine(entry as LogEntry));
+  if (tooLong !== null) throw new LogError("LIMIT", `refused: ${tooLong}`);
   return deepFreeze(entry) as LogEntryOf<K>;
 }
 

@@ -152,12 +152,15 @@ function proofOptionsFor(issuer: string, overrides: Json = {}): Json {
   };
 }
 
-/** Signs exactly like signMandateCredential (proof options + document @context), with any options. */
+/** Signs exactly like signMandateCredential (proof = options + document @context, hashed as carried), with any options. */
 function issuerSigned(unsecured: Json, options: Json): Json {
-  const proofConfig = { ...options, "@context": unsecured["@context"] };
+  const proofConfig = "@context" in unsecured ? { ...options, "@context": unsecured["@context"] } : { ...options };
   const hashData = indepHashData(canon(proofConfig), canon(unsecured));
-  return { ...unsecured, proof: { ...options, proofValue: `z${base58.encode(ed25519.sign(hashData, DELEGATOR_SEED))}` } };
+  return { ...unsecured, proof: { ...proofConfig, proofValue: `z${base58.encode(ed25519.sign(hashData, DELEGATOR_SEED))}` } };
 }
+
+/** The delegator our credentials are pinned to (S-VC-1: verification needs the expected issuer). */
+const PIN = { expectedIssuer: indepDidKey(indepPublicKey(DELEGATOR_SEED)) } as const;
 
 // ---- W3C vc-di-eddsa eddsa-jcs-2022 ---------------------------------------------------------------------
 
@@ -193,9 +196,9 @@ describe("W3C vc-di-eddsa eddsa-jcs-2022 published test vectors (REC 15 May 2025
     expect(bytesToHex(indepHashData(W3C.proofCanon, W3C.canonDoc))).toBe(W3C.combinedHashHex);
   });
 
-  it("our proof.ts hashData formula (options without @context, plus the document @context) gives the same bytes", () => {
+  it("options without @context plus the document @context (the proof our signer emits) give the same bytes", () => {
     const { "@context": _ctx, ...optionsWithoutContext } = W3C.proofConfig;
-    const proofConfig = { ...optionsWithoutContext, "@context": W3C.unsigned["@context"] }; // proof.ts line 38
+    const proofConfig = { ...optionsWithoutContext, "@context": W3C.unsigned["@context"] }; // Create Proof step 2
     expect(toHex(concat(jcsSha256(proofConfig), jcsSha256(W3C.unsigned)))).toBe(W3C.combinedHashHex);
   });
 
@@ -235,22 +238,42 @@ describe("AgentDelegationCredential against the REC eddsa-jcs-2022 algorithm", (
   it("accepts a credential secured by a REC signer (proof carries @context)", () => {
     const rec = recCreateProof(unsignedM0() as unknown as Json, proofOptionsFor(signedM0().issuer), DELEGATOR_SEED);
     expect(recVerifyProof(rec)).toBe(true);
-    expect(verifyMandateCredential(rec)).toEqual({ valid: true, reason: null });
+    expect(verifyMandateCredential(rec, PIN)).toEqual({ valid: true, reason: null });
   });
 
   it("minimal fix for C-1: copying the document @context into proof verifies everywhere, proofValue unchanged", () => {
     const vc = signedM0();
     const fixed = { ...vc, proof: { ...vc.proof, "@context": vc["@context"] } };
     expect(recVerifyProof(fixed)).toBe(true);
-    expect(verifyMandateCredential(fixed)).toEqual({ valid: true, reason: null });
+    expect(verifyMandateCredential(fixed, PIN)).toEqual({ valid: true, reason: null });
+  });
+
+  it("the REC Create Proof path reproduces our signer's output exactly", () => {
+    const vc = signedM0();
+    expect(recCreateProof(unsignedM0() as unknown as Json, proofOptionsFor(vc.issuer), DELEGATOR_SEED)).toEqual(vc);
+  });
+
+  it("a proof without @context (the pre-fix format) fails both the REC verifier and ours", () => {
+    const vc = signedM0();
+    const { "@context": _ctx, ...legacyProof } = vc.proof;
+    const legacy = { ...vc, proof: legacyProof };
+    expect(recVerifyProof(legacy as unknown as Json)).toBe(false);
+    expect(verifyMandateCredential(legacy, PIN).valid).toBe(false);
   });
 });
 
-describe("KNOWN DEFECT C-1: emitted proof omits @context (REC 3.3.1 step 2)", () => {
-  it.fails("signMandateCredential output verifies under a REC-conformant eddsa-jcs-2022 verifier", () => {
+describe("C-1 (fixed): the emitted proof carries @context (REC 3.3.1 step 2)", () => {
+  it("signMandateCredential output verifies under a REC-conformant eddsa-jcs-2022 verifier", () => {
     const vc = signedM0();
-    expect("@context" in vc.proof).toBe(false); // what we emit today
-    expect(recVerifyProof(vc as unknown as Json)).toBe(true); // fails today: the verifier hashes the proof as carried
+    expect(vc.proof["@context"]).toEqual(vc["@context"]); // what we emit since the fix
+    expect(recVerifyProof(vc as unknown as Json)).toBe(true); // the verifier hashes the proof as carried
+  });
+
+  it("the committed golden log's sealed credential (seq 0) verifies under the REC verifier", () => {
+    const line = readFileSync(new URL("./golden/demo-log.jsonl", import.meta.url), "utf8").split("\n")[0] ?? "";
+    const sealed = (JSON.parse(line) as { payload: Json }).payload;
+    expect(recVerifyProof(sealed)).toBe(true);
+    expect(recVerifyProof({ ...sealed, validUntil: "2027-10-31T15:59:59Z" })).toBe(false);
   });
 });
 
@@ -259,39 +282,39 @@ describe("verifyMandateCredential rejects validly signed variants (no reliance o
   const issuer = String(base["issuer"]);
 
   it("the helper produces credentials our verifier accepts (control)", () => {
-    expect(verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer)))).toEqual({ valid: true, reason: null });
+    expect(verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer)), PIN)).toEqual({ valid: true, reason: null });
   });
 
   it.each(["eddsa-rdfc-2022", "ecdsa-jcs-2019", "eddsa-2022", "EDDSA-JCS-2022"])("another cryptosuite %s => SCHEMA", (suite) => {
     const vc = issuerSigned(base, proofOptionsFor(issuer, { cryptosuite: suite }));
-    expect(verifyMandateCredential(vc)).toMatchObject({ valid: false, reason: "SCHEMA" });
+    expect(verifyMandateCredential(vc, PIN)).toMatchObject({ valid: false, reason: "SCHEMA" });
   });
 
   it("another proof type or proof purpose => SCHEMA", () => {
     for (const o of [{ type: "Ed25519Signature2020" }, { proofPurpose: "authentication" }, { proofPurpose: "capabilityInvocation" }]) {
-      expect(verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer, o)))).toMatchObject({ valid: false, reason: "SCHEMA" });
+      expect(verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer, o)), PIN)).toMatchObject({ valid: false, reason: "SCHEMA" });
     }
   });
 
   it("a missing or different document @context => SCHEMA", () => {
     const { "@context": _ctx, ...noContext } = base;
-    expect(verifyMandateCredential(issuerSigned(noContext, proofOptionsFor(issuer)))).toMatchObject({ valid: false, reason: "SCHEMA" });
+    expect(verifyMandateCredential(issuerSigned(noContext, proofOptionsFor(issuer)), PIN)).toMatchObject({ valid: false, reason: "SCHEMA" });
     const onlyBase = { ...base, "@context": ["https://www.w3.org/ns/credentials/v2"] };
-    expect(verifyMandateCredential(issuerSigned(onlyBase, proofOptionsFor(issuer)))).toMatchObject({ valid: false, reason: "SCHEMA" });
+    expect(verifyMandateCredential(issuerSigned(onlyBase, proofOptionsFor(issuer)), PIN)).toMatchObject({ valid: false, reason: "SCHEMA" });
   });
 
   it("a proof @context that is only a prefix of the document's (allowed by REC 3.3.2) => SCHEMA (stricter, fail closed)", () => {
     const options = proofOptionsFor(issuer, { "@context": ["https://www.w3.org/ns/credentials/v2"] });
     const vc = recCreateProof(base, options, DELEGATOR_SEED);
     const prefixOnly = { ...vc, proof: { ...(vc["proof"] as Json), "@context": ["https://www.w3.org/ns/credentials/v2"] } };
-    expect(verifyMandateCredential(prefixOnly).valid).toBe(false);
+    expect(verifyMandateCredential(prefixOnly, PIN).valid).toBe(false);
   });
 
   it("a verification method other than <issuer>#<issuer key>, signed by the issuer key => rejected", () => {
     const other = indepDidKey(indepPublicKey(testSeed("other-delegator")));
     const methods = [`${issuer}#key-1`, `${other}#${other.slice(8)}`, `${issuer}#${other.slice(8)}`, `${other}#${issuer.slice(8)}`];
     for (const verificationMethod of methods) {
-      const result = verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer, { verificationMethod })));
+      const result = verifyMandateCredential(issuerSigned(base, proofOptionsFor(issuer, { verificationMethod })), PIN);
       expect(result.valid).toBe(false);
       expect(["SCHEMA", "VERIFICATION_METHOD"]).toContain(result.reason);
     }
@@ -306,12 +329,12 @@ describe("verifyMandateCredential rejects validly signed variants (no reliance o
       { ...vc, validFrom: "2026-10-03T02:00:00.000Z" },
       { ...vc, proof: { ...proof, created: "2026-10-03T02:00:00Z" } },
     ];
-    for (const v of variants) expect(verifyMandateCredential(v)).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    for (const v of variants) expect(verifyMandateCredential(v, PIN)).toMatchObject({ valid: false, reason: "SIGNATURE" });
   });
 
   it("created with a UTC offset (valid XSD dateTimeStamp) => SCHEMA: our Timestamp pins 'Z' (stricter than VC-DI)", () => {
     const vc = issuerSigned(base, proofOptionsFor(issuer, { created: "2026-10-03T10:00:00+08:00" }));
-    expect(verifyMandateCredential(vc)).toMatchObject({ valid: false, reason: "SCHEMA" });
+    expect(verifyMandateCredential(vc, PIN)).toMatchObject({ valid: false, reason: "SCHEMA" });
   });
 
   it("non-canonical multibase spellings of the proofValue are rejected", () => {
@@ -321,7 +344,7 @@ describe("verifyMandateCredential rejects validly signed variants (no reliance o
     const spellings = [`z1${value.slice(1)}`, `Z${value.slice(1)}`, `u${value.slice(1)}`, `${value} `, `z${value.slice(1).replace(/1/g, "l")}`];
     for (const proofValue of spellings) {
       if (proofValue === value) continue;
-      expect(verifyMandateCredential({ ...vc, proof: { ...proof, proofValue } }).valid).toBe(false);
+      expect(verifyMandateCredential({ ...vc, proof: { ...proof, proofValue } }, PIN).valid).toBe(false);
     }
   });
 });

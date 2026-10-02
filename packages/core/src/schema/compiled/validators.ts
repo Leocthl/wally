@@ -1194,7 +1194,7 @@ return errors === 0;
 validate20.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validateMandateCredential = validate25;
-const schema49 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/mandate-credential.schema.json","title":"MandateCredential","description":"AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof: unsecuredDocument = credential without `proof`; proofConfig = `proof` without `proofValue`, plus the document's `@context`; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key and checks that proof.verificationMethod starts with issuer + '#'. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential (id = vc.id without the urn:laisee:mandate: prefix).","type":"object","additionalProperties":false,"required":["@context","type","id","issuer","validFrom","validUntil","credentialSubject","proof"],"properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":["VerifiableCredential","AgentDelegationCredential"],"description":"Fixed order."},"id":{"type":"string","pattern":"^urn:laisee:mandate:mnd_[A-Za-z0-9]{6,40}$","description":"VC 2.0 needs a URL: urn:laisee:mandate:<mandate id>. mandateFromCredential strips the prefix, so mandate_id stays mnd_... everywhere else."},"issuer":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Delegator did:key."},"validFrom":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Seal time."},"validUntil":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"(R2) Mandate and packet end."},"credentialSubject":{"$ref":"#/$defs/DelegationSubject"},"proof":{"$ref":"#/$defs/DataIntegrityProof"}},"$defs":{"Contexts":{"const":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"description":"VC 2.0 base context first, then the delegation context. Fixed order."},"DelegationSubject":{"type":"object","additionalProperties":false,"required":["id","intent_text","rules"],"description":"The agent being authorised and what it may do.","properties":{"id":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Agent did:key."},"intent_text":{"$ref":"mandate.schema.json#/$defs/IntentText"},"rules":{"$ref":"mandate.schema.json#/$defs/CompiledRules"},"parent":{"$ref":"mandate.schema.json#/$defs/ParentLink"}}},"DataIntegrityProof":{"type":"object","additionalProperties":false,"required":["type","cryptosuite","created","verificationMethod","proofPurpose","proofValue"],"description":"W3C Data Integrity proof, eddsa-jcs-2022. `@context` is optional here; when present it must equal the document's.","properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":"DataIntegrityProof"},"cryptosuite":{"const":"eddsa-jcs-2022"},"created":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"verificationMethod":{"$ref":"mandate.schema.json#/$defs/DidKeyUrl","description":"<issuer did>#<fragment>."},"proofPurpose":{"const":"assertionMethod"},"proofValue":{"type":"string","pattern":"^z[1-9A-HJ-NP-Za-km-z]{80,90}$","description":"Multibase base58btc ('z' prefix) of the 64-byte Ed25519 signature."}}}},"$comment":"examples[0] is SIMULATED: demo mandate M0 (DM1), HK$800 packet [F20], no per-purchase cap, so R3 binds. Keys, dates and proofValue are placeholders and do not verify [F59]; golden vectors computed by real code live in packages/core tests (lane A).","examples":[{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":["VerifiableCredential","AgentDelegationCredential"],"id":"urn:laisee:mandate:mnd_demoM0","issuer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","validFrom":"2026-10-03T02:00:00Z","validUntil":"2026-10-31T15:59:59Z","credentialSubject":{"id":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","intent_text":"HK$800, clothes, verified sellers.","rules":{"budget":{"amount_minor":80000,"currency":"HKD"},"categories":["apparel"],"merchants":{"allow":null,"deny":[]},"seller_check":{"require_capture":true}}},"proof":{"type":"DataIntegrityProof","cryptosuite":"eddsa-jcs-2022","created":"2026-10-03T02:00:00Z","verificationMethod":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX#z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proofPurpose":"assertionMethod","proofValue":"z3FakeProofDemoNotVerifyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}]};
+const schema49 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/mandate-credential.schema.json","title":"MandateCredential","description":"AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof (W3C vc-di-eddsa 3.3): unsecuredDocument = credential without `proof`; the proof carries the document's `@context` (Create Proof step 2); proofConfig = `proof` without `proofValue`, exactly as carried; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key, which must equal the pinned delegator key (did:key is self-certifying), and checks that proof.verificationMethod is issuer + '#' + the issuer key. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential (id = vc.id without the urn:laisee:mandate: prefix).","type":"object","additionalProperties":false,"required":["@context","type","id","issuer","validFrom","validUntil","credentialSubject","proof"],"properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":["VerifiableCredential","AgentDelegationCredential"],"description":"Fixed order."},"id":{"type":"string","pattern":"^urn:laisee:mandate:mnd_[A-Za-z0-9]{6,40}$","description":"VC 2.0 needs a URL: urn:laisee:mandate:<mandate id>. mandateFromCredential strips the prefix, so mandate_id stays mnd_... everywhere else."},"issuer":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Delegator did:key."},"validFrom":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Seal time."},"validUntil":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"(R2) Mandate and packet end."},"credentialSubject":{"$ref":"#/$defs/DelegationSubject"},"proof":{"$ref":"#/$defs/DataIntegrityProof"}},"$defs":{"Contexts":{"const":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"description":"VC 2.0 base context first, then the delegation context. Fixed order."},"DelegationSubject":{"type":"object","additionalProperties":false,"required":["id","intent_text","rules"],"description":"The agent being authorised and what it may do.","properties":{"id":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Agent did:key."},"intent_text":{"$ref":"mandate.schema.json#/$defs/IntentText"},"rules":{"$ref":"mandate.schema.json#/$defs/CompiledRules"},"parent":{"$ref":"mandate.schema.json#/$defs/ParentLink"}}},"DataIntegrityProof":{"type":"object","additionalProperties":false,"required":["@context","type","cryptosuite","created","verificationMethod","proofPurpose","proofValue"],"description":"W3C Data Integrity proof, eddsa-jcs-2022. `@context` is required and equals the document's (Create Proof step 2); the verifier hashes the proof exactly as carried.","properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":"DataIntegrityProof"},"cryptosuite":{"const":"eddsa-jcs-2022"},"created":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"verificationMethod":{"$ref":"mandate.schema.json#/$defs/DidKeyUrl","description":"<issuer did>#<fragment>."},"proofPurpose":{"const":"assertionMethod"},"proofValue":{"type":"string","pattern":"^z[1-9A-HJ-NP-Za-km-z]{80,90}$","description":"Multibase base58btc ('z' prefix) of the 64-byte Ed25519 signature."}}}},"$comment":"examples[0] is SIMULATED: demo mandate M0 (DM1), HK$800 packet [F20], no per-purchase cap, so R3 binds. Keys, dates and proofValue are placeholders and do not verify [F59]; golden vectors computed by real code live in packages/core tests (lane A).","examples":[{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":["VerifiableCredential","AgentDelegationCredential"],"id":"urn:laisee:mandate:mnd_demoM0","issuer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","validFrom":"2026-10-03T02:00:00Z","validUntil":"2026-10-31T15:59:59Z","credentialSubject":{"id":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","intent_text":"HK$800, clothes, verified sellers.","rules":{"budget":{"amount_minor":80000,"currency":"HKD"},"categories":["apparel"],"merchants":{"allow":null,"deny":[]},"seller_check":{"require_capture":true}}},"proof":{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":"DataIntegrityProof","cryptosuite":"eddsa-jcs-2022","created":"2026-10-03T02:00:00Z","verificationMethod":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX#z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proofPurpose":"assertionMethod","proofValue":"z3FakeProofDemoNotVerifyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}]};
 const schema50 = {"const":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"description":"VC 2.0 base context first, then the delegation context. Fixed order."};
 const pattern14 = new RegExp("^urn:laisee:mandate:mnd_[A-Za-z0-9]{6,40}$", "u");
 const schema54 = {"type":"object","additionalProperties":false,"required":["id","intent_text","rules"],"description":"The agent being authorised and what it may do.","properties":{"id":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Agent did:key."},"intent_text":{"$ref":"mandate.schema.json#/$defs/IntentText"},"rules":{"$ref":"mandate.schema.json#/$defs/CompiledRules"},"parent":{"$ref":"mandate.schema.json#/$defs/ParentLink"}}};
@@ -2199,7 +2199,7 @@ return errors === 0;
 }
 validate26.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema68 = {"type":"object","additionalProperties":false,"required":["type","cryptosuite","created","verificationMethod","proofPurpose","proofValue"],"description":"W3C Data Integrity proof, eddsa-jcs-2022. `@context` is optional here; when present it must equal the document's.","properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":"DataIntegrityProof"},"cryptosuite":{"const":"eddsa-jcs-2022"},"created":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"verificationMethod":{"$ref":"mandate.schema.json#/$defs/DidKeyUrl","description":"<issuer did>#<fragment>."},"proofPurpose":{"const":"assertionMethod"},"proofValue":{"type":"string","pattern":"^z[1-9A-HJ-NP-Za-km-z]{80,90}$","description":"Multibase base58btc ('z' prefix) of the 64-byte Ed25519 signature."}}};
+const schema68 = {"type":"object","additionalProperties":false,"required":["@context","type","cryptosuite","created","verificationMethod","proofPurpose","proofValue"],"description":"W3C Data Integrity proof, eddsa-jcs-2022. `@context` is required and equals the document's (Create Proof step 2); the verifier hashes the proof exactly as carried.","properties":{"@context":{"$ref":"#/$defs/Contexts"},"type":{"const":"DataIntegrityProof"},"cryptosuite":{"const":"eddsa-jcs-2022"},"created":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"verificationMethod":{"$ref":"mandate.schema.json#/$defs/DidKeyUrl","description":"<issuer did>#<fragment>."},"proofPurpose":{"const":"assertionMethod"},"proofValue":{"type":"string","pattern":"^z[1-9A-HJ-NP-Za-km-z]{80,90}$","description":"Multibase base58btc ('z' prefix) of the 64-byte Ed25519 signature."}}};
 const schema71 = {"type":"string","pattern":"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$","description":"did:key verification method: '<did>#<multibase key>'."};
 const pattern25 = new RegExp("^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$", "u");
 const pattern26 = new RegExp("^z[1-9A-HJ-NP-Za-km-z]{80,90}$", "u");
@@ -2215,8 +2215,8 @@ if(evaluated0.dynamicItems){
 evaluated0.items = undefined;
 }
 if(data && typeof data == "object" && !Array.isArray(data)){
-if(data.type === undefined){
-const err0 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
+if(data["@context"] === undefined){
+const err0 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "@context"},message:"must have required property '"+"@context"+"'"};
 if(vErrors === null){
 vErrors = [err0];
 }
@@ -2225,8 +2225,8 @@ vErrors.push(err0);
 }
 errors++;
 }
-if(data.cryptosuite === undefined){
-const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "cryptosuite"},message:"must have required property '"+"cryptosuite"+"'"};
+if(data.type === undefined){
+const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err1];
 }
@@ -2235,8 +2235,8 @@ vErrors.push(err1);
 }
 errors++;
 }
-if(data.created === undefined){
-const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "created"},message:"must have required property '"+"created"+"'"};
+if(data.cryptosuite === undefined){
+const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "cryptosuite"},message:"must have required property '"+"cryptosuite"+"'"};
 if(vErrors === null){
 vErrors = [err2];
 }
@@ -2245,8 +2245,8 @@ vErrors.push(err2);
 }
 errors++;
 }
-if(data.verificationMethod === undefined){
-const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "verificationMethod"},message:"must have required property '"+"verificationMethod"+"'"};
+if(data.created === undefined){
+const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "created"},message:"must have required property '"+"created"+"'"};
 if(vErrors === null){
 vErrors = [err3];
 }
@@ -2255,8 +2255,8 @@ vErrors.push(err3);
 }
 errors++;
 }
-if(data.proofPurpose === undefined){
-const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "proofPurpose"},message:"must have required property '"+"proofPurpose"+"'"};
+if(data.verificationMethod === undefined){
+const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "verificationMethod"},message:"must have required property '"+"verificationMethod"+"'"};
 if(vErrors === null){
 vErrors = [err4];
 }
@@ -2265,8 +2265,8 @@ vErrors.push(err4);
 }
 errors++;
 }
-if(data.proofValue === undefined){
-const err5 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "proofValue"},message:"must have required property '"+"proofValue"+"'"};
+if(data.proofPurpose === undefined){
+const err5 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "proofPurpose"},message:"must have required property '"+"proofPurpose"+"'"};
 if(vErrors === null){
 vErrors = [err5];
 }
@@ -2275,9 +2275,8 @@ vErrors.push(err5);
 }
 errors++;
 }
-for(const key0 in data){
-if(!(((((((key0 === "@context") || (key0 === "type")) || (key0 === "cryptosuite")) || (key0 === "created")) || (key0 === "verificationMethod")) || (key0 === "proofPurpose")) || (key0 === "proofValue"))){
-const err6 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
+if(data.proofValue === undefined){
+const err6 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "proofValue"},message:"must have required property '"+"proofValue"+"'"};
 if(vErrors === null){
 vErrors = [err6];
 }
@@ -2286,10 +2285,9 @@ vErrors.push(err6);
 }
 errors++;
 }
-}
-if(data["@context"] !== undefined){
-if(!func0(data["@context"], schema50.const)){
-const err7 = {instancePath:instancePath+"/@context",schemaPath:"#/$defs/Contexts/const",keyword:"const",params:{allowedValue: schema50.const},message:"must be equal to constant"};
+for(const key0 in data){
+if(!(((((((key0 === "@context") || (key0 === "type")) || (key0 === "cryptosuite")) || (key0 === "created")) || (key0 === "verificationMethod")) || (key0 === "proofPurpose")) || (key0 === "proofValue"))){
+const err7 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err7];
 }
@@ -2299,9 +2297,9 @@ vErrors.push(err7);
 errors++;
 }
 }
-if(data.type !== undefined){
-if("DataIntegrityProof" !== data.type){
-const err8 = {instancePath:instancePath+"/type",schemaPath:"#/properties/type/const",keyword:"const",params:{allowedValue: "DataIntegrityProof"},message:"must be equal to constant"};
+if(data["@context"] !== undefined){
+if(!func0(data["@context"], schema50.const)){
+const err8 = {instancePath:instancePath+"/@context",schemaPath:"#/$defs/Contexts/const",keyword:"const",params:{allowedValue: schema50.const},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err8];
 }
@@ -2311,9 +2309,9 @@ vErrors.push(err8);
 errors++;
 }
 }
-if(data.cryptosuite !== undefined){
-if("eddsa-jcs-2022" !== data.cryptosuite){
-const err9 = {instancePath:instancePath+"/cryptosuite",schemaPath:"#/properties/cryptosuite/const",keyword:"const",params:{allowedValue: "eddsa-jcs-2022"},message:"must be equal to constant"};
+if(data.type !== undefined){
+if("DataIntegrityProof" !== data.type){
+const err9 = {instancePath:instancePath+"/type",schemaPath:"#/properties/type/const",keyword:"const",params:{allowedValue: "DataIntegrityProof"},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err9];
 }
@@ -2323,11 +2321,9 @@ vErrors.push(err9);
 errors++;
 }
 }
-if(data.created !== undefined){
-let data3 = data.created;
-if(typeof data3 === "string"){
-if(!pattern12.test(data3)){
-const err10 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
+if(data.cryptosuite !== undefined){
+if("eddsa-jcs-2022" !== data.cryptosuite){
+const err10 = {instancePath:instancePath+"/cryptosuite",schemaPath:"#/properties/cryptosuite/const",keyword:"const",params:{allowedValue: "eddsa-jcs-2022"},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err10];
 }
@@ -2336,8 +2332,12 @@ vErrors.push(err10);
 }
 errors++;
 }
-if(!(formats0.validate(data3))){
-const err11 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
+}
+if(data.created !== undefined){
+let data3 = data.created;
+if(typeof data3 === "string"){
+if(!pattern12.test(data3)){
+const err11 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
 if(vErrors === null){
 vErrors = [err11];
 }
@@ -2346,9 +2346,8 @@ vErrors.push(err11);
 }
 errors++;
 }
-}
-else {
-const err12 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(!(formats0.validate(data3))){
+const err12 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
 if(vErrors === null){
 vErrors = [err12];
 }
@@ -2358,11 +2357,8 @@ vErrors.push(err12);
 errors++;
 }
 }
-if(data.verificationMethod !== undefined){
-let data4 = data.verificationMethod;
-if(typeof data4 === "string"){
-if(!pattern25.test(data4)){
-const err13 = {instancePath:instancePath+"/verificationMethod",schemaPath:"mandate.schema.json#/$defs/DidKeyUrl/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
+else {
+const err13 = {instancePath:instancePath+"/created",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err13];
 }
@@ -2372,8 +2368,11 @@ vErrors.push(err13);
 errors++;
 }
 }
-else {
-const err14 = {instancePath:instancePath+"/verificationMethod",schemaPath:"mandate.schema.json#/$defs/DidKeyUrl/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.verificationMethod !== undefined){
+let data4 = data.verificationMethod;
+if(typeof data4 === "string"){
+if(!pattern25.test(data4)){
+const err14 = {instancePath:instancePath+"/verificationMethod",schemaPath:"mandate.schema.json#/$defs/DidKeyUrl/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
 if(vErrors === null){
 vErrors = [err14];
 }
@@ -2383,9 +2382,8 @@ vErrors.push(err14);
 errors++;
 }
 }
-if(data.proofPurpose !== undefined){
-if("assertionMethod" !== data.proofPurpose){
-const err15 = {instancePath:instancePath+"/proofPurpose",schemaPath:"#/properties/proofPurpose/const",keyword:"const",params:{allowedValue: "assertionMethod"},message:"must be equal to constant"};
+else {
+const err15 = {instancePath:instancePath+"/verificationMethod",schemaPath:"mandate.schema.json#/$defs/DidKeyUrl/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -2395,11 +2393,9 @@ vErrors.push(err15);
 errors++;
 }
 }
-if(data.proofValue !== undefined){
-let data6 = data.proofValue;
-if(typeof data6 === "string"){
-if(!pattern26.test(data6)){
-const err16 = {instancePath:instancePath+"/proofValue",schemaPath:"#/properties/proofValue/pattern",keyword:"pattern",params:{pattern: "^z[1-9A-HJ-NP-Za-km-z]{80,90}$"},message:"must match pattern \""+"^z[1-9A-HJ-NP-Za-km-z]{80,90}$"+"\""};
+if(data.proofPurpose !== undefined){
+if("assertionMethod" !== data.proofPurpose){
+const err16 = {instancePath:instancePath+"/proofPurpose",schemaPath:"#/properties/proofPurpose/const",keyword:"const",params:{allowedValue: "assertionMethod"},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -2409,8 +2405,11 @@ vErrors.push(err16);
 errors++;
 }
 }
-else {
-const err17 = {instancePath:instancePath+"/proofValue",schemaPath:"#/properties/proofValue/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.proofValue !== undefined){
+let data6 = data.proofValue;
+if(typeof data6 === "string"){
+if(!pattern26.test(data6)){
+const err17 = {instancePath:instancePath+"/proofValue",schemaPath:"#/properties/proofValue/pattern",keyword:"pattern",params:{pattern: "^z[1-9A-HJ-NP-Za-km-z]{80,90}$"},message:"must match pattern \""+"^z[1-9A-HJ-NP-Za-km-z]{80,90}$"+"\""};
 if(vErrors === null){
 vErrors = [err17];
 }
@@ -2420,14 +2419,25 @@ vErrors.push(err17);
 errors++;
 }
 }
-}
 else {
-const err18 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err18 = {instancePath:instancePath+"/proofValue",schemaPath:"#/properties/proofValue/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err18];
 }
 else {
 vErrors.push(err18);
+}
+errors++;
+}
+}
+}
+else {
+const err19 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err19];
+}
+else {
+vErrors.push(err19);
 }
 errors++;
 }
@@ -4223,7 +4233,7 @@ return errors === 0;
 validate34.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validateDecision = validate37;
-const schema92 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/decision.schema.json","title":"Decision","description":"Policy engine output for one cart; the engine is the only producer (D3). AP2-shaped payment-mandate evidence [F12]. Logged as the payload of one DECISION entry before any side effect (I7). Outcome = DENY if any FAIL has verdict DENY, else ESCALATE if any FAIL has verdict ESCALATE, else APPROVE. Judge results can only move APPROVE to DENY or ESCALATE (I3).","type":"object","additionalProperties":false,"required":["id","mandate_id","cart","decided_at","outcome","packet","rules","judge","engine"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"cart":{"$ref":"cart.schema.json","description":"The exact cart decided on."},"decided_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"`now` passed to engine.decide."},"outcome":{"enum":["APPROVE","DENY","ESCALATE"]},"approved_limit_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"APPROVE only. Equals cart.total_minor (I2)."},"packet":{"$ref":"packet-state.schema.json","description":"Packet snapshot the engine decided on."},"rules":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/RuleResult"},"description":"R1..R12 in order. R10 emits one result per judge question. Rules not evaluated in this phase are SKIPPED (R11 outside escalation, R12 before checkout)."},"judge":{"$ref":"#/$defs/JudgeRecord"},"explanation":{"$ref":"#/$defs/Explanation"},"resolves":{"$ref":"mandate.schema.json#/$defs/DecisionId","description":"Earlier decision this one closes: an ESCALATE answered or expired (S5), or an APPROVE voided at checkout (R12)."},"escalation":{"$ref":"#/$defs/Escalation"},"engine":{"type":"object","additionalProperties":false,"required":["version","config_sha256"],"properties":{"version":{"type":"string","minLength":1,"description":"Package version + git commit."},"config_sha256":{"$ref":"mandate.schema.json#/$defs/Sha256Hex","description":"SHA-256 of JCS of the thresholds and defaults in force (F30-F36, F50-F52)."}}}},"allOf":[{"if":{"properties":{"outcome":{"const":"APPROVE"}},"required":["outcome"]},"then":{"required":["approved_limit_minor"],"properties":{"approved_limit_minor":true}},"else":{"required":["explanation"],"properties":{"explanation":true},"not":{"required":["approved_limit_minor"],"properties":{"approved_limit_minor":true}}}},{"if":{"properties":{"outcome":{"const":"ESCALATE"}},"required":["outcome"]},"then":{"required":["escalation"],"properties":{"escalation":true}}}],"$defs":{"TemplateId":{"enum":["R1.invalid_signature","R2.revoked","R2.expired","R3.over_remaining","R4.over_cap","R4.ask_above","R5.over_ceiling","R6.off_mandate","R7.velocity","R8.max_active","R9.flagged","R9.unverified","R10.injection","R10.seller_risk","R10.scope","R10.escalate","R10.unavailable","R11.expired","R12.price_drift"],"description":"Canonical IDs from 00-context plus six added by A1 pending lead approval: R1.invalid_signature, R5.over_ceiling, R6.off_mandate, R8.max_active, R10.escalate, R10.unavailable."},"RuleResult":{"type":"object","additionalProperties":false,"required":["id","result","inputs"],"description":"One check. inputs = recorded values the template and a verifier reuse; comparator relates them; threshold_ref names the source of the threshold. In shadow mode R10 results are SKIPPED with inputs.shadow_verdict.","properties":{"id":{"$ref":"mandate.schema.json#/$defs/RuleId"},"check":{"type":"string","pattern":"^[a-z_]+$","description":"Sub-check name; for R10 the judge question."},"result":{"enum":["PASS","FAIL","SKIPPED"]},"verdict":{"enum":["DENY","ESCALATE"],"description":"FAIL only."},"inputs":{"type":"object","additionalProperties":true},"comparator":{"enum":["<=","<",">=",">","==","!=","in","not_in","verify"]},"threshold_ref":{"type":"string","pattern":"^(F[0-9]{1,3}[a-z]?(\\.[A-Za-z_]+)?|mandate\\.[a-z_.]+|packet\\.[a-z_]+)$","description":"e.g. packet.remaining_minor, F1.ceiling, F36.T_inj, mandate.valid_until, mandate.rules.per_purchase.hard_cap_minor"},"template_id":{"$ref":"#/$defs/TemplateId"}},"allOf":[{"if":{"properties":{"result":{"const":"FAIL"}},"required":["result"]},"then":{"required":["verdict","comparator","template_id"],"properties":{"verdict":true,"comparator":true,"template_id":true}}},{"if":{"properties":{"result":{"const":"PASS"}},"required":["result"]},"then":{"required":["comparator"],"properties":{"comparator":true}}}]},"JudgeRecord":{"type":"object","additionalProperties":false,"required":["provider","model","version","status","latency_ms","shadow"],"description":"Judge call as recorded. laya (local default [F11c]) and jev (hosted, optional [F11]) share the typed wire protocol; replay returns recorded answers in the same shape. R10 reads probabilities only, never the provider's confidence, under the typed profile [F36, F50]. Escalation answers and R11/R12 decisions copy the record of the decision they resolve.","properties":{"provider":{"$ref":"mandate.schema.json#/$defs/JudgeProvider"},"model":{"type":"string","minLength":1,"description":"e.g. typed-decisions (laya), jev-1.13.0 (jev [F11b]), the recorded model (replay)."},"version":{"type":"string","minLength":1,"description":"Server or checkpoint version reported at runtime."},"status":{"enum":["OK","TIMEOUT","ERROR"],"description":"Not OK => R10 FAIL, verdict ESCALATE, template R10.unavailable (I5)."},"fallback_from":{"enum":["laya","jev"],"description":"Set when another provider answered after laya or jev failed or timed out [F34]."},"input_truncated":{"type":"boolean","description":"true when Laya reported usage.truncated: the judge did not see the whole listing. status must then be ERROR, so R10 escalates with R10.unavailable (I5)."},"latency_ms":{"type":"integer","minimum":0,"description":"Wall time of the judge step, MEASURED."},"shadow":{"type":"boolean","description":"true = recorded, not enforced (JUDGE_MODE=shadow)."},"answers":{"$ref":"#/$defs/JudgeAnswers"}},"allOf":[{"if":{"properties":{"status":{"const":"OK"}},"required":["status"]},"then":{"required":["answers"],"properties":{"answers":true}}},{"if":{"properties":{"input_truncated":{"const":true}},"required":["input_truncated"]},"then":{"properties":{"status":{"const":"ERROR"}}}}]},"Probability":{"type":"number","minimum":0,"maximum":1},"JudgeAnswers":{"type":"object","additionalProperties":false,"required":["scope_fit","injection_risk","seller_risk","escalate_or_proceed"],"description":"Probability per typed option; each question's options sum to 1 (adapter normalises, tolerance in code).","properties":{"scope_fit":{"type":"object","additionalProperties":false,"required":["in_scope","out_of_scope"],"properties":{"in_scope":{"$ref":"#/$defs/Probability"},"out_of_scope":{"$ref":"#/$defs/Probability"}}},"injection_risk":{"type":"object","additionalProperties":false,"required":["clean","suspicious","injection"],"properties":{"clean":{"$ref":"#/$defs/Probability"},"suspicious":{"$ref":"#/$defs/Probability"},"injection":{"$ref":"#/$defs/Probability"}}},"seller_risk":{"type":"object","additionalProperties":false,"required":["low_risk","high_risk"],"properties":{"low_risk":{"$ref":"#/$defs/Probability"},"high_risk":{"$ref":"#/$defs/Probability"}}},"escalate_or_proceed":{"type":"object","additionalProperties":false,"required":["proceed","escalate"],"properties":{"proceed":{"$ref":"#/$defs/Probability"},"escalate":{"$ref":"#/$defs/Probability"}}}}},"Explanation":{"type":"object","additionalProperties":false,"required":["template_id","inputs","rendered"],"description":"Why, rendered by a pure function from template_id + inputs (D4), never LLM prose. Primary reason = first FAIL in rule order whose verdict equals the outcome. A verifier can re-render and compare.","properties":{"template_id":{"$ref":"#/$defs/TemplateId"},"inputs":{"type":"object","additionalProperties":true},"rendered":{"type":"string","minLength":1,"description":"English line."},"rendered_zh_hk":{"type":"string","minLength":1,"description":"zh-HK line from the same inputs."}}},"Escalation":{"type":"object","additionalProperties":false,"required":["state","expires_at"],"description":"On an ESCALATE decision: state OPEN, expires_at = decided_at + window [F31]. On the decision that resolves it: the final state, with answer when APPROVED or DENIED.","properties":{"state":{"enum":["OPEN","APPROVED","DENIED","EXPIRED"]},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"answer":{"$ref":"#/$defs/EscalationAnswer"}}},"EscalationAnswer":{"type":"object","additionalProperties":false,"required":["decision_id","choice","answered_at","signer","signature"],"description":"Delegator-signed answer to an ESCALATE. Signature over UTF-8 of 'laisee.resolve.v1:' + hex SHA-256(JCS(this object without signature)). Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.","properties":{"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"choice":{"enum":["APPROVE","DENY"]},"answered_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey"},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}}}},"$comment":"examples[0] is SIMULATED: attempt 3 (DM4, S1). Subtotal HK$520 + shipping HK$30 = HK$550 over HK$541 left [F22]. Judge probabilities, latency, ids, hashes and times are placeholders [F59]; thresholds from F1, F32, F36, F50, F52.","examples":[{"id":"dec_demoA3","mandate_id":"mnd_demoM0","cart":{"id":"crt_demoA3","mandate_id":"mnd_demoM0","agent":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proposed_at":"2026-10-03T02:11:50Z","merchant":{"name":"Demo Streetwear (SIMULATED)","domain":"demo-streetwear.example"},"items":[{"title":"Denim jacket (SIMULATED)","category":"apparel","qty":1,"unit_price_minor":52000}],"subtotal_minor":52000,"shipping_minor":3000,"fees_minor":0,"fx":null,"total_minor":55000,"currency":"HKD","listing":{"url":"https://demo-streetwear.example/p/jacket","text_sha256":"643820c38a88c8fa0a93d4ddfce7ec034661cd410473d7a6fc53bc4caa964f8c","observed_at":"2026-10-03T02:11:40Z"},"price_observed_at":"2026-10-03T02:11:40Z","scameter":{"state":"NO_RECORD","capture_ref":"SIM-scameter-demo-streetwear","captured_at":"2026-10-03T01:35:00Z","searched":["url"]},"provenance":"SIMULATED"},"decided_at":"2026-10-03T02:12:00Z","outcome":"DENY","packet":{"mandate_id":"mnd_demoM0","log_id":"log_demoM0","budget_minor":80000,"committed_minor":0,"spent_minor":25900,"remaining_minor":54100,"currency":"HKD","active_cards":[],"mint_times":["2026-10-03T02:05:02Z"],"open_escalations":[],"status":"ACTIVE","expires_at":"2026-10-31T15:59:59Z","folded_through_seq":4,"computed_at":"2026-10-03T02:12:00Z"},"rules":[{"id":"R1","result":"PASS","inputs":{"signer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX"},"comparator":"verify"},{"id":"R2","result":"PASS","inputs":{"revoked":false,"now":"2026-10-03T02:12:00Z","valid_until":"2026-10-31T15:59:59Z"},"comparator":"<","threshold_ref":"mandate.valid_until"},{"id":"R3","result":"FAIL","verdict":"DENY","inputs":{"total_minor":55000,"remaining_minor":54100},"comparator":"<=","threshold_ref":"packet.remaining_minor","template_id":"R3.over_remaining"},{"id":"R4","result":"SKIPPED","inputs":{"per_purchase":null}},{"id":"R5","result":"PASS","inputs":{"total_minor":55000,"ceiling_minor":200000},"comparator":"<=","threshold_ref":"F1.ceiling"},{"id":"R6","result":"PASS","inputs":{"domain":"demo-streetwear.example","allow":null,"categories":["apparel"],"item_categories":["apparel"]},"comparator":"in","threshold_ref":"mandate.rules.categories"},{"id":"R7","result":"PASS","inputs":{"mints_in_window":1,"max_mints":3,"window_s":600},"comparator":"<","threshold_ref":"F32"},{"id":"R8","result":"PASS","inputs":{"active_cards":0,"max_active":2},"comparator":"<","threshold_ref":"F1.active"},{"id":"R9","result":"PASS","inputs":{"state":"NO_RECORD","capture_age_s":2220,"max_capture_age_s":86400},"comparator":"<=","threshold_ref":"F52"},{"id":"R10","check":"scope_fit","result":"PASS","inputs":{"p_in_scope":0.95,"threshold":0.6},"comparator":">=","threshold_ref":"F36.T_scope"},{"id":"R10","check":"injection_risk","result":"PASS","inputs":{"p_suspicious_or_injection":0.03,"threshold":0.2},"comparator":"<","threshold_ref":"F36.T_inj"},{"id":"R10","check":"seller_risk","result":"PASS","inputs":{"p_high_risk":0.05,"threshold":0.25},"comparator":"<","threshold_ref":"F36.T_sell_esc"},{"id":"R10","check":"escalate_or_proceed","result":"PASS","inputs":{"p_escalate":0.1,"threshold":0.5},"comparator":"<","threshold_ref":"F50.T_esc"},{"id":"R11","result":"SKIPPED","inputs":{}},{"id":"R12","result":"SKIPPED","inputs":{}}],"judge":{"provider":"laya","model":"typed-decisions","version":"typed-decisions@VERIFY","status":"OK","latency_ms":240,"shadow":false,"answers":{"scope_fit":{"in_scope":0.95,"out_of_scope":0.05},"injection_risk":{"clean":0.97,"suspicious":0.02,"injection":0.01},"seller_risk":{"low_risk":0.95,"high_risk":0.05},"escalate_or_proceed":{"proceed":0.9,"escalate":0.1}}},"explanation":{"template_id":"R3.over_remaining","inputs":{"total_minor":55000,"remaining_minor":54100},"rendered":"Stopped by R3. Total HK$550 is over the HK$541 left."},"engine":{"version":"core@0.1.0+demo","config_sha256":"d4540759f6ba5ea1a6a33167a7e544abfb84111b765bc96dd2536627f8d127a8"}}]};
+const schema92 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/decision.schema.json","title":"Decision","description":"Policy engine output for one cart; the engine is the only producer (D3). AP2-shaped payment-mandate evidence [F12]. Logged as the payload of one DECISION entry before any side effect (I7). Outcome = DENY if any FAIL has verdict DENY, else ESCALATE if any FAIL has verdict ESCALATE, else APPROVE. Judge results can only move APPROVE to DENY or ESCALATE (I3).","type":"object","additionalProperties":false,"required":["id","mandate_id","cart","decided_at","outcome","packet","rules","judge","engine"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"cart":{"$ref":"cart.schema.json","description":"The exact cart decided on."},"decided_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"`now` passed to engine.decide."},"outcome":{"enum":["APPROVE","DENY","ESCALATE"]},"approved_limit_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"APPROVE only. Equals cart.total_minor (I2)."},"packet":{"$ref":"packet-state.schema.json","description":"Packet snapshot the engine decided on."},"rules":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/RuleResult"},"description":"R1..R12 in order. R10 emits one result per judge question. Rules not evaluated in this phase are SKIPPED (R11 outside escalation, R12 before checkout)."},"judge":{"$ref":"#/$defs/JudgeRecord"},"explanation":{"$ref":"#/$defs/Explanation"},"resolves":{"$ref":"mandate.schema.json#/$defs/DecisionId","description":"Earlier decision this one closes: an ESCALATE answered or expired (S5), or an APPROVE voided at checkout (R12)."},"escalation":{"$ref":"#/$defs/Escalation"},"engine":{"type":"object","additionalProperties":false,"required":["version","config_sha256"],"properties":{"version":{"type":"string","minLength":1,"description":"Package version + git commit."},"config_sha256":{"$ref":"mandate.schema.json#/$defs/Sha256Hex","description":"SHA-256 of JCS of the thresholds and defaults in force (F30-F36, F50-F52)."}}}},"allOf":[{"if":{"properties":{"outcome":{"const":"APPROVE"}},"required":["outcome"]},"then":{"required":["approved_limit_minor"],"properties":{"approved_limit_minor":true}},"else":{"required":["explanation"],"properties":{"explanation":true},"not":{"required":["approved_limit_minor"],"properties":{"approved_limit_minor":true}}}},{"if":{"properties":{"outcome":{"const":"ESCALATE"}},"required":["outcome"]},"then":{"required":["escalation"],"properties":{"escalation":true}}}],"$defs":{"TemplateId":{"enum":["R1.invalid_signature","R2.revoked","R2.expired","R3.over_remaining","R4.over_cap","R4.ask_above","R5.over_ceiling","R6.off_mandate","R7.velocity","R8.max_active","R9.flagged","R9.unverified","R10.injection","R10.seller_risk","R10.scope","R10.escalate","R10.unavailable","R11.expired","R12.price_drift"],"description":"Canonical IDs from 00-context plus six added by A1 pending lead approval: R1.invalid_signature, R5.over_ceiling, R6.off_mandate, R8.max_active, R10.escalate, R10.unavailable."},"RuleResult":{"type":"object","additionalProperties":false,"required":["id","result","inputs"],"description":"One check. inputs = recorded values the template and a verifier reuse; comparator relates them; threshold_ref names the source of the threshold. In shadow mode R10 results are SKIPPED with inputs.shadow_verdict.","properties":{"id":{"$ref":"mandate.schema.json#/$defs/RuleId"},"check":{"type":"string","pattern":"^[a-z_]+$","description":"Sub-check name; for R10 the judge question."},"result":{"enum":["PASS","FAIL","SKIPPED"]},"verdict":{"enum":["DENY","ESCALATE"],"description":"FAIL only."},"inputs":{"type":"object","additionalProperties":true},"comparator":{"enum":["<=","<",">=",">","==","!=","in","not_in","verify"]},"threshold_ref":{"type":"string","pattern":"^(F[0-9]{1,3}[a-z]?(\\.[A-Za-z_]+)?|mandate\\.[a-z_.]+|packet\\.[a-z_]+)$","description":"e.g. packet.remaining_minor, F1.ceiling, F36.T_inj, mandate.valid_until, mandate.rules.per_purchase.hard_cap_minor"},"template_id":{"$ref":"#/$defs/TemplateId"}},"allOf":[{"if":{"properties":{"result":{"const":"FAIL"}},"required":["result"]},"then":{"required":["verdict","comparator","template_id"],"properties":{"verdict":true,"comparator":true,"template_id":true}}},{"if":{"properties":{"result":{"const":"PASS"}},"required":["result"]},"then":{"required":["comparator"],"properties":{"comparator":true}}}]},"JudgeRecord":{"type":"object","additionalProperties":false,"required":["provider","model","version","status","latency_ms","shadow"],"description":"Judge call as recorded. laya (local default [F11c]) and jev (hosted, optional [F11]) share the typed wire protocol; replay returns recorded answers in the same shape. R10 reads probabilities only, never the provider's confidence, under the typed profile [F36, F50]. Escalation answers and R11/R12 decisions copy the record of the decision they resolve.","properties":{"provider":{"$ref":"mandate.schema.json#/$defs/JudgeProvider"},"model":{"type":"string","minLength":1,"description":"e.g. typed-decisions (laya), jev-1.13.0 (jev [F11b]), the recorded model (replay)."},"version":{"type":"string","minLength":1,"description":"Server or checkpoint version reported at runtime."},"status":{"enum":["OK","TIMEOUT","ERROR"],"description":"Not OK => R10 FAIL, verdict ESCALATE, template R10.unavailable (I5)."},"fallback_from":{"enum":["laya","jev"],"description":"Set when another provider answered after laya or jev failed or timed out [F34]."},"input_truncated":{"type":"boolean","description":"true when Laya reported usage.truncated: the judge did not see the whole listing. status must then be ERROR, so R10 escalates with R10.unavailable (I5)."},"latency_ms":{"type":"integer","minimum":0,"description":"Wall time of the judge step, MEASURED."},"shadow":{"type":"boolean","description":"true = recorded, not enforced (JUDGE_MODE=shadow)."},"answers":{"$ref":"#/$defs/JudgeAnswers"}},"allOf":[{"if":{"properties":{"status":{"const":"OK"}},"required":["status"]},"then":{"required":["answers"],"properties":{"answers":true}}},{"if":{"properties":{"input_truncated":{"const":true}},"required":["input_truncated"]},"then":{"properties":{"status":{"const":"ERROR"}}}}]},"Probability":{"type":"number","minimum":0,"maximum":1},"JudgeAnswers":{"type":"object","additionalProperties":false,"required":["scope_fit","injection_risk","seller_risk","escalate_or_proceed"],"description":"Probability per typed option; each question's options sum to 1 (adapter normalises, tolerance in code).","properties":{"scope_fit":{"type":"object","additionalProperties":false,"required":["in_scope","out_of_scope"],"properties":{"in_scope":{"$ref":"#/$defs/Probability"},"out_of_scope":{"$ref":"#/$defs/Probability"}}},"injection_risk":{"type":"object","additionalProperties":false,"required":["clean","suspicious","injection"],"properties":{"clean":{"$ref":"#/$defs/Probability"},"suspicious":{"$ref":"#/$defs/Probability"},"injection":{"$ref":"#/$defs/Probability"}}},"seller_risk":{"type":"object","additionalProperties":false,"required":["low_risk","high_risk"],"properties":{"low_risk":{"$ref":"#/$defs/Probability"},"high_risk":{"$ref":"#/$defs/Probability"}}},"escalate_or_proceed":{"type":"object","additionalProperties":false,"required":["proceed","escalate"],"properties":{"proceed":{"$ref":"#/$defs/Probability"},"escalate":{"$ref":"#/$defs/Probability"}}}}},"Explanation":{"type":"object","additionalProperties":false,"required":["template_id","inputs","rendered"],"description":"Why, rendered by a pure function from template_id + inputs (D4), never LLM prose. Primary reason = first FAIL in rule order whose verdict equals the outcome. A verifier can re-render and compare.","properties":{"template_id":{"$ref":"#/$defs/TemplateId"},"inputs":{"type":"object","additionalProperties":true},"rendered":{"type":"string","minLength":1,"description":"English line."},"rendered_zh_hk":{"type":"string","minLength":1,"description":"zh-HK line from the same inputs."}}},"Escalation":{"type":"object","additionalProperties":false,"required":["state","expires_at"],"description":"On an ESCALATE decision: state OPEN, expires_at = decided_at + window [F31]. On the decision that resolves it: the final state, with answer when APPROVED or DENIED.","properties":{"state":{"enum":["OPEN","APPROVED","DENIED","EXPIRED"]},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"answer":{"$ref":"#/$defs/EscalationAnswer"}}},"EscalationAnswer":{"type":"object","additionalProperties":false,"required":["decision_id","mandate_id","cart_sha256","choice","answered_at","signer","signature"],"description":"Delegator-signed answer to an ESCALATE, bound to the mandate and to the cart the delegator was shown. Signature over UTF-8 of 'laisee.resolve.v2:' + hex SHA-256(JCS(this object without signature)); a v1 answer (no mandate_id or cart_sha256) is refused. Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.","properties":{"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId","description":"The sealed mandate the escalated decision belongs to."},"cart_sha256":{"$ref":"mandate.schema.json#/$defs/Sha256Hex","description":"Cart fingerprint of the escalated cart: hex SHA-256(JCS(cart without id and proposed_at)), as the engine computes it (docs/02 section 6)."},"choice":{"enum":["APPROVE","DENY"]},"answered_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey"},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}}}},"$comment":"examples[0] is SIMULATED: attempt 3 (DM4, S1). Subtotal HK$520 + shipping HK$30 = HK$550 over HK$541 left [F22]. Judge probabilities, latency, ids, hashes and times are placeholders [F59]; thresholds from F1, F32, F36, F50, F52.","examples":[{"id":"dec_demoA3","mandate_id":"mnd_demoM0","cart":{"id":"crt_demoA3","mandate_id":"mnd_demoM0","agent":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proposed_at":"2026-10-03T02:11:50Z","merchant":{"name":"Demo Streetwear (SIMULATED)","domain":"demo-streetwear.example"},"items":[{"title":"Denim jacket (SIMULATED)","category":"apparel","qty":1,"unit_price_minor":52000}],"subtotal_minor":52000,"shipping_minor":3000,"fees_minor":0,"fx":null,"total_minor":55000,"currency":"HKD","listing":{"url":"https://demo-streetwear.example/p/jacket","text_sha256":"643820c38a88c8fa0a93d4ddfce7ec034661cd410473d7a6fc53bc4caa964f8c","observed_at":"2026-10-03T02:11:40Z"},"price_observed_at":"2026-10-03T02:11:40Z","scameter":{"state":"NO_RECORD","capture_ref":"SIM-scameter-demo-streetwear","captured_at":"2026-10-03T01:35:00Z","searched":["url"]},"provenance":"SIMULATED"},"decided_at":"2026-10-03T02:12:00Z","outcome":"DENY","packet":{"mandate_id":"mnd_demoM0","log_id":"log_demoM0","budget_minor":80000,"committed_minor":0,"spent_minor":25900,"remaining_minor":54100,"currency":"HKD","active_cards":[],"mint_times":["2026-10-03T02:05:02Z"],"open_escalations":[],"status":"ACTIVE","expires_at":"2026-10-31T15:59:59Z","folded_through_seq":4,"computed_at":"2026-10-03T02:12:00Z"},"rules":[{"id":"R1","result":"PASS","inputs":{"signer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX"},"comparator":"verify"},{"id":"R2","result":"PASS","inputs":{"revoked":false,"now":"2026-10-03T02:12:00Z","valid_until":"2026-10-31T15:59:59Z"},"comparator":"<","threshold_ref":"mandate.valid_until"},{"id":"R3","result":"FAIL","verdict":"DENY","inputs":{"total_minor":55000,"remaining_minor":54100},"comparator":"<=","threshold_ref":"packet.remaining_minor","template_id":"R3.over_remaining"},{"id":"R4","result":"SKIPPED","inputs":{"per_purchase":null}},{"id":"R5","result":"PASS","inputs":{"total_minor":55000,"ceiling_minor":200000},"comparator":"<=","threshold_ref":"F1.ceiling"},{"id":"R6","result":"PASS","inputs":{"domain":"demo-streetwear.example","allow":null,"categories":["apparel"],"item_categories":["apparel"]},"comparator":"in","threshold_ref":"mandate.rules.categories"},{"id":"R7","result":"PASS","inputs":{"mints_in_window":1,"max_mints":3,"window_s":600},"comparator":"<","threshold_ref":"F32"},{"id":"R8","result":"PASS","inputs":{"active_cards":0,"max_active":2},"comparator":"<","threshold_ref":"F1.active"},{"id":"R9","result":"PASS","inputs":{"state":"NO_RECORD","capture_age_s":2220,"max_capture_age_s":86400},"comparator":"<=","threshold_ref":"F52"},{"id":"R10","check":"scope_fit","result":"PASS","inputs":{"p_in_scope":0.95,"threshold":0.6},"comparator":">=","threshold_ref":"F36.T_scope"},{"id":"R10","check":"injection_risk","result":"PASS","inputs":{"p_suspicious_or_injection":0.03,"threshold":0.2},"comparator":"<","threshold_ref":"F36.T_inj"},{"id":"R10","check":"seller_risk","result":"PASS","inputs":{"p_high_risk":0.05,"threshold":0.25},"comparator":"<","threshold_ref":"F36.T_sell_esc"},{"id":"R10","check":"escalate_or_proceed","result":"PASS","inputs":{"p_escalate":0.1,"threshold":0.5},"comparator":"<","threshold_ref":"F50.T_esc"},{"id":"R11","result":"SKIPPED","inputs":{}},{"id":"R12","result":"SKIPPED","inputs":{}}],"judge":{"provider":"laya","model":"typed-decisions","version":"typed-decisions@VERIFY","status":"OK","latency_ms":240,"shadow":false,"answers":{"scope_fit":{"in_scope":0.95,"out_of_scope":0.05},"injection_risk":{"clean":0.97,"suspicious":0.02,"injection":0.01},"seller_risk":{"low_risk":0.95,"high_risk":0.05},"escalate_or_proceed":{"proceed":0.9,"escalate":0.1}}},"explanation":{"template_id":"R3.over_remaining","inputs":{"total_minor":55000,"remaining_minor":54100},"rendered":"Stopped by R3. Total HK$550 is over the HK$541 left."},"engine":{"version":"core@0.1.0+demo","config_sha256":"d4540759f6ba5ea1a6a33167a7e544abfb84111b765bc96dd2536627f8d127a8"}}]};
 const schema93 = {"type":"string","pattern":"^dec_[A-Za-z0-9]{6,40}$"};
 const pattern42 = new RegExp("^dec_[A-Za-z0-9]{6,40}$", "u");
 const schema97 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/packet-state.schema.json","title":"PacketState","description":"Sealed decrementing budget (U1). Derived, never stored as truth: a pure fold of one log, seq 0..folded_through_seq, evaluated at computed_at. Accounting: commit the card limit on CARD_MINTED; release it on CARD_EVENT VOIDED or EXPIRED; on AUTHORISED move the actual amount to spent and release the difference. Invariant: budget_minor == committed_minor + spent_minor + remaining_minor, all >= 0. Status precedence: REVOKED > EXPIRED > EXHAUSTED (remaining_minor == 0) > ACTIVE.","type":"object","additionalProperties":false,"required":["mandate_id","log_id","budget_minor","committed_minor","spent_minor","remaining_minor","currency","active_cards","mint_times","open_escalations","status","expires_at","folded_through_seq","computed_at"],"properties":{"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"log_id":{"$ref":"mandate.schema.json#/$defs/LogId"},"budget_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"mandate.rules.budget.amount_minor"},"committed_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Sum of limits of ACTIVE cards."},"spent_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Sum of AUTHORISED amounts."},"remaining_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"(R3) What a new cart is checked against."},"currency":{"$ref":"mandate.schema.json#/$defs/Currency"},"active_cards":{"type":"array","description":"(R8) Cards in state ACTIVE.","items":{"type":"object","additionalProperties":false,"required":["id","limit_minor","expires_at"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/CardId"},"limit_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor"},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}}},"mint_times":{"type":"array","description":"(R7) minted_at of every CARD_MINTED, oldest first.","items":{"$ref":"mandate.schema.json#/$defs/Timestamp"}},"open_escalations":{"type":"array","description":"(R11) ESCALATE decisions not yet resolved.","items":{"type":"object","additionalProperties":false,"required":["decision_id","expires_at"],"properties":{"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}}},"status":{"enum":["ACTIVE","EXHAUSTED","EXPIRED","REVOKED"]},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"mandate.valid_until (credential validUntil)."},"folded_through_seq":{"type":"integer","minimum":0,"description":"Last log seq folded in. Decisions record it so a verifier can replay the same state."},"computed_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"`now` used for EXPIRED status."}},"$comment":"examples[0] is SIMULATED: packet after attempt 1 settled, HK$800 [F20] minus HK$259 [F21] = HK$541 left. Ids and times are placeholders [F59].","examples":[{"mandate_id":"mnd_demoM0","log_id":"log_demoM0","budget_minor":80000,"committed_minor":0,"spent_minor":25900,"remaining_minor":54100,"currency":"HKD","active_cards":[],"mint_times":["2026-10-03T02:05:02Z"],"open_escalations":[],"status":"ACTIVE","expires_at":"2026-10-31T15:59:59Z","folded_through_seq":3,"computed_at":"2026-10-03T02:06:00Z"}]};
@@ -6540,9 +6550,9 @@ return errors === 0;
 validate47.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 const schema131 = {"type":"object","additionalProperties":false,"required":["state","expires_at"],"description":"On an ESCALATE decision: state OPEN, expires_at = decided_at + window [F31]. On the decision that resolves it: the final state, with answer when APPROVED or DENIED.","properties":{"state":{"enum":["OPEN","APPROVED","DENIED","EXPIRED"]},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"answer":{"$ref":"#/$defs/EscalationAnswer"}}};
-const schema133 = {"type":"object","additionalProperties":false,"required":["decision_id","choice","answered_at","signer","signature"],"description":"Delegator-signed answer to an ESCALATE. Signature over UTF-8 of 'laisee.resolve.v1:' + hex SHA-256(JCS(this object without signature)). Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.","properties":{"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"choice":{"enum":["APPROVE","DENY"]},"answered_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey"},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}}};
-const schema137 = {"type":"string","pattern":"^[A-Za-z0-9_-]{86}$","description":"Ed25519 signature (64 bytes), base64url without padding. Used by log entries, revocations and escalation answers."};
-const pattern61 = new RegExp("^[A-Za-z0-9_-]{86}$", "u");
+const schema133 = {"type":"object","additionalProperties":false,"required":["decision_id","mandate_id","cart_sha256","choice","answered_at","signer","signature"],"description":"Delegator-signed answer to an ESCALATE, bound to the mandate and to the cart the delegator was shown. Signature over UTF-8 of 'laisee.resolve.v2:' + hex SHA-256(JCS(this object without signature)); a v1 answer (no mandate_id or cart_sha256) is refused. Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.","properties":{"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId"},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId","description":"The sealed mandate the escalated decision belongs to."},"cart_sha256":{"$ref":"mandate.schema.json#/$defs/Sha256Hex","description":"Cart fingerprint of the escalated cart: hex SHA-256(JCS(cart without id and proposed_at)), as the engine computes it (docs/02 section 6)."},"choice":{"enum":["APPROVE","DENY"]},"answered_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey"},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}}};
+const schema139 = {"type":"string","pattern":"^[A-Za-z0-9_-]{86}$","description":"Ed25519 signature (64 bytes), base64url without padding. Used by log entries, revocations and escalation answers."};
+const pattern63 = new RegExp("^[A-Za-z0-9_-]{86}$", "u");
 
 function validate50(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -6565,8 +6575,8 @@ vErrors.push(err0);
 }
 errors++;
 }
-if(data.choice === undefined){
-const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "choice"},message:"must have required property '"+"choice"+"'"};
+if(data.mandate_id === undefined){
+const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "mandate_id"},message:"must have required property '"+"mandate_id"+"'"};
 if(vErrors === null){
 vErrors = [err1];
 }
@@ -6575,8 +6585,8 @@ vErrors.push(err1);
 }
 errors++;
 }
-if(data.answered_at === undefined){
-const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "answered_at"},message:"must have required property '"+"answered_at"+"'"};
+if(data.cart_sha256 === undefined){
+const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "cart_sha256"},message:"must have required property '"+"cart_sha256"+"'"};
 if(vErrors === null){
 vErrors = [err2];
 }
@@ -6585,8 +6595,8 @@ vErrors.push(err2);
 }
 errors++;
 }
-if(data.signer === undefined){
-const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signer"},message:"must have required property '"+"signer"+"'"};
+if(data.choice === undefined){
+const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "choice"},message:"must have required property '"+"choice"+"'"};
 if(vErrors === null){
 vErrors = [err3];
 }
@@ -6595,8 +6605,8 @@ vErrors.push(err3);
 }
 errors++;
 }
-if(data.signature === undefined){
-const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signature"},message:"must have required property '"+"signature"+"'"};
+if(data.answered_at === undefined){
+const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "answered_at"},message:"must have required property '"+"answered_at"+"'"};
 if(vErrors === null){
 vErrors = [err4];
 }
@@ -6605,9 +6615,8 @@ vErrors.push(err4);
 }
 errors++;
 }
-for(const key0 in data){
-if(!(((((key0 === "decision_id") || (key0 === "choice")) || (key0 === "answered_at")) || (key0 === "signer")) || (key0 === "signature"))){
-const err5 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
+if(data.signer === undefined){
+const err5 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signer"},message:"must have required property '"+"signer"+"'"};
 if(vErrors === null){
 vErrors = [err5];
 }
@@ -6616,12 +6625,8 @@ vErrors.push(err5);
 }
 errors++;
 }
-}
-if(data.decision_id !== undefined){
-let data0 = data.decision_id;
-if(typeof data0 === "string"){
-if(!pattern42.test(data0)){
-const err6 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/pattern",keyword:"pattern",params:{pattern: "^dec_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^dec_[A-Za-z0-9]{6,40}$"+"\""};
+if(data.signature === undefined){
+const err6 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signature"},message:"must have required property '"+"signature"+"'"};
 if(vErrors === null){
 vErrors = [err6];
 }
@@ -6630,9 +6635,9 @@ vErrors.push(err6);
 }
 errors++;
 }
-}
-else {
-const err7 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/type",keyword:"type",params:{type: "string"},message:"must be string"};
+for(const key0 in data){
+if(!(((((((key0 === "decision_id") || (key0 === "mandate_id")) || (key0 === "cart_sha256")) || (key0 === "choice")) || (key0 === "answered_at")) || (key0 === "signer")) || (key0 === "signature"))){
+const err7 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err7];
 }
@@ -6642,10 +6647,11 @@ vErrors.push(err7);
 errors++;
 }
 }
-if(data.choice !== undefined){
-let data1 = data.choice;
-if(!((data1 === "APPROVE") || (data1 === "DENY"))){
-const err8 = {instancePath:instancePath+"/choice",schemaPath:"#/properties/choice/enum",keyword:"enum",params:{allowedValues: schema133.properties.choice.enum},message:"must be equal to one of the allowed values"};
+if(data.decision_id !== undefined){
+let data0 = data.decision_id;
+if(typeof data0 === "string"){
+if(!pattern42.test(data0)){
+const err8 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/pattern",keyword:"pattern",params:{pattern: "^dec_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^dec_[A-Za-z0-9]{6,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err8];
 }
@@ -6655,11 +6661,8 @@ vErrors.push(err8);
 errors++;
 }
 }
-if(data.answered_at !== undefined){
-let data2 = data.answered_at;
-if(typeof data2 === "string"){
-if(!pattern12.test(data2)){
-const err9 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
+else {
+const err9 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err9];
 }
@@ -6668,8 +6671,12 @@ vErrors.push(err9);
 }
 errors++;
 }
-if(!(formats0.validate(data2))){
-const err10 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
+}
+if(data.mandate_id !== undefined){
+let data1 = data.mandate_id;
+if(typeof data1 === "string"){
+if(!pattern4.test(data1)){
+const err10 = {instancePath:instancePath+"/mandate_id",schemaPath:"mandate.schema.json#/$defs/MandateId/pattern",keyword:"pattern",params:{pattern: "^mnd_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^mnd_[A-Za-z0-9]{6,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err10];
 }
@@ -6680,7 +6687,7 @@ errors++;
 }
 }
 else {
-const err11 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err11 = {instancePath:instancePath+"/mandate_id",schemaPath:"mandate.schema.json#/$defs/MandateId/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err11];
 }
@@ -6690,11 +6697,11 @@ vErrors.push(err11);
 errors++;
 }
 }
-if(data.signer !== undefined){
-let data3 = data.signer;
-if(typeof data3 === "string"){
-if(!pattern5.test(data3)){
-const err12 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
+if(data.cart_sha256 !== undefined){
+let data2 = data.cart_sha256;
+if(typeof data2 === "string"){
+if(!pattern11.test(data2)){
+const err12 = {instancePath:instancePath+"/cart_sha256",schemaPath:"mandate.schema.json#/$defs/Sha256Hex/pattern",keyword:"pattern",params:{pattern: "^[0-9a-f]{64}$"},message:"must match pattern \""+"^[0-9a-f]{64}$"+"\""};
 if(vErrors === null){
 vErrors = [err12];
 }
@@ -6705,7 +6712,7 @@ errors++;
 }
 }
 else {
-const err13 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err13 = {instancePath:instancePath+"/cart_sha256",schemaPath:"mandate.schema.json#/$defs/Sha256Hex/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err13];
 }
@@ -6715,11 +6722,10 @@ vErrors.push(err13);
 errors++;
 }
 }
-if(data.signature !== undefined){
-let data4 = data.signature;
-if(typeof data4 === "string"){
-if(!pattern61.test(data4)){
-const err14 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
+if(data.choice !== undefined){
+let data3 = data.choice;
+if(!((data3 === "APPROVE") || (data3 === "DENY"))){
+const err14 = {instancePath:instancePath+"/choice",schemaPath:"#/properties/choice/enum",keyword:"enum",params:{allowedValues: schema133.properties.choice.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err14];
 }
@@ -6729,8 +6735,11 @@ vErrors.push(err14);
 errors++;
 }
 }
-else {
-const err15 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.answered_at !== undefined){
+let data4 = data.answered_at;
+if(typeof data4 === "string"){
+if(!pattern12.test(data4)){
+const err15 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -6739,15 +6748,86 @@ vErrors.push(err15);
 }
 errors++;
 }
-}
-}
-else {
-const err16 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(!(formats0.validate(data4))){
+const err16 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
 if(vErrors === null){
 vErrors = [err16];
 }
 else {
 vErrors.push(err16);
+}
+errors++;
+}
+}
+else {
+const err17 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err17];
+}
+else {
+vErrors.push(err17);
+}
+errors++;
+}
+}
+if(data.signer !== undefined){
+let data5 = data.signer;
+if(typeof data5 === "string"){
+if(!pattern5.test(data5)){
+const err18 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
+if(vErrors === null){
+vErrors = [err18];
+}
+else {
+vErrors.push(err18);
+}
+errors++;
+}
+}
+else {
+const err19 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err19];
+}
+else {
+vErrors.push(err19);
+}
+errors++;
+}
+}
+if(data.signature !== undefined){
+let data6 = data.signature;
+if(typeof data6 === "string"){
+if(!pattern63.test(data6)){
+const err20 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
+if(vErrors === null){
+vErrors = [err20];
+}
+else {
+vErrors.push(err20);
+}
+errors++;
+}
+}
+else {
+const err21 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err21];
+}
+else {
+vErrors.push(err21);
+}
+errors++;
+}
+}
+}
+else {
+const err22 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err22];
+}
+else {
+vErrors.push(err22);
 }
 errors++;
 }
@@ -7525,11 +7605,11 @@ return errors === 0;
 validate37.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validateLogEntry = validate53;
-const schema139 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/log-entry.schema.json","title":"LogEntry","description":"One line of the append-only JSONL log at LOG_DIR/<log_id>.jsonl. One log per packet; seq 0 is MANDATE_SEALED; seq increases by 1. Bytes hashed and signed (JCS = RFC 8785 canonical JSON, UTF-8): (1) payload_hash = hex SHA-256(JCS(payload)). (2) entry_hash = hex SHA-256(JCS({v, log_id, seq, kind, ts, prev_hash, payload_hash, signer})). (3) prev_hash = entry_hash of seq - 1; for seq 0 it is 64 '0' characters. (4) signature = base64url(Ed25519.sign(engine key, UTF-8('laisee.log.v1:' + entry_hash))). The payload is covered through payload_hash; the signature covers entry_hash only.","type":"object","additionalProperties":false,"required":["v","log_id","seq","kind","ts","prev_hash","payload","payload_hash","entry_hash","signer","signature"],"properties":{"v":{"const":1},"log_id":{"$ref":"mandate.schema.json#/$defs/LogId"},"seq":{"type":"integer","minimum":0},"kind":{"enum":["MANDATE_SEALED","DECISION","CARD_MINTED","CARD_EVENT","MANDATE_REVOKED","PACKET_EXPIRED"]},"ts":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Append time."},"prev_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"payload":{"type":"object","additionalProperties":true,"description":"Shape fixed by kind (oneOf below)."},"payload_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"entry_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Engine (operator) key. Delegator signatures live inside payloads (mandate credential proof, revocation, escalation answer)."},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}},"oneOf":[{"properties":{"kind":{"const":"MANDATE_SEALED"},"payload":{"$ref":"mandate-credential.schema.json"}}},{"properties":{"kind":{"const":"DECISION"},"payload":{"$ref":"decision.schema.json"}}},{"properties":{"kind":{"const":"CARD_MINTED"},"payload":{"$ref":"card-record.schema.json"}}},{"properties":{"kind":{"const":"CARD_EVENT"},"payload":{"$ref":"#/$defs/CardEvent"}}},{"properties":{"kind":{"const":"MANDATE_REVOKED"},"payload":{"$ref":"mandate.schema.json#/$defs/Revocation"}}},{"properties":{"kind":{"const":"PACKET_EXPIRED"},"payload":{"$ref":"#/$defs/PacketExpired"}}}],"$defs":{"CardEvent":{"type":"object","additionalProperties":false,"required":["card_id","event","at","simulated"],"description":"Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).","properties":{"card_id":{"$ref":"mandate.schema.json#/$defs/CardId"},"event":{"enum":["AUTHORISED","DECLINED","VOIDED","EXPIRED"]},"at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"amount_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Charged (AUTHORISED) or attempted (DECLINED)."},"merchant_domain":{"$ref":"mandate.schema.json#/$defs/Domain"},"decline_code":{"enum":["OVER_LIMIT","CARD_USED","CARD_VOIDED","CARD_EXPIRED","UNKNOWN_HANDLE","MERCHANT_MISMATCH"],"description":"rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md). MERCHANT_MISMATCH is SIMULATED: the real Single Use Card has no merchant lock [F1]."},"idempotency_key":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"AUTHORISED or DECLINED: the key the executor sent. A retry with the same key returns the same event and never charges twice."},"simulated":{"const":true}},"allOf":[{"if":{"properties":{"event":{"enum":["AUTHORISED","DECLINED"]}},"required":["event"]},"then":{"required":["amount_minor","merchant_domain"],"properties":{"amount_minor":true,"merchant_domain":true}}},{"if":{"properties":{"event":{"const":"DECLINED"}},"required":["event"]},"then":{"required":["decline_code"],"properties":{"decline_code":true}}}]},"PacketExpired":{"type":"object","additionalProperties":false,"required":["mandate_id","expired_at"],"description":"Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.","properties":{"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"expired_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}}},"$comment":"examples are SIMULATED. examples[0]: seq 0, MANDATE_SEALED for demo mandate M0 (HK$800 [F20]). examples[1]: seq 2, CARD_MINTED for attempt 1 (HK$259 [F21]). Hashes, keys, proofs and signatures are placeholders and do not verify [F59]; golden vectors are Lane A's job (T-V1).","examples":[{"v":1,"log_id":"log_demoM0","seq":0,"kind":"MANDATE_SEALED","ts":"2026-10-03T02:00:01Z","prev_hash":"0000000000000000000000000000000000000000000000000000000000000000","payload":{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":["VerifiableCredential","AgentDelegationCredential"],"id":"urn:laisee:mandate:mnd_demoM0","issuer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","validFrom":"2026-10-03T02:00:00Z","validUntil":"2026-10-31T15:59:59Z","credentialSubject":{"id":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","intent_text":"HK$800, clothes, verified sellers.","rules":{"budget":{"amount_minor":80000,"currency":"HKD"},"categories":["apparel"],"merchants":{"allow":null,"deny":[]},"seller_check":{"require_capture":true}}},"proof":{"type":"DataIntegrityProof","cryptosuite":"eddsa-jcs-2022","created":"2026-10-03T02:00:00Z","verificationMethod":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX#z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proofPurpose":"assertionMethod","proofValue":"z3FakeProofDemoNotVerifyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}},"payload_hash":"5b1f0e3a9c7d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a1b3c5d7e9f","entry_hash":"ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f71","signer":"did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","signature":"SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},{"v":1,"log_id":"log_demoM0","seq":2,"kind":"CARD_MINTED","ts":"2026-10-03T02:05:02Z","prev_hash":"ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f72","payload":{"id":"crd_demoA1","decision_id":"dec_demoA1","mandate_id":"mnd_demoM0","handle":"hdl_SIMULATEDdemoA1handle","last4":"0000","limit_minor":25900,"currency":"HKD","minted_at":"2026-10-03T02:05:02Z","expires_at":"2026-10-03T02:35:02Z","state":"ACTIVE","merchant_lock":"demo-apparel.example","purpose":"crt_demoA1","simulated":true},"payload_hash":"042dbdf22682451d37b18c24a92dee4276a2cf92209fc17702caacb83aa32e80","entry_hash":"7a6e4d20d2f48747ce2537787bf3e0794c469b9f4c073ad8f88377ad6ba10ae6","signer":"did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","signature":"SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}]};
-const schema140 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/card-record.schema.json","title":"CardRecord","description":"One-off card minted for one APPROVE (U2), payload of CARD_MINTED. Single use, limit = approved total, TTL, optional merchant_lock and purpose (U2, [F19]); minted at most once per decision (RailPort.mint is idempotent by decision id). AP2-shaped payment-mandate evidence [F12]. SIMULATED rail only (RAIL_MODE=sim): no real card exists. There are no PAN, CVV or printed card expiry fields, by design (I8). The executor presents `handle` to the merchant stub; the planner sees status only. State changes after mint arrive as CARD_EVENT entries; the fold gives the current state.","type":"object","additionalProperties":false,"required":["id","decision_id","mandate_id","handle","last4","limit_minor","currency","minted_at","expires_at","state","simulated"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/CardId"},"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId","description":"The APPROVE that allowed this mint (I1)."},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"handle":{"type":"string","pattern":"^hdl_[A-Za-z0-9_-]{16,64}$","description":"Opaque rail reference, not a card number. rail-sim accepts it only from the executor."},"last4":{"type":"string","pattern":"^[0-9]{4}$","description":"Display only. Random in rail-sim."},"limit_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"== decision.approved_limit_minor == cart.total_minor (I2); <= rail ceiling [F1]."},"currency":{"$ref":"mandate.schema.json#/$defs/Currency"},"minted_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Card TTL in the engine, not a printed expiry: min(minted_at + TTL [F30], mandate.rules.expires_at, minted_at + rail validity [F1])."},"state":{"enum":["ACTIVE","USED","VOIDED","EXPIRED"],"description":"ACTIVE at mint."},"merchant_lock":{"$ref":"mandate.schema.json#/$defs/Domain","description":"SIMULATED merchant lock: authorise from any other domain is DECLINED MERCHANT_MISMATCH. The real Single Use Card has no merchant lock [F1]; listed as an ask in 09."},"purpose":{"type":"string","minLength":1,"maxLength":80,"pattern":"^\\D*(\\d\\D*){0,12}$","description":"Cart or order reference, e.g. the cart id. At most 12 digits in total, so no card number fits (I8)."},"simulated":{"const":true,"description":"rail-sim only. A real rail would need a new schema version."}},"$comment":"examples[0] is SIMULATED: the card for attempt 1 (DM2), limit HK$259 [F21], TTL 30 min [F30]. Handle, last4, ids and times are placeholders [F59].","examples":[{"id":"crd_demoA1","decision_id":"dec_demoA1","mandate_id":"mnd_demoM0","handle":"hdl_SIMULATEDdemoA1handle","last4":"0000","limit_minor":25900,"currency":"HKD","minted_at":"2026-10-03T02:05:02Z","expires_at":"2026-10-03T02:35:02Z","state":"ACTIVE","merchant_lock":"demo-apparel.example","purpose":"crt_demoA1","simulated":true}]};
-const pattern66 = new RegExp("^hdl_[A-Za-z0-9_-]{16,64}$", "u");
-const pattern67 = new RegExp("^[0-9]{4}$", "u");
-const pattern71 = new RegExp("^\\D*(\\d\\D*){0,12}$", "u");
+const schema141 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/log-entry.schema.json","title":"LogEntry","description":"One line of the append-only JSONL log at LOG_DIR/<log_id>.jsonl. One log per packet; seq 0 is MANDATE_SEALED; seq increases by 1. Bytes hashed and signed (JCS = RFC 8785 canonical JSON, UTF-8): (1) payload_hash = hex SHA-256(JCS(payload)). (2) entry_hash = hex SHA-256(JCS({v, log_id, seq, kind, ts, prev_hash, payload_hash, signer})). (3) prev_hash = entry_hash of seq - 1; for seq 0 it is 64 '0' characters. (4) signature = base64url(Ed25519.sign(engine key, UTF-8('laisee.log.v1:' + entry_hash))). The payload is covered through payload_hash; the signature covers entry_hash only.","type":"object","additionalProperties":false,"required":["v","log_id","seq","kind","ts","prev_hash","payload","payload_hash","entry_hash","signer","signature"],"properties":{"v":{"const":1},"log_id":{"$ref":"mandate.schema.json#/$defs/LogId"},"seq":{"type":"integer","minimum":0},"kind":{"enum":["MANDATE_SEALED","DECISION","CARD_MINTED","CARD_EVENT","MANDATE_REVOKED","PACKET_EXPIRED"]},"ts":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Append time."},"prev_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"payload":{"type":"object","additionalProperties":true,"description":"Shape fixed by kind (oneOf below)."},"payload_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"entry_hash":{"$ref":"mandate.schema.json#/$defs/Sha256Hex"},"signer":{"$ref":"mandate.schema.json#/$defs/DidKey","description":"Engine (operator) key. Delegator signatures live inside payloads (mandate credential proof, revocation, escalation answer)."},"signature":{"$ref":"mandate.schema.json#/$defs/SignatureB64u"}},"oneOf":[{"properties":{"kind":{"const":"MANDATE_SEALED"},"payload":{"$ref":"mandate-credential.schema.json"}}},{"properties":{"kind":{"const":"DECISION"},"payload":{"$ref":"decision.schema.json"}}},{"properties":{"kind":{"const":"CARD_MINTED"},"payload":{"$ref":"card-record.schema.json"}}},{"properties":{"kind":{"const":"CARD_EVENT"},"payload":{"$ref":"#/$defs/CardEvent"}}},{"properties":{"kind":{"const":"MANDATE_REVOKED"},"payload":{"$ref":"mandate.schema.json#/$defs/Revocation"}}},{"properties":{"kind":{"const":"PACKET_EXPIRED"},"payload":{"$ref":"#/$defs/PacketExpired"}}}],"$defs":{"CardEvent":{"type":"object","additionalProperties":false,"required":["card_id","event","at","simulated"],"description":"Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).","properties":{"card_id":{"$ref":"mandate.schema.json#/$defs/CardId"},"event":{"enum":["AUTHORISED","DECLINED","VOIDED","EXPIRED"]},"at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"amount_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Charged (AUTHORISED) or attempted (DECLINED)."},"merchant_domain":{"$ref":"mandate.schema.json#/$defs/Domain"},"decline_code":{"enum":["OVER_LIMIT","CARD_USED","CARD_VOIDED","CARD_EXPIRED","UNKNOWN_HANDLE","MERCHANT_MISMATCH"],"description":"rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md). MERCHANT_MISMATCH is SIMULATED: the real Single Use Card has no merchant lock [F1]."},"idempotency_key":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"AUTHORISED or DECLINED: the key the executor sent. A retry with the same key returns the same event and never charges twice."},"simulated":{"const":true}},"allOf":[{"if":{"properties":{"event":{"enum":["AUTHORISED","DECLINED"]}},"required":["event"]},"then":{"required":["amount_minor","merchant_domain"],"properties":{"amount_minor":true,"merchant_domain":true}}},{"if":{"properties":{"event":{"const":"DECLINED"}},"required":["event"]},"then":{"required":["decline_code"],"properties":{"decline_code":true}}}]},"PacketExpired":{"type":"object","additionalProperties":false,"required":["mandate_id","expired_at"],"description":"Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.","properties":{"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"expired_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}}},"$comment":"examples are SIMULATED. examples[0]: seq 0, MANDATE_SEALED for demo mandate M0 (HK$800 [F20]). examples[1]: seq 2, CARD_MINTED for attempt 1 (HK$259 [F21]). Hashes, keys, proofs and signatures are placeholders and do not verify [F59]; golden vectors are Lane A's job (T-V1).","examples":[{"v":1,"log_id":"log_demoM0","seq":0,"kind":"MANDATE_SEALED","ts":"2026-10-03T02:00:01Z","prev_hash":"0000000000000000000000000000000000000000000000000000000000000000","payload":{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":["VerifiableCredential","AgentDelegationCredential"],"id":"urn:laisee:mandate:mnd_demoM0","issuer":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","validFrom":"2026-10-03T02:00:00Z","validUntil":"2026-10-31T15:59:59Z","credentialSubject":{"id":"did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","intent_text":"HK$800, clothes, verified sellers.","rules":{"budget":{"amount_minor":80000,"currency":"HKD"},"categories":["apparel"],"merchants":{"allow":null,"deny":[]},"seller_check":{"require_capture":true}}},"proof":{"@context":["https://www.w3.org/ns/credentials/v2","https://laisee.local/contexts/delegation/v1"],"type":"DataIntegrityProof","cryptosuite":"eddsa-jcs-2022","created":"2026-10-03T02:00:00Z","verificationMethod":"did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX#z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX","proofPurpose":"assertionMethod","proofValue":"z3FakeProofDemoNotVerifyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}},"payload_hash":"5b1f0e3a9c7d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a1b3c5d7e9f","entry_hash":"ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f71","signer":"did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","signature":"SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},{"v":1,"log_id":"log_demoM0","seq":2,"kind":"CARD_MINTED","ts":"2026-10-03T02:05:02Z","prev_hash":"ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f72","payload":{"id":"crd_demoA1","decision_id":"dec_demoA1","mandate_id":"mnd_demoM0","handle":"hdl_SIMULATEDdemoA1handle","last4":"0000","limit_minor":25900,"currency":"HKD","minted_at":"2026-10-03T02:05:02Z","expires_at":"2026-10-03T02:35:02Z","state":"ACTIVE","merchant_lock":"demo-apparel.example","purpose":"crt_demoA1","simulated":true},"payload_hash":"042dbdf22682451d37b18c24a92dee4276a2cf92209fc17702caacb83aa32e80","entry_hash":"7a6e4d20d2f48747ce2537787bf3e0794c469b9f4c073ad8f88377ad6ba10ae6","signer":"did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX","signature":"SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}]};
+const schema142 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/card-record.schema.json","title":"CardRecord","description":"One-off card minted for one APPROVE (U2), payload of CARD_MINTED. Single use, limit = approved total, TTL, optional merchant_lock and purpose (U2, [F19]); minted at most once per decision (RailPort.mint is idempotent by decision id). AP2-shaped payment-mandate evidence [F12]. SIMULATED rail only (RAIL_MODE=sim): no real card exists. There are no PAN, CVV or printed card expiry fields, by design (I8). The executor presents `handle` to the merchant stub; the planner sees status only. State changes after mint arrive as CARD_EVENT entries; the fold gives the current state.","type":"object","additionalProperties":false,"required":["id","decision_id","mandate_id","handle","last4","limit_minor","currency","minted_at","expires_at","state","simulated"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/CardId"},"decision_id":{"$ref":"mandate.schema.json#/$defs/DecisionId","description":"The APPROVE that allowed this mint (I1)."},"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"handle":{"type":"string","pattern":"^hdl_[A-Za-z0-9_-]{16,64}$","description":"Opaque rail reference, not a card number. rail-sim accepts it only from the executor."},"last4":{"type":"string","pattern":"^[0-9]{4}$","description":"Display only. Random in rail-sim."},"limit_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"== decision.approved_limit_minor == cart.total_minor (I2); <= rail ceiling [F1]."},"currency":{"$ref":"mandate.schema.json#/$defs/Currency"},"minted_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"expires_at":{"$ref":"mandate.schema.json#/$defs/Timestamp","description":"Card TTL in the engine, not a printed expiry: min(minted_at + TTL [F30], mandate.rules.expires_at, minted_at + rail validity [F1])."},"state":{"enum":["ACTIVE","USED","VOIDED","EXPIRED"],"description":"ACTIVE at mint."},"merchant_lock":{"$ref":"mandate.schema.json#/$defs/Domain","description":"SIMULATED merchant lock: authorise from any other domain is DECLINED MERCHANT_MISMATCH. The real Single Use Card has no merchant lock [F1]; listed as an ask in 09."},"purpose":{"type":"string","minLength":1,"maxLength":80,"pattern":"^\\D*(\\d\\D*){0,12}$","description":"Cart or order reference, e.g. the cart id. At most 12 digits in total, so no card number fits (I8)."},"simulated":{"const":true,"description":"rail-sim only. A real rail would need a new schema version."}},"$comment":"examples[0] is SIMULATED: the card for attempt 1 (DM2), limit HK$259 [F21], TTL 30 min [F30]. Handle, last4, ids and times are placeholders [F59].","examples":[{"id":"crd_demoA1","decision_id":"dec_demoA1","mandate_id":"mnd_demoM0","handle":"hdl_SIMULATEDdemoA1handle","last4":"0000","limit_minor":25900,"currency":"HKD","minted_at":"2026-10-03T02:05:02Z","expires_at":"2026-10-03T02:35:02Z","state":"ACTIVE","merchant_lock":"demo-apparel.example","purpose":"crt_demoA1","simulated":true}]};
+const pattern68 = new RegExp("^hdl_[A-Za-z0-9_-]{16,64}$", "u");
+const pattern69 = new RegExp("^[0-9]{4}$", "u");
+const pattern73 = new RegExp("^\\D*(\\d\\D*){0,12}$", "u");
 
 function validate56(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 /*# sourceURL="https://laisee.local/schemas/card-record.schema.json" */;
@@ -7654,7 +7734,7 @@ vErrors.push(err10);
 errors++;
 }
 for(const key0 in data){
-if(!(func14.call(schema140.properties, key0))){
+if(!(func14.call(schema142.properties, key0))){
 const err11 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err11];
@@ -7743,7 +7823,7 @@ errors++;
 if(data.handle !== undefined){
 let data3 = data.handle;
 if(typeof data3 === "string"){
-if(!pattern66.test(data3)){
+if(!pattern68.test(data3)){
 const err18 = {instancePath:instancePath+"/handle",schemaPath:"#/properties/handle/pattern",keyword:"pattern",params:{pattern: "^hdl_[A-Za-z0-9_-]{16,64}$"},message:"must match pattern \""+"^hdl_[A-Za-z0-9_-]{16,64}$"+"\""};
 if(vErrors === null){
 vErrors = [err18];
@@ -7768,7 +7848,7 @@ errors++;
 if(data.last4 !== undefined){
 let data4 = data.last4;
 if(typeof data4 === "string"){
-if(!pattern67.test(data4)){
+if(!pattern69.test(data4)){
 const err20 = {instancePath:instancePath+"/last4",schemaPath:"#/properties/last4/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}$"},message:"must match pattern \""+"^[0-9]{4}$"+"\""};
 if(vErrors === null){
 vErrors = [err20];
@@ -7900,7 +7980,7 @@ errors++;
 if(data.state !== undefined){
 let data9 = data.state;
 if(!((((data9 === "ACTIVE") || (data9 === "USED")) || (data9 === "VOIDED")) || (data9 === "EXPIRED"))){
-const err31 = {instancePath:instancePath+"/state",schemaPath:"#/properties/state/enum",keyword:"enum",params:{allowedValues: schema140.properties.state.enum},message:"must be equal to one of the allowed values"};
+const err31 = {instancePath:instancePath+"/state",schemaPath:"#/properties/state/enum",keyword:"enum",params:{allowedValues: schema142.properties.state.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err31];
 }
@@ -7958,7 +8038,7 @@ vErrors.push(err35);
 }
 errors++;
 }
-if(!pattern71.test(data11)){
+if(!pattern73.test(data11)){
 const err36 = {instancePath:instancePath+"/purpose",schemaPath:"#/properties/purpose/pattern",keyword:"pattern",params:{pattern: "^\\D*(\\d\\D*){0,12}$"},message:"must match pattern \""+"^\\D*(\\d\\D*){0,12}$"+"\""};
 if(vErrors === null){
 vErrors = [err36];
@@ -8008,7 +8088,7 @@ return errors === 0;
 }
 validate56.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema149 = {"type":"object","additionalProperties":false,"required":["card_id","event","at","simulated"],"description":"Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).","properties":{"card_id":{"$ref":"mandate.schema.json#/$defs/CardId"},"event":{"enum":["AUTHORISED","DECLINED","VOIDED","EXPIRED"]},"at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"amount_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Charged (AUTHORISED) or attempted (DECLINED)."},"merchant_domain":{"$ref":"mandate.schema.json#/$defs/Domain"},"decline_code":{"enum":["OVER_LIMIT","CARD_USED","CARD_VOIDED","CARD_EXPIRED","UNKNOWN_HANDLE","MERCHANT_MISMATCH"],"description":"rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md). MERCHANT_MISMATCH is SIMULATED: the real Single Use Card has no merchant lock [F1]."},"idempotency_key":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"AUTHORISED or DECLINED: the key the executor sent. A retry with the same key returns the same event and never charges twice."},"simulated":{"const":true}},"allOf":[{"if":{"properties":{"event":{"enum":["AUTHORISED","DECLINED"]}},"required":["event"]},"then":{"required":["amount_minor","merchant_domain"],"properties":{"amount_minor":true,"merchant_domain":true}}},{"if":{"properties":{"event":{"const":"DECLINED"}},"required":["event"]},"then":{"required":["decline_code"],"properties":{"decline_code":true}}}]};
+const schema151 = {"type":"object","additionalProperties":false,"required":["card_id","event","at","simulated"],"description":"Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).","properties":{"card_id":{"$ref":"mandate.schema.json#/$defs/CardId"},"event":{"enum":["AUTHORISED","DECLINED","VOIDED","EXPIRED"]},"at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"amount_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Charged (AUTHORISED) or attempted (DECLINED)."},"merchant_domain":{"$ref":"mandate.schema.json#/$defs/Domain"},"decline_code":{"enum":["OVER_LIMIT","CARD_USED","CARD_VOIDED","CARD_EXPIRED","UNKNOWN_HANDLE","MERCHANT_MISMATCH"],"description":"rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md). MERCHANT_MISMATCH is SIMULATED: the real Single Use Card has no merchant lock [F1]."},"idempotency_key":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"AUTHORISED or DECLINED: the key the executor sent. A retry with the same key returns the same event and never charges twice."},"simulated":{"const":true}},"allOf":[{"if":{"properties":{"event":{"enum":["AUTHORISED","DECLINED"]}},"required":["event"]},"then":{"required":["amount_minor","merchant_domain"],"properties":{"amount_minor":true,"merchant_domain":true}}},{"if":{"properties":{"event":{"const":"DECLINED"}},"required":["event"]},"then":{"required":["decline_code"],"properties":{"decline_code":true}}}]};
 
 function validate58(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -8266,7 +8346,7 @@ errors++;
 if(data.event !== undefined){
 let data3 = data.event;
 if(!((((data3 === "AUTHORISED") || (data3 === "DECLINED")) || (data3 === "VOIDED")) || (data3 === "EXPIRED"))){
-const err16 = {instancePath:instancePath+"/event",schemaPath:"#/properties/event/enum",keyword:"enum",params:{allowedValues: schema149.properties.event.enum},message:"must be equal to one of the allowed values"};
+const err16 = {instancePath:instancePath+"/event",schemaPath:"#/properties/event/enum",keyword:"enum",params:{allowedValues: schema151.properties.event.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -8364,7 +8444,7 @@ errors++;
 if(data.decline_code !== undefined){
 let data7 = data.decline_code;
 if(!((((((data7 === "OVER_LIMIT") || (data7 === "CARD_USED")) || (data7 === "CARD_VOIDED")) || (data7 === "CARD_EXPIRED")) || (data7 === "UNKNOWN_HANDLE")) || (data7 === "MERCHANT_MISMATCH"))){
-const err24 = {instancePath:instancePath+"/decline_code",schemaPath:"#/properties/decline_code/enum",keyword:"enum",params:{allowedValues: schema149.properties.decline_code.enum},message:"must be equal to one of the allowed values"};
+const err24 = {instancePath:instancePath+"/decline_code",schemaPath:"#/properties/decline_code/enum",keyword:"enum",params:{allowedValues: schema151.properties.decline_code.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -8427,7 +8507,7 @@ return errors === 0;
 }
 validate58.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema154 = {"type":"object","additionalProperties":false,"required":["mandate_id","revoked_at","signer","signature"],"description":"Delegator-signed revoke (S4), payload of MANDATE_REVOKED. signer must equal mandate.delegator. Signature over UTF-8 of 'laisee.revoke.v1:' + hex SHA-256(JCS(this object without signature)).","properties":{"mandate_id":{"$ref":"#/$defs/MandateId"},"revoked_at":{"$ref":"#/$defs/Timestamp"},"reason":{"type":"string","maxLength":200},"signer":{"$ref":"#/$defs/DidKey"},"signature":{"$ref":"#/$defs/SignatureB64u"}}};
+const schema156 = {"type":"object","additionalProperties":false,"required":["mandate_id","revoked_at","signer","signature"],"description":"Delegator-signed revoke (S4), payload of MANDATE_REVOKED. signer must equal mandate.delegator. Signature over UTF-8 of 'laisee.revoke.v1:' + hex SHA-256(JCS(this object without signature)).","properties":{"mandate_id":{"$ref":"#/$defs/MandateId"},"revoked_at":{"$ref":"#/$defs/Timestamp"},"reason":{"type":"string","maxLength":200},"signer":{"$ref":"#/$defs/DidKey"},"signature":{"$ref":"#/$defs/SignatureB64u"}}};
 
 function validate60(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -8605,7 +8685,7 @@ errors++;
 if(data.signature !== undefined){
 let data4 = data.signature;
 if(typeof data4 === "string"){
-if(!pattern61.test(data4)){
+if(!pattern63.test(data4)){
 const err14 = {instancePath:instancePath+"/signature",schemaPath:"#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
 if(vErrors === null){
 vErrors = [err14];
@@ -8643,7 +8723,7 @@ return errors === 0;
 }
 validate60.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema159 = {"type":"object","additionalProperties":false,"required":["mandate_id","expired_at"],"description":"Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.","properties":{"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"expired_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}};
+const schema161 = {"type":"object","additionalProperties":false,"required":["mandate_id","expired_at"],"description":"Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.","properties":{"mandate_id":{"$ref":"mandate.schema.json#/$defs/MandateId"},"expired_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"}}};
 
 function validate62(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -9126,7 +9206,7 @@ vErrors.push(err17);
 errors++;
 }
 for(const key0 in data){
-if(!(func14.call(schema139.properties, key0))){
+if(!(func14.call(schema141.properties, key0))){
 const err18 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err18];
@@ -9202,7 +9282,7 @@ errors++;
 if(data.kind !== undefined){
 let data15 = data.kind;
 if(!((((((data15 === "MANDATE_SEALED") || (data15 === "DECISION")) || (data15 === "CARD_MINTED")) || (data15 === "CARD_EVENT")) || (data15 === "MANDATE_REVOKED")) || (data15 === "PACKET_EXPIRED"))){
-const err24 = {instancePath:instancePath+"/kind",schemaPath:"#/properties/kind/enum",keyword:"enum",params:{allowedValues: schema139.properties.kind.enum},message:"must be equal to one of the allowed values"};
+const err24 = {instancePath:instancePath+"/kind",schemaPath:"#/properties/kind/enum",keyword:"enum",params:{allowedValues: schema141.properties.kind.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -9365,7 +9445,7 @@ errors++;
 if(data.signature !== undefined){
 let data22 = data.signature;
 if(typeof data22 === "string"){
-if(!pattern61.test(data22)){
+if(!pattern63.test(data22)){
 const err37 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
 if(vErrors === null){
 vErrors = [err37];
@@ -9408,9 +9488,9 @@ export const validateCardRecord = validate56;
 export const validatePacketState = validate39;
 
 export const validateListingRecord = validate64;
-const schema169 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/listing-record.schema.json","title":"ListingRecord","description":"Structured listing record. The cart builder prices a proposal from these fields (never from the text); the planner and the judge read `text` as untrusted data inside a delimited block. Real listings are OBSERVED captures [F40]; fixtures are SIMULATED.","type":"object","additionalProperties":false,"required":["id","url","merchant","items","shipping_minor","fees_minor","currency","text","observed_at","scameter_ref","provenance"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/ListingId"},"url":{"type":"string","format":"uri"},"merchant":{"type":"object","additionalProperties":false,"required":["name","domain"],"properties":{"name":{"type":"string","minLength":1,"maxLength":80},"domain":{"$ref":"mandate.schema.json#/$defs/Domain"}}},"items":{"type":"array","minItems":1,"maxItems":20,"description":"Items on sale; propose_cart picks by exact title.","items":{"type":"object","additionalProperties":false,"required":["title","category","unit_price_minor"],"properties":{"title":{"type":"string","minLength":1,"maxLength":120},"category":{"$ref":"mandate.schema.json#/$defs/CategorySlug"},"unit_price_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor"}}}},"shipping_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Flat shipping for one order."},"fees_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor"},"currency":{"$ref":"mandate.schema.json#/$defs/Currency"},"seller":{"type":"string","maxLength":200,"description":"Seller line as shown (SIMULATED or redacted). No phone, FPS id or personal name of a real person."},"text":{"type":"string","minLength":1,"maxLength":4000,"description":"Listing text as the planner and judge see it. Untrusted data, never instructions."},"observed_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"scameter_ref":{"oneOf":[{"type":"null"},{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$"}],"description":"capture_ref of the Scameter capture for this seller; null = not checked."},"provenance":{"enum":["OBSERVED","SIMULATED"]}},"$comment":"examples[0] is SIMULATED: the attempt 1 listing (DM2), HK$259 [F21]. Merchant, URL and times are placeholders [F59].","examples":[{"id":"lst_demoTee","url":"https://demo-apparel.example/p/tee","merchant":{"name":"Demo Apparel (SIMULATED)","domain":"demo-apparel.example"},"items":[{"title":"Cotton tee (SIMULATED)","category":"apparel","unit_price_minor":25900}],"shipping_minor":0,"fees_minor":0,"currency":"HKD","seller":"Demo Apparel (SIMULATED), shop since 2019, 30-day returns","text":"Cotton tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns.","observed_at":"2026-10-03T02:04:00Z","scameter_ref":"SIM-scameter-demo-apparel","provenance":"SIMULATED"}]};
-const schema170 = {"type":"string","pattern":"^lst_[A-Za-z0-9]{3,40}$"};
-const pattern89 = new RegExp("^lst_[A-Za-z0-9]{3,40}$", "u");
+const schema171 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/listing-record.schema.json","title":"ListingRecord","description":"Structured listing record. The cart builder prices a proposal from these fields (never from the text); the planner and the judge read `text` as untrusted data inside a delimited block. Real listings are OBSERVED captures [F40]; fixtures are SIMULATED.","type":"object","additionalProperties":false,"required":["id","url","merchant","items","shipping_minor","fees_minor","currency","text","observed_at","scameter_ref","provenance"],"properties":{"id":{"$ref":"mandate.schema.json#/$defs/ListingId"},"url":{"type":"string","format":"uri"},"merchant":{"type":"object","additionalProperties":false,"required":["name","domain"],"properties":{"name":{"type":"string","minLength":1,"maxLength":80},"domain":{"$ref":"mandate.schema.json#/$defs/Domain"}}},"items":{"type":"array","minItems":1,"maxItems":20,"description":"Items on sale; propose_cart picks by exact title.","items":{"type":"object","additionalProperties":false,"required":["title","category","unit_price_minor"],"properties":{"title":{"type":"string","minLength":1,"maxLength":120},"category":{"$ref":"mandate.schema.json#/$defs/CategorySlug"},"unit_price_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor"}}}},"shipping_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor","description":"Flat shipping for one order."},"fees_minor":{"$ref":"mandate.schema.json#/$defs/MoneyMinor"},"currency":{"$ref":"mandate.schema.json#/$defs/Currency"},"seller":{"type":"string","maxLength":200,"description":"Seller line as shown (SIMULATED or redacted). No phone, FPS id or personal name of a real person."},"text":{"type":"string","minLength":1,"maxLength":4000,"description":"Listing text as the planner and judge see it. Untrusted data, never instructions."},"observed_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"scameter_ref":{"oneOf":[{"type":"null"},{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$"}],"description":"capture_ref of the Scameter capture for this seller; null = not checked."},"provenance":{"enum":["OBSERVED","SIMULATED"]}},"$comment":"examples[0] is SIMULATED: the attempt 1 listing (DM2), HK$259 [F21]. Merchant, URL and times are placeholders [F59].","examples":[{"id":"lst_demoTee","url":"https://demo-apparel.example/p/tee","merchant":{"name":"Demo Apparel (SIMULATED)","domain":"demo-apparel.example"},"items":[{"title":"Cotton tee (SIMULATED)","category":"apparel","unit_price_minor":25900}],"shipping_minor":0,"fees_minor":0,"currency":"HKD","seller":"Demo Apparel (SIMULATED), shop since 2019, 30-day returns","text":"Cotton tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns.","observed_at":"2026-10-03T02:04:00Z","scameter_ref":"SIM-scameter-demo-apparel","provenance":"SIMULATED"}]};
+const schema172 = {"type":"string","pattern":"^lst_[A-Za-z0-9]{3,40}$"};
+const pattern91 = new RegExp("^lst_[A-Za-z0-9]{3,40}$", "u");
 
 function validate64(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 /*# sourceURL="https://laisee.local/schemas/listing-record.schema.json" */;
@@ -9535,7 +9615,7 @@ vErrors.push(err10);
 errors++;
 }
 for(const key0 in data){
-if(!(func14.call(schema169.properties, key0))){
+if(!(func14.call(schema171.properties, key0))){
 const err11 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err11];
@@ -9549,7 +9629,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern89.test(data0)){
+if(!pattern91.test(data0)){
 const err12 = {instancePath:instancePath+"/id",schemaPath:"mandate.schema.json#/$defs/ListingId/pattern",keyword:"pattern",params:{pattern: "^lst_[A-Za-z0-9]{3,40}$"},message:"must match pattern \""+"^lst_[A-Za-z0-9]{3,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err12];
@@ -10118,7 +10198,7 @@ vErrors = null;
 if(data.provenance !== undefined){
 let data17 = data.provenance;
 if(!((data17 === "OBSERVED") || (data17 === "SIMULATED"))){
-const err57 = {instancePath:instancePath+"/provenance",schemaPath:"#/properties/provenance/enum",keyword:"enum",params:{allowedValues: schema169.properties.provenance.enum},message:"must be equal to one of the allowed values"};
+const err57 = {instancePath:instancePath+"/provenance",schemaPath:"#/properties/provenance/enum",keyword:"enum",params:{allowedValues: schema171.properties.provenance.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err57];
 }
@@ -10145,8 +10225,8 @@ return errors === 0;
 validate64.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validateScameterCapture = validate65;
-const schema178 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/scameter-capture.schema.json","title":"ScameterCapture","description":"One manual, human-paced Scameter lookup [F6], redacted. The engine never queries live. The cart builder copies state, capture_ref, captured_at and searched into cart.scameter; R9 judges freshness [F52]. Identifier values are never stored, only which types were searched. Flagged-seller fixtures are SIMULATED.","type":"object","additionalProperties":false,"required":["capture_ref","subject_domain","state","captured_at","searched","provenance"],"properties":{"capture_ref":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"Row in data/capture-sheet.md or a fixture id."},"subject_domain":{"$ref":"mandate.schema.json#/$defs/Domain","description":"Merchant domain the capture is about."},"state":{"enum":["FLAGGED","NO_RECORD"],"description":"NO_RECORD is not 'safe' [F6]."},"captured_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"searched":{"$ref":"mandate.schema.json#/$defs/ScameterSearched"},"provenance":{"enum":["OBSERVED","SIMULATED"]},"note":{"type":"string","maxLength":200}},"$comment":"examples[0] is SIMULATED: no record for the attempt 1 merchant. Times are placeholders [F59].","examples":[{"capture_ref":"SIM-scameter-demo-apparel","subject_domain":"demo-apparel.example","state":"NO_RECORD","captured_at":"2026-10-03T01:30:00Z","searched":["url"],"provenance":"SIMULATED"}]};
-const schema181 = {"type":"array","uniqueItems":true,"items":{"enum":["phone","fps_id","page_name","payment_account","url"]},"description":"Identifier types searched. Identifier values are never stored."};
+const schema180 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/scameter-capture.schema.json","title":"ScameterCapture","description":"One manual, human-paced Scameter lookup [F6], redacted. The engine never queries live. The cart builder copies state, capture_ref, captured_at and searched into cart.scameter; R9 judges freshness [F52]. Identifier values are never stored, only which types were searched. Flagged-seller fixtures are SIMULATED.","type":"object","additionalProperties":false,"required":["capture_ref","subject_domain","state","captured_at","searched","provenance"],"properties":{"capture_ref":{"type":"string","pattern":"^[A-Za-z0-9_.:-]{1,64}$","description":"Row in data/capture-sheet.md or a fixture id."},"subject_domain":{"$ref":"mandate.schema.json#/$defs/Domain","description":"Merchant domain the capture is about."},"state":{"enum":["FLAGGED","NO_RECORD"],"description":"NO_RECORD is not 'safe' [F6]."},"captured_at":{"$ref":"mandate.schema.json#/$defs/Timestamp"},"searched":{"$ref":"mandate.schema.json#/$defs/ScameterSearched"},"provenance":{"enum":["OBSERVED","SIMULATED"]},"note":{"type":"string","maxLength":200}},"$comment":"examples[0] is SIMULATED: no record for the attempt 1 merchant. Times are placeholders [F59].","examples":[{"capture_ref":"SIM-scameter-demo-apparel","subject_domain":"demo-apparel.example","state":"NO_RECORD","captured_at":"2026-10-03T01:30:00Z","searched":["url"],"provenance":"SIMULATED"}]};
+const schema183 = {"type":"array","uniqueItems":true,"items":{"enum":["phone","fps_id","page_name","payment_account","url"]},"description":"Identifier types searched. Identifier values are never stored."};
 
 function validate65(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 /*# sourceURL="https://laisee.local/schemas/scameter-capture.schema.json" */;
@@ -10285,7 +10365,7 @@ errors++;
 if(data.state !== undefined){
 let data2 = data.state;
 if(!((data2 === "FLAGGED") || (data2 === "NO_RECORD"))){
-const err11 = {instancePath:instancePath+"/state",schemaPath:"#/properties/state/enum",keyword:"enum",params:{allowedValues: schema178.properties.state.enum},message:"must be equal to one of the allowed values"};
+const err11 = {instancePath:instancePath+"/state",schemaPath:"#/properties/state/enum",keyword:"enum",params:{allowedValues: schema180.properties.state.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err11];
 }
@@ -10337,7 +10417,7 @@ const len0 = data4.length;
 for(let i0=0; i0<len0; i0++){
 let data5 = data4[i0];
 if(!(((((data5 === "phone") || (data5 === "fps_id")) || (data5 === "page_name")) || (data5 === "payment_account")) || (data5 === "url"))){
-const err15 = {instancePath:instancePath+"/searched/" + i0,schemaPath:"mandate.schema.json#/$defs/ScameterSearched/items/enum",keyword:"enum",params:{allowedValues: schema181.items.enum},message:"must be equal to one of the allowed values"};
+const err15 = {instancePath:instancePath+"/searched/" + i0,schemaPath:"mandate.schema.json#/$defs/ScameterSearched/items/enum",keyword:"enum",params:{allowedValues: schema183.items.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -10382,7 +10462,7 @@ errors++;
 if(data.provenance !== undefined){
 let data6 = data.provenance;
 if(!((data6 === "OBSERVED") || (data6 === "SIMULATED"))){
-const err18 = {instancePath:instancePath+"/provenance",schemaPath:"#/properties/provenance/enum",keyword:"enum",params:{allowedValues: schema178.properties.provenance.enum},message:"must be equal to one of the allowed values"};
+const err18 = {instancePath:instancePath+"/provenance",schemaPath:"#/properties/provenance/enum",keyword:"enum",params:{allowedValues: schema180.properties.provenance.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err18];
 }
@@ -10434,7 +10514,7 @@ return errors === 0;
 validate65.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validateProposeCartInput = validate66;
-const schema182 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/propose-cart.schema.json","title":"ProposeCartInput","description":"Input of propose_cart, the planner's only tool (I4), and the shape of recorded planner replay outputs. No money fields: the cart builder prices the proposal from the listing record. A proposal is untrusted until the engine decides.","type":"object","additionalProperties":false,"required":["listing_url","items"],"properties":{"listing_url":{"type":"string","format":"uri","description":"Must equal the url of one listing record given to the planner."},"items":{"type":"array","minItems":1,"maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["title","qty"],"properties":{"title":{"type":"string","minLength":1,"maxLength":120,"description":"Exact item title from the listing record."},"qty":{"type":"integer","minimum":1,"maximum":20}}}},"note":{"type":"string","maxLength":280,"description":"Planner's short reason. Display only."}},"$comment":"examples[0] is SIMULATED: the attempt 1 proposal (DM2).","examples":[{"listing_url":"https://demo-apparel.example/p/tee","items":[{"title":"Cotton tee (SIMULATED)","qty":1}],"note":"Plain tee inside the clothing packet."}]};
+const schema184 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/propose-cart.schema.json","title":"ProposeCartInput","description":"Input of propose_cart, the planner's only tool (I4), and the shape of recorded planner replay outputs. No money fields: the cart builder prices the proposal from the listing record. A proposal is untrusted until the engine decides.","type":"object","additionalProperties":false,"required":["listing_url","items"],"properties":{"listing_url":{"type":"string","format":"uri","description":"Must equal the url of one listing record given to the planner."},"items":{"type":"array","minItems":1,"maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["title","qty"],"properties":{"title":{"type":"string","minLength":1,"maxLength":120,"description":"Exact item title from the listing record."},"qty":{"type":"integer","minimum":1,"maximum":20}}}},"note":{"type":"string","maxLength":280,"description":"Planner's short reason. Display only."}},"$comment":"examples[0] is SIMULATED: the attempt 1 proposal (DM2).","examples":[{"listing_url":"https://demo-apparel.example/p/tee","items":[{"title":"Cotton tee (SIMULATED)","qty":1}],"note":"Plain tee inside the clothing packet."}]};
 
 function validate66(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 /*# sourceURL="https://laisee.local/schemas/propose-cart.schema.json" */;
@@ -10700,10 +10780,10 @@ return errors === 0;
 validate66.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 export const validatePlannerReplayRecord = validate67;
-const schema183 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/planner-replay.schema.json","title":"PlannerReplayRecord","description":"One recorded planner output for the replay backend (PLANNER_PROVIDER=replay; CI and the booth fallback). Keyed by scenario. proposal null = the planner made no proposal. trace is optional and display or audit only; the engine never reads it.","type":"object","additionalProperties":false,"required":["scenario","listing_ids","proposal"],"properties":{"scenario":{"type":"string","pattern":"^[a-z0-9][a-z0-9_-]{1,40}$","description":"e.g. attempt-1, attempt-3b."},"listing_ids":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"mandate.schema.json#/$defs/ListingId"},"description":"Listing records the planner was given."},"proposal":{"oneOf":[{"type":"null"},{"$ref":"propose-cart.schema.json"}]},"trace":{"$ref":"#/$defs/PlannerTrace"}},"$defs":{"PlannerTrace":{"type":"object","additionalProperties":false,"required":["provider","question","probabilities"],"description":"Laya item-choice probabilities behind the proposal, label -> probability.","properties":{"provider":{"const":"laya"},"model":{"type":"string","minLength":1},"question":{"type":"string","pattern":"^[a-z_]{1,40}$"},"probabilities":{"type":"object","minProperties":1,"maxProperties":255,"additionalProperties":{"$ref":"decision.schema.json#/$defs/Probability"}},"choice":{"type":"string","minLength":1},"latency_ms":{"type":"integer","minimum":0}}}},"$comment":"examples[0] is SIMULATED: the attempt 1 replay (DM2). Probabilities and latency are placeholders [F59].","examples":[{"scenario":"attempt-1","listing_ids":["lst_demoTee"],"proposal":{"listing_url":"https://demo-apparel.example/p/tee","items":[{"title":"Cotton tee (SIMULATED)","qty":1}],"note":"Plain tee inside the clothing packet."},"trace":{"provider":"laya","model":"typed-decisions","question":"item_choice","probabilities":{"lst_demoTee":0.92,"none":0.08},"choice":"lst_demoTee","latency_ms":120}}]};
-const pattern97 = new RegExp("^[a-z0-9][a-z0-9_-]{1,40}$", "u");
-const schema186 = {"type":"object","additionalProperties":false,"required":["provider","question","probabilities"],"description":"Laya item-choice probabilities behind the proposal, label -> probability.","properties":{"provider":{"const":"laya"},"model":{"type":"string","minLength":1},"question":{"type":"string","pattern":"^[a-z_]{1,40}$"},"probabilities":{"type":"object","minProperties":1,"maxProperties":255,"additionalProperties":{"$ref":"decision.schema.json#/$defs/Probability"}},"choice":{"type":"string","minLength":1},"latency_ms":{"type":"integer","minimum":0}}};
-const pattern99 = new RegExp("^[a-z_]{1,40}$", "u");
+const schema185 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://laisee.local/schemas/planner-replay.schema.json","title":"PlannerReplayRecord","description":"One recorded planner output for the replay backend (PLANNER_PROVIDER=replay; CI and the booth fallback). Keyed by scenario. proposal null = the planner made no proposal. trace is optional and display or audit only; the engine never reads it.","type":"object","additionalProperties":false,"required":["scenario","listing_ids","proposal"],"properties":{"scenario":{"type":"string","pattern":"^[a-z0-9][a-z0-9_-]{1,40}$","description":"e.g. attempt-1, attempt-3b."},"listing_ids":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"mandate.schema.json#/$defs/ListingId"},"description":"Listing records the planner was given."},"proposal":{"oneOf":[{"type":"null"},{"$ref":"propose-cart.schema.json"}]},"trace":{"$ref":"#/$defs/PlannerTrace"}},"$defs":{"PlannerTrace":{"type":"object","additionalProperties":false,"required":["provider","question","probabilities"],"description":"Laya item-choice probabilities behind the proposal, label -> probability.","properties":{"provider":{"const":"laya"},"model":{"type":"string","minLength":1},"question":{"type":"string","pattern":"^[a-z_]{1,40}$"},"probabilities":{"type":"object","minProperties":1,"maxProperties":255,"additionalProperties":{"$ref":"decision.schema.json#/$defs/Probability"}},"choice":{"type":"string","minLength":1},"latency_ms":{"type":"integer","minimum":0}}}},"$comment":"examples[0] is SIMULATED: the attempt 1 replay (DM2). Probabilities and latency are placeholders [F59].","examples":[{"scenario":"attempt-1","listing_ids":["lst_demoTee"],"proposal":{"listing_url":"https://demo-apparel.example/p/tee","items":[{"title":"Cotton tee (SIMULATED)","qty":1}],"note":"Plain tee inside the clothing packet."},"trace":{"provider":"laya","model":"typed-decisions","question":"item_choice","probabilities":{"lst_demoTee":0.92,"none":0.08},"choice":"lst_demoTee","latency_ms":120}}]};
+const pattern99 = new RegExp("^[a-z0-9][a-z0-9_-]{1,40}$", "u");
+const schema188 = {"type":"object","additionalProperties":false,"required":["provider","question","probabilities"],"description":"Laya item-choice probabilities behind the proposal, label -> probability.","properties":{"provider":{"const":"laya"},"model":{"type":"string","minLength":1},"question":{"type":"string","pattern":"^[a-z_]{1,40}$"},"probabilities":{"type":"object","minProperties":1,"maxProperties":255,"additionalProperties":{"$ref":"decision.schema.json#/$defs/Probability"}},"choice":{"type":"string","minLength":1},"latency_ms":{"type":"integer","minimum":0}}};
+const pattern101 = new RegExp("^[a-z_]{1,40}$", "u");
 
 function validate68(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -10798,7 +10878,7 @@ errors++;
 if(data.question !== undefined){
 let data2 = data.question;
 if(typeof data2 === "string"){
-if(!pattern99.test(data2)){
+if(!pattern101.test(data2)){
 const err7 = {instancePath:instancePath+"/question",schemaPath:"#/properties/question/pattern",keyword:"pattern",params:{pattern: "^[a-z_]{1,40}$"},message:"must match pattern \""+"^[a-z_]{1,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -11014,7 +11094,7 @@ errors++;
 if(data.scenario !== undefined){
 let data0 = data.scenario;
 if(typeof data0 === "string"){
-if(!pattern97.test(data0)){
+if(!pattern99.test(data0)){
 const err4 = {instancePath:instancePath+"/scenario",schemaPath:"#/properties/scenario/pattern",keyword:"pattern",params:{pattern: "^[a-z0-9][a-z0-9_-]{1,40}$"},message:"must match pattern \""+"^[a-z0-9][a-z0-9_-]{1,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err4];
@@ -11053,7 +11133,7 @@ const len0 = data1.length;
 for(let i0=0; i0<len0; i0++){
 let data2 = data1[i0];
 if(typeof data2 === "string"){
-if(!pattern89.test(data2)){
+if(!pattern91.test(data2)){
 const err7 = {instancePath:instancePath+"/listing_ids/" + i0,schemaPath:"mandate.schema.json#/$defs/ListingId/pattern",keyword:"pattern",params:{pattern: "^lst_[A-Za-z0-9]{3,40}$"},message:"must match pattern \""+"^lst_[A-Za-z0-9]{3,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -11854,8 +11934,8 @@ vErrors.push(err0);
 }
 errors++;
 }
-if(data.choice === undefined){
-const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "choice"},message:"must have required property '"+"choice"+"'"};
+if(data.mandate_id === undefined){
+const err1 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "mandate_id"},message:"must have required property '"+"mandate_id"+"'"};
 if(vErrors === null){
 vErrors = [err1];
 }
@@ -11864,8 +11944,8 @@ vErrors.push(err1);
 }
 errors++;
 }
-if(data.answered_at === undefined){
-const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "answered_at"},message:"must have required property '"+"answered_at"+"'"};
+if(data.cart_sha256 === undefined){
+const err2 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "cart_sha256"},message:"must have required property '"+"cart_sha256"+"'"};
 if(vErrors === null){
 vErrors = [err2];
 }
@@ -11874,8 +11954,8 @@ vErrors.push(err2);
 }
 errors++;
 }
-if(data.signer === undefined){
-const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signer"},message:"must have required property '"+"signer"+"'"};
+if(data.choice === undefined){
+const err3 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "choice"},message:"must have required property '"+"choice"+"'"};
 if(vErrors === null){
 vErrors = [err3];
 }
@@ -11884,8 +11964,8 @@ vErrors.push(err3);
 }
 errors++;
 }
-if(data.signature === undefined){
-const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signature"},message:"must have required property '"+"signature"+"'"};
+if(data.answered_at === undefined){
+const err4 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "answered_at"},message:"must have required property '"+"answered_at"+"'"};
 if(vErrors === null){
 vErrors = [err4];
 }
@@ -11894,9 +11974,8 @@ vErrors.push(err4);
 }
 errors++;
 }
-for(const key0 in data){
-if(!(((((key0 === "decision_id") || (key0 === "choice")) || (key0 === "answered_at")) || (key0 === "signer")) || (key0 === "signature"))){
-const err5 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
+if(data.signer === undefined){
+const err5 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signer"},message:"must have required property '"+"signer"+"'"};
 if(vErrors === null){
 vErrors = [err5];
 }
@@ -11905,12 +11984,8 @@ vErrors.push(err5);
 }
 errors++;
 }
-}
-if(data.decision_id !== undefined){
-let data0 = data.decision_id;
-if(typeof data0 === "string"){
-if(!pattern42.test(data0)){
-const err6 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/pattern",keyword:"pattern",params:{pattern: "^dec_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^dec_[A-Za-z0-9]{6,40}$"+"\""};
+if(data.signature === undefined){
+const err6 = {instancePath,schemaPath:"#/required",keyword:"required",params:{missingProperty: "signature"},message:"must have required property '"+"signature"+"'"};
 if(vErrors === null){
 vErrors = [err6];
 }
@@ -11919,9 +11994,9 @@ vErrors.push(err6);
 }
 errors++;
 }
-}
-else {
-const err7 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/type",keyword:"type",params:{type: "string"},message:"must be string"};
+for(const key0 in data){
+if(!(((((((key0 === "decision_id") || (key0 === "mandate_id")) || (key0 === "cart_sha256")) || (key0 === "choice")) || (key0 === "answered_at")) || (key0 === "signer")) || (key0 === "signature"))){
+const err7 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err7];
 }
@@ -11931,10 +12006,11 @@ vErrors.push(err7);
 errors++;
 }
 }
-if(data.choice !== undefined){
-let data1 = data.choice;
-if(!((data1 === "APPROVE") || (data1 === "DENY"))){
-const err8 = {instancePath:instancePath+"/choice",schemaPath:"#/properties/choice/enum",keyword:"enum",params:{allowedValues: schema133.properties.choice.enum},message:"must be equal to one of the allowed values"};
+if(data.decision_id !== undefined){
+let data0 = data.decision_id;
+if(typeof data0 === "string"){
+if(!pattern42.test(data0)){
+const err8 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/pattern",keyword:"pattern",params:{pattern: "^dec_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^dec_[A-Za-z0-9]{6,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err8];
 }
@@ -11944,11 +12020,8 @@ vErrors.push(err8);
 errors++;
 }
 }
-if(data.answered_at !== undefined){
-let data2 = data.answered_at;
-if(typeof data2 === "string"){
-if(!pattern12.test(data2)){
-const err9 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
+else {
+const err9 = {instancePath:instancePath+"/decision_id",schemaPath:"mandate.schema.json#/$defs/DecisionId/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err9];
 }
@@ -11957,8 +12030,12 @@ vErrors.push(err9);
 }
 errors++;
 }
-if(!(formats0.validate(data2))){
-const err10 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
+}
+if(data.mandate_id !== undefined){
+let data1 = data.mandate_id;
+if(typeof data1 === "string"){
+if(!pattern4.test(data1)){
+const err10 = {instancePath:instancePath+"/mandate_id",schemaPath:"mandate.schema.json#/$defs/MandateId/pattern",keyword:"pattern",params:{pattern: "^mnd_[A-Za-z0-9]{6,40}$"},message:"must match pattern \""+"^mnd_[A-Za-z0-9]{6,40}$"+"\""};
 if(vErrors === null){
 vErrors = [err10];
 }
@@ -11969,7 +12046,7 @@ errors++;
 }
 }
 else {
-const err11 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err11 = {instancePath:instancePath+"/mandate_id",schemaPath:"mandate.schema.json#/$defs/MandateId/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err11];
 }
@@ -11979,11 +12056,11 @@ vErrors.push(err11);
 errors++;
 }
 }
-if(data.signer !== undefined){
-let data3 = data.signer;
-if(typeof data3 === "string"){
-if(!pattern5.test(data3)){
-const err12 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
+if(data.cart_sha256 !== undefined){
+let data2 = data.cart_sha256;
+if(typeof data2 === "string"){
+if(!pattern11.test(data2)){
+const err12 = {instancePath:instancePath+"/cart_sha256",schemaPath:"mandate.schema.json#/$defs/Sha256Hex/pattern",keyword:"pattern",params:{pattern: "^[0-9a-f]{64}$"},message:"must match pattern \""+"^[0-9a-f]{64}$"+"\""};
 if(vErrors === null){
 vErrors = [err12];
 }
@@ -11994,7 +12071,7 @@ errors++;
 }
 }
 else {
-const err13 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err13 = {instancePath:instancePath+"/cart_sha256",schemaPath:"mandate.schema.json#/$defs/Sha256Hex/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err13];
 }
@@ -12004,11 +12081,10 @@ vErrors.push(err13);
 errors++;
 }
 }
-if(data.signature !== undefined){
-let data4 = data.signature;
-if(typeof data4 === "string"){
-if(!pattern61.test(data4)){
-const err14 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
+if(data.choice !== undefined){
+let data3 = data.choice;
+if(!((data3 === "APPROVE") || (data3 === "DENY"))){
+const err14 = {instancePath:instancePath+"/choice",schemaPath:"#/properties/choice/enum",keyword:"enum",params:{allowedValues: schema133.properties.choice.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err14];
 }
@@ -12018,8 +12094,11 @@ vErrors.push(err14);
 errors++;
 }
 }
-else {
-const err15 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.answered_at !== undefined){
+let data4 = data.answered_at;
+if(typeof data4 === "string"){
+if(!pattern12.test(data4)){
+const err15 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/pattern",keyword:"pattern",params:{pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"},message:"must match pattern \""+"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$"+"\""};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -12028,15 +12107,86 @@ vErrors.push(err15);
 }
 errors++;
 }
-}
-}
-else {
-const err16 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(!(formats0.validate(data4))){
+const err16 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/format",keyword:"format",params:{format: "date-time"},message:"must match format \""+"date-time"+"\""};
 if(vErrors === null){
 vErrors = [err16];
 }
 else {
 vErrors.push(err16);
+}
+errors++;
+}
+}
+else {
+const err17 = {instancePath:instancePath+"/answered_at",schemaPath:"mandate.schema.json#/$defs/Timestamp/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err17];
+}
+else {
+vErrors.push(err17);
+}
+errors++;
+}
+}
+if(data.signer !== undefined){
+let data5 = data.signer;
+if(typeof data5 === "string"){
+if(!pattern5.test(data5)){
+const err18 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/pattern",keyword:"pattern",params:{pattern: "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"},message:"must match pattern \""+"^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$"+"\""};
+if(vErrors === null){
+vErrors = [err18];
+}
+else {
+vErrors.push(err18);
+}
+errors++;
+}
+}
+else {
+const err19 = {instancePath:instancePath+"/signer",schemaPath:"mandate.schema.json#/$defs/DidKey/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err19];
+}
+else {
+vErrors.push(err19);
+}
+errors++;
+}
+}
+if(data.signature !== undefined){
+let data6 = data.signature;
+if(typeof data6 === "string"){
+if(!pattern63.test(data6)){
+const err20 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
+if(vErrors === null){
+vErrors = [err20];
+}
+else {
+vErrors.push(err20);
+}
+errors++;
+}
+}
+else {
+const err21 = {instancePath:instancePath+"/signature",schemaPath:"mandate.schema.json#/$defs/SignatureB64u/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err21];
+}
+else {
+vErrors.push(err21);
+}
+errors++;
+}
+}
+}
+else {
+const err22 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err22];
+}
+else {
+vErrors.push(err22);
 }
 errors++;
 }
@@ -12303,7 +12453,7 @@ errors++;
 if(data.event !== undefined){
 let data3 = data.event;
 if(!((((data3 === "AUTHORISED") || (data3 === "DECLINED")) || (data3 === "VOIDED")) || (data3 === "EXPIRED"))){
-const err16 = {instancePath:instancePath+"/event",schemaPath:"#/properties/event/enum",keyword:"enum",params:{allowedValues: schema149.properties.event.enum},message:"must be equal to one of the allowed values"};
+const err16 = {instancePath:instancePath+"/event",schemaPath:"#/properties/event/enum",keyword:"enum",params:{allowedValues: schema151.properties.event.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -12401,7 +12551,7 @@ errors++;
 if(data.decline_code !== undefined){
 let data7 = data.decline_code;
 if(!((((((data7 === "OVER_LIMIT") || (data7 === "CARD_USED")) || (data7 === "CARD_VOIDED")) || (data7 === "CARD_EXPIRED")) || (data7 === "UNKNOWN_HANDLE")) || (data7 === "MERCHANT_MISMATCH"))){
-const err24 = {instancePath:instancePath+"/decline_code",schemaPath:"#/properties/decline_code/enum",keyword:"enum",params:{allowedValues: schema149.properties.decline_code.enum},message:"must be equal to one of the allowed values"};
+const err24 = {instancePath:instancePath+"/decline_code",schemaPath:"#/properties/decline_code/enum",keyword:"enum",params:{allowedValues: schema151.properties.decline_code.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -12642,7 +12792,7 @@ errors++;
 if(data.signature !== undefined){
 let data4 = data.signature;
 if(typeof data4 === "string"){
-if(!pattern61.test(data4)){
+if(!pattern63.test(data4)){
 const err14 = {instancePath:instancePath+"/signature",schemaPath:"#/$defs/SignatureB64u/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z0-9_-]{86}$"},message:"must match pattern \""+"^[A-Za-z0-9_-]{86}$"+"\""};
 if(vErrors === null){
 vErrors = [err14];

@@ -1,5 +1,6 @@
-// A-18: FileLogStore, append-only JSONL under LOG_DIR with fsync on append. Temp dirs only.
-import { appendFile, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+// A-18: FileLogStore, append-only JSONL under LOG_DIR with fsync on append, private modes, one write queue
+// per file across stores. Temp dirs only.
+import { appendFile, chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -53,6 +54,33 @@ describe("FileLogStore", () => {
     await expect(store.append({ ...entries[1]!, payload: { nope: true } } as never)).rejects.toMatchObject({ code: "SCHEMA" });
     await expect(store.read("../../etc/passwd")).rejects.toMatchObject({ code: "LOG_ID" });
     expect(await store.read(LOG_ID)).toHaveLength(1);
+  });
+
+  it.skipIf(process.platform === "win32")("creates the directory 0700 and each log file 0600, and tightens wider ones", async () => {
+    const { entries } = await buildDemoLog();
+    const logs = join(dir, "logs");
+    const store = new FileLogStore(logs);
+    await store.append(entries[0]!);
+    const file = join(logs, `${LOG_ID}.jsonl`);
+    expect((await stat(logs)).mode & 0o777).toBe(0o700);
+    expect((await stat(file)).mode & 0o777).toBe(0o600);
+    await chmod(logs, 0o755);
+    await chmod(file, 0o644);
+    await store.append(entries[1]!);
+    expect((await stat(logs)).mode & 0o777).toBe(0o700);
+    expect((await stat(file)).mode & 0o777).toBe(0o600);
+  });
+
+  it("serialises appends across two stores on the same directory: exactly one same-seq writer wins", async () => {
+    const { entries } = await buildDemoLog();
+    const a = new FileLogStore(dir);
+    const b = new FileLogStore(join(dir, ".", "")); // same directory, spelled differently
+    await a.append(entries[0]!);
+    const results = await Promise.allSettled([a.append(entries[1]!), b.append(entries[1]!), b.append(entries[1]!)]);
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected", "rejected"]);
+    expect(await a.read(LOG_ID)).toHaveLength(2);
+    const text = await readFile(join(dir, `${LOG_ID}.jsonl`), "utf8");
+    expect(text.split("\n").filter((l) => l !== "")).toHaveLength(2);
   });
 
   it("serialises concurrent appends: exactly one of two same-seq writers wins", async () => {

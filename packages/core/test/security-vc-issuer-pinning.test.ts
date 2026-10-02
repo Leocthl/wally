@@ -24,7 +24,9 @@ function selfIssued() {
 }
 
 const SELF_ISSUED = selfIssued();
-const UNPINNED = verifyMandateCredential(SELF_ISSUED);
+// The pin is mandatory in the type since the fix; a JavaScript caller (or a cast) can still omit it at runtime.
+const verifyLoosely = verifyMandateCredential as (input: unknown, opts?: unknown) => ReturnType<typeof verifyMandateCredential>;
+const UNPINNED = verifyLoosely(SELF_ISSUED);
 const PINNED = verifyMandateCredential(SELF_ISSUED, { expectedIssuer: keys.delegator.did });
 
 describe("issuer pinning (controls)", () => {
@@ -38,14 +40,16 @@ describe("issuer pinning (controls)", () => {
   });
 });
 
-describe("KNOWN DEFECT S-VC-1: verifyMandateCredential fails open when no trusted issuer is given", () => {
+describe("S-VC-1 (fixed): verifyMandateCredential fails closed when no trusted issuer is given", () => {
   it("setup: Mallory's credential is well formed and carries a HK$999,999.99 packet", () => {
     expect(verifyMandateCredential(SELF_ISSUED, { expectedIssuer: mallory.did }).valid).toBe(true);
     expect(SELF_ISSUED.credentialSubject.rules.budget.amount_minor).toBe(99_999_999);
   });
 
-  it.fails("without expectedIssuer the check must fail closed (I5), not trust the credential's own key", () => {
+  it("without expectedIssuer the check must fail closed (I5), not trust the credential's own key", () => {
     expect(UNPINNED.valid).toBe(false);
+    expect(UNPINNED).toMatchObject({ reason: "ISSUER_UNPINNED" });
+    expect(verifyLoosely(SELF_ISSUED, { expectedIssuer: undefined })).toMatchObject({ valid: false, reason: "ISSUER_UNPINNED" });
   });
 });
 

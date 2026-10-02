@@ -1,6 +1,8 @@
 // Audit (lane s-audit): bypasses of the free-text I8 guard (log/i8.ts). The guard is defence in depth (no
 // schema has a PAN field and the rail has none), but intent_text, revoke reasons and rule inputs are free
 // text that is sealed, signed and exported. PANs are built at runtime (Luhn-valid, no literal in the repo).
+// Fixed (lane s-fix-crypto): NFKC, format characters stripped, any decimal digit, [\s./_-]{0,3} separators,
+// normalised key names and CVV wording.
 import { describe, expect, it } from "vitest";
 import { findCardData } from "../src/log";
 import { luhnValidDigits } from "./crypto-independent";
@@ -25,8 +27,8 @@ describe("controls: what the guard catches", () => {
   });
 });
 
-describe("KNOWN DEFECT S-I8-1: common PAN and CVV spellings pass the guard", () => {
-  it.fails.each([
+describe("S-I8-1 (fixed): common PAN and CVV spellings are caught by the guard", () => {
+  it.each([
     ["dots", groups(".")],
     ["slashes", groups("/")],
     ["double spaces", groups("  ")],
@@ -37,11 +39,11 @@ describe("KNOWN DEFECT S-I8-1: common PAN and CVV spellings pass the guard", () 
     expect(findCardData({ reason: text })).not.toBeNull();
   });
 
-  it.fails("flags card-data keys spelled with dashes or abbreviations", () => {
+  it("flags card-data keys spelled with dashes or abbreviations", () => {
     for (const key of ["card-number", "card_no", "cc_number", "cvv_code"]) expect(findCardData({ [key]: "x" })).not.toBeNull();
   });
 
-  it.fails("flags 'cvv123', 'security code 123' and a fullwidth PAN", () => {
+  it("flags 'cvv123', 'security code 123' and a fullwidth PAN", () => {
     for (const text of ["cvv123", "security code 123", fullwidth(PAN)]) expect(findCardData({ reason: text })).not.toBeNull();
   });
 });

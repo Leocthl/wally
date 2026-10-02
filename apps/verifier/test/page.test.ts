@@ -55,7 +55,7 @@ describe("judge flow: Load demo log, Verify, Tamper, Restore", () => {
     expect(result.getAttribute("aria-live")).toBe("polite");
     expect(result.textContent).toContain("PASS");
     expect(result.textContent).toContain("10 (seq 0 to 9)");
-    expect(result.textContent).toContain("cbcd1b6bea4bdb07");
+    expect(result.textContent).toContain("c239a89c00b57f49");
     expect(result.textContent).toContain("Matches seq 9 (the head).");
     const rows = [...root.querySelectorAll(".timeline .row")];
     expect(rows).toHaveLength(10);

@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createSigner, toBase64url } from "../src/crypto";
-import type { CardRecord, Decision, LogEntry, LogEntryKind, LogPayloadByKind } from "../src/generated";
+import type { CardRecord, Cart, Decision, LogEntry, LogEntryKind, LogPayloadByKind } from "../src/generated";
 import {
   appendEntry,
   entryHash,
@@ -57,36 +57,52 @@ export function demoCredential(keys: DemoKeys = demoKeys(), mandateId = MANDATE_
   return signMandateCredential(unsigned, keys.delegator, { created: new Date("2026-10-03T02:00:00Z") });
 }
 
-function approveDecision(): Decision {
-  const base = schemaExample<Decision>("decision.schema.json");
-  const { explanation: _explanation, ...rest } = base;
-  const cart = loadFixture("carts/attempt-1.json", "cart");
+/** End of the demo escalation window (decided 02:12, window [F31] placeholder). */
+export const ESCALATION_EXPIRES = "2026-10-03T02:21:00Z";
+
+/** decision.schema.json examples[0]: a DENY (R3) for attempt 3, as a fresh copy. */
+export function decisionExample(): Decision {
+  return schemaExample<Decision>("decision.schema.json");
+}
+
+/** An APPROVE built from the schema example: R3 passes, no explanation, limit = cart total (I2). */
+export function approveOf(id: string, cart: Cart, extra: Partial<Decision> = {}): Decision {
+  const { explanation: _explanation, ...rest } = decisionExample();
   const rules = rest.rules.map((r) => {
     if (r.id !== "R3") return r;
     const { verdict: _verdict, template_id: _template, ...passing } = r;
     return { ...passing, result: "PASS" as const };
   }) as Decision["rules"];
-  return { ...rest, id: "dec_demoA1", cart, rules, outcome: "APPROVE", approved_limit_minor: cart.total_minor };
+  return { ...rest, id, cart, rules, outcome: "APPROVE", approved_limit_minor: cart.total_minor, ...extra };
+}
+
+/** An open ESCALATE built from the schema example (its cart unless another is given). */
+export function escalateOf(id: string, cart?: Cart): Decision {
+  const base = decisionExample();
+  return { ...base, id, cart: cart ?? base.cart, outcome: "ESCALATE", escalation: { state: "OPEN", expires_at: ESCALATION_EXPIRES } };
+}
+
+/** The schema example card, minted for `decision` at its approved limit. */
+export function cardFor(decision: Decision, cardId: string): CardRecord {
+  const card = schemaExample<CardRecord>("card-record.schema.json");
+  return { ...card, id: cardId, decision_id: decision.id, limit_minor: decision.approved_limit_minor ?? 0 };
+}
+
+function approveDecision(): Decision {
+  return approveOf("dec_demoA1", loadFixture("carts/attempt-1.json", "cart"));
 }
 
 function escalateDecision(): Decision {
-  const base = schemaExample<Decision>("decision.schema.json");
-  return {
-    ...base,
-    id: "dec_demoE1",
-    outcome: "ESCALATE",
-    escalation: { state: "OPEN", expires_at: "2026-10-03T02:21:00Z" },
-  };
+  return escalateOf("dec_demoE1");
 }
 
 function answeredDecision(answer: NonNullable<NonNullable<Decision["escalation"]>["answer"]>): Decision {
-  const base = schemaExample<Decision>("decision.schema.json");
   return {
-    ...base,
+    ...decisionExample(),
     id: "dec_demoE2",
     resolves: "dec_demoE1",
     outcome: "DENY",
-    escalation: { state: "DENIED", expires_at: "2026-10-03T02:21:00Z", answer },
+    escalation: { state: "DENIED", expires_at: ESCALATION_EXPIRES, answer },
   };
 }
 
@@ -95,8 +111,9 @@ export type DemoStep = { readonly [K in LogEntryKind]: { readonly kind: K; reado
 /** The SIMULATED storyline as (kind, payload) steps, seq 0..9. */
 export function demoSteps(keys: DemoKeys = demoKeys()): DemoStep[] {
   const card = schemaExample<CardRecord>("card-record.schema.json");
+  const escalated = escalateDecision();
   const answer = signEscalationAnswer(
-    { decision_id: "dec_demoE1", choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") },
+    { decision_id: escalated.id, mandate_id: escalated.mandate_id, cart: escalated.cart, choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") },
     keys.delegator,
   );
   const revocation = signRevocation(
@@ -117,7 +134,7 @@ export function demoSteps(keys: DemoKeys = demoKeys()): DemoStep[] {
       payload: { ...event, event: "AUTHORISED", amount_minor: 25900, merchant_domain: "demo-apparel.example", idempotency_key: "chk_demoA1" },
     },
     { kind: "DECISION", payload: schemaExample<Decision>("decision.schema.json") },
-    { kind: "DECISION", payload: escalateDecision() },
+    { kind: "DECISION", payload: escalated },
     { kind: "DECISION", payload: answeredDecision(answer) },
     { kind: "MANDATE_REVOKED", payload: revocation },
     { kind: "PACKET_EXPIRED", payload: { mandate_id: MANDATE_ID, expired_at: "2026-10-31T15:59:59Z" } },

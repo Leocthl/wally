@@ -23,10 +23,13 @@
 - **Timeline**: seq, kind, time, then verified, broken or not checked per entry.
 
 ## What it checks (docs/02 section 11, via `verifyLogText`)
-- Steps 1 to 8: schema and canonical JSON per line, seq order, prev_hash chain, payload hash, entry hash, engine signature against the listed engine keys, the seq 0 mandate credential and delegator signatures, and the checkpoint (TRUNCATED).
+- Keys first (KEYS): a pinned delegator key that is not also an engine key, or nothing is checked.
+- Steps 1 to 8: schema and canonical JSON per line, seq order, prev_hash chain, payload hash, entry hash, engine signature against the listed engine keys, the seq 0 mandate credential pinned to the delegator, delegator signatures (escalation answers bound to the escalated decision, mandate and cart), and the checkpoint (TRUNCATED).
+- Step 9, consent and money against the signed credential: every card follows a logged APPROVE at its limit, once (NO_DECISION, DUPLICATE); an APPROVE above the ask-above amount or resolving an escalation rests on the delegator's in-time yes for that same cart, once (CONSENT); per-purchase caps, card limits and the sealed budget hold (OVERSPEND); no approval or card outside the validity dates or after a revoke or expiry marker (AFTER_REVOKE).
 
 ## What it does not check
-- **Step 9** (re-fold PacketState, re-render explanations) is not verified.
+- **Re-fold and re-render**: PacketState snapshots inside decisions and rendered explanations are not recomputed; nor are the engine's rule results.
+- **Omissions**: an operator who never logs a mint or a charge is not caught offline; only what is logged is checked.
 - **Truncation without a checkpoint passes**: a log cut after its last entry looks complete. Paste the checkpoint to catch it.
 - Whoever holds the engine key can rewrite entries after the last published checkpoint (02 section 12).
 - Keys are taken as pasted: the page cannot tell demo keys from booth keys.

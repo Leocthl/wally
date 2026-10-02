@@ -3,8 +3,16 @@
 export { verifyChain } from "./chain";
 export { parseLogText, verifyLogText, type ParsedLog } from "./text";
 export { parsePublicKeys } from "./keys";
+export { assertLogIntegrity, LogIntegrityError } from "./integrity";
+export { LOG_LIMITS } from "../log/limits";
 export type { PublicKeys, VerifyReport } from "./report";
 export { checkpointOf, parseCheckpoint } from "../log/checkpoint";
-export { verifyEscalationAnswer, verifyRevocation, type DelegatorCheck } from "../log/delegator";
-export { verifyMandateCredential, type CredentialCheck, type CredentialFailure } from "../vc/proof";
+export { verifyEscalationAnswer, verifyRevocation, type AnswerBinding, type DelegatorCheck } from "../log/delegator";
+export { cartSha256 } from "../log/cart-sha256";
+export {
+  verifyMandateCredential,
+  type CredentialCheck,
+  type CredentialFailure,
+  type VerifyCredentialOptions,
+} from "../vc/proof";
 export type { Checkpoint, VerifyFailure, VerifyResult } from "../ports";

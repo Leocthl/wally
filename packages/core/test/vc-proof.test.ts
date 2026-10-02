@@ -41,6 +41,7 @@ describe("signMandateCredential (eddsa-jcs-2022)", () => {
     expect(vc.proof.proofValue).toBe(GOLDEN.proofValue);
     expect(indepProofValue(vc as unknown as Record<string, unknown>, DELEGATOR_SEED)).toBe(GOLDEN.proofValue);
     expect(vc.proof).toEqual({
+      "@context": vc["@context"],
       type: "DataIntegrityProof",
       cryptosuite: "eddsa-jcs-2022",
       created: "2026-10-03T02:00:00.000Z",
@@ -71,13 +72,29 @@ describe("signMandateCredential (eddsa-jcs-2022)", () => {
   });
 });
 
+const pinned = { expectedIssuer: GOLDEN.delegatorDid } as const;
+
 describe("verifyMandateCredential", () => {
-  it("accepts the signed credential, with or without proof @context", () => {
+  it("accepts the signed credential pinned to its issuer; the proof carries the document @context (C-1)", () => {
     const vc = signedM0();
-    expect(verifyMandateCredential(vc)).toEqual({ valid: true, reason: null });
-    expect(verifyMandateCredential(vc, { expectedIssuer: vc.issuer }).valid).toBe(true);
-    const withContext = { ...vc, proof: { ...vc.proof, "@context": vc["@context"] } };
-    expect(verifyMandateCredential(withContext).valid).toBe(true);
+    expect(verifyMandateCredential(vc, pinned)).toEqual({ valid: true, reason: null });
+    expect(vc.proof["@context"]).toEqual(vc["@context"]);
+    expect(vc.proof["@context"]).not.toBe(vc["@context"]);
+  });
+
+  it("rejects the pre-fix format, a proof without @context, even though its signature bytes are unchanged", () => {
+    const vc = signedM0();
+    const { "@context": _ctx, ...legacyProof } = vc.proof;
+    expect(verifyMandateCredential({ ...vc, proof: legacyProof }, pinned)).toMatchObject({ valid: false, reason: "SCHEMA" });
+  });
+
+  it("fails closed with ISSUER_UNPINNED when no delegator is pinned (S-VC-1), whatever the credential", () => {
+    const vc = signedM0();
+    const unpinned = verifyMandateCredential as (input: unknown, opts?: unknown) => ReturnType<typeof verifyMandateCredential>;
+    for (const opts of [undefined, null, {}, { expectedIssuer: undefined }, { expectedIssuer: "" }, { expectedIssuer: 42 }, "did:key:x"]) {
+      expect(unpinned(vc, opts)).toMatchObject({ valid: false, reason: "ISSUER_UNPINNED" });
+    }
+    expect(unpinned(null)).toMatchObject({ valid: false, reason: "ISSUER_UNPINNED" });
   });
 
   it("fails SIGNATURE when rules, expiry or proof options change after signing", () => {
@@ -89,21 +106,22 @@ describe("verifyMandateCredential", () => {
       { ...vc, proof: { ...vc.proof, created: "2026-10-03T02:00:01.000Z" } },
       { ...vc, credentialSubject: { ...vc.credentialSubject, id: indepDidKey(indepPublicKey(OTHER_SEED)) } },
     ];
-    for (const t of tampered) expect(verifyMandateCredential(t)).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    for (const t of tampered) expect(verifyMandateCredential(t, pinned)).toMatchObject({ valid: false, reason: "SIGNATURE" });
   });
 
   it("fails SIGNATURE for a wrong issuer key and WRONG_ISSUER for an unexpected issuer", () => {
     const vc = signedM0();
     const otherDid = indepDidKey(indepPublicKey(OTHER_SEED));
     const swapped = { ...vc, issuer: otherDid, proof: { ...vc.proof, verificationMethod: verificationMethodId(otherDid) } };
-    expect(verifyMandateCredential(swapped)).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    expect(verifyMandateCredential(swapped, { expectedIssuer: otherDid })).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    expect(verifyMandateCredential(swapped, pinned)).toMatchObject({ valid: false, reason: "WRONG_ISSUER" });
     expect(verifyMandateCredential(vc, { expectedIssuer: otherDid })).toMatchObject({ valid: false, reason: "WRONG_ISSUER" });
   });
 
   it("fails VERIFICATION_METHOD when the method is not the issuer's key", () => {
     const vc = signedM0();
     const vm = verificationMethodId(indepDidKey(indepPublicKey(OTHER_SEED)));
-    expect(verifyMandateCredential({ ...vc, proof: { ...vc.proof, verificationMethod: vm } })).toMatchObject({
+    expect(verifyMandateCredential({ ...vc, proof: { ...vc.proof, verificationMethod: vm } }, pinned)).toMatchObject({
       valid: false,
       reason: "VERIFICATION_METHOD",
     });
@@ -120,14 +138,14 @@ describe("verifyMandateCredential", () => {
       "credential",
       [vc],
     ];
-    for (const c of cases) expect(verifyMandateCredential(c)).toMatchObject({ valid: false, reason: "SCHEMA" });
+    for (const c of cases) expect(verifyMandateCredential(c, pinned)).toMatchObject({ valid: false, reason: "SCHEMA" });
   });
 
   it("fails PROOF_VALUE when the multibase value is not a 64-byte signature", () => {
     const vc = signedM0();
     const short = `z${toBase58btc(new Uint8Array(63).fill(9))}`;
     expect(short.length).toBeGreaterThanOrEqual(81);
-    expect(verifyMandateCredential({ ...vc, proof: { ...vc.proof, proofValue: short } })).toMatchObject({
+    expect(verifyMandateCredential({ ...vc, proof: { ...vc.proof, proofValue: short } }, pinned)).toMatchObject({
       valid: false,
       reason: "PROOF_VALUE",
     });
@@ -135,7 +153,8 @@ describe("verifyMandateCredential", () => {
 
   it("fails ISSUER_KEY for a placeholder did:key that is not a real Ed25519 key", () => {
     const fixture = loadFixture("mandate/m0.credential.json", "mandate-credential");
-    expect(verifyMandateCredential(fixture)).toMatchObject({ valid: false, reason: "ISSUER_KEY" });
+    expect(verifyMandateCredential(fixture, { expectedIssuer: fixture.issuer })).toMatchObject({ valid: false, reason: "ISSUER_KEY" });
+    expect(verifyMandateCredential(fixture, pinned)).toMatchObject({ valid: false, reason: "WRONG_ISSUER" });
   });
 
   it("round-trips any intent text and budget (property)", () => {
@@ -151,7 +170,7 @@ describe("verifyMandateCredential", () => {
           const vc = signMandateCredential(unsigned, signer, { created: CREATED });
           const bumped = { ...rules, budget: { amount_minor: amount + 1, currency: "HKD" as const } };
           const tampered = { ...vc, credentialSubject: { ...vc.credentialSubject, rules: bumped } };
-          return verifyMandateCredential(vc).valid && !verifyMandateCredential(tampered).valid;
+          return verifyMandateCredential(vc, pinned).valid && !verifyMandateCredential(tampered, pinned).valid;
         },
       ),
       { numRuns: 40 },

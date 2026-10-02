@@ -15,4 +15,5 @@ export {
   type CredentialFailure,
   type SignCredentialOptions,
   type UnsignedMandateCredential,
+  type VerifyCredentialOptions,
 } from "./proof";

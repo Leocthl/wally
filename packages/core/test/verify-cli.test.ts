@@ -52,6 +52,20 @@ describe.skipIf(!CAN_RUN)("verify-log CLI", CLI_TIMEOUT, () => {
     expect(truncated.stdout).toMatch(/^FAIL seq 6 TRUNCATED: /);
   });
 
+  it("refuses a log that is not valid UTF-8 and keeps a byte-order mark as a changed byte", () => {
+    const bytes = readFileSync(golden("demo-log.jsonl"));
+    const invalid = join(tmp, "invalid-utf8.jsonl");
+    writeFileSync(invalid, Buffer.concat([bytes.subarray(0, 40), Buffer.from([0xff]), bytes.subarray(41)]));
+    const result = run("verify-log.mjs", [invalid, golden("demo-public-keys.json")]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("not valid UTF-8");
+    const bom = join(tmp, "bom.jsonl");
+    writeFileSync(bom, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), bytes]));
+    const withBom = run("verify-log.mjs", [bom, golden("demo-public-keys.json")]);
+    expect(withBom.code).toBe(1);
+    expect(withBom.stdout).toMatch(/^FAIL seq 0 SCHEMA: /);
+  });
+
   it("exits 1 with a message on bad arguments or bad key files", () => {
     expect(run("verify-log.mjs", [])).toMatchObject({ code: 1 });
     const badKeys = join(tmp, "bad-keys.json");

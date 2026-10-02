@@ -186,10 +186,12 @@
     "EscalationAnswer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["decision_id", "choice", "answered_at", "signer", "signature"],
-      "description": "Delegator-signed answer to an ESCALATE. Signature over UTF-8 of 'laisee.resolve.v1:' + hex SHA-256(JCS(this object without signature)). Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.",
+      "required": ["decision_id", "mandate_id", "cart_sha256", "choice", "answered_at", "signer", "signature"],
+      "description": "Delegator-signed answer to an ESCALATE, bound to the mandate and to the cart the delegator was shown. Signature over UTF-8 of 'laisee.resolve.v2:' + hex SHA-256(JCS(this object without signature)); a v1 answer (no mandate_id or cart_sha256) is refused. Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.",
       "properties": {
         "decision_id": { "$ref": "mandate.schema.json#/$defs/DecisionId" },
+        "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId", "description": "The sealed mandate the escalated decision belongs to." },
+        "cart_sha256": { "$ref": "mandate.schema.json#/$defs/Sha256Hex", "description": "Cart fingerprint of the escalated cart: hex SHA-256(JCS(cart without id and proposed_at)), as the engine computes it (docs/02 section 6)." },
         "choice": { "enum": ["APPROVE", "DENY"] },
         "answered_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
         "signer": { "$ref": "mandate.schema.json#/$defs/DidKey" },
