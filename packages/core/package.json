@@ -38,7 +38,6 @@
     "canonicalize": "5.1.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "5.0.3",
     "fast-check": "^4.10.2"
   }
 }
