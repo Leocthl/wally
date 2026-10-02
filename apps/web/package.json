@@ -12,7 +12,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json && vite build",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:pages": "node ../../scripts/pages-build.mjs && playwright test -c playwright.pages.config.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.3",

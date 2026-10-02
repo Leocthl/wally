@@ -13,6 +13,8 @@ const OUT_DIR = "dist/e2e";
 
 export default defineConfig({
   testDir: "./e2e",
+  // The GitHub Pages proof serves its own build on its own port: pnpm e2e:pages (playwright.pages.config.ts).
+  testIgnore: "**/e2e/pages/**",
   fullyParallel: false,
   workers: 1,
   retries: 0,
