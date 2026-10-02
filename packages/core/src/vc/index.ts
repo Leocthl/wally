@@ -1,2 +1,8 @@
-// @laisee/core/vc: AgentDelegationCredential helpers. Owner: lane A (proof sign/verify goes here).
-export { mandateFromCredential } from "./mandate";
+// @laisee/core/vc: AgentDelegationCredential (W3C VC 2.0, Data Integrity eddsa-jcs-2022). Browser-safe.
+export {
+  credentialIdForMandate,
+  CredentialIdError,
+  MANDATE_URN_PREFIX,
+  mandateFromCredential,
+  mandateIdFromCredentialId,
+} from "./mandate";
