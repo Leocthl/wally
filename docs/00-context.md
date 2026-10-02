@@ -53,7 +53,7 @@
 | D9 | Cut order, first to go: teen chain, screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is no longer cut: HKT's workshop centres on DID-VC [F19] | 03 |
 | D10 | First-2-hour kill tests: real-card decline [F40]; shop probe [F39]; ask an HKT mentor whether a delegate SUC API is planned [F17] | 03, 05 |
 | D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
-| D12 | Local-first, no API keys to run the demo: judge = Laya on 127.0.0.1; planner = PlannerPort with `replay`, `rule` and `local` (Qwen3 via llama.cpp, download pending approval [F27]) backends; `claude` stays an optional backend | ADR-0008 |
+| D12 | Laya-only, local-first, no API keys to run the demo: judge = Laya on 127.0.0.1; planner = PlannerPort with a `rule` backend (structured parser + Laya typed item choice) and `replay` backend; `claude` stays an optional backend; no generative LLM [F27] | ADR-0008 |
 | D13 | Booth first: the demo is built for a judge who drives it for 5 min [F14]; the finalist pitch reuses it. Single-use token semantics include a blocked replay and a SIMULATED merchant lock [F19] | 06, 07 |
 
 ## Canonical IDs
@@ -115,7 +115,7 @@
 | Escalation state | `OPEN`, `APPROVED`, `DENIED`, `EXPIRED` |
 | Judge questions | `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` |
 | Judge provider | `laya` (default, local), `jev` (hosted, optional), `llm` (fallback) |
-| Planner provider | `replay`, `rule`, `local`, `claude` |
+| Planner provider | `rule` (default), `replay`, `claude` (optional) |
 | Money | integer minor units (HKD cents), currency `HKD` |
 
 ### Pipeline contract v0
@@ -184,7 +184,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 - [ ] **Team** is 3-4 and writes TypeScript; at least one member reads zh-HK for copy review
 - [ ] **Someone holds** a Tap & Go Plus(ii) or Pro account (needed for the real-card test and F1 re-capture)
 - [x] **Judge runs locally** (Laya on 127.0.0.1): no key, no vendor, listing text never leaves the Mac. Hosted Jev stays optional [F11c]
-- [ ] **Local planner** model: Qwen3-4B Q4_K_M from Qwen's official Hugging Face org needs the user's download approval [F27]
+- [x] **Laya only**: no second model; the user declined a local LLM planner [F27]
 - [ ] **Scameter**: manual, human-paced captures only. No terms on automated use were found and the Important Notice limits reproduction [F6]. The engine reads captures and never queries live
 - [ ] **Dates**: no Mastercard or Visa announcement date goes on a slide until re-captured [F7a, F7b]
 - [x] **Track declaration** submitted (confirmed by the user) [F13]
@@ -226,7 +226,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Decision** | Engine output for one cart: APPROVE, DENY or ESCALATE + rule results |
 | **Mint** | Create a one-off card whose limit equals the approved total (U2) |
 | **Stop** | A DENY, an unanswered ESCALATE, or a revoke; catalogue S1-S6 |
-| **Planner** | Untrusted agent (local LLM, rule parser or replay; Claude optional); may only call `propose_cart` |
+| **Planner** | Untrusted agent (rule parser + Laya typed item choice, or recorded replay; Claude optional); may only call `propose_cart` |
 | **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or LLM fallback); can only tighten a decision |
 | **Policy engine** | Deterministic code that applies R1-R12 and is the only source of a Decision |
 | **Rail** | Card issuing layer; SIMULATED, mirrors Single Use Card semantics [F1] |

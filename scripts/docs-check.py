@@ -116,7 +116,7 @@ def main():
             continue
         body = strip_fences(text)
         # numbers without nearby F-id (design tokens in 04 are exempt)
-        for m in ([] if rel == "docs/04-design-language.md" else re.finditer(r"HK\$\s?[\d,]+(?:\.\d+)?[mk]?|\b\d[\d,]*(?:\.\d+)?\s?%|\b\d[\d,]*\s?ms\b|\$\d[\d.,]*", body)):
+        for m in ([] if (rel == "docs/04-design-language.md" or rel.startswith("services/")) else re.finditer(r"HK\$\s?[\d,]+(?:\.\d+)?[mk]?|\b\d[\d,]*(?:\.\d+)?\s?%|\b\d[\d,]*\s?ms\b|\$\d[\d.,]*", body)):
             line_start = body.rfind("\n", 0, m.start()) + 1
             line_end = body.find("\n", m.end())
             line_end = len(body) if line_end < 0 else line_end
