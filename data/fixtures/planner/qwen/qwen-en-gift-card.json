@@ -1,0 +1,21 @@
+{
+  "fixture": "planner/qwen/qwen-en-gift-card",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language en, kind off-category item. Request: \"add the gift card bundle\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-en-gift-card",
+    "listing_ids": [
+      "lst_injectedTee"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-outlet.example/p/graphic-tee",
+      "items": [
+        {
+          "title": "Gift card bundle (SIMULATED)",
+          "qty": 1
+        }
+      ]
+    }
+  }
+}

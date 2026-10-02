@@ -1,0 +1,14 @@
+{
+  "fixture": "planner/qwen/qwen-en-two-tees",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language en, kind two-item ambiguity. Request: \"a t-shirt please\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-en-two-tees",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_graphicTee"
+    ],
+    "proposal": null
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "fixture": "planner/qwen/qwen-en-vague",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language en, kind vague. Request: \"get me something nice\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-en-vague",
+    "listing_ids": [
+      "lst_demoTee",
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": null
+  }
+}

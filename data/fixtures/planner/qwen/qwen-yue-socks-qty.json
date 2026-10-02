@@ -1,0 +1,22 @@
+{
+  "fixture": "planner/qwen/qwen-yue-socks-qty",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED evaluation scenario for the local Qwen planner (lane m-qwen), language yue, kind quantity. Request: \"我要兩包短襪\". The proposal is the EXPECTED answer written by the author (one annotator), not a recording; the replay backend does not read this folder.",
+  "data": {
+    "scenario": "qwen-yue-socks-qty",
+    "listing_ids": [
+      "lst_demoSocks",
+      "lst_flaggedHoodie"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/socks",
+      "items": [
+        {
+          "title": "Ankle socks, 3 pairs (SIMULATED)",
+          "qty": 2
+        }
+      ]
+    }
+  }
+}
