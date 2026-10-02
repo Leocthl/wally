@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 import type { ApiInfo } from "../api/types";
 import { BRAND } from "../brand";
+import { ABOUT } from "../i18n/about";
 import { useBoothContext } from "../hooks/useBooth";
 import { routeHref } from "../hooks/useRoute";
 import { UI } from "../i18n/ui";
@@ -27,15 +28,33 @@ function modeText(kind: string, t: ReturnType<typeof useLocale>["t"]): string {
   return kind;
 }
 
+/** The provider named in plain words; a name the app does not know shows as the booth wrote it. */
+function providerText(table: Readonly<Record<string, { readonly en: string; readonly zh: string }>>, provider: string, t: ReturnType<typeof useLocale>["t"]): string {
+  const known = table[provider];
+  return known ? t(known) : provider;
+}
+
 function ModeInfo({ info }: { readonly info: ApiInfo }): ReactElement {
   const { t } = useLocale();
-  // The server's notes are English text from api.info(); they keep lang="en" in the zh-HK view.
   return (
-    <List inset label={t(UI["shell.modeTitle"])}>
-      <ListRow leading={<Icon name="settings" />} title={t(UI["shell.modeLabel"])} subtitle={modeText(info.kind, t)} trailing={<Tag size="sm" tone={info.replayed ? "neutral" : "ok"}>{t(UI[info.replayed ? "shell.replayedShort" : "shell.liveShort"])}</Tag>} />
-      <ListRow leading={<Icon name="sparkle" />} title={t(UI["shell.planner"])} subtitle={<span lang="en"><span data-ident>{info.planner.provider}</span> · {info.planner.note}</span>} />
-      <ListRow leading={<Icon name="eye" />} title={t(UI["shell.judge"])} subtitle={<span lang="en"><span data-ident>{info.judge.provider}</span> · {info.judge.note}</span>} />
-    </List>
+    <>
+      <List inset label={t(UI["shell.modeTitle"])}>
+        <ListRow leading={<Icon name="settings" />} title={t(UI["shell.modeLabel"])} subtitle={modeText(info.kind, t)} trailing={<Tag size="sm" tone={info.replayed ? "neutral" : "ok"}>{t(UI[info.replayed ? "shell.replayedShort" : "shell.liveShort"])}</Tag>} />
+        <ListRow leading={<Icon name="sparkle" />} title={t(UI["shell.planner"])} subtitle={providerText(ABOUT.planner, info.planner.provider, t)} />
+        <ListRow leading={<Icon name="eye" />} title={t(UI["shell.judge"])} subtitle={providerText(ABOUT.judge, info.judge.provider, t)} />
+      </List>
+      {/* The server's notes are English text from api.info(), long and technical: one level down, kept lang="en" in the 繁 view. */}
+      <details className="shell-about__notes">
+        <summary>{t(ABOUT.notes)}</summary>
+        <p className="shell-about__notes-lead">{t(ABOUT.notesLead)}</p>
+        <dl lang="en" className="shell-about__notes-list" data-ident>
+          <dt>{t(UI["shell.planner"])}</dt>
+          <dd><span data-ident>{info.planner.provider}</span> · {info.planner.note}</dd>
+          <dt>{t(UI["shell.judge"])}</dt>
+          <dd><span data-ident>{info.judge.provider}</span> · {info.judge.note}</dd>
+        </dl>
+      </details>
+    </>
   );
 }
 
