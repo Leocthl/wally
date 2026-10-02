@@ -11,9 +11,14 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "judge:fit": "tsx src/judge/fit/cli.ts"
   },
   "dependencies": {
     "@laisee/core": "workspace:*"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.2",
+    "tsx": "^4.23.15"
   }
 }
