@@ -8,8 +8,8 @@ import type { DecideContext, Engine, EscalationResolution, JudgeRecord } from "@
 
 export const REFERENCE_ENGINE_VERSION = "harness-reference-double@test";
 
-// Register values, typed again here on purpose: F36 and F50 thresholds, F1 ceiling and active cards, F32 velocity, F52 capture age.
-const T = { inj: 0.39, sellDeny: 0.86, sellEsc: 0.85, scope: 0.63, esc: 0.5 } as const; // F36 as fitted 2026-10-03, F50
+// Register values, typed again here on purpose: F36 (fitted) and F50 thresholds, F1 ceiling and active cards, F32 velocity, F52 capture age.
+const T = { inj: 0.39, sellDeny: 0.86, sellEsc: 0.85, scope: 0.63, esc: 0.5 } as const;
 const RAIL = { ceilingMinor: 200_000, maxActive: 2 } as const;
 const VELOCITY = { maxMints: 3, windowS: 600 } as const;
 const SELLER_CHECK = { maxCaptureAgeS: 86_400 } as const;

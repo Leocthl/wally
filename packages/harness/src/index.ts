@@ -3,7 +3,7 @@
 export { BASELINES, type Baseline, type Category, type Scenario, type ScenarioLabel } from "./types";
 export { ACCEPTANCE, CATEGORIES, SCENARIO_COUNT } from "./config";
 export { generateScenarios, type GenerateOptions } from "./scenario/generate";
-export { createCartBuilder, createComponents, createLiveJudge, createLiveJudgeSource, describeComponents, type ComponentReport, type LiveSourceOptions } from "./factory";
+export { createComponents, createLiveJudge, createLiveJudgeSource, describeComponents, type ComponentReport, type LiveSourceOptions } from "./factory";
 export { createSystems } from "./systems/create";
 export type { CheckoutReport, Components, RunOutcome, SystemDeps, SystemUnderTest, World } from "./systems/types";
 export type { ChoiceClient, ChoiceRequest, ChoiceResult } from "./judge/choice-client";

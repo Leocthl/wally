@@ -54,6 +54,13 @@ export function legitimateBlocked(pairs: readonly Pair[]): readonly BlockedRow[]
     .map((p) => ({ scenario: p.scenario.id, category: p.scenario.category, variant: p.scenario.variant, ...gateOf(p.outcome), byDesign: p.scenario.label.payment.kind !== "authorised" }));
 }
 
+/** Legitimate scenarios the engine escalated and the simulated shopper was asked about: friction, not a block if the answer was yes. */
+export function legitimateAsked(pairs: readonly Pair[]): readonly BlockedRow[] {
+  return pairs
+    .filter((p) => p.scenario.label.legitimate && p.outcome.escalations.length > 0)
+    .map((p) => ({ scenario: p.scenario.id, category: p.scenario.category, variant: p.scenario.variant, ...stoppedAt(p.outcome), byDesign: false }));
+}
+
 export function tallyGates(rows: readonly BlockedRow[]): Readonly<Record<string, number>> {
   return rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.gate]: (acc[r.gate] ?? 0) + 1 }), {});
 }

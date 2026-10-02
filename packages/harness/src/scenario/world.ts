@@ -1,6 +1,7 @@
 // Builds one Scenario from a DraftSpec: mandate, packet, listing, Scameter capture, recorded planner output, cart.
 // Category modules decide the numbers and the label; this file does the bookkeeping and keeps the schemas valid.
 import type {
+  Cart,
   ListingRecord,
   Mandate,
   PacketState,
@@ -10,9 +11,10 @@ import type {
 } from "@laisee/core/generated";
 import { EXAMPLE_MANDATE, RAIL, SCENARIO_EPOCH, type Category } from "../config";
 import type { Rng } from "../prng";
-import type { InjectionInfo, Scenario, ScenarioEvents, ScenarioLabel } from "../types";
+import type { HistoryEvent, InjectionInfo, Scenario, ScenarioEvents, ScenarioLabel } from "../types";
 import { AGENT_DID, DELEGATOR_DID } from "../keys";
-import { buildCart, type CartBuilder, type FxPricing } from "./cart";
+import { buildScenarioCart } from "./cart";
+import { historyOf, packetFromHistory } from "./history";
 import { formatHkd } from "./money";
 import type { Template } from "./templates";
 
@@ -76,7 +78,6 @@ export interface DraftSpec {
   readonly extraItems?: readonly ExtraItem[];
   /** Titles the recorded planner proposes. Default: the template item only. */
   readonly proposalTitles?: readonly string[];
-  readonly fx?: Pick<FxPricing, "listedCurrency" | "listedAmountMinor" | "rate">;
   readonly events?: Partial<ScenarioEvents>;
   readonly label: ScenarioLabel;
   readonly injection?: InjectionInfo | null;
@@ -147,29 +148,16 @@ function buildMandate(ctx: Ctx, spec: DraftSpec): Mandate {
   };
 }
 
-function buildPacket(ctx: Ctx, spec: DraftSpec, mandate: Mandate): PacketState {
-  const active = spec.activeCardLimits ?? [];
-  const committed = active.reduce((acc, l) => acc + l, 0);
-  const spent = spec.budgetMinor - committed - spec.remainingMinor;
-  if (spent < 0) throw new RangeError(`${ctx.scenarioId}: remaining ${spec.remainingMinor} and active cards ${committed} exceed the budget`);
-  const mints = [...(spec.mintAgesS ?? [])].sort((a, b) => b - a).map((age) => iso(ctx.nowMs - age * 1000));
-  const status = spec.packetStatus ?? (spec.remainingMinor === 0 ? "EXHAUSTED" : "ACTIVE");
-  return {
-    mandate_id: mandate.id,
-    log_id: `log_${ctx.tag}`,
-    budget_minor: spec.budgetMinor,
-    committed_minor: committed,
-    spent_minor: spent,
-    remaining_minor: spec.remainingMinor,
-    currency: "HKD",
-    active_cards: active.map((limit, k) => ({ id: `crd_${ctx.tag}a${k}`, limit_minor: limit, expires_at: iso(ctx.nowMs + 20 * 60 * 1000) })),
-    mint_times: mints,
-    open_escalations: [],
-    status,
-    expires_at: mandate.valid_until,
-    folded_through_seq: 1 + mints.length,
-    computed_at: iso(ctx.nowMs),
-  };
+function buildPacket(ctx: Ctx, spec: DraftSpec, mandate: Mandate): { readonly packet: PacketState; readonly history: readonly HistoryEvent[] } {
+  const history = historyOf({
+    tag: ctx.tag,
+    budgetMinor: spec.budgetMinor,
+    remainingMinor: spec.remainingMinor,
+    activeCardLimits: spec.activeCardLimits ?? [],
+    mintAgesS: spec.mintAgesS ?? [],
+    revoked: spec.packetStatus === "REVOKED",
+  });
+  return { packet: packetFromHistory(mandate, history, ctx.nowMs), history };
 }
 
 function buildCapture(ctx: Ctx, spec: DraftSpec): ScameterCapture | null {
@@ -219,9 +207,9 @@ const DEFAULT_EVENTS: ScenarioEvents = {
 };
 
 /** Builds the full scenario. Throws if the spec is inconsistent, so a generator bug fails loudly and early. */
-export function assemble(ctx: Ctx, spec: DraftSpec, build: CartBuilder = buildCart): Scenario {
+export function assemble(ctx: Ctx, spec: DraftSpec): Scenario {
   const mandate = buildMandate(ctx, spec);
-  const packet = buildPacket(ctx, spec, mandate);
+  const { packet, history } = buildPacket(ctx, spec, mandate);
   const capture = buildCapture(ctx, spec);
   const listing = buildListing(ctx, spec, capture);
   const titles = spec.proposalTitles ?? [spec.template.title];
@@ -233,18 +221,12 @@ export function assemble(ctx: Ctx, spec: DraftSpec, build: CartBuilder = buildCa
     note: spec.plannerNote ?? "Recorded planner choice for this scenario.",
   };
   const planner: PlannerReplayRecord = { scenario: ctx.scenarioId.slice(0, 41), listing_ids: [listing.id], proposal };
-  const built = build({
-    cartId: `crt_${ctx.tag}`,
-    mandate,
-    listing,
-    proposal,
-    scameter: capture,
-    now: new Date(ctx.nowMs),
-    ...(spec.fx === undefined
-      ? {}
-      : { fx: { ...spec.fx, rateSourceRef: "SIMULATED-not-a-market-rate" } }),
-  });
-  if (!built.ok) throw new Error(`${ctx.scenarioId}: ${built.reason}`);
+  let cart: Cart;
+  try {
+    cart = buildScenarioCart({ cartId: `crt_${ctx.tag}`, mandate, listing, proposal, scameter: capture, now: new Date(ctx.nowMs) });
+  } catch (err) {
+    throw new Error(`${ctx.scenarioId}: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+  }
   return {
     id: ctx.scenarioId,
     index: ctx.index,
@@ -255,10 +237,12 @@ export function assemble(ctx: Ctx, spec: DraftSpec, build: CartBuilder = buildCa
     now: iso(ctx.nowMs),
     mandate,
     packet,
+    history,
     listing,
     scameterCapture: capture,
     planner,
-    cart: built.cart,
+    requestText: `Buy ${titles.join(" and ")} from ${listing.merchant.name}.`,
+    cart,
     events: { ...DEFAULT_EVENTS, ...spec.events },
     limits: { allowedMinor: allowedLimit(spec.perPurchase, spec.remainingMinor) },
     injection: spec.injection ?? null,

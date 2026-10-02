@@ -98,12 +98,15 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
     }
   });
 
-  it("states its scope: scenario counts, SIMULATED parts, and a log checked for integrity rather than consent", () => {
+  it("states its scope: counts not proofs, SIMULATED parts, a log checked for integrity rather than consent, a modelled shopper", () => {
     const scope = (live.result["scope"] as string[]).join(" ");
-    expect(scope).toContain("none of those scenarios did it");
+    expect(scope).toContain("Zero over-limit mints in these 100 scenarios is a count of zero");
+    expect(scope).toContain("not a proof that no cart can overspend");
     expect(scope).toContain("SIMULATED");
     expect(scope).toContain("chain integrity");
-    expect(scope).toContain("does not by itself show that the delegator consented");
+    expect(scope).toContain("does not show that the delegator consented");
+    expect(scope).toContain("simulated shopper");
+    expect(scope).toContain("A judge timeout is not retried");
     expect(live.summary).toContain("## Scope: what these numbers say");
   });
 
@@ -131,11 +134,11 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
     expect(recorded.summary).not.toContain("Host load");
   });
 
-  it("counts the stop cases that got through for a model-free rule apart, and B2 has none", () => {
-    const through = (live.result["breakdown"] as { stops_through: Record<string, { count: number; model_free_count: number }> }).stops_through;
+  it("counts the stop cases that got through for a model-free rule apart; for B2 they are the repeated carts and nothing else", () => {
+    const through = (live.result["breakdown"] as { stops_through: Record<string, { count: number; model_free_count: number; rows: { category: string }[] }> }).stops_through;
     for (const b of ["B0", "B1", "B2"]) expect(through[b]?.model_free_count).toBeLessThanOrEqual(through[b]?.count ?? -1);
-    expect(through["B2"]?.model_free_count).toBe(0);
-    expect(live.summary).toMatch(/\*\*B2\*\*: \d+ of \d+ stop cases got through; 0 of them were for a model-free rule/);
+    expect(through["B2"]?.rows.filter((r) => r.category !== "duplicate")).toEqual([]);
+    expect(live.summary).toMatch(/\*\*B2\*\*: \d+ of \d+ stop cases got through; \d+ of them were for a model-free rule/);
   });
 
   it("round-trips through JSON without loss", () => {

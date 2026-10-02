@@ -5,7 +5,7 @@ import type { Summary } from "../stats";
 import { BASELINES, type Baseline } from "../types";
 import { countModelFree, tallyGates, type BlockedRow, type BreachRow } from "./breakdown";
 import { formatHkt } from "./meta";
-import { hostLoadOf, type Computed, type ResultInput } from "./result";
+import { EVIDENCE_RULE, hostLoadOf, type Computed, type ResultInput } from "./result";
 
 const kn = (r: Ratio): string => `${r.k}/${r.n}`;
 const row = (cells: readonly string[]): string => `| ${cells.join(" | ")} |`;
@@ -60,6 +60,7 @@ function baselineTable(c: Computed): string[] {
     ratioRow("Wrong-merchant rate", "[F38]", (b) => m[b].wrongMerchant),
     ratioRow("False-block rate", "[F38]", (b) => m[b].falseBlock),
     ratioRow("Stop-breach rate", "[F38]", (b) => m[b].stopBreach),
+    ratioRow("Legitimate purchases that needed the shopper's answer", "[F38]", (b) => m[b].legitimateAsked),
     ratioRow("Injection pass-through, judge-only cases", "[F36]", (b) => m[b].injectionPassThrough),
     ratioRow("Label agreement", "[F37]", (b) => m[b].labelAgreement),
     ratioRow("Judge calls that timed out", "[F34]", (b) => m[b].judgeTimeouts),
@@ -110,6 +111,17 @@ function cappedRows<T>(rows: readonly T[], line: (row: T) => string): string[] {
   return rows.length > SHOWN_ROWS ? [...shown, `- ... ${rows.length - SHOWN_ROWS} more in the JSON`] : shown;
 }
 
+function acceptanceLines(c: Computed, input: ResultInput): string[] {
+  const t = c.judgeTimeouts;
+  const load = t.hostLoad1m === null ? "not recorded" : String(t.hostLoad1m);
+  const when = input.mode === "live" ? "at the end of the run" : "when the answers were recorded";
+  return [
+    ...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`),
+    `- **Judge-timeout cases**: ${t.scenarios.length} of ${t.legitimate} legitimate scenarios, never retried${t.scenarios.length === 0 ? "" : `: ${t.scenarios.join(", ")}`}; host load average ${load} ${when} [F34]`,
+    "- A miss is reported as a miss; nothing is retuned to turn it green [F38]",
+  ];
+}
+
 const blockedLine = (r: BlockedRow): string => `- ${r.scenario} (${r.variant}): stopped by ${r.gate}, ${r.reason}${r.byDesign ? "; by design, the label expects this decline" : ""}`;
 const breachLine = (r: BreachRow): string => `- ${r.scenario} (${r.variant}): label expects ${r.expected}, got ${r.got}; ${r.modelFree ? "a model-free rule or the rail should stop it" : `needs ${r.labelRule === "R9" ? "the seller check (R9)" : "the judge (R10)"}`}`;
 
@@ -129,6 +141,14 @@ function blockedLines(c: Computed): string[] {
   ];
 }
 
+function askedLines(c: Computed): string[] {
+  const asked = c.breakdown.asked.B2;
+  return [
+    `- **B2** escalated ${asked.length} of ${c.metrics.B2.falseBlock.n} legitimate scenarios; the simulated shopper approved each of them, so none is a block. By gate: ${tallyText(asked)}`,
+    ...(asked.length === 0 ? [] : ["", "B2, one line per scenario:", ...cappedRows(asked, (r) => `- ${r.scenario} (${r.variant}): asked because of ${r.gate}, ${r.reason}`)]),
+  ];
+}
+
 function throughLines(c: Computed): string[] {
   const stops = c.metrics.B2.stopBreach.n;
   const lines = (["B1", "B2"] as const).flatMap((b) => {
@@ -141,13 +161,14 @@ function throughLines(c: Computed): string[] {
 export function renderSummary(input: ResultInput, c: Computed): string {
   return [
     ...header(input, c),
-    ...section("Evidence status", [`- **Valid as product evidence**: ${c.evidence.valid ? "yes" : "no"}`, ...c.evidence.reasons.map((r) => `- ${r}`)]),
+    ...section("Evidence status", [`- **Valid as product evidence**: ${c.evidence.valid ? "yes" : "no"}`, `- **Rule**: ${EVIDENCE_RULE}`, ...c.evidence.reasons.map((r) => `- ${r}`)]),
     ...section("Scope: what these numbers say", c.scope.map((line) => `- ${line}`)),
     ...section("Baselines (k/n, percentage in brackets)", [...baselineTable(c), "", "- **Cost per decision**: no per-call charge (local compute); wall time per decision is the latency row [F35]"]),
     ...section("Judge false-allow, B2, injection set", judgeLines(c)),
     ...section("Judge on the whole injection corpus, scored by the engine's R10", corpusLines(input)),
-    ...section("Acceptance [F38]", [...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`), "- A miss is reported as a miss; nothing is retuned to turn it green [F38]"]),
+    ...section("Acceptance [F38]", acceptanceLines(c, input)),
     ...section("Legitimate purchases blocked, by gate", blockedLines(c)),
+    ...section("Legitimate purchases that needed the shopper's answer", askedLines(c)),
     ...section("Stop cases that got through", throughLines(c)),
     ...section("Categories (k/n completed, k/n where B2 matches the label)", categoryTable(c)),
     ...section("Label disagreements, B2", disagreementLines(c)),

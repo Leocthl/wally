@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseCliArgs, UsageError, USAGE, type CliOptions } from "./cli-args";
-import { createCartBuilder, createComponents, createLiveJudgeSource, describeComponents } from "./factory";
+import { createComponents, createLiveJudgeSource, describeComponents } from "./factory";
 import { createRecordedSource, probeLaya, type JudgeSource } from "./judge/sources";
 import { parseRecording } from "./judge/recording";
 import { repoMetaReader } from "./report/meta";
@@ -78,7 +78,6 @@ async function main(): Promise<number> {
     timer: monotonicTimer,
     meta: repoMetaReader(chosen.device),
     clock: { now: () => new Date() },
-    buildCart: createCartBuilder(),
     onProgress: (done, total) => {
       if (done % 25 === 0 || done === total) console.error(`  ${done}/${total} scenarios`);
     },

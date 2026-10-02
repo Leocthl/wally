@@ -8,7 +8,6 @@ import type { MetaReader, RunMeta } from "./report/meta";
 import { buildResult, computeReport, type Computed, type Mode, type ResultInput } from "./report/result";
 import { evaluateCorpus } from "./judge/corpus-eval";
 import { renderSummary } from "./report/markdown";
-import type { CartBuilder } from "./scenario/cart";
 import { generateScenarios } from "./scenario/generate";
 import { createSystems } from "./systems/create";
 import type { Components, RunOutcome, SystemUnderTest } from "./systems/types";
@@ -25,7 +24,6 @@ export interface RunInput {
   readonly timer: Timer;
   readonly meta: MetaReader;
   readonly clock: Clock;
-  readonly buildCart?: CartBuilder;
   readonly onProgress?: (done: number, total: number) => void;
 }
 
@@ -49,7 +47,7 @@ async function collect(scenarios: readonly Scenario[], systems: readonly SystemU
 }
 
 export async function runHarness(input: RunInput): Promise<RunOutput> {
-  const scenarios = generateScenarios({ seed: input.seed, n: input.n, ...(input.buildCart === undefined ? {} : { buildCart: input.buildCart }) });
+  const scenarios = generateScenarios({ seed: input.seed, n: input.n });
   const base = scenarios[0];
   if (base === undefined) throw new RangeError("a run needs at least one scenario");
   await input.source.warmUp();

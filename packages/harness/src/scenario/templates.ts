@@ -64,7 +64,7 @@ export function cleanTemplates(): readonly Template[] {
   return cleanCache;
 }
 
-export const FX_TEMPLATE: Template = generated("global", "Demo Global Store", "Overseas parka", "apparel", 2018, "30-day returns");
+export const FEES_TEMPLATE: Template = generated("handling", "Demo Handling Store", "Quilted parka", "apparel", 2018, "30-day returns");
 export const FLAGGED_TEMPLATE: Template = { ...fromFixture("flagged-seller-hoodie"), scameterRef: FLAGGED_CAPTURE_REF };
 export const INJECTED_FIXTURE_TEMPLATE: Template = fromFixture("injected-tee");
 export const EARBUDS_TEMPLATE: Template = fromFixture("off-category-earbuds");

@@ -2,7 +2,6 @@
 // optionally replay the charge, handle a revoke. A Gate decides; a Policy says which orchestrator behaviours and which
 // world the baseline has. Core's orchestrator (TASKS A-26) replaces the body of this file; the Gate and Policy split stays.
 import type { CardRecord, Decision } from "@laisee/core/generated";
-import { cartFingerprint } from "@laisee/core/engine";
 import { MintError, type CardEvent, type MerchantQuote } from "@laisee/core/ports";
 import type { Baseline, Scenario } from "../types";
 import type { Timer } from "../timer";
@@ -29,8 +28,6 @@ export interface Gate {
 export interface Policy {
   readonly id: Baseline;
   readonly world: "governed" | "ungoverned";
-  /** A repeated cart returns the earlier Decision (cart fingerprint, 02 §6). */
-  readonly dedup: boolean;
   /** A revoke voids ACTIVE cards. */
   readonly voidOnRevoke: boolean;
 }
@@ -63,28 +60,45 @@ const withEvent = (w: Work, e: CardEvent): Work => ({ ...w, events: [...w.events
 const withError = (w: Work, message: string): Work => ({ ...w, error: w.error ?? message });
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
-/** Logs each distinct decision once (I7), then mints each approved one. A repeat mint returns the same card (T-I1). */
-async function logAndMint(decisions: readonly GateDecision[], scenario: Scenario, world: World): Promise<Work> {
-  let work = empty;
-  const logged = new Set<string>();
-  for (const d of decisions) {
-    if (d.entry !== null && !logged.has(d.facts.decisionId)) {
-      logged.add(d.facts.decisionId);
-      const failure = await world.recordDecision(d.entry);
-      if (failure !== null) return withError(work, failure); // not logged, so nothing may follow (I7)
-    }
-    if (d.forRail === null) continue;
-    try {
-      const card = await world.mint(d.forRail, scenario.cart.merchant.domain, scenario.cart.id);
-      if (work.held.some((h) => h.card.id === card.id)) continue;
-      const failure = await world.recordMint(card);
-      if (failure !== null) return withError({ ...work, held: [...work.held, { card, decision: d.forRail }] }, failure);
-      work = { ...work, held: [...work.held, { card, decision: d.forRail }] };
-    } catch (err) {
-      work = err instanceof MintError ? { ...work, mintBlocked: err.code } : withError(work, `mint failed: ${message(err)}`);
-    }
+/** Logs a decision (I7), then mints it when it was approved. A decision that cannot be logged is not acted on. */
+async function recordAndMint(d: GateDecision, scenario: Scenario, world: World, before: Work): Promise<Work> {
+  if (d.entry !== null) {
+    const failure = await world.recordDecision(d.entry);
+    if (failure !== null) return withError(before, failure);
   }
-  return work;
+  if (d.forRail === null) return before;
+  try {
+    const card = await world.mint(d.forRail, scenario.cart.merchant.domain, d.forRail.cart.id);
+    const held = [...before.held, { card, decision: d.forRail }];
+    const failure = await world.recordMint(card);
+    return failure === null ? { ...before, held } : withError({ ...before, held }, failure);
+  } catch (err) {
+    return err instanceof MintError ? { ...before, mintBlocked: err.code } : withError(before, `mint failed: ${message(err)}`);
+  }
+}
+
+interface Submitted {
+  readonly decisions: readonly GateDecision[];
+  readonly work: Work;
+  readonly error: string | null;
+}
+
+/** One submission after another: decide, log, mint, so the next decision is made against the budget this one committed. */
+async function submitAll(scenario: Scenario, gate: Gate, world: World): Promise<Submitted> {
+  const decisions: GateDecision[] = [];
+  let work = empty;
+  for (let k = 0; k < scenario.events.submissions; k += 1) {
+    let d: GateDecision;
+    try {
+      d = await gate.decide(scenario, world, k);
+    } catch (err) {
+      return { decisions, work, error: `decision failed: ${message(err)}` };
+    }
+    decisions.push(d);
+    work = await recordAndMint(d, scenario, world, work);
+    if (work.error !== null) break;
+  }
+  return { decisions, work, error: null };
 }
 
 async function voidAll(work: Work, world: World): Promise<Work> {
@@ -132,23 +146,6 @@ async function replay(work: Work, scenario: Scenario, gate: Gate, world: World, 
   return pay(work, first, scenario, gate, world, at);
 }
 
-async function decideAll(scenario: Scenario, gate: Gate, policy: Policy, world: World): Promise<{ decisions: GateDecision[]; error: string | null }> {
-  const decisions: GateDecision[] = [];
-  const seen = new Map<string, GateDecision>();
-  for (let k = 0; k < scenario.events.submissions; k += 1) {
-    const fp = cartFingerprint(scenario.cart);
-    const prior = policy.dedup ? seen.get(fp) : undefined;
-    try {
-      const d = prior ?? (await gate.decide(scenario, world, k));
-      if (policy.dedup) seen.set(fp, d);
-      decisions.push(d);
-    } catch (err) {
-      return { decisions, error: `decision failed: ${message(err)}` };
-    }
-  }
-  return { decisions, error: null };
-}
-
 /** Used when no submission produced a decision: nothing was approved, so the scenario counts as a stop (I5). */
 const failClosed = (): GateDecision => ({ facts: { outcome: "DENY", rule: null, templateId: null, decisionId: "dec_failclosed" }, entry: null, forRail: null, judge: null });
 
@@ -182,6 +179,7 @@ function summarise({ scenario, policy, decisions, work, latencyMs, error, log }:
     latencyMs,
     error: error ?? work.error,
     log,
+    escalations: [],
   };
 }
 
@@ -199,9 +197,10 @@ export async function runPipeline(scenario: Scenario, gate: Gate, policy: Policy
   const t0 = deps.timer();
   const now = new Date(scenario.now);
   const at = new Date(now.getTime() + CHECKOUT_DELAY_MS);
-  const { decisions, error } = await decideAll(scenario, gate, policy, world);
-  if (error !== null) return summarise({ scenario, policy, decisions, work: empty, latencyMs: null, error, log: await auditOf(world, deps) });
-  let work = await logAndMint(decisions, scenario, world);
+  const submitted = await submitAll(scenario, gate, world);
+  const { decisions } = submitted;
+  if (submitted.error !== null) return summarise({ scenario, policy, decisions, work: submitted.work, latencyMs: null, error: submitted.error, log: await auditOf(world, deps) });
+  let work = submitted.work;
   // Latency measures real calls: an outage injected by the judge_down category called nothing, so it is not a sample.
   const latencyMs = deps.measureLatency && scenario.events.judgeFault === "none" ? deps.timer() - t0 : null;
   if (scenario.events.revoke === "after_mint" && policy.voidOnRevoke) work = await voidAll(work, world);
