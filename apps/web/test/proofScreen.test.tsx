@@ -46,14 +46,14 @@ describe("Proof: verify, tamper, restore", () => {
     expect(card()).toHaveTextContent("The content of this entry changed after it was written.");
     expect(card().querySelector("[data-reason]")).toHaveTextContent("PAYLOAD_HASH");
     expect(card().querySelector("[data-changed]")).toHaveTextContent("In the copy, the cart total of receipt #1 went from HK$259 to HK$359.");
-    expect(screen.getByRole("note")).toHaveTextContent("Your stored receipts are untouched.");
+    expect(document.querySelector("[data-tampered-copy]")).toHaveTextContent("Your stored receipts are untouched.");
     expect(document.querySelector('[data-link="fail"]')).not.toBeNull();
     expect(document.querySelectorAll('[data-link="after"]')).toHaveLength(2);
     expect(bareFigures(document.body)).toEqual([]);
     expect(numsWithoutChip(document.body)).toEqual([]);
     await user.click(screen.getByRole("button", { name: "Restore" }));
     await waitFor(() => expect(card()).toHaveAttribute("data-status", "pass"));
-    expect(screen.queryByRole("note")).toBeNull();
+    expect(document.querySelector("[data-tampered-copy]")).toBeNull();
     expect(screen.getByRole("button", { name: "Try to tamper" })).toBeEnabled();
   });
 

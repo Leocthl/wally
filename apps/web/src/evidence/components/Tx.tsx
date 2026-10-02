@@ -31,6 +31,37 @@ export function Tx({ text, as: Tag = "span", className }: { readonly text: Label
   return <Tag className={className} lang={locale === "zh-HK" ? "zh-HK" : undefined}>{t(text)}</Tag>;
 }
 
+const SLOT = /\{(\w+)\}/g;
+
+function filled(text: string, slots: Readonly<Record<string, ReactNode>>): ReactNode[] {
+  const out: ReactNode[] = [];
+  let cursor = 0;
+  for (const m of text.matchAll(SLOT)) {
+    const at = m.index ?? 0;
+    if (at > cursor) out.push(text.slice(cursor, at));
+    const name = m[1] ?? "";
+    if (name in slots) out.push(<span key={`${name}-${at}`} className="tx-slot">{slots[name]}</span>);
+    cursor = at + m[0].length;
+  }
+  if (cursor < text.length) out.push(text.slice(cursor));
+  return out;
+}
+
+/** A translated sentence with {name} slots filled by elements (figures keep their chips); both languages on the presenter. */
+export function TxFill({ text, slots, as: Tag = "span", className }: { readonly text: LabelPair; readonly slots: Readonly<Record<string, ReactNode>>; readonly as?: Tag; readonly className?: string }): ReactElement {
+  const { t, locale } = useLocale();
+  const both = useBoth();
+  if (both) {
+    return (
+      <Tag className={cx("tx-both", className)}>
+        <span lang="en" className="tx-both__en">{filled(text.en, slots)}</span>
+        <span lang="zh-HK" className="tx-both__zh">{filled(text.zh, slots)}</span>
+      </Tag>
+    );
+  }
+  return <Tag className={className} lang={locale === "zh-HK" ? "zh-HK" : undefined}>{filled(t(text), slots)}</Tag>;
+}
+
 /** A sentence with figures inside it, one language (or both, side by side, on the presenter). */
 export function Sentence({ en, zh, className }: { readonly en: ReactNode; readonly zh: ReactNode; readonly className?: string }): ReactElement {
   const { locale } = useLocale();

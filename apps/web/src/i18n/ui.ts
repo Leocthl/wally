@@ -153,6 +153,63 @@ export const UI = {
     showing: label("Showing", "顯示"), // NEEDS-REVIEW
   },
 
+  // Lane b-proof: #/presenter (stage and booth big screen). Placeholders in braces take figure elements.
+  presenterUi: {
+    controls: label("Presenter controls", "講者控制"), // NEEDS-REVIEW
+    step: label("Step", "下一步"), // NEEDS-REVIEW
+    skip: label("Skip", "略過"), // NEEDS-REVIEW
+    reset: label("Reset", "重設"), // NEEDS-REVIEW
+    mode: label("Mode", "模式"), // NEEDS-REVIEW
+    simulated: label("SIMULATED", "模擬"), // NEEDS-REVIEW
+    real: label("REAL", "真實"), // NEEDS-REVIEW
+    realOff: label("no capture yet", "未有擷取紀錄"), // NEEDS-REVIEW
+    language: label("Language", "語言"), // NEEDS-REVIEW
+    both: label("Both", "雙語"), // NEEDS-REVIEW
+    end: label("End of script", "腳本完結"), // NEEDS-REVIEW
+    next: label("Next", "下一步"), // NEEDS-REVIEW
+    shortcuts: label("Space or Right arrow: next step. R: reset.", "空白鍵或右方向鍵：下一步。R：重設。"), // NEEDS-REVIEW
+    ready: label("Ready. Step seals the budget.", "準備好。按「下一步」鎖定預算。"), // NEEDS-REVIEW
+    budgetLeft: label("Budget left", "預算剩餘"), // NEEDS-REVIEW
+    ofBudget: label("of {amount}", "總額 {amount}"), // NEEDS-REVIEW
+    held: label("Held on cards", "卡上預留"), // NEEDS-REVIEW
+    spent: label("Spent", "已使用"), // NEEDS-REVIEW
+    cardsTitle: label("One-off cards", "一次性卡"), // NEEDS-REVIEW
+    noCards: label("No card yet. A card exists only after an approval.", "未有卡。獲批後才會發卡。"), // NEEDS-REVIEW
+    cardOnce: label("Works once, for {amount} only", "只可用一次，限 {amount}"), // NEEDS-REVIEW
+    cardActive: label("Ready to use", "可以使用"), // NEEDS-REVIEW
+    cardUsed: label("Used", "已使用"), // NEEDS-REVIEW
+    cardVoided: label("Cancelled", "已取消"), // NEEDS-REVIEW
+    cardExpired: label("Expired", "已過期"), // NEEDS-REVIEW
+    sealedTitle: label("Budget sealed", "預算已鎖定"), // NEEDS-REVIEW
+    sealedBody: label("You signed these rules. Fixed rules, not the AI, decide every purchase.", "你簽署了這些規則。每次購買都由固定規則決定，不是 AI。"), // NEEDS-REVIEW
+    yourWords: label("In your words", "你的原話"), // NEEDS-REVIEW
+    ruleBudget: label("Budget {amount}", "預算 {amount}"), // NEEDS-REVIEW
+    ruleCategories: label("Only these kinds of things", "只限這些類別"), // NEEDS-REVIEW
+    ruleSellers: label("Sellers checked against scam reports first", "賣家先查核詐騙紀錄"), // NEEDS-REVIEW
+    ruleCap: label("Each purchase at most {amount}", "每次購買最多 {amount}"), // NEEDS-REVIEW
+    ruleAsk: label("Asks you above {amount}", "超過 {amount} 要你確認"), // NEEDS-REVIEW
+    ruleUntil: label("Valid until {time} (Hong Kong time)", "有效至 {time}（香港時間）"), // NEEDS-REVIEW
+    shopping: label("Wally is shopping", "Wally 正在幫你買"), // NEEDS-REVIEW
+    madeCard: label("Wally made a one-off card", "Wally 已發出一次性卡"), // NEEDS-REVIEW
+    stopped: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
+    needsOk: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
+    failedRun: label("Something failed, so nothing was bought. No card was made.", "過程出錯，所以沒有購買，也沒有發卡。"), // NEEDS-REVIEW
+    noCardMade: label("No card was made. Nothing can be charged.", "沒有發卡，不會有任何扣款。"), // NEEDS-REVIEW
+    exactly: label("A one-off card for exactly {amount}", "剛好 {amount} 的一次性卡"), // NEEDS-REVIEW
+    atCheckout: label("At checkout", "結帳時"), // NEEDS-REVIEW
+    beatPaid: label("Paid {amount}: exactly the card limit.", "已扣款 {amount}，剛好是卡額。"), // NEEDS-REVIEW
+    beatRetry: label("The reply timed out; the retry used the same key, so the rail charged once: {amount}.", "回覆逾時；重試用同一個鍵，發卡層只扣款一次：{amount}。"), // NEEDS-REVIEW
+    beatTried: label("The shop tried {amount}.", "商戶嘗試扣款 {amount}。"), // NEEDS-REVIEW
+    beatVoided: label("Card cancelled. The budget gets its limit back.", "卡已取消，額度退回預算。"), // NEEDS-REVIEW
+    beatExpired: label("Card expired unused. The budget gets its limit back.", "卡未用已過期，額度退回預算。"), // NEEDS-REVIEW
+    proofTitle: label("Receipts and proof", "收據及證明"), // NEEDS-REVIEW
+    latest: label("Latest receipts", "最新收據"), // NEEDS-REVIEW
+    realTitle: label("The one real card decline", "唯一一次真實卡拒絕"), // NEEDS-REVIEW
+    realCode: label("Decline code", "拒絕代碼"), // NEEDS-REVIEW
+    realNote: label("Replayed from the real-card test: read only, redacted, never a live rail.", "重播真卡測試：只讀、已遮蓋，絕非真實發卡層。"), // NEEDS-REVIEW
+    deck: label("Slides carry this beat.", "此環節由投影片展示。"), // NEEDS-REVIEW
+  },
+
   // Lane b-proof: #/proof. The reason lines copy the offline verifier page's wording (apps/verifier/src/reasons.ts).
   proof: {
     title: label("Proof", "證明"), // NEEDS-REVIEW

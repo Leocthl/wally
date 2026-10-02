@@ -16,10 +16,10 @@ const BUNDLED = loadHarnessRuns();
 export function Dm8View({ harness = BUNDLED }: { readonly harness?: Loaded<HarnessRun> }): ReactElement {
   const pick = pickRun(harness.items);
   const run = harness.items.find((r) => r.file === pick?.file) ?? null;
-  if (run === null) return <div className="ev ev--stage" data-register="ledger" data-beat="DM8"><Tx as="p" text={E.unreadableNone} className="ev-unreadable" /></div>;
+  if (run === null) return <div className="ev ev--stage" data-beat="DM8"><Tx as="p" text={E.unreadableNone} className="ev-unreadable" /></div>;
   const status = wiringStatus(run);
   return (
-    <div className="ev ev--stage" data-register="ledger" data-beat="DM8">
+    <div className="ev ev--stage" data-beat="DM8">
       {status.wiringOnly ? (
         <section className="ev-wiring" aria-labelledby="ev-dm8-wiring" data-wiring-banner>
           <h3 id="ev-dm8-wiring" className="ev-wiring__title"><Tx text={E.wiringTitle} /></h3>
@@ -38,7 +38,7 @@ export function Dm8View({ harness = BUNDLED }: { readonly harness?: Loaded<Harne
 
 export function Dm9Card(): ReactElement {
   return (
-    <div className="ev ev--stage" data-register="ledger" data-beat="DM9">
+    <div className="ev ev--stage" data-beat="DM9">
       <div className="ev-dm9">
         {DM9.map((col) => (
           <section key={col.id} className="ev-dm9__col" aria-labelledby={`ev-dm9-${col.id}`} data-dm9={col.id}>

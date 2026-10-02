@@ -1,4 +1,6 @@
 // Presenter (docs/06): the Driver steps DM1 to DM9; the big screen shows the beat; Reset returns to step 0 in SIMULATED.
+// Updated deliberately by lane b-proof for the restyled stage: the sealed rules are the "Budget sealed" region, stops are
+// alerts carrying their template id (the plain sentence comes from the rule template), and the budget is the side hero.
 import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PRESENTER_SCRIPT } from "../src/booth/presenterScript";
@@ -25,7 +27,8 @@ describe("presenter walk", () => {
   it("DM1 seals M0; DM2 mints, declines the overshoot, charges exactly, and declines the replay", async () => {
     const h = await bootApp("#/presenter");
     await stepTo(h, 1);
-    await waitFor(() => expect(screen.getByRole("region", { name: "Sealed mandate" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: "Budget sealed" })).toBeInTheDocument());
+    expect(screen.getByRole("region", { name: "Budget sealed" })).toHaveTextContent("HK$800");
     await stepTo(h, 1); // mint
     await waitFor(() => expect(document.querySelector('[data-card-state="ACTIVE"]')).not.toBeNull());
     await stepTo(h, 1); // overshoot
@@ -38,12 +41,14 @@ describe("presenter walk", () => {
   it("DM3 to DM5 show the three live stops, each with its banner", async () => {
     const h = await bootApp("#/presenter");
     await stepTo(h, 4);
+    const stop = (template: string): Element | null => document.querySelector(`[role="alert"][data-template="${template}"]`);
     await stepTo(h, 1);
-    await waitFor(() => expect(screen.getAllByRole("alert").some((a) => /STOPPED R9/.test(a.textContent ?? ""))).toBe(true));
+    await waitFor(() => expect(stop("R9.flagged")).toHaveTextContent("Stopped before paying"));
+    expect(stop("R9.flagged")).toHaveTextContent("No card was made.");
     await stepTo(h, 1);
-    await waitFor(() => expect(screen.getAllByRole("alert").some((a) => /Total HK\$550/.test(a.textContent ?? ""))).toBe(true));
+    await waitFor(() => expect(stop("R3.over_remaining")).toHaveTextContent("Stopped by R3. Total HK$550 is over the HK$541 left."));
     await stepTo(h, 1);
-    await waitFor(() => expect(screen.getAllByRole("alert").some((a) => /STOPPED R10/.test(a.textContent ?? ""))).toBe(true));
+    await waitFor(() => expect(stop("R10.injection")).toHaveTextContent("Stopped by R10."));
     expect(bareFigures(document.body)).toEqual([]);
     expect(numsWithoutChip(document.body)).toEqual([]);
   });
@@ -72,6 +77,8 @@ describe("presenter walk", () => {
     await bootApp("#/presenter");
     expect(screen.getByRole("note")).toHaveTextContent("SIMULATED rail");
     expect(screen.getByRole("navigation", { name: "Presenter controls" })).toBeInTheDocument();
-    expect(document.querySelector(".packet-meter--l")).not.toBeNull();
+    expect(document.querySelector(".pr-budget")).toHaveTextContent("HK$800");
+    expect(screen.getByRole("meter", { name: "Budget left" })).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
+    expect(document.querySelector(".pr-rail")).toHaveTextContent("SIMULATED rail. No money moves.");
   });
 });

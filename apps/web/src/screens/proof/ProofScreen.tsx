@@ -85,7 +85,7 @@ export function ProofScreen(): ReactElement {
         <>
           <VerifyCard status={status} outcome={verifyOutcome} shownCount={log.shown.length} head={log.head} tampered={tampered} stale={stale} apiKind={api.kind} busy={busy} onVerify={() => void verify()} />
           {tampered ? (
-            <Card tone="info" className="pf-copy" role="note">
+            <Card tone="info" className="pf-copy" data-tampered-copy>
               <Icon name="info" size={20} />
               <p>{t(P.tamperedNote)}</p>
             </Card>
