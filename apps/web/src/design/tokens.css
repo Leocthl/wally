@@ -1,77 +1,178 @@
-/* tokens.css. Ratios in comments are light/dark, from the contrast script.
-   light-dark() needs a current browser: test the demo laptop and phone. */
+@import "./tokens-warm.css";
+/* tokens.css: Wally "cool wallet" design tokens. Light and dark come from light-dark(); tokens-fallback.css is generated
+   from this file (scripts/gen-token-fallback.ts) for browsers without light-dark(). Colour pairs are checked at WCAG AA
+   in both modes by test/design-tokens.test.ts (text 4.5:1, large text and UI 3:1).
+
+   Palette (light / dark)                          Use
+   --c-bg            #F4F7FE / #0B1220              app background
+   --c-surface       #FFFFFF / #131C30              cards, sheets, bars
+   --c-ink           #0E1A33 / #EAF0FF              text, 16:1 or better
+   --c-ink-muted     #4F5B78 / #A7B3CF              secondary text, 5.9:1 or better
+   --c-primary       #1A5CFF / #3366F5              actions, selection, the budget card (white text 4.8:1 or better)
+   --c-accent        #19C3A6 / #2FD3B6              teal highlights; fill only with --c-on-accent text, else decorative
+   --c-ok            #0B7D41 / #34C77B              approved, one-off card made, log intact
+   --c-warn          #F2B21B / #F5BE3C              needs your OK (amber, never orange)
+   --c-stop          #D92D20 / #FF6B5E              stopped and errors only
+   --c-info          #2563EB / #5B8CFF              neutral notices
+
+   Red and orange: stop and error semantics only (a stopped purchase, a broken log, a failed request). Never for brand,
+   decoration, prices or emphasis. Amber is only "needs your OK". Colour is never the only signal: pair it with an icon
+   and words.
+
+   Each role has four tokens: --c-X (solid fill), --c-on-X (text on the fill), --c-X-ink (role text on bg, surface and
+   tint), --c-X-tint (quiet background). Legacy names at the end keep phase-A screens readable until phase B. */
 :root { color-scheme: light dark; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
+.theme-light { color-scheme: light; }
+.theme-dark  { color-scheme: dark; }
 
 :root {
-  /* PACKET */
-  --paper:        light-dark(#FBF4E8, #1C1410);
-  --paper-raised: light-dark(#FFFBF3, #2A1E18);
-  --ink:          light-dark(#2A1C16, #F6EBDC);  /* on paper 15.1/15.4 */
-  --ink-soft:     light-dark(#5E4838, #CDB9A5);  /* 7.8/9.6 */
-  --vermilion:    light-dark(#A32F18, #EE7A5C);  /* text and UI on paper 6.5/6.5 */
-  --on-vermilion: light-dark(#FFF6E8, #2A0F08);  /* on --vermilion 6.6/6.5 */
-  --brass-text:   light-dark(#6F5309, #E0BD62);  /* 6.6/10.0 */
-  --brass-line:   light-dark(#8F6E14, #C9A24B);  /* UI on paper 4.4/7.6 */
-  --brass-fill:   light-dark(#C9A24B, #8F6E14);  /* decorative, never under text */
-  --meter-track:  light-dark(#EADBC0, #3A2B22);  /* --vermilion on track 5.2/4.9 */
+  /* NEUTRALS */
+  --c-bg:             light-dark(#F4F7FE, #0B1220);
+  --c-surface:        light-dark(#FFFFFF, #131C30);
+  --c-surface-raised: light-dark(#FFFFFF, #1A253D);
+  --c-surface-sunken: light-dark(#EBF0FA, #0F1728);  /* tracks, segmented control, input fill */
+  --c-ink:            light-dark(#0E1A33, #EAF0FF);
+  --c-ink-muted:      light-dark(#4F5B78, #A7B3CF);
+  --c-line:           light-dark(#E1E7F5, #25314B);  /* hairline, decorative only */
+  --c-line-strong:    light-dark(#7A86A5, #66759A);  /* control borders, 3:1 on every surface */
+  --c-focus:          light-dark(#1A5CFF, #93B4FF);
+  --c-scrim:          light-dark(rgb(14 26 51 / 0.45), rgb(2 6 14 / 0.66));
+  --c-shadow:         light-dark(rgb(14 26 51 / 0.08), rgb(0 0 0 / 0.45));
+  --c-shadow-strong:  light-dark(rgb(14 26 51 / 0.16), rgb(0 0 0 / 0.6));
 
-  /* LEDGER */
-  --ledger-bg:       light-dark(#F2F5F7, #0E141A);
-  --ledger-surface:  light-dark(#FFFFFF, #161E26);
-  --ledger-ink:      light-dark(#14202B, #E8EDF2);  /* on bg 15.1/15.7 */
-  --ledger-ink-soft: light-dark(#44515D, #A9B6C2);  /* 7.4/9.0 */
-  --line-strong:     light-dark(#6F7B86, #7A8896);  /* control borders 3.95/5.1 */
-  --hairline:        light-dark(#D6DCE2, #2B3641);  /* decorative only */
-  --chart-b0:        light-dark(#44515D, #A9B6C2);  /* hatched; 8.1/8.1 on surface */
-  --chart-b1:        light-dark(#1B4C9B, #9DBEFF);  /* 8.2/9.0 */
-  --chart-b2:        light-dark(#14202B, #E8EDF2);  /* 16.5/14.3 */
-  --focus:           light-dark(#1B4C9B, #9DBEFF);  /* ring on any surface 7.5/9.7 */
+  /* PRIMARY (vivid blue) */
+  --c-primary:         light-dark(#1A5CFF, #3366F5);
+  --c-primary-pressed: light-dark(#1249D6, #2A57D8);
+  --c-on-primary:      light-dark(#FFFFFF, #FFFFFF);
+  --c-primary-ink:     light-dark(#1450E6, #93B4FF);
+  --c-primary-tint:    light-dark(#E8EFFF, #18264A);
 
-  /* STATE: text and icon on own tint and on all four surfaces, 5.5 or better */
-  --minted:       light-dark(#14663A, #63D08F);
-  --minted-bg:    light-dark(#E2F3E7, #12301F);
-  --stopped:      light-dark(#B3261E, #FF8F85);
-  --stopped-bg:   light-dark(#FCE8E6, #3B1714);
-  --on-stop:      light-dark(#FFFFFF, #2B0A07);   /* banner text on --stopped 6.5/8.3 */
-  --escalated:    light-dark(#8A5200, #F4B650);
-  --escalated-bg: light-dark(#FFEFCF, #3A2A0C);
-  --pending:      light-dark(#505C67, #A9B6C2);
-  --pending-bg:   light-dark(#E8ECEF, #222B34);
+  /* ACCENT (teal) */
+  --c-accent:      light-dark(#19C3A6, #2FD3B6);
+  --c-on-accent:   light-dark(#062B25, #05241F);
+  --c-accent-ink:  light-dark(#0A7563, #5CE0C6);
+  --c-accent-tint: light-dark(#DDF6F1, #0E2E2B);
 
-  /* PROVENANCE chips: text on own tint, 6.8 or better */
-  --obs:  light-dark(#0B5963, #6FD0DB);  --obs-bg:  light-dark(#DDF1F3, #0F3036);
-  --meas: light-dark(#1B4C9B, #9DBEFF);  --meas-bg: light-dark(#E4ECFB, #172B52);
-  --asm:  light-dark(#5A4726, #DCC79A);  --asm-bg:  light-dark(#F1EBDB, #352B17);
-  --sim:  light-dark(#FFFFFF, #14202B);  --sim-bg:  light-dark(#24303B, #E8EDF2);  /* 13.5/14.0 */
+  /* STATES */
+  --c-ok:        light-dark(#0B7D41, #34C77B);
+  --c-on-ok:     light-dark(#FFFFFF, #04210F);
+  --c-ok-ink:    light-dark(#0A6E38, #5EDB98);
+  --c-ok-tint:   light-dark(#E2F6EA, #0F2A1C);
+  --c-warn:      light-dark(#F2B21B, #F5BE3C);
+  --c-on-warn:   light-dark(#2E2100, #2B1F00);
+  --c-warn-ink:  light-dark(#825400, #F7C95E);
+  --c-warn-tint: light-dark(#FFF4D6, #2D2410);
+  --c-stop:      light-dark(#D92D20, #FF6B5E);
+  --c-on-stop:   light-dark(#FFFFFF, #2A0703);
+  --c-stop-ink:  light-dark(#B8251A, #FF8F84);
+  --c-stop-tint: light-dark(#FDECEA, #3A1714);
+  --c-info:      light-dark(#2563EB, #5B8CFF);
+  --c-on-info:   light-dark(#FFFFFF, #061331);
+  --c-info-ink:  light-dark(#1D4FD1, #9BB9FF);
+  --c-info-tint: light-dark(#E6EEFE, #17244A);
 
-  /* Type: 1.25 scale; fs-5 to fs-7 are numerals and presenter sizes */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans HK", sans-serif;
+  /* HERO (budget card) and TICKET (one-off card): the only gradient, white text 5.2:1, muted text 4.6:1 or better at every stop */
+  --c-hero-from:     light-dark(#1A5CFF, #2453DB);
+  --c-hero-to:       light-dark(#0A7396, #0B5470);
+  --c-hero-glow:     light-dark(rgb(25 195 166 / 0.34), rgb(47 211 182 / 0.24));
+  --c-on-hero:       light-dark(#FFFFFF, #FFFFFF);
+  --c-on-hero-muted: light-dark(#EEF2FF, #D3DEFF);
+  --c-hero-track:    light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.22));
+  --c-ticket:           light-dark(#0E1A33, #1E2A47);
+  --c-on-ticket:        light-dark(#FFFFFF, #FFFFFF);
+  --c-on-ticket-muted:  light-dark(#A7B3CF, #B9C4DE);
+
+  /* PROVENANCE chips: quiet tints, text 4.5:1 or better on its own tint */
+  --sim:      light-dark(#3A4766, #C9D2EA);
+  --sim-bg:   light-dark(#EEF1F7, #1C2640);
+  --sim-line: light-dark(#7F8BA8, #7686AA);
+  --obs:      light-dark(#0A6B5C, #6FE0C9);
+  --obs-bg:   light-dark(#E0F5F0, #0F2C29);
+  --meas:     light-dark(#1D4FD1, #9BB9FF);
+  --meas-bg:  light-dark(#E7EEFE, #17244A);
+  --asm:      light-dark(#5C5444, #D8CFBD);
+  --asm-bg:   light-dark(#F2EFE8, #2A261E);
+
+  /* WALLY (the character): its own tokens so a retheme can keep or change him */
+  --wally-body:   light-dark(#1A5CFF, #3D73FF);
+  --wally-flap:   light-dark(#1240C4, #2A57D8);
+  --wally-card:   light-dark(#19C3A6, #2FD3B6);
+  --wally-stripe: light-dark(#0E9C84, #1FA88F);
+  --wally-face:   light-dark(#FFFFFF, #FFFFFF);
+  --wally-pupil:  light-dark(#0E1A33, #0B1220);
+  --wally-shadow: light-dark(rgb(14 26 51 / 0.12), rgb(0 0 0 / 0.4));
+
+  /* TYPE: system fonts only (the booth is offline). Rounded numerals where the OS has them. */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
+  --font-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", sans-serif;
+  --font-zh: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-  --num: tabular-nums lining-nums;                /* font-variant-numeric */
-  --fs-s: 0.8125rem;  --fs-0: 1rem;      --fs-1: 1.25rem;   --fs-2: 1.5625rem;
-  --fs-3: 1.9375rem;  --fs-4: 2.4375rem; --fs-5: 3.0625rem; --fs-6: 3.8125rem; --fs-7: 4.75rem;
-  --lh-tight: 1.15; --lh-body: 1.5; --lh-zh: 1.7;
+  --num: tabular-nums lining-nums;
+  --text-xs: 0.75rem;   --text-sm: 0.875rem; --text-md: 1rem;      --text-lg: 1.125rem; --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;  --text-3xl: 2.25rem; --text-4xl: 3rem;     --text-5xl: 3.75rem;
+  --weight-regular: 400; --weight-medium: 500; --weight-semibold: 600; --weight-bold: 700; --weight-heavy: 800;
+  --lh-tight: 1.15; --lh-snug: 1.3; --lh-body: 1.5; --lh-zh: 1.7;
+  --track-tight: -0.02em; --track-caps: 0.06em;
 
-  /* Space, shape */
+  /* SPACE, SHAPE, ELEVATION */
   --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem; --sp-4: 1rem;
   --sp-5: 1.5rem;  --sp-6: 2rem;   --sp-7: 3rem;    --sp-8: 4rem;
+  --gutter: 1rem;
   --tap: 2.75rem;                                 /* 44px minimum target */
-  --r-packet: 14px; --r-ledger: 2px; --r-chip: 4px;
-  --shadow-packet: 0 1px 0 rgb(0 0 0 / .06), 0 8px 18px -10px rgb(42 28 22 / .35);
+  --tap-lg: 3rem;                                 /* 48px primary actions */
+  --tap-xl: 3.5rem;                               /* 56px full-width calls to action */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
+  --shadow-1: 0 1px 2px var(--c-shadow), 0 1px 1px var(--c-shadow);
+  --shadow-2: 0 8px 24px -8px var(--c-shadow-strong), 0 2px 6px var(--c-shadow);
+  --shadow-3: 0 -12px 40px -12px var(--c-shadow-strong), 0 -2px 8px var(--c-shadow);
+  --column: 30rem;                                /* phone column on wide screens */
 
-  /* Motion */
-  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-stamp: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  /* SAFE AREA (viewport-fit=cover) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --tabbar-h: 4rem;
+
+  /* LAYERS */
+  --z-base: 0; --z-raised: 1; --z-sticky: 10; --z-tabbar: 20; --z-sheet: 40; --z-dialog: 50; --z-toast: 60;
+
+  /* MOTION: spring-like overshoot is allowed; every duration is zeroed under reduced motion except the hold */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-stamp:  cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --dur-press: 120ms; --dur-fast: 180ms; --dur-base: 260ms; --dur-slow: 420ms;
+  --dur-sheet: 340ms; --dur-blink: 4200ms; --dur-idle: 2600ms; --dur-shimmer: 1400ms;
   --dur-seal: 420ms; --dur-mint: 320ms; --dur-stop: 200ms; --dur-expire: 800ms;
   --dur-hold: 1200ms;                             /* functional, kept under reduced motion */
 }
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; }
+  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-sheet: 0ms; --dur-blink: 0ms; --dur-idle: 0ms; --dur-shimmer: 0ms; }
 }
 
-[data-register="packet"] { --bg: var(--paper); --surface: var(--paper-raised); --fg: var(--ink);
-  --fg-soft: var(--ink-soft); --accent: var(--vermilion); --radius: var(--r-packet); --font-data: var(--font-sans); }
-[data-register="ledger"] { --bg: var(--ledger-bg); --surface: var(--ledger-surface); --fg: var(--ledger-ink);
-  --fg-soft: var(--ledger-ink-soft); --accent: var(--ledger-ink); --radius: var(--r-ledger); --font-data: var(--font-mono); }
+/* LEGACY aliases (phase A): old names resolve to the cool palette so existing screens stay readable. Phase B deletes them. */
+:root {
+  --paper: var(--c-bg); --paper-raised: var(--c-surface); --ink: var(--c-ink); --ink-soft: var(--c-ink-muted);
+  --vermilion: var(--c-primary); --on-vermilion: var(--c-on-primary);
+  --brass-text: var(--c-ink-muted); --brass-line: var(--c-line); --brass-fill: var(--c-line); --meter-track: var(--c-surface-sunken);
+  --ledger-bg: var(--c-bg); --ledger-surface: var(--c-surface); --ledger-ink: var(--c-ink); --ledger-ink-soft: var(--c-ink-muted);
+  --line-strong: var(--c-line-strong); --hairline: var(--c-line); --focus: var(--c-focus);
+  --chart-b0: var(--c-ink-muted); --chart-b1: var(--c-primary-ink); --chart-b2: var(--c-ink);
+  --minted: var(--c-ok-ink); --minted-bg: var(--c-ok-tint); --stopped: var(--c-stop-ink); --stopped-bg: var(--c-stop-tint);
+  --on-stop: var(--c-on-stop); --escalated: var(--c-warn-ink); --escalated-bg: var(--c-warn-tint);
+  --pending: var(--c-ink-muted); --pending-bg: var(--c-surface-sunken);
+  --fs-s: 0.8125rem; --fs-0: 1rem; --fs-1: 1.25rem; --fs-2: 1.5625rem; --fs-3: 1.9375rem; --fs-4: 2.4375rem;
+  --fs-5: 3.0625rem; --fs-6: 3.8125rem; --fs-7: 4.75rem;
+  --r-packet: var(--r-lg); --r-ledger: var(--r-sm); --r-chip: var(--r-pill);
+  --shadow-packet: var(--shadow-1);
+}
+
+[data-register="packet"] { --bg: var(--c-bg); --surface: var(--c-surface); --fg: var(--c-ink);
+  --fg-soft: var(--c-ink-muted); --accent: var(--c-primary); --radius: var(--r-lg); --font-data: var(--font-sans); }
+[data-register="ledger"] { --bg: var(--c-bg); --surface: var(--c-surface); --fg: var(--c-ink);
+  --fg-soft: var(--c-ink-muted); --accent: var(--c-ink); --radius: var(--r-md); --font-data: var(--font-mono); }
