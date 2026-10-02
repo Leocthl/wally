@@ -21,6 +21,7 @@ export const SCENARIO_IDS = [
   "wrong_merchant",
   "drift",
   "timeout",
+  "off_category",
 ] as const;
 export type ScenarioId = (typeof SCENARIO_IDS)[number];
 

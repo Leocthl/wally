@@ -8,7 +8,7 @@ import type { PurchaseSpec } from "./flows";
 import { heuristicJudge, recordedJudge } from "./judge";
 import type { MockSession } from "./session";
 
-export type PresetKey = "tee" | "socks" | "hoodie" | "overflow" | "injected" | "unverified";
+export type PresetKey = "tee" | "socks" | "hoodie" | "overflow" | "injected" | "unverified" | "earbuds";
 
 const iso = (ms: number): string => new Date(ms).toISOString().replace(".000Z", "Z");
 /** Usual capture age: the reference cart's proposed_at minus its Scameter captured_at (35 min in the fixture). */
@@ -47,6 +47,15 @@ function overflowListing(remainingMinor: number): ListingRecord {
   return { ...base, items: [{ ...first, unit_price_minor: price }] };
 }
 
+/**
+ * Off-category item [F29]: the planner holds no mandate rules (I4), so it proposes the earbuds the shopper asked for and
+ * the engine stops the cart at R6. The fixture planner/off-category.json abstains, so the booth proposal is built here.
+ */
+function earbudsProposal(): ProposeCartInput {
+  const item = LISTINGS.earbuds.items[0];
+  return { listing_url: LISTINGS.earbuds.url, items: [{ title: item.title, qty: 1 }], note: "Earbuds as asked." };
+}
+
 /** Same tee, but from a merchant whose Scameter capture is older than the F52 limit. */
 function vintageListing(): ListingRecord {
   return {
@@ -73,6 +82,8 @@ export function presetSpec(s: MockSession, runId: string, key: PresetKey): Purch
     }
     case "injected":
       return { runId, listing: LISTINGS.injected, proposal: proposalFor("injected", LISTINGS.injected), planner: plannerInfo("injected"), scameter: scameterAt(SCAMETER.outlet, now, FRESH_AGE_MS), judge: recordedJudge("injected") };
+    case "earbuds":
+      return { runId, listing: LISTINGS.earbuds, proposal: earbudsProposal(), planner: { provider: "replay" }, scameter: scameterAt(SCAMETER.gadgets, now, FRESH_AGE_MS), judge: recordedJudge("earbuds") };
     case "unverified": {
       const listing = vintageListing();
       return { runId, listing, proposal: proposalFor("tee", listing), planner: plannerInfo("tee"), scameter: scameterAt(SCAMETER.stale, now, STALE_AGE_MS), judge: recordedJudge("tee") };
