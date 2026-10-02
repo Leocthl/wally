@@ -1,17 +1,17 @@
 # 10 Test plan
 
-- **Stack**: vitest + fast-check, Playwright for browser checks.
-- **Scope**: CI uses recorded fixtures and mocks: no live calls, no key, SIMULATED rail. Live checks skip when their server is down.
+- **Stack**: vitest + fast-check; Playwright and axe, run locally.
+- **Scope**: CI uses recorded fixtures and mocks (no live calls, no key); live checks skip when their server is down.
 
 ## Property tests
 | ID | Property over generated inputs |
 |---|---|
-| T-I1 | `rail.mint` only after APPROVE for that cart; a repeat returns the same card |
+| T-I1 | Mint only after APPROVE for that cart; a repeat returns the same card |
 | T-I2 | Minted limit equals approved total, <= min(remaining, ceiling [F1]) |
 | T-I3 | No judge output turns DENY or ESCALATE into APPROVE |
-| T-I4 | Planner output is one `propose_cart`, no credential or description; lint bans signing imports |
-| T-I5 | Injected model, rail or log failure (timeout, throw, bad output): DENY or ESCALATE, no mint, no double charge |
-| T-I6 | No mint after revoke or expiry, including races |
+| T-I4 | Planner output is one `propose_cart`; lint bans signing imports |
+| T-I5 | Injected model, rail or log failure: DENY or ESCALATE, no mint, no double charge |
+| T-I6 | No mint after revoke or expiry |
 | T-I7 | One signed entry per decision; `verifyChain` passes |
 | T-I8 | No PAN-like digit run or CVV field in logs, fixtures, prompts |
 
@@ -26,23 +26,26 @@
 | T-S6 | More than 3 mints in 10 min [F32]; expired mandate | R7 DENY; R2 DENY, `PACKET_EXPIRED` |
 
 ## Contract and component checks
-| Check (task) | Expected |
+| Check | Expected |
 |---|---|
-| Credential (A-32; R1) | Published W3C, RFC 8785, RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1. One `it.fails` probe stays red: a Mandate widening only the categories passes engine R1 (see 08) |
-| Rail (A-33, A-34) | Replay → `CARD_USED`; other domain → `MERCHANT_MISMATCH`; timeout, same-key retry: one charge |
-| Orchestrator, executor (A-23, A-26) | One queue; failure → `{ ok: false }`, no mint; a live repeat returns the earlier decision; cheaper options only after R3 or R4; re-fold before mint; `LOG_EXISTS`; checkout after revoke DENIED; unlogged card refused; wrong-cart or unsigned answer → DENY R11 |
-| JudgePort (B-04, B-14) | laya, jev, replay on a mock: timeout, error, malformed, unknown option, truncation fail closed; padding → ESCALATE [F26] |
-| Planners, compiler (B-18, M-03, M-04) | Same input, same proposal; small margin abstains; `local` off-catalogue or failed → none; compiler failure → fallback |
+| Credential (A-32; R1) | W3C, RFC 8785 and RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1. One `it.fails` probe stays red: categories-only widening passes R1 (08) |
+| Rail (A-33, A-34) | Replay → `CARD_USED`; other domain → `MERCHANT_MISMATCH`; same-key retry after a timeout: one charge |
+| Orchestrator (A-23, A-26) | One queue; failure → `{ ok: false }`, no mint; a live repeat returns the earlier decision; cheaper options only after R3 or R4; bad answer → DENY R11 |
+| JudgePort (B-04, B-14) | laya, jev, replay on a mock: timeout, error, malformed, truncation fail closed; padding → ESCALATE [F26] |
+| Planners, compiler (B-18, M-03, M-04) | Same input, same proposal; `local` off-catalogue or failed → none; compiler failure → fallback |
+| Family (A-30) | A wider term (budget, category, merchant, seller check, end date) → `EXCEEDS_PARENT`, nothing logged |
+| Booth server (X-10) | Ask, cheaper options, compile and family routes; LAN guards: token, Host, Origin, CORS |
+| Web (C-13) | Contrast pairs; no raw colours or durations; axe at three phone widths; offline `?api=local` |
 
 ## Harness, rail, verifier, end to end
 | ID | Check |
 |---|---|
 | T-H1 | 0 over-limit mints, deterministic scenarios [F38] |
-| T-H2 | At least 90% of legitimate scenarios approved [F38], reported three ways ([05](05-evidence-plan.md)) |
+| T-H2 | At least 90% of legitimate scenarios approved [F38] (three ways, [05](05-evidence-plan.md)); the final run met both [F69] |
 | T-H3 | Every reported number is MEASURED(n) with seed and commit; lint blocks harness copies of core |
-| T-V1 | Untouched log passes; byte flip, truncation, reorder, wrong key fail; step 9: card without its APPROVE, second card, wrong-cart consent, overspend, mint after revoke fail at that entry |
-| T-R1 | F1 parity: one payment, validity, ceiling, max active [F1]; calibration on the real decline (`data/real-card-test.md`), else sim-only |
-| T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright, on-device build); verifier fails after tamper; booth smoke (X-17): every scenario offline, no key, Laya stopped → ESCALATE |
+| T-V1 | Untouched log passes; byte flip, truncation, reorder, wrong key, step 9 breaks fail at that entry |
+| T-R1 | F1 parity [F1]; calibration on the real decline (`data/real-card-test.md`), else sim-only |
+| T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright, on-device build); tamper fails the verifier; booth smoke (X-17): scenarios offline, no key, Laya stopped → ESCALATE |
 
 ## CI (X-03)
-- **Steps**: `gen-types --check` (types, precompiled validators), `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`.
+- **Steps**: `gen-types --check`, `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`. About 3,600 tests, core coverage about 96% [F91].
