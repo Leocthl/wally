@@ -3,14 +3,14 @@
 ## Exports (`@laisee/agent/judge`)
 - **SystemOneJudge**: `JudgePort` for `laya` (local, default [F11c]) and `jev` (hosted, optional [F11b]). Same typed wire protocol, `POST /v1/systemone`.
 - **ReplayJudge**: provider `replay`. Serves the recorded answers in `data/fixtures/judge`, keyed by the SHA-256 of the listing text. For CI and as a deliberate, labelled booth fallback. An unrecorded listing is an ERROR.
-- **ShadowJudge**: `JUDGE_MODE=shadow`. Runs the real judge and sets `shadow: true`. Nothing else changes.
+- **ShadowJudge**: only with an explicit `JUDGE_MODE=shadow`. Runs the real judge and sets `shadow: true`. Nothing else changes.
 - **createJudgeFromEnv(env)**: reads the variables below. Bad configuration throws `JudgeConfigError` once, at composition. `assess` never throws.
 
 ## Environment
 | Variable | Default | Notes |
 |---|---|---|
 | `JUDGE_PROVIDER` | `laya` | `laya`, `jev` or `replay`. There is no `llm` provider and no automatic failover |
-| `JUDGE_MODE` | `shadow` | `shadow` or `enforce` (the demo runs `enforce`) |
+| `JUDGE_MODE` | `enforce` | `enforce` or `shadow`. Unset or blank means `enforce` (fail closed, I5); `shadow` never blocks, so only when set explicitly |
 | `LAYA_BASE_URL` | `http://127.0.0.1:8808` | A non-loopback host needs `LAYA_ALLOW_REMOTE=1`, because listing text would leave the machine |
 | `LAYA_MODEL` | `typed-decisions` | Always sent. Without it the server answers HTTP 500 |
 | `LAYA_API_KEY` | none | Only if the Laya server was started with a key |

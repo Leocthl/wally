@@ -37,6 +37,8 @@ export class JudgeConfigError extends Error {
 
 const PROVIDERS: readonly JudgeProvider[] = ["laya", "jev", "replay"];
 const MODES: readonly JudgeMode[] = ["shadow", "enforce"];
+/** Fail closed (I5): an unset JUDGE_MODE enforces. Shadow never blocks, so it is used only when set explicitly. */
+export const DEFAULT_JUDGE_MODE: JudgeMode = "enforce";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
 
 const fail = (error: string): SettingsResult => ({ ok: false, error });
@@ -81,7 +83,7 @@ function jevSettings(env: JudgeEnv, mode: JudgeMode): SettingsResult {
 export function parseJudgeEnv(env: JudgeEnv): SettingsResult {
   const provider = read(env, "JUDGE_PROVIDER") ?? "laya";
   if (!PROVIDERS.includes(provider as JudgeProvider)) return fail(`JUDGE_PROVIDER must be one of ${PROVIDERS.join(", ")}`);
-  const mode = read(env, "JUDGE_MODE") ?? "shadow";
+  const mode = read(env, "JUDGE_MODE") ?? DEFAULT_JUDGE_MODE;
   if (!MODES.includes(mode as JudgeMode)) return fail(`JUDGE_MODE must be one of ${MODES.join(", ")}`);
   if (provider === "replay") return { ok: true, settings: { provider: "replay", mode: mode as JudgeMode, baseUrl: "", model: "" } };
   return provider === "jev" ? jevSettings(env, mode as JudgeMode) : layaSettings(env, mode as JudgeMode);
