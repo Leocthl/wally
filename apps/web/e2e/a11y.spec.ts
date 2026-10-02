@@ -21,10 +21,10 @@ async function settled(page: Page): Promise<void> {
   await page.waitForTimeout(500);
 }
 
-// The widths are set inside the tests, so one project is enough.
-test.beforeEach((_fixtures, testInfo) => {
-  test.skip(testInfo.project.name !== "phone", "the widths are set inside the tests");
-});
+/** The widths are set inside the tests, so one project is enough. */
+function phoneProjectOnly(): void {
+  test.skip(test.info().project.name !== "phone", "the widths are set inside the tests");
+}
 
 for (const viewport of VIEWPORTS) {
   for (const scheme of SCHEMES) {
@@ -32,6 +32,7 @@ for (const viewport of VIEWPORTS) {
       test.use({ viewport, colorScheme: scheme });
 
       test("Budget fresh and after a purchase, with the sheets over it", async ({ page }) => {
+        phoneProjectOnly();
         await page.goto("/?api=mock#/budget");
         await expect(page.getByRole("meter")).toBeVisible();
         await settled(page);
@@ -55,7 +56,8 @@ for (const viewport of VIEWPORTS) {
         expect(await blocking(page), "budget after a purchase").toEqual([]);
       });
 
-      test("Seal from Meet Wally to Sealed, and the family choice", async ({ page }) => {
+      test("Seal from Meet Wally to Sealed", async ({ page }) => {
+        phoneProjectOnly();
         await page.goto("/?api=mock#/seal?mode=welcome");
         await settled(page);
         expect(await blocking(page), "seal meet").toEqual([]);
@@ -74,6 +76,7 @@ for (const viewport of VIEWPORTS) {
       });
 
       test("Receipts, Proof, Presenter and Evidence", async ({ page }) => {
+        phoneProjectOnly();
         for (const route of ["receipts", "proof", "presenter", "evidence"]) {
           await page.goto(`/?api=mock#/${route}`);
           await expect(page.getByRole("note")).toBeVisible();

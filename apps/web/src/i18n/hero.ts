@@ -9,8 +9,9 @@ export const HERO = {
     going: label("Shopping inside your rules.", "喺你的規則入面買嘢。"), // NEEDS-REVIEW
     waiting: label("I need your OK on a buy.", "有一單要你確認。"), // NEEDS-REVIEW
     usedUp: label("The whole budget is used.", "預算已經用晒。"), // NEEDS-REVIEW
-    cancelled: label("This budget is cancelled.", "呢個預算已取消。"), // NEEDS-REVIEW
-    ended: label("This budget has ended.", "呢個預算已到期。"), // NEEDS-REVIEW
+    // Wally's own voice: the card below already says "This budget is cancelled / has ended" and what to do next.
+    cancelled: label("I've stopped shopping with this one.", "我已經停止用呢個預算買嘢。"), // NEEDS-REVIEW
+    ended: label("Time's up on this budget.", "呢個預算嘅時間到咗。"), // NEEDS-REVIEW
   },
   until: label("Until", "有效至"), // NEEDS-REVIEW
   tryNow: label("Try a buy", "試買一件"), // NEEDS-REVIEW

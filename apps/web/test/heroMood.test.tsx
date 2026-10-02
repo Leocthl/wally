@@ -100,11 +100,11 @@ describe("BudgetHero mood", () => {
 
   it("says a cancelled and an ended budget are over, and Wally stops or sleeps", () => {
     const { unmount } = hero({ ...packet, status: "REVOKED" });
-    expect(screen.getByText("This budget is cancelled.")).toBeInTheDocument();
+    expect(screen.getByText("I've stopped shopping with this one.")).toBeInTheDocument();
     expect(document.querySelector(".wally")).toHaveAttribute("data-state", "stopped");
     unmount();
     hero({ ...packet, status: "EXPIRED" });
-    expect(screen.getByText("This budget has ended.")).toBeInTheDocument();
+    expect(screen.getByText("Time's up on this budget.")).toBeInTheDocument();
     expect(document.querySelector(".wally")).toHaveAttribute("data-state", "offline");
   });
 
