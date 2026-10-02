@@ -14,7 +14,7 @@ import type { Scenario } from "../src/types";
 import { referenceDecide } from "./support/reference-engine";
 
 const SEEDS = [7, 11, 42, 2026] as const;
-const THRESHOLDS = [0.63, 0.55, 0.42, 0.5] as const; // the register values the reference carries, used to aim the fuzz at the edges
+const THRESHOLDS = [0.39, 0.86, 0.85, 0.63, 0.5] as const; // the register values the reference carries, used to aim the fuzz at the edges
 
 const judgeOf = (answers: JudgeAnswers): JudgeRecord => ({ provider: "laya", model: "typed-decisions", version: "test", status: "OK", latency_ms: 5, shadow: false, answers });
 
