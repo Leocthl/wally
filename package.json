@@ -15,7 +15,8 @@
     "build": "pnpm -r build",
     "gen:types": "node scripts/gen-types.mjs",
     "docs:check": "python3 scripts/docs-check.py",
-    "keys:gen": "node -e \"console.log('keys:gen is TBD (lane A crypto, A-17)')\"",
+    "keys:gen": "node scripts/keys-gen.mjs",
+    "verify-log": "node scripts/verify-log.mjs",
     "demo:reset": "node -e \"console.log('demo:reset is TBD (lane X, after X-10)')\""
   },
   "devDependencies": {

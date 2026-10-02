@@ -702,7 +702,7 @@ export interface ListingRecord {
   provenance: "OBSERVED" | "SIMULATED";
 }
 /**
- * AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof: unsecuredDocument = credential without `proof`; proofConfig = `proof` without `proofValue`, plus the document's `@context`; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key and checks that proof.verificationMethod starts with issuer + '#'. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential.
+ * AgentDelegationCredential (D11): the signed mandate, a W3C Verifiable Credentials Data Model 2.0 envelope secured with a Data Integrity proof, cryptosuite eddsa-jcs-2022 [F19]. Payload of MANDATE_SEALED (seq 0). Proof: unsecuredDocument = credential without `proof`; proofConfig = `proof` without `proofValue`, plus the document's `@context`; hashData = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecuredDocument)), config hash first; proofValue = 'z' + base58btc(Ed25519.sign(issuer key, hashData)). R1 verifies the proof against the issuer's did:key and checks that proof.verificationMethod starts with issuer + '#'. The engine reads the domain view (mandate.schema.json), derived by mandateFromCredential (id = vc.id without the urn:laisee:mandate: prefix).
  */
 export interface MandateCredential {
   "@context": Contexts;
@@ -711,7 +711,7 @@ export interface MandateCredential {
    */
   type: ["VerifiableCredential", "AgentDelegationCredential"];
   /**
-   * Mandate id, reused as mandate_id everywhere.
+   * VC 2.0 needs a URL: urn:laisee:mandate:<mandate id>. mandateFromCredential strips the prefix, so mandate_id stays mnd_... everywhere else.
    */
   id: string;
   /**

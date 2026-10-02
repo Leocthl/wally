@@ -1,0 +1,8 @@
+{
+  "note": "Throwaway demo keys from pnpm keys:gen (rail SIMULATED). Public keys only; secrets stay in KEY_DIR, never committed.",
+  "engine": [
+    "did:key:z6MktgTomynD15RQN8jJ7Q7PKBEkeusYRcb9Z3LMiMbnazUZ"
+  ],
+  "delegator": "did:key:z6MktMmnqqNNv1buGcvdVC2RrHShzHRj6fz38XmXgUP38TgA",
+  "agent": "did:key:z6MknubjqGbrpPiVEJwPScXRa7AspHkaonSHLPiUXqom3RjZ"
+}
