@@ -40,5 +40,5 @@
   .run-path--enter .run-path__cell[data-status="stop"] .run-path__disc { animation-name: run-disc-stop; }
   .run-path--enter .run-path__cell::before { animation: run-fade var(--dur-base) var(--ease-out) both; animation-delay: calc(var(--i) * var(--dur-press) + var(--dur-fast)); }
 }
-@keyframes run-disc { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
-@keyframes run-disc-stop { 0% { opacity: 0; transform: scale(0.5); } 60% { opacity: 1; transform: scale(1.18); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes run-disc { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes run-disc-stop { 0% { opacity: 0; transform: scale(0.7); } 60% { opacity: 1; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
