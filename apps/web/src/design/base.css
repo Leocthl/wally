@@ -110,6 +110,25 @@ textarea { resize: vertical; width: 100%; }
   border: 0;
 }
 
+/* A visually hidden link (Skip to content) shows itself when it receives keyboard focus. */
+a.sr-only:focus-visible {
+  position: fixed;
+  top: max(var(--sp-2), var(--safe-top));
+  left: max(var(--sp-2), var(--safe-left));
+  z-index: var(--z-toast);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-weight: var(--weight-semibold);
+}
+
 .mono { font-family: var(--font-mono); }
 .soft { color: var(--fg-soft, var(--c-ink-muted)); }
 .tnum { font-variant-numeric: var(--num); }
