@@ -38,6 +38,7 @@ export default defineConfig(
     ignores: [
       "**/node_modules/**",
       "**/dist/**",
+      "**/dist-pages/**",
       "**/coverage/**",
       "packages/core/src/generated/schemas.ts",
       "services/**",

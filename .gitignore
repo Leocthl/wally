@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# The GitHub Pages build (pnpm pages:build) sits next to the booth build in dist/ and is just as disposable.
+dist-pages/
 coverage/
 .env
 .env.*

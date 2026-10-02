@@ -26,6 +26,8 @@
     "src",
     "server",
     "test",
-    "vite.config.ts"
+    "build",
+    "vite.config.ts",
+    "vite.pages.config.ts"
   ]
 }
