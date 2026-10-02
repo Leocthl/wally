@@ -49,7 +49,7 @@
 
 ### M: mobile, second model, brand
 - **Tasks**: M-01 to M-12: Wally rename, Qwen service, local planner and compiler, design system, PWA shell, screens, on-device mode, key on the phone, LAN mode, device pass, voice input.
-- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode; LAN mode and the Capacitor shells run (simulator and emulator, no physical device); `scripts/rename-scope.mjs` runs last, after every lane has merged.
+- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode; LAN mode serves phone browsers; the Capacitor shells run on a simulator and an emulator, and their LAN link is untested; `scripts/rename-scope.mjs` runs last, after every lane has merged.
 
 ### X: cross-lane
 - **Tasks**: X-01 to X-19: worktrees, CI, contracts, integration, T-E2E with booth smoke, freeze guard, credits.
