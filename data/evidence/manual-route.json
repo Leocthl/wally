@@ -1,0 +1,17 @@
+{
+  "schema": "laisee.evidence.manual-route/v1",
+  "status": "pending",
+  "protocol": "docs/05-evidence-plan.md, Manual-route comparison; sample rule F80; fill as data/evidence/README.md says",
+  "routes": [
+    {
+      "id": "M",
+      "label": "By hand: read the total incl. shipping, check the packet, make a Single Use Card",
+      "runs": []
+    },
+    {
+      "id": "A",
+      "label": "Agent flow: from the opened link to the mint logged or the stop shown; the issue step runs on the SIMULATED rail",
+      "runs": []
+    }
+  ]
+}

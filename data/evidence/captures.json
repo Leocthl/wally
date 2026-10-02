@@ -1,0 +1,7 @@
+{
+  "schema": "laisee.evidence.captures/v1",
+  "status": "pending",
+  "protocol": "docs/05-evidence-plan.md, Capture protocol and Real-card test; data/capture-sheet.md; data/real-card-test.md",
+  "captures": [],
+  "real_decline": null
+}

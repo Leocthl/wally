@@ -3,7 +3,7 @@ import type { ApiClient, ScenarioId } from "../api/types";
 import { label, type LabelPair } from "../i18n/label";
 import { m0Request } from "./compile";
 
-export type View = "booth" | "seal" | "log" | "deck";
+export type View = "booth" | "seal" | "log" | "deck" | "evidence" | "limits";
 
 export interface PresenterStep {
   readonly moment: string;
@@ -27,6 +27,6 @@ export const PRESENTER_SCRIPT: readonly PresenterStep[] = [
   { moment: "DM5", title: label("Injected listing", "植入指令的商品頁"), view: "booth", run: scenario("injected") },
   { moment: "DM6", title: label("A clean cart still mints", "乾淨購物車照常發卡"), optional: true, view: "booth", run: scenario("small") },
   { moment: "DM7", title: label("Log, verify, tamper", "紀錄、驗證、竄改"), view: "log", run: async () => undefined },
-  { moment: "DM8", title: label("Evidence", "證據"), view: "deck", run: async () => undefined },
-  { moment: "DM9", title: label("Where it breaks", "限制所在"), view: "deck", run: async () => undefined },
+  { moment: "DM8", title: label("Evidence", "證據"), view: "evidence", run: async () => undefined },
+  { moment: "DM9", title: label("Where it breaks", "限制所在"), view: "limits", run: async () => undefined },
 ];

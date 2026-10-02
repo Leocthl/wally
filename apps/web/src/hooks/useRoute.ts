@@ -1,7 +1,7 @@
 // Hash routing without a dependency: the booth works from a static file and a phone browser with no server.
 import { useCallback, useEffect, useState } from "react";
 
-export const ROUTES = ["booth", "seal", "run", "console", "log", "presenter"] as const;
+export const ROUTES = ["booth", "seal", "run", "console", "log", "presenter", "evidence"] as const;
 export type Route = (typeof ROUTES)[number];
 
 export function parseRoute(hash: string): Route {
