@@ -35,7 +35,7 @@ export type CardBeat = "overshoot" | "exact" | "replay" | "wrong_merchant" | "re
 export type RunOutcome = "APPROVE" | "DENY" | "ESCALATE" | "INFO" | "ERROR";
 
 export interface PlannerTraceInfo {
-  readonly provider: "rule" | "replay";
+  readonly provider: "rule" | "replay" | "local";
   readonly choice?: string;
   readonly probabilities?: Readonly<Record<string, number>>;
   readonly latencyMs?: number;
@@ -95,6 +95,55 @@ export interface RunSummary {
   readonly outcome: RunOutcome;
   readonly decisionId?: string;
   readonly note?: string;
+  /**
+   * Stable reason for an INFO or ERROR (and for the two flags below), so a screen can word it in its own language:
+   * DUPLICATE, NO_PROPOSAL:<reason>, INVALID_CART:<code>, ON_DEVICE_UNKNOWN_REQUEST, or an orchestrator error code.
+   */
+  readonly code?: string;
+  /** The cart repeated a live one: this is the earlier decision, and nothing new was decided, minted or charged. */
+  readonly duplicate?: true;
+  /** ask-style runs: the stopped decision this run was a cheaper pick for (suggestAlternatives). */
+  readonly alternativeTo?: string;
+}
+
+export interface AskRequest {
+  /** What the shopper wants, in their own words. At most 1,000 characters after NFKC [F56]. Untrusted. */
+  readonly requestText: string;
+  readonly locale?: AskLocale;
+}
+
+/** "See cheaper options": the decision a budget stop (R3, R4) gave. */
+export interface AlternativesRequest {
+  readonly decisionId: string;
+}
+
+export interface CompileRulesRequest {
+  /** The sentence, at most 280 characters after NFKC (the mandate's intent text limit). */
+  readonly text: string;
+  readonly locale: AskLocale;
+}
+
+/** One chip label per rule, made in code from the validated rules. */
+export interface CompileLabel {
+  readonly kind: "budget" | "expiry" | "category" | "sellers" | "cap" | "askAbove" | "share" | "velocity";
+  /** Rule the chip enforces (docs/02 section 7). */
+  readonly rule: "R2" | "R3" | "R4" | "R6" | "R7" | "R9";
+  readonly en: string;
+  readonly zhHK: string;
+}
+
+/** A suggestion for the Seal screen. Never sealed by this call: the shopper edits and confirms the chips first. */
+export interface CompileResult {
+  readonly source: "model" | "rules";
+  readonly rules: CompiledRules;
+  /** mandate.valid_until, worked out in code from the clock. */
+  readonly validUntil: string;
+  readonly labels: readonly CompileLabel[];
+  /** Plain sentences in the request's language: defaults applied, and why the fixed rules answered when the model did not. */
+  readonly notes: readonly string[];
+  /** What the sentence asked for that the suggestion does not carry, and why. */
+  readonly clamped: readonly string[];
+  readonly confirmRequired: true;
 }
 
 export interface RevokeResult {
@@ -131,10 +180,25 @@ export interface RealCapture {
 /** mock: UI-test double. http: the booth server (live mode). local: the real stack on this device, recorded answers. */
 export type ApiKind = "mock" | "http" | "local";
 
+/** Screen languages the typed-request and sentence-to-rules routes take. */
+export type AskLocale = "en" | "zh-HK";
+
+/** What this backend can do beyond the booth buttons; a screen shows a control only when its feature is on. */
+export interface ApiFeatures {
+  /** ask() works. On-device it answers the sample requests only; anything else is an INFO run saying so. */
+  readonly ask: boolean;
+  /** suggestAlternatives() can find a cheaper pick: the planner replans after a budget stop (R3, R4). */
+  readonly alternatives: boolean;
+  /** compileRules(): "model" = the local model reads the sentence, "rules" = the fixed rules parser. */
+  readonly compile: "model" | "rules";
+}
+
 export interface ApiInfo {
   readonly kind: ApiKind;
   readonly judge: { readonly provider: "replay" | "laya" | "jev"; readonly note: string };
-  readonly planner: { readonly provider: "rule" | "replay"; readonly note: string };
+  /** local = the Qwen model on this machine. The note says who chose it (the operator, or the start-up check). */
+  readonly planner: { readonly provider: "rule" | "replay" | "local"; readonly note: string };
+  readonly features: ApiFeatures;
   /** true when outputs are recorded, not live: the booth shows a "replayed" label (docs/06 Fallbacks). */
   readonly replayed: boolean;
   /** The one OBSERVED decline for the REAL toggle. null until data/real-card-test.md holds one. */
@@ -159,6 +223,12 @@ export interface ApiClient {
   propose(req: ProposeRequest): Promise<RunSummary>;
   revoke(req?: { readonly reason?: string }): Promise<RevokeResult>;
   answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary>;
+  /** Ask Wally: a typed request goes through planner, judge, rules and (on APPROVE) a one-off SIMULATED card. Check info().features.ask. */
+  ask?(req: AskRequest): Promise<RunSummary>;
+  /** "See cheaper options" after a budget stop. Check info().features.alternatives. */
+  suggestAlternatives?(req: AlternativesRequest): Promise<RunSummary>;
+  /** Sentence to rule chips for the Seal screen; a suggestion only, never sealed here. */
+  compileRules?(req: CompileRulesRequest): Promise<CompileResult>;
   getLog(): Promise<LogView>;
   verify(): Promise<VerifyOutcome>;
   tamper(): Promise<LogView>;

@@ -5,7 +5,8 @@ import { resolve } from "node:path";
 import { serve } from "@hono/node-server";
 import { BRAND } from "../src/brand";
 import { composeBooth } from "./compose";
-import { REPO_ROOT } from "./booth/settings";
+import { selectPlanner } from "./booth/plannerSelect";
+import { REPO_ROOT, settingsFromEnv } from "./booth/settings";
 import type { Logger } from "./http/routes";
 import { registerStaticRoutes } from "./static";
 
@@ -17,12 +18,14 @@ const logger: Logger = {
 const roots = { ui: resolve(REPO_ROOT, "apps/web/dist"), verifier: resolve(REPO_ROOT, "apps/verifier/dist") };
 
 async function main(): Promise<void> {
-  const booth = composeBooth({ env: process.env, logger, extraRoutes: (app) => registerStaticRoutes(app, roots) });
+  const planner = await selectPlanner(settingsFromEnv(process.env)); // once, here: nothing switches planner during a run
+  logger.info(`planner ${planner.provider} (${planner.chosenBy}): ${planner.detail}`);
+  const booth = composeBooth({ env: process.env, logger, planner, extraRoutes: (app) => registerStaticRoutes(app, roots) });
   await booth.start();
   const info = await booth.backend.info();
   const server = serve({ fetch: booth.app.fetch, hostname: "127.0.0.1", port: booth.settings.port }, (addr) => {
     logger.info(`${BRAND.name} booth on http://127.0.0.1:${addr.port}/#/booth (rail SIMULATED; verifier at /verifier/)`);
-    logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}`);
+    logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}, sentence reader ${info.features.compile}`);
   });
   const stop = (): void => {
     void booth.close().finally(() => server.close(() => process.exit(0)));

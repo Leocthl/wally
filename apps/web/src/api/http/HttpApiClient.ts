@@ -3,9 +3,13 @@
 // were delivered to subscribers (X-Event-Seq), so the UI sees a run's trace before its summary, as with the mock.
 // Cards arrive without the rail handle (the server sends CardView, I8); the UI never reads the handle.
 import type {
+  AlternativesRequest,
   ApiClient,
   ApiInfo,
+  AskRequest,
   BoothSnapshot,
+  CompileResult,
+  CompileRulesRequest,
   EscalationAnswerRequest,
   LogView,
   ProposeRequest,
@@ -90,6 +94,19 @@ export class HttpApiClient implements ApiClient {
 
   answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary> {
     return this.#post<RunSummary>("/api/escalation/answer", req);
+  }
+
+  ask(req: AskRequest): Promise<RunSummary> {
+    return this.#post<RunSummary>("/api/ask", req);
+  }
+
+  suggestAlternatives(req: AlternativesRequest): Promise<RunSummary> {
+    return this.#post<RunSummary>("/api/alternatives", req);
+  }
+
+  /** Not a run: nothing streams, so it neither waits for the event stream nor for events. */
+  compileRules(req: CompileRulesRequest): Promise<CompileResult> {
+    return this.#request<CompileResult>("/api/compile", { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, body: JSON.stringify(req) });
   }
 
   verify(): Promise<VerifyOutcome> {

@@ -3,8 +3,9 @@
 // replaced for tests (clock, store, rail randomness, orchestrator, judge). Laya being down never stops the start: the
 // judge then answers ERROR and the engine escalates (R10.unavailable, I5), and /api/info says so.
 import { join } from "node:path";
+import { compileMandateText } from "@laisee/agent/compiler";
 import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@laisee/agent/judge";
-import { createPlanner, loadReplayRecords } from "@laisee/agent/planner";
+import { createChatClient, createPlanner, loadReplayRecords } from "@laisee/agent/planner";
 import { engine as defaultEngine } from "@laisee/core/engine";
 import type { PlannerReplayRecord } from "@laisee/core/generated";
 import { appendEntry } from "@laisee/core/log";
@@ -13,17 +14,21 @@ import { createOrchestrator as realOrchestrator, type Orchestrator, type Orchest
 import type { Clock, JudgePort, LogStore } from "@laisee/core/ports";
 import { cryptoRandom, type RandomSource } from "@laisee/rail-sim";
 import type { Hono } from "hono";
+import { askShelf, recordedRequests, type AskSource } from "../src/booth/backend/ask";
 import { OrchestratorBackend } from "../src/booth/backend/backend";
-import { scameterLookup } from "../src/booth/backend/catalogue";
+import { scameterLookup, type Catalogue } from "../src/booth/backend/catalogue";
+import type { ModelCompile } from "../src/booth/backend/compileRules";
 import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
-import { buildInfo, type JudgeHealth } from "../src/booth/backend/info";
+import { buildInfo, featuresFor, type JudgeHealth, type PlannerChoice } from "../src/booth/backend/info";
 import { replayPlannerFactory } from "../src/booth/backend/planner";
 import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
 import { loadCatalogue } from "./booth/catalogue";
+import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { loadDemoKeys, type DemoKeys } from "./booth/keys";
+import { settledChoice } from "./booth/plannerSelect";
 import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
@@ -56,6 +61,8 @@ export interface ComposeOptions {
   readonly warmUp?: boolean;
   /** Override key loading (tests). */
   readonly keys?: () => DemoKeys;
+  /** The planner chosen at start (selectPlanner). Default: what PLANNER_PROVIDER names, the rule planner when it is unset. */
+  readonly planner?: PlannerChoice;
 }
 
 export interface Booth {
@@ -63,18 +70,38 @@ export interface Booth {
   readonly hub: SseHub;
   readonly backend: OrchestratorBackend;
   readonly settings: BoothSettings;
+  /** The planner in use: chosen by the operator, by the start-up check, or the default. Fixed for the life of the booth. */
+  readonly planner: PlannerChoice;
   /** Seals M0 and starts the tick timer and the judge warm-up. */
   start(): Promise<void>;
   close(): Promise<void>;
 }
 
-function plannerFactory(settings: BoothSettings, table: ScenarioTable): PlannerFactory {
-  if (settings.plannerProvider === "rule") return (listings) => createPlanner({ provider: "rule", catalogue: listings, layaUrl: settings.layaUrl });
-  const records: readonly PlannerReplayRecord[] = [
-    ...loadReplayRecords(join(settings.fixturesDir, "planner")),
-    ...loadReplayRecords(join(settings.scenariosDir, "planner")),
-  ];
+const REPLAY_UNKNOWN_NOTE = "Replay mode only knows the sample requests; start the booth with the local model or Laya for free-form asks.";
+
+function replayRecords(settings: BoothSettings): readonly PlannerReplayRecord[] {
+  return [...loadReplayRecords(join(settings.fixturesDir, "planner")), ...loadReplayRecords(join(settings.scenariosDir, "planner"))];
+}
+
+function plannerFactory(settings: BoothSettings, choice: PlannerChoice, table: ScenarioTable, records: readonly PlannerReplayRecord[]): PlannerFactory {
+  if (choice.provider === "rule") return (listings) => createPlanner({ provider: "rule", catalogue: listings, layaUrl: settings.layaUrl });
+  if (choice.provider === "local") {
+    return (listings) =>
+      createPlanner({ provider: "local", catalogue: listings, localUrl: settings.plannerUrl, localModel: settings.plannerModel, allowRemote: settings.plannerAllowRemote });
+  }
   return replayPlannerFactory(records, table);
+}
+
+function askSource(settings: BoothSettings, choice: PlannerChoice, catalogue: Catalogue, table: ScenarioTable): AskSource {
+  if (choice.provider !== "replay") return { kind: "live", shelf: askShelf(catalogue, table) };
+  return { kind: "recorded", requests: recordedRequests(plannerFixtureTexts(settings.fixturesDir, settings.scenariosDir), catalogue, table), unknownNote: REPLAY_UNKNOWN_NOTE };
+}
+
+/** The sentence reader on the local Qwen server, only when that is the chosen planner. */
+function compileModel(settings: BoothSettings, choice: PlannerChoice): ModelCompile | null {
+  if (choice.provider !== "local") return null;
+  const client = createChatClient({ baseUrl: settings.plannerUrl, allowRemote: settings.plannerAllowRemote });
+  return ({ text, locale, now }) => compileMandateText({ text, locale, now, client, model: settings.plannerModel });
 }
 
 function makeJudge(opts: ComposeOptions, settings: BoothSettings): JudgePort {
@@ -94,7 +121,10 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const table = loadScenarioTable(join(settings.scenariosDir, "booth.json"));
   const catalogue = loadCatalogue(settings.fixturesDir, table);
   const judge = makeJudge(opts, settings);
-  const planner = plannerFactory(settings, table);
+  const choice = opts.planner ?? settledChoice(settings);
+  const records = choice.provider === "replay" ? replayRecords(settings) : [];
+  const planner = plannerFactory(settings, choice, table, records);
+  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")));
   const store = opts.store ?? new FileLogStore(settings.logDir);
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
   let keys = loadKeys();
@@ -124,8 +154,10 @@ export function composeBooth(opts: ComposeOptions): Booth {
     sessionDeps,
     catalogue,
     table,
-    plannerProvider: settings.plannerProvider,
-    info: () => buildInfo({ settings, judgeProvider: judge.provider, health, keySource: keys.source }),
+    plannerProvider: choice.provider,
+    ask: askSource(settings, choice, catalogue, table),
+    compileModel: compileModel(settings, choice),
+    info: () => buildInfo({ settings, judgeProvider: judge.provider, health, keySource: keys.source, planner: choice, features }),
     presetSeal: (now) => m0Request(now),
     logger,
   });
@@ -146,6 +178,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     hub,
     backend,
     settings,
+    planner: choice,
     async start() {
       // A failed preset seal is logged, not fatal: the API stays up and the UI seals M0 itself (never a blank screen).
       await backend.start().catch((err: unknown) => logger.error(`could not seal the preset mandate at start: ${err instanceof Error ? err.message : "unknown error"}`));
