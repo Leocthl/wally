@@ -160,7 +160,7 @@ describe("fail closed (I5)", () => {
   const clean = pick("within_budget", "plain");
 
   it("an engine that throws is a DENY with the error recorded, and mints nothing", async () => {
-    const throwing: Engine = { decide: () => { throw new Error("engine bug"); } };
+    const throwing: Engine = { decide: () => { throw new Error("engine bug"); }, decideCheckout: () => null };
     const out = await systems({ engine: throwing }).find((s) => s.id === "B2")!.run(clean);
     expect(out.decision.outcome).toBe("DENY");
     expect(out.error).toContain("engine bug");

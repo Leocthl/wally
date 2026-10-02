@@ -44,7 +44,7 @@ function escalated() {
 describe("engine: answer for the escalated cart (controls)", () => {
   it("APPROVE resolves the same cart (expected path)", () => {
     const { decision, packet } = escalated();
-    const d = engine.decide(M0, packet, CART_SHOWN, JUDGE_TEE, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id) }, PROOF_OK);
+    const d = engine.decide(M0, packet, CART_SHOWN, JUDGE_TEE, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id), escalated: decision }, { ...PROOF_OK, answerSignatureValid: true });
     expect(d).toMatchObject({ outcome: "APPROVE", approved_limit_minor: CART_SHOWN.total_minor });
   });
 });
@@ -52,13 +52,22 @@ describe("engine: answer for the escalated cart (controls)", () => {
 // Computed outside it.fails so a setup error turns the file red instead of passing as an expected failure.
 const SWAPPED = (() => {
   const { decision, packet } = escalated();
+  return engine.decide(M0, packet, CART_SWAPPED, JUDGE_TEE, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id), escalated: decision }, { ...PROOF_OK, answerSignatureValid: true });
+})();
+const UNBOUND = (() => {
+  const { decision, packet } = escalated();
   return engine.decide(M0, packet, CART_SWAPPED, JUDGE_TEE, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id) }, PROOF_OK);
 })();
 
-describe("KNOWN DEFECT S-ESC-1: an APPROVE answer is not bound to the cart the delegator saw", () => {
-  it.fails("decide() refuses to apply the answer for decision E (cart A) to a different cart B", () => {
-    // Today: outcome APPROVE, approved_limit_minor 60000, merchant other-shop.example, R9 cleared_by delegator.
+// FIXED (lane e-orch): a resolution needs the escalated decision itself, the same cart fingerprint and a verified
+// signature flag; any failure is DENY R11 with inputs.answer_problem naming the cause.
+describe("S-ESC-1 (fixed): an APPROVE answer is bound to the cart the delegator saw", () => {
+  it("decide() refuses to apply the answer for decision E (cart A) to a different cart B", () => {
     expect(SWAPPED.outcome).not.toBe("APPROVE");
+  });
+
+  it("a resolution without the escalated decision or the signature flag fails closed", () => {
+    expect(UNBOUND.outcome).not.toBe("APPROVE");
   });
 });
 

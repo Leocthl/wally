@@ -110,4 +110,5 @@ export function referenceDecide(
     : { ...head, outcome, explanation };
 }
 
-export const referenceEngine: Engine = { decide: referenceDecide };
+// Test-only double: it never reports checkout drift (decideCheckout returns null = the approval stands).
+export const referenceEngine: Engine = { decide: referenceDecide, decideCheckout: () => null };

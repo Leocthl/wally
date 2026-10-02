@@ -23,12 +23,14 @@ describe("controls (enforce)", () => {
   });
 });
 
-describe("KNOWN DEFECT S-JUDGE-1: a shadow judge record loosens ESCALATE and DENY to APPROVE (I3, I5)", () => {
-  it.fails("a judge that is down still escalates when its record says shadow", () => {
+// FIXED (lane e-orch): the mode is EngineConfig.judge_mode (pinned in config_sha256, default "enforce"); the
+// record's own `shadow` flag is informational and can no longer switch R10 off.
+describe("S-JUDGE-1 (fixed): a shadow judge record cannot loosen ESCALATE and DENY to APPROVE (I3, I5)", () => {
+  it("a judge that is down still escalates when its record says shadow", () => {
     expect(SHADOW_DOWN.outcome).not.toBe("APPROVE");
   });
 
-  it.fails("an injection verdict still denies when its record says shadow", () => {
+  it("an injection verdict still denies when its record says shadow", () => {
     expect(SHADOW_INJECTED.outcome).not.toBe("APPROVE");
   });
 });
