@@ -19,14 +19,14 @@ export function evaluateAcceptance(b2: readonly Pair[]): readonly AcceptanceResu
   return [
     {
       id: "T-H1",
-      target: "no over-limit mint or charge in the deterministic scenarios [F38]",
+      target: "deterministic scenarios in which a card was minted above the allowed limit or a charge went above it; the target is none of them [F38]",
       result: overLimitMints,
       pass: overLimitMints.k <= ACCEPTANCE.maxOverLimitMintsDeterministic,
       evaluatedOn: "B2",
     },
     {
       id: "T-H2",
-      target: "legitimate scenarios approved at or above the target [F38]",
+      target: "legitimate scenarios that ended in one authorised charge; the target share is set in [F38]",
       result: approved,
       // Exact integer comparison: k/n >= pct/100.
       pass: approved.n > 0 && approved.k * 100 >= approved.n * ACCEPTANCE.minLegitimateApprovedPct,

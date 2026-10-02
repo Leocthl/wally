@@ -1,16 +1,17 @@
 // B0: the model-only gate. Laya answers budget_fit {within_budget, over_budget} and the four judge questions in one call
 // and its answers are trusted as they stand: the argmax of each question, no thresholds, no arithmetic, no rules, no seller
-// check, no truncation check. The card it mints has no limit tied to the purchase (it is set to the per-card ceiling [F1.ceiling]),
-// and nothing re-quotes at checkout, collapses a repeated cart or voids a card on revoke. Single-use, the SIMULATED merchant lock and
-// idempotency keys belong to the rail instrument, so they stay. Each of these choices is listed under "definitions" in the result file.
+// check, no truncation check. It pays with a card on file (worlds/unlimited-rail.ts): no limit, no single-use rule, no merchant
+// lock, no expiry, only an idempotency key. Nothing re-quotes at checkout, collapses a repeated cart or voids a card on revoke,
+// and there is no log. The retry budget after a lost response is the executor's own default. Each of these choices is listed
+// under "definitions" in the result file, so a reader can see what the baseline is.
 import type { Decision } from "@laisee/core/generated";
-import { RAIL, TIMEOUTS_MS } from "../config";
+import { TIMEOUTS_MS } from "../config";
 import { argmax, type ChoiceAnswer, type ChoiceClient, type ChoiceRequest } from "../judge/choice-client";
 import { BUDGET_FIT_QUESTION, JUDGE_QUESTIONS, PROCEED_CHOICE } from "../judge/questions";
 import { budgetFacts, listingState } from "../judge/state";
 import type { Scenario } from "../types";
 import type { Gate, GateDecision } from "./pipeline";
-import type { JudgeSummary, SystemDeps } from "./types";
+import type { JudgeSummary, SystemDeps, World } from "./types";
 
 export const B0_QUESTION_IDS = ["budget_fit", "scope_fit", "injection_risk", "seller_risk", "escalate_or_proceed"] as const;
 
@@ -42,7 +43,7 @@ function gateDecision(s: Scenario, id: string): Decision {
     cart: s.cart,
     decided_at: s.now,
     outcome: "APPROVE",
-    approved_limit_minor: RAIL.ceilingMinor,
+    approved_limit_minor: s.cart.total_minor,
     packet: s.packet,
     rules: [{ id: "R10", check: "budget_fit", result: "PASS", comparator: "==", inputs: { source: "B0 model gate, answer trusted" } }],
     judge: { provider: "replay", model: "b0-model-gate", version: "b0", status: "OK", latency_ms: 0, shadow: false },
@@ -65,13 +66,14 @@ function summary(result: Awaited<ReturnType<ChoiceClient["ask"]>>): JudgeSummary
 
 export function createB0Gate(deps: Pick<SystemDeps, "choiceFor">): Gate {
   return {
-    async decide(s: Scenario, submission: number): Promise<GateDecision> {
+    async decide(s: Scenario, _world: World, submission: number): Promise<GateDecision> {
       const result = await deps.choiceFor(s).ask(modelGateRequest(s), { timeoutMs: TIMEOUTS_MS.judge });
       // The model is unreachable: a gate that cannot ask cannot approve. B0 keeps that much of I5.
       const outcome = result.ok ? trustedOutcome(result.answers) : "ESCALATE";
       const id = `dec_${s.cart.id.slice("crt_".length)}b0s${submission}`;
       return {
         facts: { outcome, rule: null, templateId: null, decisionId: id },
+        entry: null,
         forRail: outcome === "APPROVE" ? gateDecision(s, id) : null,
         judge: summary(result),
       };

@@ -1,7 +1,6 @@
 // Runs the harness: generate, warm up, run B0, B1 and B2 on every scenario, build the result. All dependencies are injected;
 // factory.ts chooses the real or stand-in implementations and cli.ts chooses the clock, the files and the judge source.
 import type { Clock } from "@laisee/core/ports";
-import { NO_JUDGE } from "./systems/b1";
 import type { ComponentReport } from "./factory";
 import type { JudgeSource } from "./judge/sources";
 import type { Recording, RecordingSource } from "./judge/recording";
@@ -38,16 +37,6 @@ export interface RunOutput {
   readonly summary: string;
   /** Set on a live run that recorded: the file to commit so the run can be replayed. */
   readonly recording: Recording | null;
-}
-
-/** Version string the engine stamps on a Decision, read from a probe so a swapped-in engine is detected, not declared. */
-function probeEngineVersion(components: Components, scenario: Scenario | undefined): string {
-  if (scenario === undefined) return "unknown";
-  try {
-    return components.engine.decide(scenario.mandate, scenario.packet, scenario.cart, NO_JUDGE, new Date(scenario.now), undefined, { mandateProofValid: true }).engine.version;
-  } catch {
-    return "engine threw on the probe";
-  }
 }
 
 async function collect(scenarios: readonly Scenario[], systems: readonly SystemUnderTest[], onProgress: RunInput["onProgress"]): Promise<Record<Baseline, RunOutcome[]>> {
@@ -92,7 +81,7 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     runAt,
     source: input.source.info,
     sourceOutcome,
-    components: input.describe(probeEngineVersion(input.components, base)),
+    components: input.describe(input.components.engine.version),
     scenarios,
     outcomes,
     systemDescriptions: Object.fromEntries(systems.map((s) => [s.id, s.description])) as Record<Baseline, string>,

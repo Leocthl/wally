@@ -76,7 +76,6 @@ export interface Scenario {
   /** Decision time, RFC 3339 UTC. */
   readonly now: string;
   readonly mandate: Mandate;
-  readonly mandateProofValid: boolean;
   readonly packet: PacketState;
   readonly listing: ListingRecord;
   readonly scameterCapture: ScameterCapture | null;

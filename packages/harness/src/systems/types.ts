@@ -1,7 +1,7 @@
 // The record every system under test returns for one scenario, plus the ports the systems are built from.
-import type { Cart, CardRecord, RuleId, TemplateId } from "@laisee/core/generated";
-import type { CardEvent, Engine, JudgePort, MerchantPort, RailPort } from "@laisee/core/ports";
-import type { MerchantMode } from "@laisee/rail-sim";
+import type { CardRecord, Decision, RuleId, TemplateId } from "@laisee/core/generated";
+import type { LaiseeEngine } from "@laisee/core/engine";
+import type { CardEvent, JudgePort, MerchantQuote } from "@laisee/core/ports";
 import type { Timer } from "../timer";
 import type { ChoiceClient } from "../judge/choice-client";
 import type { Baseline, DecisionOutcome, DeclineCode, Scenario } from "../types";
@@ -32,8 +32,18 @@ export interface JudgeSummary {
 
 export interface MintSummary {
   readonly cardId: string;
-  readonly limitMinor: number;
+  /** null = the instrument has no limit at all (the ungoverned baseline's card). */
+  readonly limitMinor: number | null;
   readonly merchantLock: string | null;
+}
+
+/** What the harness checked in the log a scenario left behind (I7). null for a baseline that keeps no log. */
+export interface LogAudit {
+  readonly entries: number;
+  readonly decisions: number;
+  /** verifyChain passed over the whole log with the engine and delegator keys. */
+  readonly chainOk: boolean;
+  readonly failure: string | null;
 }
 
 export interface EventSummary {
@@ -63,6 +73,7 @@ export interface RunOutcome {
   readonly latencyMs: number | null;
   /** Set when a component threw; the scenario then counts as stopped (I5). */
   readonly error: string | null;
+  readonly log: LogAudit | null;
 }
 
 export interface SystemUnderTest {
@@ -71,38 +82,41 @@ export interface SystemUnderTest {
   run(scenario: Scenario): Promise<RunOutcome>;
 }
 
-// ---------- ports the systems are built from ----------
+// ---------- the world a scenario runs in ----------
 
-export interface CheckoutInput {
-  readonly cart: Cart;
-  readonly card: CardRecord;
-  readonly merchant: MerchantPort;
-  readonly rail: RailPort;
-  readonly now: Date;
-  readonly idempotencyKey: string;
-  /** Re-quote before paying and void on any difference (R12). B0 has no rules, so it does not. */
-  readonly requote: boolean;
+export type CheckoutReport =
+  /** The rail answered and the answer is final: AUTHORISED, or DECLINED with the limit held. */
+  | { readonly status: "SETTLED"; readonly event: CardEvent }
+  /** The re-quote differs from the approved cart; nothing was charged. The engine rules on it (R12). */
+  | { readonly status: "DRIFT"; readonly quote: MerchantQuote }
+  /** No answer worth logging: every call timed out, or the executor refused. Nothing may be assumed paid. */
+  | { readonly status: "FAILED"; readonly error: string };
+
+/**
+ * Everything one scenario runs against, built fresh so no state leaks between scenarios. The governed world is the product
+ * path (RailSim, MerchantStub, core's executor, a signed log); the ungoverned world is B0's card on file with no limit.
+ */
+export interface World {
+  /** R1 input: the sealed credential's proof verified. undefined where there is no credential (the ungoverned baseline). */
+  readonly mandateProofValid: boolean | undefined;
+  setTime(at: Date): void;
+  mint(decision: Decision, merchantLock: string, purpose: string): Promise<CardRecord>;
+  checkout(decision: Decision, card: CardRecord): Promise<CheckoutReport>;
+  /** The VOIDED event, or null when the card could not be voided (a used card is final [F2]). */
+  voidCard(card: CardRecord): Promise<CardEvent | null>;
+  /** I7: the decision is logged before any side effect. Resolves to an error message, or null when it is logged. */
+  recordDecision(decision: Decision): Promise<string | null>;
+  recordMint(card: CardRecord): Promise<string | null>;
+  audit(): Promise<LogAudit | null>;
 }
 
-export interface CheckoutReport {
-  readonly drift: boolean;
-  readonly voided: CardEvent | null;
-  readonly event: CardEvent | null;
-  readonly error: string | null;
-}
-
-/** The checkout step. Interim implementation in executor.ts; core's executor (A-22) replaces it through the factory. */
-export interface CheckoutExecutor {
-  checkout(input: CheckoutInput): Promise<CheckoutReport>;
-}
-
-/** Everything the factory supplies. Each member has a real replacement on another lane. */
+/** Everything the factory supplies. Each member is a real implementation behind factory.ts. */
 export interface Components {
-  readonly engine: Engine;
-  /** A fresh rail per scenario, so no state leaks between scenarios. */
-  readonly createRail: () => RailPort;
-  readonly createMerchant: (rail: RailPort, mode: MerchantMode, deltaMinor: number) => MerchantPort;
-  readonly executor: CheckoutExecutor;
+  readonly engine: LaiseeEngine;
+  /** B1 and B2: RailSim, MerchantStub, core's executor, a signed log. */
+  readonly governed: (scenario: Scenario) => Promise<World>;
+  /** B0: a card on file with no limit, the same merchant stub, no executor, no log. */
+  readonly ungoverned: (scenario: Scenario) => Promise<World>;
 }
 
 export interface SystemDeps {
@@ -114,4 +128,6 @@ export interface SystemDeps {
   readonly timer: Timer;
   /** true only for live runs: latency is a measurement of the live judge, recorded runs report none [F26]. */
   readonly measureLatency: boolean;
+  /** Verify each scenario's log with verifyChain when it ends (I7). Default true; a large test sweep may switch it off. */
+  readonly audit?: boolean;
 }

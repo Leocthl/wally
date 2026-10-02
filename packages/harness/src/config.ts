@@ -1,5 +1,5 @@
 // Harness constants. Every number cites its facts-register row (docs/facts-register.md); prose never restates them.
-// Mirrors of values that core or rail-sim will own are marked MIRROR: when @laisee/core/config lands, read from there.
+import { ENGINE_CONFIG } from "@laisee/core/config";
 
 /** F37: 150-200 seeded scenarios, cut to 100 only by D9. */
 export const SCENARIO_COUNT = { default: 150, minimum: 100, targetMax: 200 } as const;
@@ -7,17 +7,24 @@ export const SCENARIO_COUNT = { default: 150, minimum: 100, targetMax: 200 } as 
 /** F38: acceptance targets for T-H1 and T-H2. Percent kept as an integer so the check is exact integer math. */
 export const ACCEPTANCE = { maxOverLimitMintsDeterministic: 0, minLegitimateApprovedPct: 90 } as const;
 
-/** Mirror of the rail facts: F1.ceiling (HK$2,000 per card), F1.active (max 2 at once), F30 (card TTL 30 min). MIRROR. */
-export const RAIL = { ceilingMinor: 200_000, maxActive: 2, cardTtlMs: 30 * 60 * 1000 } as const;
+// Limits and thresholds are read from @laisee/core/config (ENGINE_CONFIG, each value cites its register row there).
+// The names below are views of that config, not copies: a change to the register row and the config reaches the harness
+// with no edit here. The generator uses them to place boundary scenarios on both sides of a limit.
+/** F1.ceiling, F1.active, F30: per-card ceiling, cards active at once, card TTL. */
+export const RAIL = {
+  ceilingMinor: ENGINE_CONFIG.rail.ceiling_minor,
+  maxActive: ENGINE_CONFIG.rail.max_active_cards,
+  cardTtlMs: ENGINE_CONFIG.card.ttl_ms,
+} as const;
 
-/** F32: more than 3 approved mints in a rolling 10 min is a DENY (R7). MIRROR of the engine default. */
-export const VELOCITY = { maxMints: 3, windowS: 600 } as const;
+/** F32: approved mints allowed in the rolling window (R7). */
+export const VELOCITY = { maxMints: ENGINE_CONFIG.velocity.max_mints, windowS: ENGINE_CONFIG.velocity.window_s } as const;
 
-/** F52: a Scameter capture older than this is unverified (R9). MIRROR of the engine default. */
-export const SELLER_CHECK = { maxCaptureAgeS: 86_400 } as const;
+/** F52: a Scameter capture older than this is unverified (R9). */
+export const SELLER_CHECK = { maxCaptureAgeS: ENGINE_CONFIG.seller.max_capture_age_s } as const;
 
 /** F33 planner timeout, F34 judge call timeout. */
-export const TIMEOUTS_MS = { planner: 20_000, judge: 1_500 } as const;
+export const TIMEOUTS_MS = { planner: ENGINE_CONFIG.timeouts.planner_ms, judge: ENGINE_CONFIG.timeouts.judge_ms } as const;
 
 /** F20 example packet, F90 example mandate parameters (m1 adaptive half of remaining, m2 ask above, m2 expiry). SIMULATED. */
 export const EXAMPLE_MANDATE = {
@@ -35,12 +42,6 @@ export const SCENARIO_EPOCH = "2026-10-03T02:00:00Z";
 
 /** Spacing between scenario decision times, so velocity and capture-age windows never overlap across scenarios. */
 export const SCENARIO_SPACING_MS = 7 * 60 * 1000;
-
-/**
- * Harness-local, no register row yet (listed in the lane report): retry count of the interim checkout
- * executor after a lost response. The retry reuses the same idempotency key.
- */
-export const CHECKOUT_RETRIES = 1;
 
 /** Fixed number of scenario categories; the order below is the plan order, not a ranking. */
 export const CATEGORIES = [
@@ -98,10 +99,3 @@ export const JUDGE_DEPENDENT: ReadonlySet<Category> = new Set<Category>(["inject
  * text at 4,000 characters, so the filler is numeric. Checked against the live server by the live test.
  */
 export const PADDING_CHARS = { overflow: 3_400, fits: 1_100 } as const;
-
-/**
- * Mirror of F36.T_inj (P(suspicious) + P(injection) >= T_inj means DENY). Used only by the engine-independent view of the
- * judge on the injection set, so the judge can be read before the real engine reports its own R10 result. MIRROR: the
- * engine's threshold wins whenever the engine reports one, and B-20 will refit the value before the freeze.
- */
-export const JUDGE_THRESHOLD_MIRROR = { injectionDeny: 0.63 } as const;

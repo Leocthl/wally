@@ -6,7 +6,8 @@ import { CLEAN_ANSWERS } from "@laisee/core/testing";
 import type { Scenario } from "../types";
 import type { Gate, GateDecision } from "./pipeline";
 import { foldRules, ruleOfTemplate } from "./summary";
-import type { SystemDeps } from "./types";
+import { engineCheckout } from "./b2";
+import type { SystemDeps, World } from "./types";
 
 /** Stands in for "no judge": a shadow record, so a conforming engine skips R10 and the fold ignores it either way. */
 export const NO_JUDGE: JudgeRecord = {
@@ -28,18 +29,22 @@ function approvedByRules(decision: Decision, limitMinor: number): Decision {
 }
 
 export function createB1Gate(deps: Pick<SystemDeps, "components">): Gate {
+  const { engine } = deps.components;
   return {
-    async decide(scenario: Scenario): Promise<GateDecision> {
-      const decision = deps.components.engine.decide(scenario.mandate, scenario.packet, scenario.cart, NO_JUDGE, new Date(scenario.now), undefined, {
-        mandateProofValid: scenario.mandateProofValid,
+    async decide(scenario: Scenario, world: World): Promise<GateDecision> {
+      const decision = engine.decide(scenario.mandate, scenario.packet, scenario.cart, NO_JUDGE, new Date(scenario.now), undefined, {
+        mandateProofValid: world.mandateProofValid === true,
       });
       const folded = foldRules(decision.rules, KEPT);
       const template = folded.primary?.template_id ?? null;
+      const approved = folded.outcome === "APPROVE" ? approvedByRules(decision, scenario.cart.total_minor) : null;
       return {
         facts: { outcome: folded.outcome, rule: folded.primary?.id ?? ruleOfTemplate(template ?? undefined), templateId: template, decisionId: decision.id },
-        forRail: folded.outcome === "APPROVE" ? approvedByRules(decision, scenario.cart.total_minor) : null,
+        entry: approved ?? decision,
+        forRail: approved,
         judge: null,
       };
     },
+    decideCheckout: engineCheckout(engine),
   };
 }

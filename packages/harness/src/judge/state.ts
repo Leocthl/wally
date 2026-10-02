@@ -1,6 +1,6 @@
-// What the model is shown. Text only: numbers appear as "HK$..." strings, the way a listing page shows them.
+// What B0's model is shown. Text only: numbers appear as "HK$..." strings, the way a listing page shows them. The judge
+// (SystemOneJudge) builds its own state; this one is B0's, defined here so the baseline is a stated, stable thing.
 import type { Cart, Mandate, PacketState } from "@laisee/core/generated";
-import type { JudgeInput } from "@laisee/core/ports";
 import { formatHkd } from "../scenario/money";
 
 export interface ListingState {
@@ -11,16 +11,6 @@ export interface ListingState {
   readonly shipping: string;
 }
 
-export interface JudgeState {
-  readonly mandate: string;
-  readonly listing: ListingState;
-}
-
-/**
- * The seller is the merchant's name only. The Scameter capture state is R9's input and R9 decides it deterministically; it is
- * not sent to the model. A first version appended "seller check: NO_RECORD" here; probing the live server showed that wording
- * alone pulled P(clean) down on legitimate listings (mean 0.35 against 0.42 over ten of them), so it was dropped.
- */
 export function listingState(cart: Cart, listingText: string): ListingState {
   return {
     title: cart.items.map((i) => i.title).join("; "),
@@ -29,10 +19,6 @@ export function listingState(cart: Cart, listingText: string): ListingState {
     seller: cart.merchant.name,
     shipping: cart.shipping_minor === 0 ? "free" : formatHkd(cart.shipping_minor),
   };
-}
-
-export function judgeState(input: JudgeInput): JudgeState {
-  return { mandate: input.intentText, listing: listingState(input.cart, input.listingText) };
 }
 
 export interface BudgetFacts {
