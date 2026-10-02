@@ -3,13 +3,15 @@
 // uses the newest card in the wanted state, or buys one first, so every button works in any order. The merchant
 // stub's mode is set for each beat and always put back to honest. Everything here is SIMULATED.
 import type { ListingRecord } from "@laisee/core/generated";
-import type { CardView, CheckoutResult, Orchestrator, SubmitResult } from "@laisee/core/orchestrator";
+import type { Orchestrator } from "@laisee/core/orchestrator";
 import type { Clock } from "@laisee/core/ports";
 import type { MerchantMode } from "@laisee/rail-sim";
-import type { RunOutcome, RunSummary, TraceEvent } from "../../api/types";
+import type { RunSummary, TraceEvent } from "../../api/types";
+import { requestKey, type AskSource } from "./ask";
 import { listingsFor, overflowListing, visitorListing, type Catalogue } from "./catalogue";
 import type { RunScenario, RunTracker } from "./events";
 import { BEAT_MODES, cardBeatOf, type ScenarioBeat, type ScenarioEntry, type ScenarioTable } from "./scenarioTable";
+import { askStep, checkoutStep, submitStep, type Bought, type Step } from "./step";
 
 export interface RunnerDeps {
   readonly orchestrator: Orchestrator;
@@ -24,34 +26,8 @@ export interface RunnerDeps {
   readonly judgeOfflineNote?: string;
 }
 
-interface Step {
-  readonly outcome: RunOutcome;
-  readonly decisionId?: string;
-  readonly note?: string;
-}
-
-interface Bought extends Step {
-  readonly card: CardView | null;
-}
-
 const NO_CARD_NOTE = "No card to use: the purchase was stopped first.";
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
-
-function submitStep(result: SubmitResult): Bought {
-  if (!result.ok) return { outcome: "ERROR", card: null, note: `${result.code}: ${result.message}`, ...(result.decision ? { decisionId: result.decision.id } : {}) };
-  if (result.outcome === "NO_PROPOSAL") {
-    return { outcome: "INFO", card: null, note: `The planner made no proposal (${result.reason}): it asks the shopper. Nothing was decided and no card exists.` };
-  }
-  if (result.outcome === "INVALID_CART") return { outcome: "ERROR", card: null, note: `The cart could not be built (${result.code}); no decision, no card.` };
-  return { outcome: result.outcome, decisionId: result.decision.id, card: result.card };
-}
-
-function checkoutStep(result: CheckoutResult): Step {
-  if (!result.ok) return { outcome: "ERROR", note: `${result.code}: ${result.message}` };
-  if (result.status === "DRIFT") return { outcome: "DENY", decisionId: result.decision.id };
-  if (result.status === "TIMEOUT") return { outcome: "INFO", note: "Every merchant call timed out; the same key is kept, so a retry can never charge twice." };
-  return { outcome: "APPROVE" };
-}
 
 /** The step's own decision id, else the one behind the card. */
 function withDecision(step: Step, fallback: string | undefined): Step {
@@ -81,7 +57,16 @@ export class ScenarioRunner {
     const note = step.note ?? (step.outcome === "ERROR" ? tracker.errorOf(runId) : undefined) ?? this.#judgeNote(runId);
     emit({ type: "run.finished", runId, outcome: step.outcome, at: iso(clock.now()), ...(note === undefined ? {} : { note }) });
     tracker.end(runId);
-    return { runId, scenario, outcome: step.outcome, ...(step.decisionId === undefined ? {} : { decisionId: step.decisionId }), ...(note === undefined ? {} : { note }) };
+    return {
+      runId,
+      scenario,
+      outcome: step.outcome,
+      ...(step.decisionId === undefined ? {} : { decisionId: step.decisionId }),
+      ...(note === undefined ? {} : { note }),
+      ...(step.code === undefined ? {} : { code: step.code }),
+      ...(step.duplicate === true ? { duplicate: true as const } : {}),
+      ...(step.alternativeTo === undefined ? {} : { alternativeTo: step.alternativeTo }),
+    };
   }
 
   #judgeNote(runId: string): string | undefined {
@@ -106,6 +91,28 @@ export class ScenarioRunner {
     });
   }
 
+  /**
+   * Ask Wally: the shopper's words go to the planner over the shelf (live) or to the recording that has them (recorded).
+   * The checkout runs inside the orchestrator call, under the honest merchant. A repeat of a live cart is not bought twice.
+   */
+  ask(requestText: string, source: AskSource): Promise<RunSummary> {
+    return this.run("custom", async (runId) => {
+      const ids = source.kind === "recorded" ? source.requests.get(requestKey(requestText)) : undefined;
+      if (source.kind === "recorded" && ids === undefined) return { outcome: "INFO", code: "UNKNOWN_REQUEST", note: source.unknownNote };
+      const listings = source.kind === "live" ? source.shelf : listingsFor(this.#d.catalogue, ids ?? []);
+      this.#d.merchant.setMode("honest");
+      return askStep(await this.#d.orchestrator.submit({ requestText, listings, checkout: "auto", runId }));
+    });
+  }
+
+  /** "See cheaper options" after a budget stop: the planner replans over the same request and listings. */
+  alternatives(decisionId: string): Promise<RunSummary> {
+    return this.run("custom", async (runId) => {
+      this.#d.merchant.setMode("honest");
+      return askStep(await this.#d.orchestrator.suggestAlternatives({ decisionId, checkout: "auto", runId }));
+    });
+  }
+
   async #listings(entry: ScenarioEntry): Promise<readonly ListingRecord[]> {
     const listings = listingsFor(this.#d.catalogue, entry.listings);
     if (!entry.overflow) return listings;
@@ -114,7 +121,8 @@ export class ScenarioRunner {
   }
 
   async #submit(requestText: string, listings: readonly ListingRecord[], runId: string): Promise<Bought> {
-    return submitStep(await this.#d.orchestrator.submit({ requestText, listings, checkout: "none", runId }));
+    // allowRepeat: every booth button is a self-contained purchase that may repeat an earlier one on purpose (the tee for each rail beat)
+    return submitStep(await this.#d.orchestrator.submit({ requestText, listings, checkout: "none", runId, allowRepeat: true }));
   }
 
   async #beat(cardId: string, beat: ScenarioBeat, runId: string): Promise<Step> {

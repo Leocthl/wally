@@ -2,8 +2,19 @@
 // routes run them on parsed JSON bodies; the on-device client runs them on every call from the UI. Unknown keys are
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
+import { DEFAULT_PLANNER_CONFIG } from "@laisee/agent/planner";
 import type { CompiledRules } from "@laisee/core/generated";
-import { SCENARIO_IDS, type EscalationAnswerRequest, type ProposeRequest, type ScenarioId, type SealRequest } from "../../api/types";
+import {
+  SCENARIO_IDS,
+  type AlternativesRequest,
+  type AskLocale,
+  type AskRequest,
+  type CompileRulesRequest,
+  type EscalationAnswerRequest,
+  type ProposeRequest,
+  type ScenarioId,
+  type SealRequest,
+} from "../../api/types";
 import { badRequest, BoothError } from "./errors";
 
 /** A parsed JSON object (an HTTP body, or the request object the UI passes in). */
@@ -11,6 +22,10 @@ export type JsonObject = Readonly<Record<string, unknown>>;
 
 /** mandate.schema.json IntentText maxLength. */
 export const MAX_INTENT_CHARS = 280;
+/** Longest typed request, measured after NFKC normalisation: the planner's request cap [F56]. */
+export const MAX_REQUEST_CHARS = DEFAULT_PLANNER_CONFIG.maxRequestChars;
+/** A raw string this long cannot fit the caps once normalised; it is refused before any work is spent on it. */
+const RAW_FACTOR = 4;
 /** mandate.schema.json Revocation.reason maxLength. */
 export const MAX_REVOKE_REASON_CHARS = 200;
 /** mandate.schema.json DecisionId. */
@@ -45,6 +60,48 @@ export function parseSealRequest(body: JsonObject): SealRequest {
 export function parseProposeRequest(body: JsonObject, maxListingChars: number): ProposeRequest {
   onlyKeys(body, ["listingText"]);
   return { listingText: text(body, "listingText", 1, maxListingChars) };
+}
+
+/** NFKC, one space between words, trimmed: the form every caller (planner, compiler, recorded lookup) reads. */
+export const normaliseText = (value: string): string => value.normalize("NFKC").replace(/\s+/gu, " ").trim();
+
+function sentence(body: JsonObject, key: string, max: number): string {
+  const value = body[key];
+  if (typeof value !== "string") throw badRequest("INVALID_FIELD", `${key} must be a string`);
+  if (value.length > max * RAW_FACTOR) throw badRequest("TEXT_TOO_LONG", `${key} is longer than ${max} characters`);
+  const normalised = normaliseText(value);
+  if (normalised === "") throw badRequest("INVALID_FIELD", `${key} must not be empty`);
+  if (normalised.length > max) throw badRequest("TEXT_TOO_LONG", `${key} is longer than ${max} characters`);
+  return normalised;
+}
+
+function locale(body: JsonObject, required: boolean): AskLocale | undefined {
+  const value = body["locale"];
+  if (value === undefined && !required) return undefined;
+  if (value !== "en" && value !== "zh-HK") throw badRequest("INVALID_FIELD", "locale must be en or zh-HK");
+  return value;
+}
+
+/** requestText comes back NFKC-normalised, as the planners read it. */
+export function parseAskRequest(body: JsonObject): AskRequest {
+  onlyKeys(body, ["requestText", "locale"]);
+  const requestText = sentence(body, "requestText", MAX_REQUEST_CHARS);
+  const chosen = locale(body, false);
+  return { requestText, ...(chosen === undefined ? {} : { locale: chosen }) };
+}
+
+export function parseAlternativesRequest(body: JsonObject): AlternativesRequest {
+  onlyKeys(body, ["decisionId"]);
+  const decisionId = text(body, "decisionId", 1, 60);
+  if (!DECISION_ID_RE.test(decisionId)) throw badRequest("INVALID_FIELD", "decisionId is not a decision id");
+  return { decisionId };
+}
+
+/** The sentence is capped like the mandate's intent text, after NFKC. */
+export function parseCompileRequest(body: JsonObject): CompileRulesRequest {
+  onlyKeys(body, ["text", "locale"]);
+  const sentenceText = sentence(body, "text", MAX_INTENT_CHARS);
+  return { text: sentenceText, locale: locale(body, true) ?? "en" };
 }
 
 export function parseRevokeRequest(body: JsonObject): { readonly reason?: string } {

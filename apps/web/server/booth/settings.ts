@@ -3,8 +3,15 @@
 // package's own default is shadow, which would let a judge outage pass unseen).
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { layaUrlFromEnv, plannerProviderFromEnv } from "@laisee/agent/planner";
+import {
+  layaUrlFromEnv,
+  localPlannerAllowRemoteFromEnv,
+  localPlannerModelFromEnv,
+  localPlannerUrlFromEnv,
+  plannerProviderFromEnv,
+} from "@laisee/agent/planner";
 import type { JudgeEnv } from "@laisee/agent/judge";
+import type { PlannerProvider } from "@laisee/core/ports";
 
 export type Env = Readonly<Record<string, string | undefined>>;
 
@@ -18,8 +25,15 @@ export interface BoothSettings {
   readonly keyDir: string;
   readonly logDir: string;
   readonly judgeEnv: JudgeEnv;
-  readonly plannerProvider: "rule" | "replay";
+  /** The provider named by PLANNER_PROVIDER; with plannerAuto, only the placeholder until the start-up check has run. */
+  readonly plannerProvider: "rule" | "replay" | "local";
+  /** PLANNER_PROVIDER unset or auto: server/booth/plannerSelect.ts picks at start (local, else rule, else replay). */
+  readonly plannerAuto: boolean;
   readonly layaUrl: string;
+  /** PLANNER_BASE_URL, PLANNER_MODEL, PLANNER_ALLOW_REMOTE: the local Qwen server (planner and sentence compiler). */
+  readonly plannerUrl: string;
+  readonly plannerModel: string;
+  readonly plannerAllowRemote: boolean;
   readonly fixturesDir: string;
   readonly scenariosDir: string;
 }
@@ -49,16 +63,26 @@ function port(env: Env): number {
   return value;
 }
 
+function built(provider: PlannerProvider): "rule" | "replay" | "local" {
+  if (provider === "claude") throw new SettingsError("PLANNER_PROVIDER=claude: no claude backend is built; use rule, replay, local or auto");
+  return provider;
+}
+
 export function settingsFromEnv(env: Env): BoothSettings {
-  const provider = plannerProviderFromEnv(env);
-  if (provider !== "rule" && provider !== "replay") throw new SettingsError(`PLANNER_PROVIDER=${provider} is not built`);
+  const named = read(env, "PLANNER_PROVIDER");
+  const auto = named === undefined || named === "auto";
+  const provider = auto ? "rule" : built(plannerProviderFromEnv(env)); // an unknown name throws PlannerConfigError
   return {
     port: port(env),
     keyDir: dir(env, "KEY_DIR", ".keys"),
     logDir: dir(env, "LOG_DIR", ".data/logs"),
     judgeEnv: { ...env, JUDGE_MODE: read(env, "JUDGE_MODE") ?? "enforce" },
     plannerProvider: provider,
+    plannerAuto: auto,
     layaUrl: layaUrlFromEnv(env),
+    plannerUrl: localPlannerUrlFromEnv(env),
+    plannerModel: localPlannerModelFromEnv(env),
+    plannerAllowRemote: localPlannerAllowRemoteFromEnv(env),
     fixturesDir: resolve(REPO_ROOT, "data/fixtures"),
     scenariosDir: resolve(REPO_ROOT, "data/scenarios"),
   };

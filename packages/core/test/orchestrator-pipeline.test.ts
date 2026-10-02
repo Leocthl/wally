@@ -131,14 +131,15 @@ describe("submit", () => {
   // Changed (lane s-fix-core, audit LOW): the decision id now digests the outcome and the cart fingerprint too. A cart id
   // reused at one instant used to give the APPROVE and the later DENY one id (refused as a duplicate); they are two
   // decisions and now get two ids. The duplicate guard itself is kept and tested below with an engine that repeats itself.
+  // Changed (lane e-ask): the two carts differ (jacket, then tee); the same cart twice is now one decision (orchestrator-idempotent).
   it("a cart id reused at the same instant gives a second decision with its own id", async () => {
     const r = rig({ cartIds: () => "crt_sameid0001" });
     await r.orchestrator.seal(r.credential);
-    r.planners.push(PROPOSAL_A3, PROPOSAL_A3);
+    r.planners.push(PROPOSAL_A3, PROPOSAL_A1);
     const first = await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] });
-    const second = await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] });
+    const second = await r.orchestrator.submit({ requestText: "a tee", listings: TEE });
     expect(first).toMatchObject({ ok: true, outcome: "APPROVE" });
-    expect(second).toMatchObject({ ok: true, outcome: "DENY", decision: { explanation: { template_id: "R3.over_remaining" } } });
+    expect(second).toMatchObject({ ok: true, outcome: "DENY", decision: { explanation: { template_id: "R3.over_remaining" } } }); // HK$259 over the HK$250 left
     expect((second as DecidedResult).decision.id).not.toBe((first as DecidedResult).decision.id);
     expect((await r.kinds()).filter((k) => k === "DECISION")).toHaveLength(2);
   });
@@ -149,9 +150,9 @@ describe("submit", () => {
     const repeating: Engine = { decide: (...args) => (last ??= real.decide(...args)), decideCheckout: (input) => real.decideCheckout(input) };
     const r = rig({ engine: repeating });
     await r.orchestrator.seal(r.credential);
-    r.planners.push(PROPOSAL_A3, PROPOSAL_A3);
+    r.planners.push(PROPOSAL_A3, PROPOSAL_A1); // two different carts, so the repeat check lets the second through to the engine
     expect(await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] })).toMatchObject({ ok: true });
-    expect(await r.orchestrator.submit({ requestText: "jacket", listings: [LISTING_JACKET] })).toMatchObject({ ok: false, code: "DUPLICATE_DECISION" });
+    expect(await r.orchestrator.submit({ requestText: "a tee", listings: TEE })).toMatchObject({ ok: false, code: "DUPLICATE_DECISION" });
     expect((await r.kinds()).filter((k) => k === "DECISION")).toHaveLength(1);
   });
 

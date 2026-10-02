@@ -13,7 +13,10 @@ import { demoCredential, demoKeys, type DemoKeys } from "./log-helpers";
 
 export const SEAL_AT = "2026-10-03T02:00:00Z";
 
-/** Serves scripted proposals, one planner per submit (the rule planner is built per listing set too). */
+/**
+ * Serves scripted proposals, one planner per submit (the rule planner is built per listing set too). Each planner also
+ * answers `alternatives` with the same queued entry, so one push serves a submit or a "See cheaper options" call.
+ */
 export interface ScriptedPlanners {
   readonly factory: PlannerFactory;
   /** Listing sets the factory was called with. */
@@ -31,7 +34,7 @@ export function scriptedPlanners(): ScriptedPlanners {
       const [next = null, ...rest] = queue;
       queue = rest;
       catalogues = [...catalogues, listings];
-      const planner = new FakePlanner([next]);
+      const planner = new FakePlanner([next], [next]);
       planners = [...planners, planner];
       return planner;
     },

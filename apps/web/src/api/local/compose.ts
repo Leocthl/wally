@@ -7,6 +7,7 @@ import { createOrchestrator } from "@laisee/core/orchestrator";
 import type { Clock } from "@laisee/core/ports";
 import { MemoryLogStore } from "@laisee/core/testing";
 import { cryptoRandom, type RandomSource } from "@laisee/rail-sim";
+import { recordedRequests } from "../../booth/backend/ask";
 import { OrchestratorBackend } from "../../booth/backend/backend";
 import { scameterLookup } from "../../booth/backend/catalogue";
 import { randomId, SYSTEM_CLOCK } from "../../booth/backend/ids";
@@ -16,7 +17,7 @@ import type { SessionDeps } from "../../booth/backend/session";
 import { SILENT_BACKEND_LOGGER, type BackendLogger } from "../../booth/backend/types";
 import { m0Request } from "../../booth/compile";
 import { loadBundle } from "./bundle";
-import { LOCAL_JUDGE_OFFLINE_NOTE, LOCAL_KEYS_NOTE, localInfo } from "./info";
+import { LOCAL_JUDGE_OFFLINE_NOTE, LOCAL_KEYS_NOTE, LOCAL_UNKNOWN_REQUEST_NOTE, localInfo } from "./info";
 import { LocalReplayJudge } from "./replayJudge";
 
 export interface LocalComposeOptions {
@@ -57,7 +58,9 @@ export function composeLocalBackend(opts: LocalComposeOptions = {}): Orchestrato
     catalogue: bundle.catalogue,
     table: bundle.table,
     plannerProvider: "replay",
-    info: localInfo,
+    ask: { kind: "recorded", requests: recordedRequests(bundle.plannerTexts, bundle.catalogue, bundle.table), unknownNote: LOCAL_UNKNOWN_REQUEST_NOTE },
+    compileModel: null, // no model runs on the device: sentences are read by the fixed rules parser
+    info: () => localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative"))),
     presetSeal: (now) => m0Request(now),
     logger: opts.logger ?? SILENT_BACKEND_LOGGER,
     judgeOfflineNote: LOCAL_JUDGE_OFFLINE_NOTE,

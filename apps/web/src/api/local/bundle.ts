@@ -6,6 +6,7 @@ import type { ReplayRecording } from "@laisee/agent/judge";
 import type { PlannerReplayRecord } from "@laisee/core/generated";
 import referenceCart from "@fixtures/carts/attempt-1.json";
 import boothTable from "../../../../../data/scenarios/booth.json";
+import type { FixtureText } from "../../booth/backend/ask";
 import { buildCatalogue, type Catalogue, type FixtureFile } from "../../booth/backend/catalogue";
 import { parseScenarioTable, type ScenarioTable } from "../../booth/backend/scenarioTable";
 import { judgeRecordingsFrom } from "./recordings";
@@ -20,6 +21,8 @@ export interface LocalBundle {
   readonly table: ScenarioTable;
   readonly catalogue: Catalogue;
   readonly plannerRecords: readonly PlannerReplayRecord[];
+  /** The planner files as text, for the sample requests written in their notes (ask.ts recordedRequests). */
+  readonly plannerTexts: readonly FixtureText[];
   readonly judgeRecordings: readonly ReplayRecording[];
 }
 
@@ -57,5 +60,6 @@ export function loadBundle(): LocalBundle {
     },
     table,
   );
-  return { table, catalogue, plannerRecords: plannerRecords(), judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS) };
+  const plannerTexts = [...sorted(PLANNER_FIXTURES), ...sorted(PLANNER_SCENARIOS)].map(([name, text]) => ({ name, text }));
+  return { table, catalogue, plannerRecords: plannerRecords(), plannerTexts, judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS) };
 }

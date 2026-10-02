@@ -6,6 +6,7 @@
 // browser: the bundled JSON) and hands the parsed envelopes to buildCatalogue.
 import type { ListingRecord, ScameterCapture } from "@laisee/core/generated";
 import type { ScameterLookup } from "@laisee/core/cart";
+import { ENGINE_CONFIG } from "@laisee/core/config";
 import type { Clock } from "@laisee/core/ports";
 import { formatIssues, validateCart, validateListingRecord, validateScameterCapture, type Validator } from "@laisee/core/schema";
 import type { DerivedListing, ScenarioTable } from "./scenarioTable";
@@ -90,12 +91,26 @@ function checkTable(catalogue: Catalogue, table: ScenarioTable): void {
 
 const iso = (ms: number): string => new Date(ms).toISOString().replace(".000Z", "Z");
 
-/** Scameter lookup for the cart builder: the capture restamped to keep its fixture age against the clock. */
+/** A fresh capture is stamped again once it would be this close to the R9 age limit [F52]: one hour of margin. */
+const RESTAMP_MARGIN_MS = 60 * 60 * 1000;
+
+/**
+ * Scameter lookup for the cart builder: the capture restamped to keep its fixture age against the clock. A stamp is
+ * kept for the life of the lookup, so the same listing gives the same cart each time (the repeat check compares carts;
+ * a stamp that moved every second would make every ask look new). A fresh capture is stamped again before it could
+ * age past the R9 limit, so "fresh" stays fresh on a booth left running for days; a stale one keeps its stamp.
+ */
 export function scameterLookup(catalogue: Catalogue, clock: Clock): ScameterLookup {
+  const limitMs = ENGINE_CONFIG.seller.max_capture_age_s * 1000 - RESTAMP_MARGIN_MS;
+  const stampedFrom = new Map<string, number>();
   return (ref) => {
     const hit = catalogue.captures.get(ref);
     if (hit === undefined) return null;
-    return { ...hit.capture, captured_at: iso(clock.now().getTime() - hit.ageMs) };
+    const now = clock.now().getTime();
+    const kept = stampedFrom.get(ref);
+    const from = kept !== undefined && (hit.ageMs >= limitMs || now - kept + hit.ageMs < limitMs) ? kept : now;
+    stampedFrom.set(ref, from);
+    return { ...hit.capture, captured_at: iso(from - hit.ageMs) };
   };
 }
 

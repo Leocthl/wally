@@ -6,9 +6,13 @@
 // delegator key apart on the phone comes later (KEYS.md).
 // Every call is validated like an HTTP request body before it reaches the backend (fail closed).
 import type {
+  AlternativesRequest,
   ApiClient,
   ApiInfo,
+  AskRequest,
   BoothSnapshot,
+  CompileResult,
+  CompileRulesRequest,
   EscalationAnswerRequest,
   LogView,
   ProposeRequest,
@@ -23,7 +27,17 @@ import type {
 } from "../types";
 import type { OrchestratorBackend } from "../../booth/backend/backend";
 import type { ExportView } from "../../booth/backend/types";
-import { parseAnswerRequest, parseProposeRequest, parseRevokeRequest, parseScenarioId, parseSealRequest, type JsonObject } from "../../booth/backend/validate";
+import {
+  parseAlternativesRequest,
+  parseAnswerRequest,
+  parseAskRequest,
+  parseCompileRequest,
+  parseProposeRequest,
+  parseRevokeRequest,
+  parseScenarioId,
+  parseSealRequest,
+  type JsonObject,
+} from "../../booth/backend/validate";
 import { LISTING_TEXT_HARD_CAP } from "../../booth/scenarios";
 import { composeLocalBackend, type LocalComposeOptions } from "./compose";
 
@@ -95,6 +109,21 @@ export class LocalApiClient implements ApiClient {
 
   async answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary> {
     return this.#backend.answerEscalation(parseAnswerRequest(asBody(req)));
+  }
+
+  /** Only the sample requests that have a recording; any other request is an INFO run saying so (no model runs here). */
+  async ask(req: AskRequest): Promise<RunSummary> {
+    return this.#backend.ask(parseAskRequest(asBody(req)));
+  }
+
+  /** Works where a recorded cheaper option exists for the stopped request; otherwise an INFO run says none was found. */
+  async suggestAlternatives(req: AlternativesRequest): Promise<RunSummary> {
+    return this.#backend.suggestAlternatives(parseAlternativesRequest(asBody(req)));
+  }
+
+  /** The fixed rules parser (source "rules"): no model runs on the device. */
+  async compileRules(req: CompileRulesRequest): Promise<CompileResult> {
+    return this.#backend.compileRules(parseCompileRequest(asBody(req)));
   }
 
   verify(): Promise<VerifyOutcome> {

@@ -3,8 +3,12 @@
 // on-device client in the browser (src/api/local). Nothing here may import node:*; the hosts inject what differs.
 import type { Checkpoint } from "@laisee/core/ports";
 import type {
+  AlternativesRequest,
   ApiInfo,
+  AskRequest,
   BoothSnapshot,
+  CompileResult,
+  CompileRulesRequest,
   EscalationAnswerRequest,
   LogView,
   ProposeRequest,
@@ -42,6 +46,9 @@ export interface BoothBackend {
   propose(req: ProposeRequest): Promise<RunSummary>;
   revoke(req: { readonly reason?: string }): Promise<RevokeResult>;
   answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary>;
+  ask(req: AskRequest): Promise<RunSummary>;
+  suggestAlternatives(req: AlternativesRequest): Promise<RunSummary>;
+  compileRules(req: CompileRulesRequest): Promise<CompileResult>;
   getLog(): Promise<LogView>;
   verify(): Promise<VerifyOutcome>;
   tamper(): Promise<LogView>;

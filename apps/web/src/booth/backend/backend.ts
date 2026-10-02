@@ -10,10 +10,15 @@ import type { Decision, LogEntry } from "@laisee/core/generated";
 import type { VerifyFailure } from "@laisee/core/ports";
 import { verifyChain } from "@laisee/core/verify";
 import type {
+  AlternativesRequest,
   ApiInfo,
+  AskRequest,
   BoothSnapshot,
+  CompileResult,
+  CompileRulesRequest,
   EscalationAnswerRequest,
   LogView,
+  PlannerTraceInfo,
   ProposeRequest,
   RevokeResult,
   RunSummary,
@@ -25,7 +30,9 @@ import type {
   Unsubscribe,
   VerifyOutcome,
 } from "../../api/types";
+import type { AskSource } from "./ask";
 import type { Catalogue } from "./catalogue";
+import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
 import { mapEvent, RunTracker } from "./events";
 import { ScenarioRunner } from "./runner";
@@ -41,7 +48,11 @@ export interface BackendDeps {
   readonly sessionDeps: () => SessionDeps;
   readonly catalogue: Catalogue;
   readonly table: ScenarioTable;
-  readonly plannerProvider: "rule" | "replay";
+  readonly plannerProvider: PlannerTraceInfo["provider"];
+  /** Ask Wally: the shelf a live planner chooses among, or the requests that have a recording (ask.ts). */
+  readonly ask: AskSource;
+  /** Reads a sentence into rules with the local model; null = the fixed rules parser only (compileRules.ts). */
+  readonly compileModel: ModelCompile | null;
   readonly info: () => ApiInfo;
   readonly presetSeal: (now: Date) => SealRequest;
   readonly logger: BackendLogger;
@@ -216,6 +227,32 @@ export class OrchestratorBackend implements BoothBackend {
     const { log } = await session.orchestrator.snapshot();
     for (const entry of log) if (entry.kind === "DECISION" && entry.payload.id === decisionId) return entry.payload;
     return undefined;
+  }
+
+  ask(req: AskRequest): Promise<RunSummary> {
+    return this.#op((session) => this.#runner(session).ask(req.requestText, this.#d.ask));
+  }
+
+  suggestAlternatives(req: AlternativesRequest): Promise<RunSummary> {
+    return this.#op(async (session) => {
+      await this.#requireBudgetStop(session, req.decisionId);
+      return this.#runner(session).alternatives(req.decisionId);
+    });
+  }
+
+  /** Cheaper options exist only after a DENY by R3 or R4; anything else is refused before a run starts. */
+  async #requireBudgetStop(session: Session, decisionId: string): Promise<void> {
+    const log = (await session.orchestrator.snapshot()).log;
+    const decision = log.flatMap((e) => (e.kind === "DECISION" ? [e.payload] : [])).find((d) => d.id === decisionId);
+    const template = decision?.explanation?.template_id;
+    if (decision?.outcome !== "DENY" || (template !== "R3.over_remaining" && template !== "R4.over_cap")) {
+      throw new BoothError(409, "NOT_APPLICABLE", "Only a purchase stopped by the budget (R3) or the per-purchase cap (R4) has cheaper options.");
+    }
+  }
+
+  /** Needs no session: it reads a sentence and seals nothing. */
+  compileRules(req: CompileRulesRequest): Promise<CompileResult> {
+    return compileRules(req, { now: this.#deps.clock.now(), model: this.#d.compileModel });
   }
 
   answerEscalation(req: EscalationAnswerRequest): Promise<RunSummary> {

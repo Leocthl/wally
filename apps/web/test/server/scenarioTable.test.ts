@@ -76,6 +76,21 @@ describe("booth catalogue", () => {
     expect(lookup("SIM-unknown")).toBeNull();
   });
 
+  it("keeps a capture's stamp for the session, so the same listing gives the same cart, and renews a fresh one before it could go stale", () => {
+    const clock = new FakeClock("2026-10-04T05:00:00Z");
+    const lookup = scameterLookup(catalogue, clock);
+    const first = lookup("SIM-scameter-demo-apparel");
+    const stale = lookup("SIM-scameter-stale");
+    clock.advance(10 * 60 * 60 * 1000); // ten hours of a booth left running
+    expect(lookup("SIM-scameter-demo-apparel")?.captured_at).toBe(first?.captured_at); // the same stamp: the same cart
+    expect(lookup("SIM-scameter-stale")?.captured_at).toBe(stale?.captured_at);
+    clock.advance(14 * 60 * 60 * 1000); // a day in: a fresh capture would now be near the 24 h limit [F52], so it is stamped again
+    const renewed = lookup("SIM-scameter-demo-apparel");
+    expect(renewed?.captured_at).not.toBe(first?.captured_at);
+    expect(clock.now().getTime() - Date.parse(renewed?.captured_at ?? "")).toBeLessThan(60 * 60 * 1000);
+    expect(lookup("SIM-scameter-stale")?.captured_at).toBe(stale?.captured_at); // stale stays older than the limit
+  });
+
   it("puts the visitor's text only in the description of the visitor listing", () => {
     const [base] = listingsFor(catalogue, ["lst_visitorText"]);
     if (base === undefined) throw new Error("visitor listing missing");

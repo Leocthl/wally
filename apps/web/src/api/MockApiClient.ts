@@ -10,6 +10,8 @@ import type {
   ApiClient,
   ApiInfo,
   BoothSnapshot,
+  CompileResult,
+  CompileRulesRequest,
   EscalationAnswerRequest,
   LogView,
   ProposeRequest,
@@ -23,6 +25,7 @@ import type {
   Unsubscribe,
   VerifyOutcome,
 } from "./types";
+import { compileRules } from "../booth/backend/compileRules";
 import { checkout, mintFor, proposeAndDecide, skipUpstream, type CheckoutMode, type Purchase, type PurchaseSpec } from "./mock/flows";
 import { answerOpenEscalation, expireDueEscalations } from "./mock/escalation";
 import { CHECKED, SKIPPED, tamperCopy, verifyMockChain } from "./mock/log";
@@ -48,11 +51,13 @@ type Body = (runId: string) => Promise<{ readonly outcome: RunOutcome; readonly 
 export class MockApiClient implements ApiClient {
   readonly kind = "mock" as const;
   readonly #s: MockSession;
+  readonly #clock: Clock;
   #queue: Promise<unknown> = Promise.resolve();
   #timer: ReturnType<typeof setInterval> | null = null;
 
   constructor(opts: MockOptions = {}) {
-    this.#s = new MockSession({ clock: opts.clock ?? SYSTEM_CLOCK, sleep: opts.sleep ?? realSleep, pace: opts.pace ?? 1 });
+    this.#clock = opts.clock ?? SYSTEM_CLOCK;
+    this.#s = new MockSession({ clock: this.#clock, sleep: opts.sleep ?? realSleep, pace: opts.pace ?? 1 });
     if (opts.sweepEveryMs) this.#timer = setInterval(() => void this.sweepEscalations(), opts.sweepEveryMs);
   }
 
@@ -71,11 +76,17 @@ export class MockApiClient implements ApiClient {
     return next;
   }
 
+  /** The fixed rules parser, as in on-device mode. The mock has no ask or cheaper options (info().features says so). */
+  compileRules(req: CompileRulesRequest): Promise<CompileResult> {
+    return compileRules(req, { now: this.#clock.now(), model: null });
+  }
+
   async info(): Promise<ApiInfo> {
     return {
       kind: "mock",
       judge: { provider: "replay", note: "Recorded answers (SIMULATED). Typed text goes to a keyword stand-in, not to Laya." },
       planner: { provider: "replay", note: "Recorded proposals (SIMULATED). Typed text uses the rule planner." },
+      features: { ask: false, alternatives: false, compile: "rules" },
       replayed: true,
       realCapture: null,
     };

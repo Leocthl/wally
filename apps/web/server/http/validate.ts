@@ -2,8 +2,12 @@
 // the same checks on every call from the UI.
 export {
   MAX_INTENT_CHARS,
+  MAX_REQUEST_CHARS,
   MAX_REVOKE_REASON_CHARS,
+  parseAlternativesRequest,
   parseAnswerRequest,
+  parseAskRequest,
+  parseCompileRequest,
   parseEmptyBody,
   parseProposeRequest,
   parseRevokeRequest,

@@ -12,6 +12,7 @@ import { mandateFromCredential } from "../vc/mandate";
 import { verifyMandateCredential } from "../vc/proof";
 import type { Reporter, FailureExtra } from "./events";
 import { credentialOf } from "./log-view";
+import type { StoppedRequest } from "./stops";
 import type { OrchestratorConfig, OrchestratorDeps, OrchestratorErrorCode } from "./types";
 
 export interface Sealed {
@@ -25,6 +26,8 @@ export interface Memory {
   emittedThrough: number;
   /** Last head checkpoint published; every later read must still contain it (no truncation, no rewrite). */
   checkpoint: Checkpoint | null;
+  /** Request and listings of recent budget stops (R3, R4), by decision id, for suggestAlternatives (stops.ts). */
+  stops: ReadonlyMap<string, StoppedRequest>;
 }
 
 export interface Ctx {

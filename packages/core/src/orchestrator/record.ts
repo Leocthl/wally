@@ -6,6 +6,7 @@ import type { EscalationResolution, JudgeRecord, MintErrorCode } from "../ports"
 import { validateCardRecord } from "../schema";
 import { purposeOf } from "./config";
 import { StepError, append, describe, emitPacket, flushLog, now, readLogState, type Ctx } from "./context";
+import { findLiveDuplicate, reportDuplicate } from "./duplicate";
 import type { Run } from "./events";
 import { decisions, escalationViewOf, findDecision, toCardView } from "./log-view";
 import { checkoutCard } from "./checkout";
@@ -21,6 +22,8 @@ export interface DecideStep {
   /** verifyEscalationAnswer result, for a resolution that carries an answer. */
   readonly answerSignatureValid?: boolean;
   readonly checkout: CheckoutMode;
+  /** Cart fingerprint of a submit: when the log already holds a live decision for it, that one is the result (duplicate.ts). */
+  readonly fingerprint?: string;
 }
 
 function decideNow(ctx: Ctx, step: DecideStep, state: Awaited<ReturnType<typeof readLogState>>, judge: JudgeRecord): Decision {
@@ -47,7 +50,9 @@ function escalationAfter(step: DecideStep, decision: Decision): EscalationView |
 export async function decideAndRecord(ctx: Ctx, step: DecideStep): Promise<DecidedResult> {
   const { run, logId } = step;
   const state = await readLogState(ctx, logId, now(ctx));
-  const judge = await step.judge;
+  const repeat = step.fingerprint === undefined ? null : findLiveDuplicate(state.entries, step.fingerprint, now(ctx));
+  const judge = await step.judge; // also for a repeat: its events belong to this run and must not arrive after run.finished
+  if (repeat !== null) return reportDuplicate(ctx, run, repeat, true);
   ctx.report.stage(run, "engine", "running");
   const decision = decideNow(ctx, step, state, judge);
   if (findDecision(state.entries, decision.id) !== undefined) throw new StepError("DUPLICATE_DECISION", `decision ${decision.id} is already in the log`);

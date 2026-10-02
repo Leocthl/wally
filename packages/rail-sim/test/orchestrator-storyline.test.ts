@@ -41,6 +41,10 @@ describe("storyline DM1-DM7 (SIMULATED rail)", () => {
     const replay = await r.orchestrator.checkout({ cardId });
     expect(replay).toMatchObject({ ok: true, status: "DECLINED", event: { decline_code: "CARD_USED" } }); // blocked replay [F19]
 
+    const twice = await submit(r, P_A1, TEE, "a plain cotton tee"); // a double tap: the same cart again returns the earlier decision
+    expect(twice).toMatchObject({ ok: true, outcome: "APPROVE", duplicate: true, decision: { id: a1.decision.id }, card: { id: cardId, state: "USED" } });
+    expect(r.rail.cards).toHaveLength(1);
+
     r.clock.advance(3 * 60_000);
     const a2 = await submit(r, P_A2, HOODIE, "a fleece hoodie");
     expect(a2).toMatchObject({ outcome: "DENY", card: null, decision: { explanation: { template_id: "R9.flagged" } } }); // DM3, S2

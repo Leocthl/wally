@@ -1,7 +1,7 @@
 // HTTP contract of the booth API (Hono). Routes and JSON are exactly the ApiClient types; errors are JSON
 // { error: { code, message } }. Guards: loopback Host on every request, loopback Origin and JSON content type on
-// every POST, a byte cap on bodies and a character cap on visitor listing text. Mutating responses carry
-// X-Event-Seq: the SSE id of the last event they caused, so a client can wait until it has seen them.
+// every POST, a byte cap on bodies, a character cap on visitor listing text and on typed requests. Mutating responses
+// carry X-Event-Seq: the SSE id of the last event they caused, so a client can wait until it has seen them.
 import type { Context, Hono } from "hono";
 import type { BoothBackend } from "../backend";
 import { readJsonObject, type JsonObject } from "./body";
@@ -9,7 +9,10 @@ import { BoothError, errorBody, type BoothErrorStatus } from "./errors";
 import { checkPostOrigin, isAllowedHost, isJsonContentType, isLoopbackHostname } from "./guards";
 import type { SseHub } from "./sse";
 import {
+  parseAlternativesRequest,
   parseAnswerRequest,
+  parseAskRequest,
+  parseCompileRequest,
   parseEmptyBody,
   parseProposeRequest,
   parseRevokeRequest,
@@ -92,6 +95,15 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
   app.post("/api/propose", async (c) => reply(c, await be().propose(parseProposeRequest(await body(c), opts.maxListingTextChars))));
   app.post("/api/revoke", async (c) => reply(c, await be().revoke(parseRevokeRequest(await body(c)))));
   app.post("/api/escalation/answer", async (c) => reply(c, await be().answerEscalation(parseAnswerRequest(await body(c)))));
+  // Ask Wally: a typed request (planner cap [F56] after NFKC) and "See cheaper options" after a budget stop. Both are runs.
+  app.post("/api/ask", async (c) => reply(c, await be().ask(parseAskRequest(await body(c)))));
+  app.post("/api/alternatives", async (c) => reply(c, await be().suggestAlternatives(parseAlternativesRequest(await body(c)))));
+  // Sentence to rule chips. Not a run: no trace events, so no X-Event-Seq; it seals nothing.
+  app.post("/api/compile", async (c) => {
+    const compiled = await be().compileRules(parseCompileRequest(await body(c)));
+    c.header("cache-control", "no-store");
+    return c.json(compiled);
+  });
   app.post("/api/verify", async (c) => {
     parseEmptyBody(await body(c));
     return reply(c, await be().verify());
