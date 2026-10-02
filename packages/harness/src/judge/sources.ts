@@ -7,7 +7,7 @@ import { TIMEOUTS_MS } from "../config";
 import type { ChoiceClient } from "./choice-client";
 import { createChoiceJudge } from "./choice-judge";
 import { createLayaClient } from "./laya-client";
-import { createRecordedClient, createRecordingClient, type Recording, type RecordingClient, type RecordingSource } from "./recording";
+import { createRecordedClient, createRecordingClient, type Recording, type RecordingClient, type RecordingSource, type ReplayStats } from "./recording";
 import { JUDGE_QUESTIONS } from "./questions";
 import { createUnavailableClient } from "./unavailable";
 
@@ -35,7 +35,7 @@ export interface JudgeSource {
 
 export interface SourceOutcome {
   readonly recording: Recording | null;
-  readonly replay: { readonly hits: number; readonly misses: number } | null;
+  readonly replay: ReplayStats | null;
 }
 
 function wrap(info: JudgeSourceInfo, client: ChoiceClient, timer: Timer, measureLatency: boolean, finish: JudgeSource["finish"], warmClient: ChoiceClient = client): JudgeSource {

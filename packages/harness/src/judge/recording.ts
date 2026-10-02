@@ -61,12 +61,22 @@ export function createRecordingClient(inner: ChoiceClient): RecordingClient {
   };
 }
 
+export interface ReplayStats {
+  /** Inputs answered from a recorded answer. */
+  readonly hits: number;
+  /** Inputs answered from a recorded failure (TIMEOUT or ERROR): replayed as the same failure, which is a recording too. */
+  readonly recordedFailures: number;
+  /** Inputs the recording never saw: answered ERROR, and the run is not complete. */
+  readonly misses: number;
+}
+
 export interface RecordedClient extends ChoiceClient {
-  stats(): { readonly hits: number; readonly misses: number };
+  stats(): ReplayStats;
 }
 
 export function createRecordedClient(recording: Recording): RecordedClient {
   let hits = 0;
+  let recordedFailures = 0;
   let misses = 0;
   const meta: ChoiceMeta = { model: recording.source.model, revision: recording.source.revision };
   return {
@@ -78,12 +88,15 @@ export function createRecordedClient(recording: Recording): RecordedClient {
         hits += 1;
         return { ok: true, answers: hit.answers, truncated: hit.truncated, latencyMs: hit.latencyMs, meta };
       }
-      misses += 1;
       const failed = recording.failures[key];
-      if (failed !== undefined) return { ok: false, status: failed.status, reason: `recorded failure: ${failed.reason}`, latencyMs: 0 };
+      if (failed !== undefined) {
+        recordedFailures += 1;
+        return { ok: false, status: failed.status, reason: `recorded failure: ${failed.reason}`, latencyMs: 0 };
+      }
+      misses += 1;
       return { ok: false, status: "ERROR", reason: "no recording for this input", latencyMs: 0 };
     },
-    stats: () => ({ hits, misses }),
+    stats: () => ({ hits, recordedFailures, misses }),
   };
 }
 

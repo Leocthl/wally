@@ -23,7 +23,7 @@ function judgeSourceLine(input: ResultInput): string {
   if (s.kind === "live") return `live Laya at ${s.baseUrl ?? "loopback"}, warm-up call excluded from every statistic`;
   const from = s.recordedFrom;
   const stats = input.sourceOutcome.replay;
-  return `recorded answers${from === null ? "" : ` (recorded ${from.recordedAt} on ${from.device ?? "unknown device"}, commit ${from.commit.slice(0, 7)})`}; ${stats?.hits ?? 0} replayed, ${stats?.misses ?? 0} without a recording`;
+  return `recorded answers${from === null ? "" : ` (recorded ${from.recordedAt} on ${from.device ?? "unknown device"}, commit ${from.commit.slice(0, 7)})`}; ${stats?.hits ?? 0} answers and ${stats?.recordedFailures ?? 0} recorded failures replayed, ${stats?.misses ?? 0} inputs without a recording`;
 }
 
 const section = (title: string, body: readonly string[]): string[] => [`## ${title}`, ...body, ""];

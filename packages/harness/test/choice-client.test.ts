@@ -164,14 +164,14 @@ describe("recording and replay", () => {
       expect(again.answers).toEqual(live.answers);
       expect(again.truncated).toBe(live.truncated);
     }
-    expect(replay.stats()).toEqual({ hits: 1, misses: 0 });
+    expect(replay.stats()).toEqual({ hits: 1, recordedFailures: 0, misses: 0 });
   });
 
   it("an input it never saw is ERROR (fail closed) and is counted", async () => {
     const replay = createRecordedClient({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: {}, failures: {} });
     const result = await replay.ask(REQUEST, OPTS);
     expect(result).toMatchObject({ ok: false, status: "ERROR" });
-    expect(replay.stats()).toEqual({ hits: 0, misses: 1 });
+    expect(replay.stats()).toEqual({ hits: 0, recordedFailures: 0, misses: 1 });
   });
 
   it("replays a recorded failure as the same failure", async () => {
@@ -179,6 +179,8 @@ describe("recording and replay", () => {
     await recording.ask(REQUEST, OPTS);
     const replay = createRecordedClient(recording.snapshot(source));
     expect(await replay.ask(REQUEST, OPTS)).toMatchObject({ ok: false, status: "TIMEOUT" });
+    // A recorded failure is a recording, not a gap: it is counted apart from inputs the recording never saw.
+    expect(replay.stats()).toEqual({ hits: 0, recordedFailures: 1, misses: 0 });
   });
 
   it("the key depends on the state and the questions, not on object key order", () => {
