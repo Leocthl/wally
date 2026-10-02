@@ -30,28 +30,30 @@ export interface WhySheetProps {
 }
 
 export function WhySheet({ open, onClose, chain, seq }: WhySheetProps): ReactElement {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const outcome = chain.current.outcome;
   const title = outcome === "APPROVE" ? R.whyApprovedTitle : outcome === "ESCALATE" ? R.whyAskTitle : R.whyStoppedTitle;
   return (
     <Sheet open={open} onClose={onClose} title={t(title)} description={t(R.rulesDecided)}>
-      <List inset label={t(R.checksLabel)} className="run-checks">
-        {checksFor(chain).map((row) => {
-          const look = LOOK[row.status];
-          return (
-            <ListRow
-              key={row.id}
-              leading={<Icon name={look.icon} />}
-              tone={look.tone}
-              title={t(row.name)}
-              subtitle={t(row.line)}
-              trailing={<Tag size="sm" tone={look.tag}>{t(STATUS_TEXT[row.status])}</Tag>}
-              className="run-check"
-            />
-          );
-        })}
-      </List>
-      <NerdDetails decision={chain.current} seq={seq} />
+      <div lang={locale}>
+        <List inset label={t(R.checksLabel)} className="run-checks">
+          {checksFor(chain).map((row) => {
+            const look = LOOK[row.status];
+            return (
+              <ListRow
+                key={row.id}
+                leading={<Icon name={look.icon} />}
+                tone={look.tone}
+                title={t(row.name)}
+                subtitle={t(row.line)}
+                trailing={<Tag size="sm" tone={look.tag}>{t(STATUS_TEXT[row.status])}</Tag>}
+                className="run-check"
+              />
+            );
+          })}
+        </List>
+        <NerdDetails decision={chain.current} seq={seq} />
+      </div>
     </Sheet>
   );
 }
