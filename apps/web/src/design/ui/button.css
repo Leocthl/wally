@@ -1,0 +1,80 @@
+/* Button, IconButton. Every size clears 44 px; colours only from tokens; pressed = scale (base.css) + darker fill. */
+.w-btn {
+  --btn-h: var(--tap-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--btn-h);
+  min-width: var(--tap);
+  padding: 0 var(--sp-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.w-btn--sm { --btn-h: var(--tap); padding: 0 var(--sp-4); font-size: var(--text-sm); }
+.w-btn--md { --btn-h: var(--tap-lg); }
+.w-btn--lg { --btn-h: var(--tap-xl); padding: 0 var(--sp-6); font-size: var(--text-lg); }
+.w-btn--block { display: flex; width: 100%; }
+.w-btn__icon { display: inline-flex; flex: none; }
+.w-btn__label { min-width: 0; }
+
+.w-btn--primary { background: var(--c-primary); color: var(--c-on-primary); }
+.w-btn--primary:hover { background: var(--c-primary-pressed); }
+.w-btn--primary:active { background: var(--c-primary-pressed); }
+.w-btn--secondary { background: var(--c-surface); color: var(--c-primary-ink); border: 1.5px solid var(--c-primary); }
+.w-btn--secondary:active { background: var(--c-primary-tint); }
+.w-btn--ghost { background: transparent; color: var(--c-primary-ink); }
+.w-btn--ghost:active, .w-btn--ghost:hover { background: var(--c-primary-tint); }
+.w-btn--danger { background: var(--c-surface); color: var(--c-stop-ink); border-color: var(--c-stop-ink); }
+.w-btn--danger:active { background: var(--c-stop-tint); }
+.w-btn--on-hero { background: var(--c-on-hero); color: var(--c-hero-to); }
+
+.w-btn[aria-disabled="true"] { cursor: not-allowed; }
+.w-btn[aria-disabled="true"]:not(.w-btn--loading) { background: var(--c-surface-sunken); color: var(--c-ink-muted); border-color: transparent; }
+.w-btn--loading { cursor: progress; }
+
+/* Spinner: a ring that turns; under reduced motion it holds still as a partial ring. */
+.w-spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  flex: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .w-spinner { animation: w-spin var(--dur-idle) linear infinite; animation-duration: calc(var(--dur-idle) / 3); }
+}
+@keyframes w-spin { to { transform: rotate(360deg); } }
+
+.w-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-ink);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
+}
+.w-icon-btn--md { width: var(--tap-lg); height: var(--tap-lg); }
+.w-icon-btn--ghost:hover, .w-icon-btn--ghost:active { background: var(--c-surface-sunken); }
+.w-icon-btn--secondary { background: var(--c-surface); border-color: var(--c-line); box-shadow: var(--shadow-1); }
+.w-icon-btn--primary { background: var(--c-primary); color: var(--c-on-primary); }
+.w-icon-btn--primary:active { background: var(--c-primary-pressed); }
+.w-icon-btn--on-hero { background: var(--c-hero-track); color: var(--c-on-hero); }
+.w-icon-btn:disabled { color: var(--c-ink-muted); cursor: not-allowed; }
+.w-icon-btn--primary:disabled { background: var(--c-surface-sunken); }

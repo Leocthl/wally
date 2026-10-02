@@ -1,0 +1,88 @@
+/* TextField, TextArea, Switch. 16 px text minimum; the border carries 3:1, the error carries an icon and words. */
+.w-field { display: grid; gap: var(--sp-2); min-width: 0; }
+.w-field__label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-ink); }
+.w-field__box {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--tap-lg);
+  padding: 0 var(--sp-1) 0 var(--sp-4);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.w-field__box:focus-within { border-color: var(--c-focus); box-shadow: 0 0 0 2px var(--c-focus); }
+.w-field--invalid .w-field__box { border-color: var(--c-stop-ink); }
+/* Two classes, so the legacy input[type] rule in base.css cannot add a second border or padding. */
+.w-field__box > .w-field__input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink);
+  font-size: max(1rem, var(--text-md)); /* 16px: stops iOS zooming on focus */
+  line-height: var(--lh-snug);
+}
+.w-field__input::placeholder { color: var(--c-ink-muted); opacity: 1; }
+.w-field__input:focus, .w-field__input:focus-visible { outline: none; }
+.w-field__adorn { display: inline-flex; align-items: center; flex: none; color: var(--c-ink-muted); }
+.w-field__adorn--end { gap: var(--sp-1); }
+.w-field__box--area { align-items: stretch; padding: var(--sp-2) var(--sp-3); }
+.w-field__box > .w-field__input--area { resize: vertical; min-height: 6rem; padding: var(--sp-1); }
+.w-field__hint { font-size: var(--text-sm); color: var(--c-ink-muted); }
+.w-field__error { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-stop-ink); }
+
+/* Pill composer: "Ask Wally to buy..." with mic and send inside. */
+.w-field--pill .w-field__box { min-height: var(--tap-xl); padding-left: var(--sp-5); border-radius: var(--r-pill); border-color: var(--c-line); background: var(--c-surface); box-shadow: var(--shadow-1); }
+.w-field--pill .w-field__box:focus-within { border-color: var(--c-focus); box-shadow: 0 0 0 2px var(--c-focus); }
+
+/* Switch: 52 x 32 track inside a 44 px target. */
+.w-switch { display: flex; align-items: center; gap: var(--sp-3); min-height: 3.5rem; }
+.w-switch__text { display: grid; flex: 1; min-width: 0; }
+.w-switch__label { font-weight: var(--weight-semibold); }
+.w-switch__desc { font-size: var(--text-sm); color: var(--c-ink-muted); }
+.w-switch__control {
+  position: relative;
+  flex: none;
+  width: 3.25rem;
+  min-width: 3.25rem;
+  height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.w-switch__control::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2rem;
+  transform: translateY(-50%);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface-sunken);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.w-switch__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-primary-ink);
+  box-shadow: var(--shadow-1);
+  transition: left var(--dur-base) var(--ease-spring);
+}
+.w-switch__control[aria-checked="true"]::before { background: var(--c-primary); border-color: var(--c-primary); }
+.w-switch__control[aria-checked="true"] .w-switch__thumb { left: calc(100% - 1.75rem); }
+.w-switch__control:disabled { cursor: not-allowed; opacity: 0.6; }

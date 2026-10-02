@@ -1,0 +1,128 @@
+/* TopBar, BottomTabBar, Tabs, Segmented. Solid surfaces with a hairline; no glass effects (branding guard). */
+.w-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 3.5rem;
+  padding: var(--sp-2) 0;
+  background: var(--c-bg);
+}
+.w-topbar--sticky { position: sticky; top: 0; z-index: var(--z-sticky); padding-top: max(var(--sp-2), var(--safe-top)); }
+.w-topbar__leading { display: inline-flex; flex: none; }
+.w-topbar__titles { display: grid; flex: 1; min-width: 0; }
+.w-topbar__title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w-topbar--large .w-topbar__title { font-size: var(--text-2xl); letter-spacing: var(--track-tight); white-space: normal; }
+.w-topbar__subtitle { font-size: var(--text-sm); color: var(--c-ink-muted); line-height: var(--lh-snug); }
+.w-topbar__actions { display: inline-flex; align-items: center; gap: var(--sp-1); flex: none; }
+
+/* Bottom tab bar: icons over labels, 56 px tall items, clear of the home indicator. */
+.w-tabbar {
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-line);
+  padding: 0 max(var(--sp-2), var(--safe-right)) var(--safe-bottom) max(var(--sp-2), var(--safe-left));
+}
+.w-tabbar--fixed { position: fixed; inset: auto 0 0 0; z-index: var(--z-tabbar); }
+.w-tabbar__list { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; max-width: var(--column); margin: 0 auto; padding: 0; list-style: none; }
+.w-tabbar__item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.125rem;
+  width: 100%;
+  min-height: var(--tabbar-h);
+  padding: var(--sp-1) 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+.w-tabbar__icon { display: inline-grid; place-items: center; width: 3.5rem; height: 2rem; border-radius: var(--r-pill); transition: background-color var(--dur-fast) var(--ease-out); }
+.w-tabbar__item[aria-current="page"] { color: var(--c-primary-ink); }
+.w-tabbar__item[aria-current="page"] .w-tabbar__icon { background: var(--c-primary-tint); }
+.w-tabbar__label { line-height: 1.2; }
+.w-tabbar__badge {
+  position: absolute;
+  top: var(--sp-1);
+  left: calc(50% + 0.5rem);
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: var(--r-pill);
+  background: var(--c-warn);
+  color: var(--c-on-warn);
+  font-size: 0.6875rem;
+  line-height: 1.125rem;
+  text-align: center;
+}
+
+/* Raised central action ("Ask"): a round primary disc lifted over the bar's top edge, label below like the tabs. */
+.w-tabbar__center { display: grid; justify-items: center; }
+.w-tabbar__fab {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 0.125rem;
+  width: 100%;
+  min-height: var(--tabbar-h);
+  padding: 0 0 var(--sp-1);
+  border: 0;
+  background: transparent;
+  color: var(--c-primary-ink);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+.w-tabbar__fab-disc {
+  display: grid;
+  place-items: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  margin-top: -1.625rem;
+  border: 4px solid var(--c-surface);
+  border-radius: 50%;
+  background: linear-gradient(150deg, var(--c-hero-from), var(--c-hero-to));
+  color: var(--c-on-hero);
+  box-shadow: var(--shadow-2);
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.w-tabbar__fab:active .w-tabbar__fab-disc { transform: scale(0.94); }
+
+/* Tabs: an underline-free pill track. */
+.w-tabs__list { display: flex; gap: var(--sp-1); padding: var(--sp-1); border-radius: var(--r-pill); background: var(--c-surface-sunken); }
+.w-tabs__tab {
+  flex: 1;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-ink-muted);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.w-tabs__tab[aria-selected="true"] { background: var(--c-surface); color: var(--c-ink); box-shadow: var(--shadow-1); }
+.w-tabs__panel { padding-top: var(--sp-4); }
+.w-tabs__panel:focus-visible { outline-offset: 4px; border-radius: var(--r-sm); }
+
+/* Segmented: same track, compact. */
+.w-seg { display: inline-flex; padding: 0.1875rem; border-radius: var(--r-pill); background: var(--c-surface-sunken); }
+.w-seg__opt {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.w-seg__opt[aria-checked="true"] { background: var(--c-surface); color: var(--c-ink); box-shadow: var(--shadow-1); }
+.w-seg--md .w-seg__opt { min-height: var(--tap-lg); font-size: var(--text-md); }

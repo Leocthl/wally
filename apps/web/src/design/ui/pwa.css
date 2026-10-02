@@ -1,0 +1,20 @@
+/* Install row and the iOS "Add to Home Screen" hint. */
+.w-install { display: flex; align-items: center; gap: var(--sp-3); min-height: 4rem; }
+.w-install__text { display: grid; flex: 1; min-width: 0; gap: 0.125rem; }
+.w-install__title { font-weight: var(--weight-semibold); }
+.w-install__body { font-size: var(--text-sm); color: var(--c-ink-muted); }
+
+.w-ios-hint {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface-raised);
+  box-shadow: var(--shadow-2);
+}
+.w-ios-hint__head { display: flex; align-items: center; gap: var(--sp-3); }
+.w-ios-hint__title { flex: 1; line-height: var(--lh-snug); }
+.w-ios-hint__steps { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.w-ios-hint__steps li { display: flex; align-items: center; gap: var(--sp-3); counter-increment: step; }
+.w-ios-hint__icon { display: inline-grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--r-sm); background: var(--c-primary-tint); color: var(--c-primary-ink); }

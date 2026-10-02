@@ -1,8 +1,13 @@
-/* Base styles: reset, type, focus, touch targets, reduced motion. Tokens come from tokens.css (docs/04). */
+/* Base styles: reset, type, focus, touch targets, mobile behaviour, reduced motion. Tokens come from tokens.css. */
 *, *::before, *::after { box-sizing: border-box; }
 
 /* No scroll anchoring: when the result grows above the buttons, the page must not slide away from the StopBanner. */
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-anchor: none; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-anchor: none;
+  background: var(--c-bg);
+}
 
 body {
   margin: 0;
@@ -12,19 +17,21 @@ body {
   font-size: var(--fs-0);
   line-height: var(--lh-body);
   font-variant-numeric: var(--num);
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--c-bg);
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
 }
 
 :lang(zh-HK) {
-  font-family: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", var(--font-sans);
+  font-family: var(--font-zh);
   line-height: var(--lh-zh);
 }
 
-/* Register semantics that both registers need. */
-[data-register="packet"] { --on-accent: var(--on-vermilion); --rule: var(--brass-line); }
-[data-register="ledger"] { --on-accent: var(--ledger-surface); --rule: var(--line-strong); }
+/* Register semantics that both legacy registers need (phase B removes the registers). */
+[data-register="packet"] { --on-accent: var(--c-on-primary); --rule: var(--c-line); }
+[data-register="ledger"] { --on-accent: var(--c-surface); --rule: var(--c-line-strong); }
 
 [data-register] { color: var(--fg); }
 
@@ -32,6 +39,8 @@ h1, h2, h3, h4, p { margin: 0; }
 h1 { font-size: var(--fs-2); line-height: var(--lh-tight); }
 h2 { font-size: var(--fs-1); line-height: var(--lh-tight); }
 h3 { font-size: var(--fs-0); line-height: var(--lh-tight); }
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
@@ -44,23 +53,40 @@ button, [role="button"], select, .tap {
   min-width: var(--tap);
 }
 
+/* Controls do not select or show the iOS callout on long press; numbers, hashes and log rows stay selectable. */
+button, [role="button"], [role="tab"], [role="switch"], [role="radio"], summary, label {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.num, .num__v, .mono, code, kbd, samp, [data-selectable] { -webkit-user-select: text; user-select: text; }
+
+/* Pressed feedback: a small scale, never a colour change alone. Off under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  :where(button, [role="button"], [role="tab"], a.w-btn):not(:disabled, [aria-disabled="true"]) {
+    transition: transform var(--dur-press) var(--ease-out);
+  }
+  :where(button, [role="button"], [role="tab"], a.w-btn):not(:disabled, [aria-disabled="true"]):active { transform: scale(0.98); }
+  html:focus-within { scroll-behavior: smooth; }
+}
+
 /* The box itself stays small; its label is the 44 px target (.tap). */
 input[type="checkbox"], input[type="radio"] {
   width: 1.5rem;
   height: 1.5rem;
   margin: 0;
-  accent-color: var(--vermilion);
+  accent-color: var(--c-primary);
   flex: none;
 }
 
-input[type="text"], input[type="number"], input:not([type]), select, textarea {
+input[type="text"], input[type="number"], input[type="search"], input:not([type]), select, textarea {
   font-size: 1rem; /* 16px: stops iOS zooming on focus */
   min-height: var(--tap);
   padding: var(--sp-2) var(--sp-3);
-  background: var(--surface);
-  color: var(--fg);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
+  background: var(--surface, var(--c-surface));
+  color: var(--fg, var(--c-ink));
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--radius, var(--r-md));
 }
 
 textarea { resize: vertical; width: 100%; }
@@ -69,6 +95,8 @@ textarea { resize: vertical; width: 100%; }
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
+
+::selection { background: var(--c-primary-tint); color: var(--c-ink); }
 
 .sr-only {
   position: absolute;
@@ -82,8 +110,40 @@ textarea { resize: vertical; width: 100%; }
   border: 0;
 }
 
+/* A visually hidden link (Skip to content) shows itself when it receives keyboard focus. */
+a.sr-only:focus-visible {
+  position: fixed;
+  top: max(var(--sp-2), var(--safe-top));
+  left: max(var(--sp-2), var(--safe-left));
+  z-index: var(--z-toast);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-weight: var(--weight-semibold);
+}
+
 .mono { font-family: var(--font-mono); }
-.soft { color: var(--fg-soft); }
+.soft { color: var(--fg-soft, var(--c-ink-muted)); }
+.tnum { font-variant-numeric: var(--num); }
+
+/* Safe-area helpers for sticky headers and footers (viewport-fit=cover). */
+.safe-top { padding-top: max(var(--sp-3), var(--safe-top)); }
+.safe-bottom { padding-bottom: max(var(--sp-3), var(--safe-bottom)); }
+.safe-x { padding-left: max(var(--gutter), var(--safe-left)); padding-right: max(var(--gutter), var(--safe-right)); }
+.sticky-top { position: sticky; top: 0; z-index: var(--z-sticky); }
+.sticky-bottom { position: sticky; bottom: 0; z-index: var(--z-sticky); }
+
+/* Installed (standalone) app: no rubber-band reload of the whole page. */
+@media (display-mode: standalone) {
+  html { overscroll-behavior-y: none; }
+}
 
 /* Transitions use duration tokens, which tokens.css zeroes under reduced motion. */
 @media (prefers-reduced-motion: reduce) {

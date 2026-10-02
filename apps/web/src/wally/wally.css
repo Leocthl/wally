@@ -1,0 +1,30 @@
+/* Wally's motion. Loops (blink, glance, snooze) are the one exception to "no loops" and only for the character: small,
+   slow, and off under reduced motion. Result poses (sparkle, shield) play once. Durations come from tokens. */
+.wally { display: inline-block; flex: none; line-height: 0; vertical-align: middle; }
+.wally__svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.wally__eyes, .wally__pupils, .wally__body, .wally__spark, .wally__shield, .wally__z { transform-box: fill-box; transform-origin: center; }
+.wally__body { transform-origin: 50% 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .wally--idle .wally__eyes { animation: wally-blink var(--dur-blink) var(--ease-in-out) infinite; }
+  .wally--thinking .wally__pupils { animation: wally-glance var(--dur-idle) var(--ease-in-out) infinite; }
+  .wally--thinking .wally__body { animation: wally-wiggle var(--dur-idle) var(--ease-in-out) infinite; }
+  .wally--approved .wally__body { animation: wally-hop var(--dur-slow) var(--ease-spring) both; }
+  .wally--approved .wally__spark { animation: wally-pop var(--dur-slow) var(--ease-spring) both; }
+  .wally--approved .wally__spark--2 { animation-delay: var(--dur-fast); }
+  .wally--stopped .wally__shield { animation: wally-pop var(--dur-slow) var(--ease-spring) both; }
+  .wally--offline .wally__z { animation: wally-snooze var(--dur-blink) var(--ease-out) infinite; }
+  .wally--offline .wally__z--2 { animation-delay: var(--dur-slow); }
+}
+
+@keyframes wally-blink { 0%, 90%, 100% { transform: scaleY(1); } 93% { transform: scaleY(0.12); } 96% { transform: scaleY(1); } }
+@keyframes wally-glance { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-2.5px); } 70% { transform: translateX(2.5px); } }
+@keyframes wally-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+@keyframes wally-hop { 0% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-6%) scale(0.98, 1.02); } 100% { transform: translateY(0) scale(1, 1); } }
+@keyframes wally-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes wally-snooze { 0% { opacity: 0; transform: translate(0, 4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -8px); } }
+
+/* Wordmark: set in the rounded system face, no drawn logo. */
+.wordmark { display: inline-flex; align-items: center; gap: 0.35em; color: var(--c-ink); font-family: var(--font-display); font-weight: var(--weight-heavy); letter-spacing: -0.03em; line-height: 1; }
+.wordmark__text { font-size: 1em; }
+.wordmark__dot { color: var(--c-accent); }

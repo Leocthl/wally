@@ -1,0 +1,57 @@
+/* ProgressBar, Ring, Stat. Big money numerals use the rounded display face and tabular figures. */
+.w-progress {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-sunken);
+}
+.w-progress--sm { height: 0.375rem; }
+.w-progress--md { height: 0.625rem; }
+.w-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-primary);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.w-progress--ok .w-progress__fill { background: var(--c-ok); }
+.w-progress--warn .w-progress__fill { background: var(--c-warn); }
+.w-progress--stop .w-progress__fill { background: var(--c-stop); }
+.w-progress--accent .w-progress__fill { background: var(--c-accent); }
+.w-progress--on-hero { background: var(--c-hero-track); }
+.w-progress--on-hero .w-progress__fill { background: var(--c-on-hero); }
+
+.w-ring { position: relative; display: inline-grid; place-items: center; flex: none; }
+.w-ring svg { position: absolute; inset: 0; }
+.w-ring__track { stroke: var(--c-surface-sunken); }
+.w-ring__fill { stroke: var(--c-primary); transition: stroke-dashoffset var(--dur-slow) var(--ease-out); }
+.w-ring--ok .w-ring__fill { stroke: var(--c-ok); }
+.w-ring--stop .w-ring__fill { stroke: var(--c-stop); }
+.w-ring--warn .w-ring__fill { stroke: var(--c-warn); }
+.w-ring--accent .w-ring__fill { stroke: var(--c-accent); }
+.w-ring--on-hero .w-ring__track { stroke: var(--c-hero-track); }
+.w-ring--on-hero .w-ring__fill { stroke: var(--c-on-hero); }
+.w-ring__center { position: relative; font-weight: var(--weight-bold); font-variant-numeric: var(--num); text-align: center; line-height: 1.1; }
+
+.w-stat { display: grid; gap: var(--sp-1); min-width: 0; }
+.w-stat__label { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--c-ink-muted); }
+.w-stat__row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.w-stat__value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--num);
+  letter-spacing: var(--track-tight);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.w-stat--md .w-stat__value { font-size: var(--text-2xl); }
+.w-stat--lg .w-stat__value { font-size: var(--text-4xl); }
+.w-stat--xl .w-stat__value { font-size: var(--text-5xl); }
+.w-stat__sub { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); font-size: var(--text-sm); color: var(--c-ink-muted); }
+.w-stat__delta { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.w-stat__delta--ok { color: var(--c-ok-ink); }
+.w-stat__delta--stop { color: var(--c-stop-ink); }
+.w-stat__delta--neutral { color: var(--c-ink-muted); }
+.w-stat--on-hero .w-stat__label, .w-stat--on-hero .w-stat__sub { color: var(--c-on-hero-muted); }
+.w-stat--on-hero .w-stat__value { color: var(--c-on-hero); }

@@ -14,6 +14,7 @@ import { PacketPanel } from "./screens/PacketPanel";
 import { PresenterScreen } from "./screens/PresenterScreen";
 import { RunPanel } from "./screens/RunPanel";
 import { SealPanel } from "./screens/SealPanel";
+import { StyleGuideRoute, useStyleGuideRoute } from "./screens/StyleGuideRoute";
 
 const NAV: readonly { readonly route: Route; readonly title: typeof S.navBooth }[] = [
   { route: "booth", title: S.navBooth },
@@ -75,6 +76,7 @@ function Shell(): ReactElement {
 }
 
 export function App({ api }: { readonly api: ApiClient }): ReactElement {
+  if (useStyleGuideRoute()) return <StyleGuideRoute />;
   return (
     <BoothProvider api={api}>
       <Shell />

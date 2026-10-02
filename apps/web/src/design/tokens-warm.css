@@ -1,0 +1,29 @@
+/* tokens-warm.css: OPTIONAL "warm" palette, a restrained orange sibling of the default cool look, for comparing a
+   look closer to local wallet apps. Opt in with data-palette="warm" on <html> (whole app) or on any element (preview).
+   tokens.css imports this file first, so the :root selector here adds the specificity that beats the cool :root block.
+   Same neutrals, same contrast table (test/design-tokens.test.ts runs every pair on cool overlaid with these values).
+
+   Trade-off: orange becomes the action colour here, so stop moves to a crimson to keep its hue apart, and stop states
+   must keep their icon and words (they always do). The default stays cool; nothing ships warm unless a team chooses it. */
+[data-palette="warm"], :root[data-palette="warm"] {
+  --c-primary:         light-dark(#C2410C, #C8490C);
+  --c-primary-pressed: light-dark(#A93C08, #B03A0A);
+  --c-on-primary:      light-dark(#FFFFFF, #FFFFFF);
+  --c-primary-ink:     light-dark(#A93C08, #FFB38A);
+  --c-primary-tint:    light-dark(#FFEDE3, #3A2216);
+  --c-focus:           light-dark(#C2410C, #FFB38A);
+
+  --c-stop:      light-dark(#C81E3A, #FF6B7D);
+  --c-on-stop:   light-dark(#FFFFFF, #2A0709);
+  --c-stop-ink:  light-dark(#B0182F, #FF8E9C);
+  --c-stop-tint: light-dark(#FDE8EC, #3A1520);
+
+  --c-hero-from:     light-dark(#C2410C, #A43A10);
+  --c-hero-to:       light-dark(#9C3412, #7A2A0E);
+  --c-on-hero-muted: light-dark(#FFF3EC, #FFE3D3);
+  --c-hero-glow:     light-dark(rgb(255 179 138 / 0.4), rgb(255 179 138 / 0.22));
+
+  --wally-body: light-dark(#E0601A, #E0601A);
+  --wally-flap: light-dark(#B5450F, #B5450F);
+
+}

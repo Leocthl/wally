@@ -10,6 +10,7 @@ import "./design/base.css";
 import "./design/chips.css";
 import "./design/components.css";
 import "./design/shell.css";
+import "./pwa/register";
 
 /** The offline mock replays the SIMULATED storyline; the HTTP + SSE client talks to the booth server. */
 const SWEEP_EVERY_MS = 1000;
