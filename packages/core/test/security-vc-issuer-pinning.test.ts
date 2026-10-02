@@ -4,9 +4,12 @@
 // orchestrator's call is the whole trust decision.
 import { describe, expect, it } from "vitest";
 import { createSigner } from "../src/crypto";
+import { engine } from "../src/engine";
+import type { Cart, Mandate } from "../src/generated";
 import { verifyChain } from "../src/verify";
 import { signMandateCredential, verifyMandateCredential, type UnsignedMandateCredential } from "../src/vc";
 import { testSeed } from "./crypto-independent";
+import { CART_A1, JUDGE_TEE, M0, PACKET_INITIAL, PROOF_OK } from "./engine-helpers";
 import { buildLog, demoCredential, demoKeys } from "./log-helpers";
 
 const keys = demoKeys();
@@ -43,5 +46,33 @@ describe("KNOWN DEFECT S-VC-1: verifyMandateCredential fails open when no truste
 
   it.fails("without expectedIssuer the check must fail closed (I5), not trust the credential's own key", () => {
     expect(UNPINNED.valid).toBe(false);
+  });
+});
+
+// ---- R1 binding: the Mandate object the caller passes is not tied to the credential the packet was folded from ----
+
+const NOW = new Date("2026-10-03T02:05:00Z");
+const WIDENED: Mandate = {
+  ...M0,
+  rules: { ...M0.rules, budget: { amount_minor: 10_000_000, currency: "HKD" }, categories: ["apparel", "electronics"], seller_check: { require_capture: false } },
+};
+const GADGET: Cart = {
+  ...CART_A1,
+  items: [{ ...CART_A1.items[0], category: "electronics" }],
+  scameter: { state: "NOT_CHECKED", capture_ref: null, captured_at: null, searched: [] },
+};
+const NARROW_DECISION = engine.decide(M0, PACKET_INITIAL, GADGET, JUDGE_TEE, NOW, undefined, PROOF_OK);
+const WIDE_DECISION = engine.decide(WIDENED, PACKET_INITIAL, GADGET, JUDGE_TEE, NOW, undefined, PROOF_OK);
+
+describe("R1 binding (controls)", () => {
+  it("the sealed mandate denies the off-mandate cart; the packet carries the sealed budget", () => {
+    expect(NARROW_DECISION.outcome).toBe("DENY");
+    expect(PACKET_INITIAL.budget_minor).toBe(M0.rules.budget.amount_minor);
+  });
+});
+
+describe("KNOWN DEFECT S-R1-1: R1 checks ids only, so a widened Mandate passes with mandateProofValid: true", () => {
+  it.fails("R1 fails when the mandate's budget or expiry differ from the packet folded from the credential", () => {
+    expect(WIDE_DECISION.outcome).not.toBe("APPROVE");
   });
 });
