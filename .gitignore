@@ -14,3 +14,4 @@ services/laya/.cache/
 services/laya/*.pid
 services/laya/*.log
 .worktrees/
+.claude/
