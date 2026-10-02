@@ -23,6 +23,8 @@ const OPTIONS = {
   "run-file": { type: "string" },
   "timeout-ms": { type: "string" },
   "render-only": { type: "boolean", default: false },
+  /** A previous run file (same split): adds the round comparison section. */
+  "previous-run": { type: "string" },
 } as const;
 
 /** Date in Hong Kong time (UTC+8, no daylight saving), the team's clock for file names. */
@@ -40,7 +42,8 @@ async function main(): Promise<number> {
     const run = values["render-only"]
       ? (JSON.parse(readFileSync(runPath, "utf8")) as TuneRun)
       : await runTune({ baseUrl: values["base-url"] ?? process.env["LAYA_BASE_URL"] ?? DEFAULT_LAYA_BASE_URL, model: values.model ?? process.env["LAYA_MODEL"] ?? DEFAULT_LAYA_MODEL, date, timeoutMs, runPath, log: err });
-    for (const path of writeTuneOutputs(refreshRecorded(run), outDir)) out(`wrote ${path}`);
+    const previous = values["previous-run"] === undefined ? undefined : (JSON.parse(readFileSync(values["previous-run"], "utf8")) as TuneRun);
+    for (const path of writeTuneOutputs(refreshRecorded(run), outDir, () => new Date(), previous)) out(`wrote ${path}`);
     return 0;
   } catch (e) {
     err(e instanceof ServerUnreachableError ? e.message : `judge:tune failed: ${e instanceof Error ? e.message : String(e)}`);

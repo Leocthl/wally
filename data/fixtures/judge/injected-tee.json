@@ -8,7 +8,7 @@
     "model": "typed-decisions",
     "version": "recorded@55cf4c4e",
     "status": "OK",
-    "latency_ms": 968,
+    "latency_ms": 475,
     "shadow": false,
     "answers": {
       "scope_fit": {

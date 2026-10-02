@@ -8,7 +8,7 @@
     "model": "typed-decisions",
     "version": "recorded@55cf4c4e",
     "status": "OK",
-    "latency_ms": 519,
+    "latency_ms": 1228,
     "shadow": false,
     "answers": {
       "scope_fit": {
@@ -16,9 +16,9 @@
         "out_of_scope": 0.2535
       },
       "injection_risk": {
-        "clean": 0.68619,
-        "suspicious": 0.177339,
-        "injection": 0.136471
+        "clean": 0.686167,
+        "suspicious": 0.177333,
+        "injection": 0.136467
       },
       "seller_risk": {
         "low_risk": 0.74835,

@@ -1,6 +1,7 @@
 // Renders the held-out round report as team-facing markdown: point form, tables first, k/n beside every rate.
 // Writing rules from CLAUDE.md apply: no em dashes, no emoji, every figure with ms in it cites a register ID.
 import type { GateThresholds } from "./thresholds";
+import type { RoundComparison, RoundSummary } from "./rounds";
 import { blockedBreakdown, sellerGateNote, type Rate, type SplitEval, type TuneReport } from "./tune-report";
 
 const num = (x: number | null | undefined, digits = 2): string => (x === null || x === undefined || Number.isNaN(x) ? "n/a" : x.toFixed(digits));
@@ -145,6 +146,36 @@ function tailSection(r: TuneReport): string[] {
   ];
 }
 
-export function renderTuneMarkdown(r: TuneReport): string {
-  return [...header(r), ...resultSection(r), ...heldoutSection(r), ...variantSection(r), ...anchorSection(r), ...windowSection(r), ...tailSection(r)].join("\n");
+const roundRow = (label: string, s: RoundSummary): (string | number)[] => [
+  label,
+  s.commit ?? "unknown",
+  s.winner,
+  thresholdsLine(s.proposed),
+  rate(s.legitApproved),
+  rate(s.injectedApproved),
+  rate(s.highRiskApproved),
+  rate(s.outOfScopeApproved),
+];
+
+/** Round 1 (raw listing text) against round 2 (M8 model-facing text), same split, variants, rule and objective. */
+export function renderRoundsMarkdown(c: RoundComparison): string[] {
+  return [
+    "## Round 1 against round 2 (M8 input normalisation)",
+    "- **Why two rounds**: after round 1 the security audit (M8) changed what the model sees: NFKC, format characters removed, tokenizer control tokens neutralised. Round 2 reran the same split, variants, rule and objective on that input. The held-out split was judged in both rounds; nothing was chosen between them.",
+    "",
+    ...table(["Round", "Commit", "Wording", "Proposed thresholds", "Legit approved (held-out)", "Injected approved", "High-risk approved", "Out of scope approved"], [roundRow("round 1", c.previous), roundRow("round 2", c.current)]),
+    "",
+    "- **Cases**: the zero-width and homoglyph cases and every case whose model-facing text M8 changes. Injection value under one wording where both rounds have it; R10 outcome under the round 2 proposal.",
+    "",
+    ...table(
+      ["Case", "Split", "Text changed by M8", "Wording before, after", "Injection before, after", "R10 before, after"],
+      c.rows.map((x) => [x.id, x.split, x.textChanged ? "yes" : "no", `${x.wording.before}, ${x.wording.after}`, `${num(x.injection.before)}, ${num(x.injection.after)}`, `${x.outcome.before}, ${x.outcome.after}`]),
+    ),
+    "",
+  ];
+}
+
+export function renderTuneMarkdown(r: TuneReport, rounds?: RoundComparison): string {
+  const comparison = rounds === undefined ? [] : renderRoundsMarkdown(rounds);
+  return [...header(r), ...resultSection(r), ...comparison, ...heldoutSection(r), ...variantSection(r), ...anchorSection(r), ...windowSection(r), ...tailSection(r)].join("\n");
 }
