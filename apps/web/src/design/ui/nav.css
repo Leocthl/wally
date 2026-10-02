@@ -110,9 +110,25 @@
 .w-tabs__panel { padding-top: var(--sp-4); }
 .w-tabs__panel:focus-visible { outline-offset: 4px; border-radius: var(--r-sm); }
 
-/* Segmented: same track, compact. */
-.w-seg { display: inline-flex; padding: 0.1875rem; border-radius: var(--r-pill); background: var(--c-surface-sunken); }
+/* Segmented: same track, compact. Equal columns; one thumb slides to the chosen option (its inline transform; a transition,
+   so a quick second tap retargets it from where it is). Mounting draws the thumb already in place. */
+.w-seg { --seg-pad: 0.1875rem; position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: var(--seg-pad); border-radius: var(--r-pill); background: var(--c-surface-sunken); isolation: isolate; }
+.w-seg__thumb {
+  position: absolute;
+  z-index: var(--z-base);
+  top: var(--seg-pad);
+  bottom: var(--seg-pad);
+  left: var(--seg-pad);
+  width: calc((100% - 2 * var(--seg-pad)) / var(--seg-n, 2));
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-fast) var(--ease-out);
+  pointer-events: none;
+}
 .w-seg__opt {
+  position: relative;
+  z-index: var(--z-raised);
   min-width: var(--tap);
   min-height: var(--tap);
   padding: 0 var(--sp-3);
@@ -123,6 +139,7 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
-.w-seg__opt[aria-checked="true"] { background: var(--c-surface); color: var(--c-ink); box-shadow: var(--shadow-1); }
+.w-seg__opt[aria-checked="true"] { color: var(--c-ink); }
 .w-seg--md .w-seg__opt { min-height: var(--tap-lg); font-size: var(--text-md); }

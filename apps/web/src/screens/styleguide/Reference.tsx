@@ -24,7 +24,7 @@ export function WallySection(): ReactElement {
           </figure>
         ))}
       </div>
-      <div className="sg-wally-sizes" aria-label="Sizes">
+      <div className="sg-wally-sizes" role="group" aria-label="Sizes">
         {[24, 32, 48, 64, 160].map((n) => <Wally key={n} state="idle" size={n} decorative />)}
       </div>
       <div className="sg-wordmarks">
@@ -61,7 +61,7 @@ export function PaletteSection({ warm }: { readonly warm: boolean }): ReactEleme
           return t ? <Swatch key={n} name={n} light={t.light} dark={t.dark} /> : null;
         })}
       </ul>
-      <div className="sg-table-wrap">
+      <div className="sg-table-wrap" role="region" aria-label="Contrast table" tabIndex={0}>
         <table className="sg-table">
           <caption>{CONTRAST_PAIRS.length} pairs tested in light and dark; a sample:</caption>
           <thead><tr><th scope="col">Text or UI</th><th scope="col">On</th><th scope="col">Light</th><th scope="col">Dark</th></tr></thead>
@@ -72,7 +72,7 @@ export function PaletteSection({ warm }: { readonly warm: boolean }): ReactEleme
                 <tr key={`${p.fg}-${p.bg}`}>
                   <td className="mono">{p.fg}</td>
                   <td className="mono">{p.bg}</td>
-                  <td><span className="sg-ratio" style={{ color: `var(--${p.fg})`, background: `var(--${p.bg})` }}>Aa</span> {l.toFixed(1)} {wcagLevel(l)}</td>
+                  <td><span className="sg-ratio" aria-hidden="true" style={{ color: `var(--${p.fg})`, background: `var(--${p.bg})` }} /> {l.toFixed(1)} {wcagLevel(l)}</td>
                   <td>{d.toFixed(1)} {wcagLevel(d)}</td>
                 </tr>
               );

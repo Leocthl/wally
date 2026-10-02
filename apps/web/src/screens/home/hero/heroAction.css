@@ -1,0 +1,24 @@
+/* Hero "Action first": a compact blue card and a row of one-tap tries under it. Tokens only. */
+.hero-c { display: grid; gap: var(--sp-4); }
+.hero-c__card { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: var(--sp-2); row-gap: var(--sp-3); }
+.hero-c__card > :not(.hero-c__kicker, .hero-c__status, .hero-c__chip) { grid-column: 1 / -1; }
+.hero-c__kicker { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--c-on-hero); line-height: var(--lh-snug); }
+.hero-c__main { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.hero-c__stat { min-width: 0; }
+.hero-c__stat .fig, .hero-c .w-stat__sub .fig { color: inherit; }
+.hero-c__tags { display: flex; flex-wrap: nowrap; gap: var(--sp-2); margin: 0 calc(-1 * var(--sp-4)); padding: 0 var(--sp-4); overflow-x: auto; list-style: none; scrollbar-width: none; }
+.hero-c__tags::-webkit-scrollbar { display: none; }
+.hero-c__tags .w-tag { white-space: nowrap; flex: none; }
+.hero-c__try { display: grid; gap: var(--sp-2); }
+.hero-c__try-title { font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); }
+.hero-c__tiles { display: flex; gap: var(--sp-2); margin: 0 calc(-1 * var(--gutter)); padding: var(--sp-1) var(--gutter) var(--sp-2); overflow-x: auto; list-style: none; scroll-snap-type: x proximity; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+.hero-c__tiles::-webkit-scrollbar { display: none; }
+.hero-c__tiles > li { flex: none; scroll-snap-align: start; }
+.hero-c__tile { display: grid; align-content: space-between; gap: var(--sp-3); width: 8.75rem; min-height: 6.75rem; padding: var(--sp-3); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: var(--c-ink); font: inherit; text-align: left; cursor: pointer; box-shadow: var(--shadow-1); }
+.hero-c__tile:disabled { cursor: progress; opacity: 0.55; }
+.hero-c__tile-icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--r-md); background: var(--c-primary-tint); color: var(--c-primary-ink); }
+.hero-c__tile--stop .hero-c__tile-icon { background: var(--c-stop-tint); color: var(--c-stop-ink); }
+.hero-c__tile--warn .hero-c__tile-icon { background: var(--c-warn-tint); color: var(--c-warn-ink); }
+.hero-c__tile--accent .hero-c__tile-icon { background: var(--c-accent-tint); color: var(--c-accent-ink); }
+.hero-c__tile-title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+.hero-c__card:is([data-status="REVOKED"], [data-status="EXPIRED"]) { filter: saturate(0.35); }

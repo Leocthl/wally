@@ -62,6 +62,7 @@ function Stage({ view, mode }: { readonly view: View; readonly mode: Mode }): Re
 const WIDE_VIEWS: ReadonlySet<View> = new Set(["log", "evidence", "limits"]);
 
 function PresenterBody({ lang, onLang }: { readonly lang: PresenterLang; readonly onLang: (l: PresenterLang) => void }): ReactElement {
+  const { t } = useLocale();
   const booth = useBoothContext();
   const { state, busy, info } = booth;
   const [index, setIndex] = useState(0);
@@ -94,6 +95,7 @@ function PresenterBody({ lang, onLang }: { readonly lang: PresenterLang; readonl
   const wide = WIDE_VIEWS.has(view) && !(mode === "REAL" && info?.realCapture);
   return (
     <div className="pr" data-view={view} data-wide={wide}>
+      <h1 className="sr-only">{t(UI["shell.presenter"])}</h1>
       <header className="pr-top">
         <Wordmark size="md" />
         <p className="pr-top__hint"><Tx text={UI.presenterUi.shortcuts} /></p>

@@ -80,6 +80,7 @@
   --c-on-hero:       light-dark(#FFFFFF, #FFFFFF);
   --c-on-hero-muted: light-dark(#EEF2FF, #D3DEFF);
   --c-hero-track:    light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.22));
+  --c-qr-plate:         light-dark(#FFFFFF, #FFFFFF);   /* the plate behind a QR code: white in both modes, or a phone cannot read it */
   --c-ticket:           light-dark(#0E1A33, #1E2A47);
   --c-on-ticket:        light-dark(#FFFFFF, #FFFFFF);
   --c-on-ticket-muted:  light-dark(#A7B3CF, #B9C4DE);
@@ -149,13 +150,26 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --ease-stamp:  cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  /* Sheets and drawers (the iOS drawer curve), a released drag returning, and arrivals with a little life. The last two
+     become real springs (damping 0.82 and 0.62) wherever CSS linear() exists; see the @supports block below. */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-pop:    cubic-bezier(0.34, 1.3, 0.64, 1);
   --dur-press: 120ms; --dur-fast: 180ms; --dur-base: 260ms; --dur-slow: 420ms;
   --dur-sheet: 340ms; --dur-blink: 4200ms; --dur-idle: 2600ms; --dur-shimmer: 1400ms;
   --dur-seal: 420ms; --dur-mint: 320ms; --dur-stop: 200ms; --dur-expire: 800ms;
+  /* Leaving is quicker than arriving; a dragged sheet returns; digits roll; siblings enter one step apart. */
+  --dur-exit: 220ms; --dur-settle: 380ms; --dur-roll: 560ms; --dur-stagger: 40ms; --dur-ceremony: 900ms;
   --dur-hold: 1200ms;                             /* functional, kept under reduced motion */
 }
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-settle: linear(0, 0.028, 0.098, 0.192, 0.297, 0.403, 0.504, 0.597, 0.68, 0.751, 0.811, 0.86, 0.9, 0.932, 0.956, 0.975, 0.988, 0.998, 1.004, 1.008, 1.01, 1.011, 1);
+    --ease-pop: linear(0, 0.031, 0.112, 0.223, 0.349, 0.478, 0.603, 0.716, 0.814, 0.896, 0.961, 1.01, 1.045, 1.068, 1.08, 1.084, 1.081, 1.075, 1.066, 1.055, 1.045, 1.034, 1.025, 1.016, 1.009, 1.004, 0.999, 0.996, 1);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-sheet: 0ms; --dur-blink: 0ms; --dur-idle: 0ms; --dur-shimmer: 0ms; }
+  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-sheet: 0ms; --dur-blink: 0ms; --dur-idle: 0ms; --dur-shimmer: 0ms; --dur-exit: 0ms; --dur-settle: 0ms; --dur-roll: 0ms; --dur-stagger: 0ms; --dur-ceremony: 0ms; }
 }
 
 /* LEGACY aliases (phase A): old names resolve to the cool palette so existing screens stay readable. Phase B deletes them. */

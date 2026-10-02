@@ -18,29 +18,27 @@ const LOOK: Readonly<Record<DecisionOutcome, { readonly icon: IconName; readonly
 
 export function RecentSection({ rows }: { readonly rows: readonly DecisionRow[] }): ReactElement {
   const { t } = useLocale();
+  // Nothing yet: one quiet line that points at Try asking, not a heading and a link to an empty list.
+  if (rows.length === 0) return <p className="home-section__hint" data-recent-empty>{t(UI["home.recentEmpty"])}</p>;
   return (
     <section className="home-section" aria-labelledby="home-recent-title">
       <h2 id="home-recent-title" className="home-section__title">{t(UI["home.recent"])}</h2>
       <a className="home-section__action" href={routeHref("receipts")}>{t(UI["home.seeAll"])}</a>
-      {rows.length === 0 ? (
-        <p className="home-section__empty">{t(UI["home.recentEmpty"])}</p>
-      ) : (
-        <List cards label={t(UI["home.recent"])}>
-          {rows.map((r) => (
-            <ListRow
-              key={r.id}
-              className="home-recent"
-              href={routeHref("wally", { [PARAM.decision]: r.id })}
-              leading={<Icon name={LOOK[r.outcome].icon} />}
-              tone={LOOK[r.outcome].tone}
-              title={<span data-ident>{r.title}</span>}
-              subtitle={<span data-outcome={r.outcome}>{t(UI[`home.outcome.${r.outcome}`])} · <span data-ident>#{r.seq}</span></span>}
-              trailing={<Money minor={r.totalMinor} prov={SIMULATED} />}
-              chevron
-            />
-          ))}
-        </List>
-      )}
+      <List cards label={t(UI["home.recent"])}>
+        {rows.map((r) => (
+          <ListRow
+            key={r.id}
+            className="home-recent"
+            href={routeHref("wally", { [PARAM.decision]: r.id })}
+            leading={<Icon name={LOOK[r.outcome].icon} />}
+            tone={LOOK[r.outcome].tone}
+            title={<span data-ident>{r.title}</span>}
+            subtitle={<span data-outcome={r.outcome}>{t(UI[`home.outcome.${r.outcome}`])} · <span data-ident>#{r.seq}</span></span>}
+            trailing={<Money minor={r.totalMinor} prov={SIMULATED} />}
+            chevron
+          />
+        ))}
+      </List>
     </section>
   );
 }

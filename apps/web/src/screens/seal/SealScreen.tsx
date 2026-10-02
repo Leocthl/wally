@@ -4,6 +4,7 @@
 // signed budget through api.seal (SealRequest unchanged); nothing seals by itself.
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import type { Mandate } from "../../api/types";
+import { cssDurationMs } from "../../design/motion";
 import { useBoothContext } from "../../hooks/useBooth";
 import { navigate, PARAM, useRouteParam } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
@@ -21,6 +22,7 @@ import { applySentence, EMPTY_FORM, formFromRules, hkDay, isValid, monthEndDay, 
 import "./seal.css";
 
 type Step = "meet" | "describe" | "review" | "done";
+const STEP_ORDER: readonly Step[] = ["meet", "describe", "review", "done"];
 const FIELD_ORDER: readonly FieldName[] = ["amount", "categories", "until", "askAbove", "cap", "share"];
 const ALL_FIELDS: ReadonlySet<FieldName> = new Set(FIELD_ORDER);
 
@@ -45,12 +47,12 @@ function focusField(field: FieldName): void {
   document.querySelector<HTMLElement>(`[data-field="${field}"] input, [data-field="${field}"] button`)?.focus();
 }
 
-function Header({ title, onBack, step }: { readonly title: string; readonly onBack: () => void; readonly step: Step }): ReactElement {
+function Header({ title, onBack, step, locked = false }: { readonly title: string; readonly onBack: () => void; readonly step: Step; readonly locked?: boolean }): ReactElement {
   const { t } = useLocale();
   const at = step === "describe" ? 1 : 2;
   return (
     <div className="seal-head">
-      <IconButton label={t(UI.back)} icon={<Icon name="chevronLeft" />} onClick={onBack} />
+      <IconButton label={t(UI.back)} icon={<Icon name="chevronLeft" />} onClick={onBack} disabled={locked} />
       <h1 id="seal-describe-title" className="seal-head__title" tabIndex={-1}>{title}</h1>
       <span className="seal-dots" aria-hidden="true">
         {[0, 1, 2].map((i) => <span key={i} className="seal-dots__dot" data-on={i <= at} />)}
@@ -86,6 +88,13 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
   const [sealing, setSealing] = useState(false);
   const [sealedForm, setSealedForm] = useState<RulesForm | null>(null);
   const top = useRef<HTMLDivElement>(null);
+  // Which way the person is moving, so the next pane arrives from that side (and a Back goes the other way). Set with the
+  // step in one go: a pane's animation must not see its direction change after it has started.
+  const [direction, setDirection] = useState<"fwd" | "back">("fwd");
+  const go = (to: Step): void => {
+    setDirection(STEP_ORDER.indexOf(to) >= STEP_ORDER.indexOf(step) ? "fwd" : "back");
+    setStep(to);
+  };
   const errors = validate(form, new Date());
   const replacing = booth.state.mandate !== null;
   const family = useFamilySeal(form.amount);
@@ -99,6 +108,17 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
     else focusField("amount");
   }, [step]);
 
+  // The seal moment plays on Check and seal (the lock closes where the person pressed), then the sealed screen takes over.
+  // Under reduced motion --dur-ceremony is 0, so the next screen follows at once.
+  useEffect(() => {
+    if (sealedForm === null || step !== "review") return undefined;
+    const timer = window.setTimeout(() => {
+      setDirection("fwd");
+      setStep("done");
+    }, cssDurationMs("--dur-ceremony"));
+    return () => window.clearTimeout(timer);
+  }, [sealedForm, step]);
+
   const next = (): void => {
     setSubmitted(true);
     if (!isValid(errors) || family.over) {
@@ -106,62 +126,64 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
       if (first) focusField(first);
       return;
     }
-    setStep("review");
+    go("review");
   };
 
   const seal = async (): Promise<void> => {
     const at = new Date();
     if (!isValid(validate(form, at)) || family.over) {
-      setStep("describe");
+      go("describe");
       return;
     }
     setSealing(true);
     const ok = await attempt(booth, () => booth.api.seal(family.apply(toSealRequest(sentence, form, at))));
     setSealing(false);
     if (!ok) return;
-    setSealedForm(form);
-    setStep("done");
+    // The haptic and the lock close on the same frame (apple-design: causality and harmony).
     haptic("success");
+    setSealedForm(form);
   };
 
   const title = mode === "topup" ? t(UI["seal.topUpTitle"]) : mode === "edit" ? t(UI["seal.editTitle"]) : t(UI["seal.describeTitle"]);
 
   return (
     <div className="seal-screen" ref={top} data-step={step}>
-      {step === "meet" ? <MeetStep onStart={() => setStep("describe")} /> : null}
-      {step === "describe" ? (
-        <>
-          <Header title={title} step={step} onBack={() => (start.step === "meet" ? setStep("meet") : navigate("budget"))} />
-          <p className="seal-lead seal-screen__lead">{t(UI["seal.describeLead"])}</p>
-          {family.choice}
-          <DescribeStep
-            sentence={sentence}
-            form={form}
-            errors={errors}
-            shown={submitted ? ALL_FIELDS : touched}
-            now={now}
-            today={hkDay(now.toISOString())}
-            incomplete={incomplete}
-            notes={family.notes}
-            {...(suggestRules ? { suggestRules } : {})}
-            onSentence={(text, next, complete) => {
-              setSentence(text);
-              setForm(next);
-              setIncomplete(text.trim().length > 0 && !complete);
-            }}
-            onForm={setForm}
-            onTouch={(f) => setTouched((s) => new Set([...s, f]))}
-            onNext={next}
-          />
-        </>
-      ) : null}
-      {step === "review" ? (
-        <>
-          <Header title={t(UI["seal.reviewTitle"])} step={step} onBack={() => setStep("describe")} />
-          <ReviewStep form={form} sealing={sealing} replacing={replacing} onEdit={() => setStep("describe")} onSeal={() => void seal()} />
-        </>
-      ) : null}
-      {step === "done" && sealedForm ? <DoneStep form={sealedForm} /> : null}
+      <div className="seal-pane" key={step} data-dir={direction} data-step={step}>
+        {step === "meet" ? <MeetStep onStart={() => go("describe")} /> : null}
+        {step === "describe" ? (
+          <>
+            <Header title={title} step={step} onBack={() => (start.step === "meet" ? go("meet") : navigate("budget"))} />
+            <p className="seal-lead seal-screen__lead">{t(UI["seal.describeLead"])}</p>
+            {family.choice}
+            <DescribeStep
+              sentence={sentence}
+              form={form}
+              errors={errors}
+              shown={submitted ? ALL_FIELDS : touched}
+              now={now}
+              today={hkDay(now.toISOString())}
+              incomplete={incomplete}
+              notes={family.notes}
+              {...(suggestRules ? { suggestRules } : {})}
+              onSentence={(text, next, complete) => {
+                setSentence(text);
+                setForm(next);
+                setIncomplete(text.trim().length > 0 && !complete);
+              }}
+              onForm={setForm}
+              onTouch={(f) => setTouched((s) => new Set([...s, f]))}
+              onNext={next}
+            />
+          </>
+        ) : null}
+        {step === "review" ? (
+          <>
+            <Header title={t(UI["seal.reviewTitle"])} step={step} onBack={() => go("describe")} locked={sealedForm !== null} />
+            <ReviewStep form={sealedForm ?? form} sealing={sealing} sealed={sealedForm !== null} replacing={replacing} onEdit={() => go("describe")} onSeal={() => void seal()} />
+          </>
+        ) : null}
+        {step === "done" && sealedForm ? <DoneStep form={sealedForm} /> : null}
+      </div>
     </div>
   );
 }

@@ -14,8 +14,14 @@
 /* Top: wordmark left, the shortcut hint, the rail badge top right. */
 .pr-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-4); }
 .pr-top__hint { flex: 1; min-width: 0; font-size: var(--text-sm); color: var(--c-ink-muted); }
-.pr-rail { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-left: auto; padding: var(--sp-2) var(--sp-4); border: 1.5px dashed var(--sim-line); border-radius: var(--r-pill); background: var(--sim-bg); color: var(--sim); font-size: var(--text-md); font-weight: var(--weight-bold); }
+.pr-rail { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-left: auto; padding: var(--sp-2) var(--sp-4); border: 1.5px dashed var(--sim-line); border-radius: var(--r-lg); background: var(--sim-bg); color: var(--sim); font-size: var(--text-md); font-weight: var(--weight-bold); }
 .pr-rail svg { flex: none; }
+/* A phone: the shell's side padding is enough, and the rail badge is a full-width note rather than a pill that wraps into an ellipse. */
+@media (max-width: 40rem) {
+  .shell-app--wide .shell-main { padding-inline: max(var(--gutter), var(--safe-left)) max(var(--gutter), var(--safe-right)); }
+  .pr { padding-inline: 0; }
+  .pr-rail { width: 100%; margin-left: 0; justify-content: center; }
+}
 
 .pr-stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
 .pr-main { display: grid; gap: var(--sp-4); min-width: 0; }

@@ -27,12 +27,11 @@
 .w-btn__label { min-width: 0; }
 
 .w-btn--primary { background: var(--c-primary); color: var(--c-on-primary); }
-.w-btn--primary:hover { background: var(--c-primary-pressed); }
 .w-btn--primary:active { background: var(--c-primary-pressed); }
 .w-btn--secondary { background: var(--c-surface); color: var(--c-primary-ink); border: 1.5px solid var(--c-primary); }
 .w-btn--secondary:active { background: var(--c-primary-tint); }
 .w-btn--ghost { background: transparent; color: var(--c-primary-ink); }
-.w-btn--ghost:active, .w-btn--ghost:hover { background: var(--c-primary-tint); }
+.w-btn--ghost:active { background: var(--c-primary-tint); }
 .w-btn--danger { background: var(--c-surface); color: var(--c-stop-ink); border-color: var(--c-stop-ink); }
 .w-btn--danger:active { background: var(--c-stop-tint); }
 .w-btn--on-hero { background: var(--c-on-hero); color: var(--c-hero-to); }
@@ -71,10 +70,17 @@
   transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
 .w-icon-btn--md { width: var(--tap-lg); height: var(--tap-lg); }
-.w-icon-btn--ghost:hover, .w-icon-btn--ghost:active { background: var(--c-surface-sunken); }
+.w-icon-btn--ghost:active { background: var(--c-surface-sunken); }
 .w-icon-btn--secondary { background: var(--c-surface); border-color: var(--c-line); box-shadow: var(--shadow-1); }
 .w-icon-btn--primary { background: var(--c-primary); color: var(--c-on-primary); }
 .w-icon-btn--primary:active { background: var(--c-primary-pressed); }
 .w-icon-btn--on-hero { background: var(--c-hero-track); color: var(--c-on-hero); }
 .w-icon-btn:disabled { color: var(--c-ink-muted); cursor: not-allowed; }
 .w-icon-btn--primary:disabled { background: var(--c-surface-sunken); }
+
+/* Hover only where a pointer can hover: on touch the first tap would otherwise leave these lit. Press (:active) works everywhere. */
+@media (hover: hover) and (pointer: fine) {
+  .w-btn--primary:hover { background: var(--c-primary-pressed); }
+  .w-btn--ghost:hover { background: var(--c-primary-tint); }
+  .w-icon-btn--ghost:hover { background: var(--c-surface-sunken); }
+}

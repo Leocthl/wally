@@ -12,7 +12,8 @@
 .lan-phone__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .lan-phone__title { font-size: var(--text-md); font-weight: var(--weight-bold); }
 .lan-phone__body { display: grid; gap: var(--sp-4); justify-items: center; }
-.lan-phone__qr { width: min(100%, 15rem); height: auto; aspect-ratio: 1; border-radius: var(--r-md); }
+/* The code sits on its own white plate with a quiet shadow, so it reads as an object to point a camera at (and scans in dark mode). */
+.lan-phone__qr { width: min(100%, 15rem); height: auto; aspect-ratio: 1; padding: var(--sp-2); border-radius: var(--r-lg); background: var(--c-qr-plate); box-shadow: var(--shadow-1); }
 .lan-phone__text { display: grid; gap: var(--sp-2); width: 100%; min-width: 0; }
 .lan-phone__note { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); }
 .lan-phone__urls { display: grid; gap: var(--sp-1); margin: 0; padding: 0; list-style: none; }

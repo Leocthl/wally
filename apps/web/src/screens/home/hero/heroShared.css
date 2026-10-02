@@ -1,0 +1,7 @@
+/* Pieces the Budget hero variants share. Tokens only. */
+.hero-mini { display: grid; gap: 0.125rem; }
+.hero-mini__label { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--c-on-hero-muted); }
+.hero-mini__value { font-weight: var(--weight-bold); color: var(--c-on-hero); }
+.hero-tags { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.hero-tags .w-tag { white-space: normal; }
+.hero-tags .fig { color: inherit; }
