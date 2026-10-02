@@ -109,6 +109,19 @@ const REUSED_LOG = await logWith((a) => [
   approveOf("dec_demoE3", loadFixture("carts/attempt-1.json", "cart"), { resolves: "dec_demoE1", escalation: { state: "APPROVED", expires_at: EXPIRES, answer: a } }),
 ]);
 
+// Same verifier gap without any real consent: an APPROVE that resolves an ESCALATE with no answer, or with the
+// delegator's DENY answer (A3-01 a, b).
+const NO_ANSWER_LOG = await logWith(() => [
+  approveOf("dec_demoE2", loadFixture("carts/attempt-1.json", "cart"), { resolves: "dec_demoE1", escalation: { state: "APPROVED", expires_at: EXPIRES } }),
+]);
+const DENIED_LOG = await (async () => {
+  const keys = demoKeys();
+  const deny = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.delegator);
+  return logWith(() => [
+    approveOf("dec_demoE2", loadFixture("carts/attempt-1.json", "cart"), { resolves: "dec_demoE1", escalation: { state: "APPROVED", expires_at: EXPIRES, answer: deny } }),
+  ]);
+})();
+
 describe("KNOWN DEFECT S-ESC-2: the verifier accepts a consent applied to another cart or consumed twice", () => {
   it("setup: both hostile logs were written by the real appendEntry (engine key) with a real delegator answer", () => {
     expect(SWAPPED_LOG.log.entries).toHaveLength(3);
@@ -121,5 +134,13 @@ describe("KNOWN DEFECT S-ESC-2: the verifier accepts a consent applied to anothe
 
   it.fails("rejects a second decision that consumes the same answer (two mints from one consent)", () => {
     expect(verifyChain(REUSED_LOG.log.entries, REUSED_LOG.log.keys.publicKeys).ok).toBe(false);
+  });
+
+  it.fails("rejects an APPROVE that resolves an ESCALATE without any delegator answer", () => {
+    expect(verifyChain(NO_ANSWER_LOG.log.entries, NO_ANSWER_LOG.log.keys.publicKeys).ok).toBe(false);
+  });
+
+  it.fails("rejects an APPROVE backed by the delegator's DENY answer", () => {
+    expect(verifyChain(DENIED_LOG.log.entries, DENIED_LOG.log.keys.publicKeys).ok).toBe(false);
   });
 });
