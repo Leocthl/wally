@@ -13,7 +13,7 @@ import { keywordJudge } from "./keyword-model";
 import { createOracleClient } from "./oracle-client";
 
 export const PINNED_META: MetaReader = {
-  read: () => ({ commit: "9be9705c9f7f9aa3e4d75b80fa3a91e182b27138", dirty: false, checkpointRevision: "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851", device: "test device" }),
+  read: () => ({ commit: "9be9705c9f7f9aa3e4d75b80fa3a91e182b27138", dirty: false, checkpointRevision: "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851", device: "test device", hostLoad1m: 1.5 }),
 };
 
 export interface TestRunOptions {

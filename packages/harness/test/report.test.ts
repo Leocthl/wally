@@ -124,6 +124,20 @@ describe("T-H3: every reported number carries n, seed and commit", () => {
     expect(live.summary).toContain("## Stop cases that got through");
   });
 
+  it("reports the host load of a live run, because latency and timeouts depend on it, and none for a replay that has no recorded load", () => {
+    expect((live.result["run"] as { host_load_average_1m: unknown }).host_load_average_1m).toBe(1.5);
+    expect(live.summary).toContain("**Host load**: 1-minute load average 1.5 at the end of the run");
+    expect((recorded.result["run"] as { host_load_average_1m: unknown }).host_load_average_1m).toBeNull();
+    expect(recorded.summary).not.toContain("Host load");
+  });
+
+  it("counts the stop cases that got through for a model-free rule apart, and B2 has none", () => {
+    const through = (live.result["breakdown"] as { stops_through: Record<string, { count: number; model_free_count: number }> }).stops_through;
+    for (const b of ["B0", "B1", "B2"]) expect(through[b]?.model_free_count).toBeLessThanOrEqual(through[b]?.count ?? -1);
+    expect(through["B2"]?.model_free_count).toBe(0);
+    expect(live.summary).toMatch(/\*\*B2\*\*: \d+ of \d+ stop cases got through; 0 of them were for a model-free rule/);
+  });
+
   it("round-trips through JSON without loss", () => {
     expect(JSON.parse(JSON.stringify(live.result))).toEqual(live.result);
   });

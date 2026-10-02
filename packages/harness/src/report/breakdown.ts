@@ -1,5 +1,6 @@
 // Why a number is what it is, one scenario at a time: which legitimate purchases a baseline blocked and at which gate, and
 // which stop cases got through. Plain rows for the result file and its summary. Pure functions over (scenario, outcome).
+import type { RuleId } from "@laisee/core/generated";
 import type { Pair } from "../metrics/metrics";
 import type { RunOutcome } from "../systems/types";
 import type { Category } from "../types";
@@ -58,6 +59,10 @@ export interface BreachRow {
   /** What the label allows the money to do: none, voided, declined or authorised. */
   readonly expected: string;
   readonly got: string;
+  /** The rule the label says should have stopped it; null when the rail or the executor is what stops it. */
+  readonly labelRule: RuleId | null;
+  /** The stop belongs to a model-free rule (R1-R8, R12) or the rail, not to the seller check or the judge (R9, R10). */
+  readonly modelFree: boolean;
   /** Only the judge stood between this attack and the rail: no hard rule would have stopped the cart. */
   readonly judgeOnly: boolean;
 }
@@ -78,6 +83,11 @@ export function stopsThrough(pairs: readonly Pair[]): readonly BreachRow[] {
       variant: scenario.variant,
       expected: scenario.label.payment.kind,
       got: `${plural(outcome.authorisedCount, "authorised charge")}, ${plural(outcome.mints.length, "card")} minted`,
+      labelRule: scenario.label.rule,
+      modelFree: scenario.label.rule !== "R9" && scenario.label.rule !== "R10",
       judgeOnly: scenario.injection !== null && !scenario.injection.hardRulesAlsoStop,
     }));
 }
+
+/** Rows a model-free rule or the rail should have stopped. B1 and B2 are expected to have none. */
+export const countModelFree = (rows: readonly BreachRow[]): number => rows.filter((r) => r.modelFree).length;

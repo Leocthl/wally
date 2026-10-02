@@ -72,6 +72,7 @@ export async function runHarness(input: RunInput): Promise<RunOutput> {
     commit: meta.commit,
     seed: input.seed,
     n: input.n,
+    hostLoad1m: meta.hostLoad1m,
   };
   const sourceOutcome = input.source.finish(recordingSource);
   const resultInput: ResultInput = {

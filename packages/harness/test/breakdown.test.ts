@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { legitimateBlocked, stopsThrough, tallyGates } from "../src/report/breakdown";
+import { countModelFree, legitimateBlocked, stopsThrough, tallyGates } from "../src/report/breakdown";
 import { generateScenarios } from "../src/scenario/generate";
 import type { RunOutcome } from "../src/systems/types";
 import type { Baseline, Scenario } from "../src/types";
@@ -108,6 +108,24 @@ describe("stop cases that got through: money moved, or a card was minted, where 
 
   it("does not list legitimate purchases", () => {
     expect(stopsThrough([{ scenario: legit, outcome: outcome(legit, "B2", { authorisedCount: 1, authorisedMinor: legit.cart.total_minor }) }])).toEqual([]);
+  });
+
+  it("separates stops a model-free rule or the rail must make from stops that need the seller check or the judge (R9, R10)", () => {
+    const needsJudge = first((s) => !s.label.legitimate && (s.label.rule === "R10" || s.label.rule === "R9"));
+    const hard = first((s) => !s.label.legitimate && s.label.rule !== null && !["R9", "R10"].includes(s.label.rule));
+    const rail = first((s) => !s.label.legitimate && s.label.rule === null && s.label.payment.kind === "declined");
+    const through = (s: Scenario) => stopsThrough([{ scenario: s, outcome: outcome(s, "B1", { authorisedCount: 1, authorisedMinor: 1, mints: [{ cardId: "c", limitMinor: 1, merchantLock: null }] }) }])[0];
+    expect(through(needsJudge)).toMatchObject({ labelRule: needsJudge.label.rule, modelFree: false });
+    expect(through(hard)).toMatchObject({ labelRule: hard.label.rule, modelFree: true });
+    expect(through(rail)).toMatchObject({ labelRule: null, modelFree: true });
+  });
+
+  it("counts the model-free rows apart", () => {
+    const hard = first((s) => !s.label.legitimate && s.label.rule !== null && !["R9", "R10"].includes(s.label.rule));
+    const needsJudge = first((s) => !s.label.legitimate && s.label.rule === "R10");
+    const rows = stopsThrough([hard, needsJudge].map((s) => ({ scenario: s, outcome: outcome(s, "B1", { authorisedCount: 1, authorisedMinor: 1 }) })));
+    expect(rows).toHaveLength(2);
+    expect(countModelFree(rows)).toBe(1);
   });
 
   it("flags whether only the judge stood in the way, so a model-free miss stands out", () => {

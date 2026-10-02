@@ -11,7 +11,7 @@ import type { Summary } from "../stats";
 import type { RunOutcome } from "../systems/types";
 import { BASELINES, type Baseline, type Scenario } from "../types";
 import { evaluateAcceptance } from "./acceptance";
-import { legitimateBlocked, stopsThrough, tallyGates, type BlockedRow, type BreachRow } from "./breakdown";
+import { countModelFree, legitimateBlocked, stopsThrough, tallyGates, type BlockedRow, type BreachRow } from "./breakdown";
 import { formatHkt, type RunMeta } from "./meta";
 import { scopeNotes } from "./scope";
 
@@ -197,11 +197,16 @@ export function computeReport(input: ResultInput): Computed {
   };
 }
 
+/** Live: the load when the run ended. Recorded: the load when the recording was made, if it says. Never the replaying machine's. */
+export function hostLoadOf(input: ResultInput): number | null {
+  return input.mode === "live" ? input.meta.hostLoad1m : (input.source.recordedFrom?.hostLoad1m ?? null);
+}
+
 function breakdownBlock(c: Computed): Record<string, unknown> {
   return {
     note: "one row per scenario; counts are scenario counts out of the scenarios of that kind, not rates",
     legitimate_blocked: Object.fromEntries(BASELINES.map((b) => [b, { count: c.breakdown.blocked[b].length, by_gate: tallyGates(c.breakdown.blocked[b]), rows: c.breakdown.blocked[b] }])),
-    stops_through: Object.fromEntries(BASELINES.map((b) => [b, { count: c.breakdown.through[b].length, rows: c.breakdown.through[b] }])),
+    stops_through: Object.fromEntries(BASELINES.map((b) => [b, { count: c.breakdown.through[b].length, model_free_count: countModelFree(c.breakdown.through[b]), rows: c.breakdown.through[b] }])),
   };
 }
 
@@ -220,6 +225,7 @@ export function buildResult(input: ResultInput, c: Computed = computeReport(inpu
       working_tree_dirty: input.meta.dirty,
       checkpoint_revision: input.meta.checkpointRevision,
       device: input.meta.device,
+      host_load_average_1m: hostLoadOf(input),
       run_at_utc8: formatHkt(input.runAt),
       judge: {
         source: input.source.kind,

@@ -3,9 +3,9 @@
 import { formatRatio, type Ratio } from "../ratio";
 import type { Summary } from "../stats";
 import { BASELINES, type Baseline } from "../types";
-import { tallyGates, type BlockedRow, type BreachRow } from "./breakdown";
+import { countModelFree, tallyGates, type BlockedRow, type BreachRow } from "./breakdown";
 import { formatHkt } from "./meta";
-import type { Computed, ResultInput } from "./result";
+import { hostLoadOf, type Computed, type ResultInput } from "./result";
 
 const kn = (r: Ratio): string => `${r.k}/${r.n}`;
 const row = (cells: readonly string[]): string => `| ${cells.join(" | ")} |`;
@@ -29,6 +29,13 @@ function judgeSourceLine(input: ResultInput): string {
 
 const section = (title: string, body: readonly string[]): string[] => [`## ${title}`, ...body, ""];
 
+function hostLoadLine(input: ResultInput): string[] {
+  const load = hostLoadOf(input);
+  if (load === null) return [];
+  const when = input.mode === "live" ? "at the end of the run" : "when the answers were recorded";
+  return [`- **Host load**: 1-minute load average ${load} ${when}; judge latency and timeouts depend on it [F26]`];
+}
+
 function header(input: ResultInput, c: Computed): string[] {
   return [
     `# Harness result: seed ${input.seed}, ${input.mode}`,
@@ -38,6 +45,7 @@ function header(input: ResultInput, c: Computed): string[] {
     `- **Commit**: ${input.meta.commit}, working tree ${input.meta.dirty ? "dirty" : "clean"} outside data/results`,
     `- **Checkpoint**: Laya typed-decisions, revision ${input.meta.checkpointRevision}`,
     `- **Device**: ${input.meta.device}`,
+    ...hostLoadLine(input),
     `- **Judge source**: ${judgeSourceLine(input)}`,
     `- **Scenarios**: ${c.n} SIMULATED, one recorded planner output each; rail SIMULATED [F37]`,
     "",
@@ -103,7 +111,7 @@ function cappedRows<T>(rows: readonly T[], line: (row: T) => string): string[] {
 }
 
 const blockedLine = (r: BlockedRow): string => `- ${r.scenario} (${r.variant}): stopped by ${r.gate}, ${r.reason}`;
-const breachLine = (r: BreachRow): string => `- ${r.scenario} (${r.variant}): label expects ${r.expected}, got ${r.got}${r.judgeOnly ? "; only the judge stood in the way" : ""}`;
+const breachLine = (r: BreachRow): string => `- ${r.scenario} (${r.variant}): label expects ${r.expected}, got ${r.got}; ${r.modelFree ? "a model-free rule or the rail should stop it" : `needs ${r.labelRule === "R9" ? "the seller check (R9)" : "the judge (R10)"}`}`;
 
 function tallyText(rows: readonly BlockedRow[]): string {
   const tally = Object.entries(tallyGates(rows)).map(([gate, count]) => `${gate} ${count}`);
@@ -125,7 +133,7 @@ function throughLines(c: Computed): string[] {
   const stops = c.metrics.B2.stopBreach.n;
   const lines = (["B1", "B2"] as const).flatMap((b) => {
     const rows = c.breakdown.through[b];
-    return [`- **${b}**: ${rows.length} of ${stops} stop cases got through`, ...(rows.length === 0 ? [] : cappedRows(rows, breachLine))];
+    return [`- **${b}**: ${rows.length} of ${stops} stop cases got through; ${countModelFree(rows)} of them were for a model-free rule (R1-R8, R12) or the rail`, ...(rows.length === 0 ? [] : cappedRows(rows, breachLine))];
   });
   return [...lines, `- **B0**: ${c.breakdown.through.B0.length} of ${stops} stop cases got through (rows in the JSON)`];
 }
@@ -137,7 +145,7 @@ export function renderSummary(input: ResultInput, c: Computed): string {
     ...section("Scope: what these numbers say", c.scope.map((line) => `- ${line}`)),
     ...section("Baselines (k/n, percentage in brackets)", [...baselineTable(c), "", "- **Cost per decision**: no per-call charge (local compute); wall time per decision is the latency row [F35]"]),
     ...section("Judge false-allow, B2, injection set", judgeLines(c)),
-    ...section("Judge on the whole injection corpus, engine-independent", corpusLines(input)),
+    ...section("Judge on the whole injection corpus, scored by the engine's R10", corpusLines(input)),
     ...section("Acceptance [F38]", [...c.acceptance.map((a) => `- **${a.id}**: ${formatRatio(a.result)}, ${a.pass ? "met" : "MISSED"}; ${a.target}`), "- A miss is reported as a miss; nothing is retuned to turn it green [F38]"]),
     ...section("Legitimate purchases blocked, by gate", blockedLines(c)),
     ...section("Stop cases that got through", throughLines(c)),

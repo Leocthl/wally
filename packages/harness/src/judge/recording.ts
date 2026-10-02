@@ -29,6 +29,8 @@ export interface RecordingSource {
   readonly commit: string;
   readonly seed: number;
   readonly n: number;
+  /** 1-minute load average when the recording was made: a TIMEOUT in it may be the machine, not the judge. */
+  readonly hostLoad1m?: number;
   /** Set when the recording was made while the judge wording was still being tuned: it must not be quoted as final. */
   readonly provisional?: string;
 }
