@@ -1,9 +1,25 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "jsx": "react-jsx",
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@fixtures/*": [
+        "../../data/fixtures/*"
+      ]
+    }
   },
-  "include": ["src", "server", "test", "vite.config.ts"]
+  "include": [
+    "src",
+    "server",
+    "test",
+    "vite.config.ts"
+  ]
 }
