@@ -42,6 +42,7 @@ export const RUNX = {
   holdToApprove: label("Hold to approve", "按住批准"), // NEEDS-REVIEW
   holdHint: label("Press and hold. Let go early and nothing happens.", "按住不放；提早放手就唔會批准。"), // NEEDS-REVIEW
   signedOk: label("Signed", "已簽署"), // NEEDS-REVIEW
+  youAsked: label("You asked", "你想買"), // NEEDS-REVIEW
   signing: label("Signing your answer", "正在簽署你的回覆"), // NEEDS-REVIEW
   slipWhat: label("What", "貨品"), // NEEDS-REVIEW
   slipHowMuch: label("How much", "金額"), // NEEDS-REVIEW

@@ -17,6 +17,7 @@ import { isPaid } from "../model/story";
 import { BudgetNow } from "./BudgetNow";
 import { CardStory } from "./CardStory";
 import { Footnote } from "./parts";
+import { SignedMark } from "./SignedMark";
 
 const R = UI.run;
 
@@ -49,7 +50,7 @@ export function Approved({ result, packet, fresh, headingRef, paying, canPay, on
         <Wally state="approved" size={64} decorative />
         <div className="run-head__text">
           <h2 className="run-head__title" tabIndex={-1} ref={headingRef}>{t(paid ? R.paidTitle : R.approvedTitle)}</h2>
-          {result.answer === "yes" ? <p className="run-head__note">{t(R.youSaidYes)}</p> : null}
+          {result.answer === "yes" ? <p className="run-head__note"><SignedMark /> {t(R.youSaidYes)}</p> : null}
           <span className="sr-only">{formatHkd(total)}</span>
         </div>
       </header>
