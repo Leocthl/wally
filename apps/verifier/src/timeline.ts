@@ -44,15 +44,16 @@ function breakIndex(parsed: ParsedLog, report: VerifyReport, checkpoint?: Checkp
   return rewrittenAt(parsed, report.failedSeq, checkpoint) ? report.failedSeq : null;
 }
 
-function checkpointStatus(report: VerifyReport, broken: number | null, checkpoint?: Checkpoint): CheckpointStatus {
+/** TRUNCATED is the checkpoint comparison failing; any other failure stops the walk before the checkpoint. */
+function checkpointStatus(report: VerifyReport, checkpoint?: Checkpoint): CheckpointStatus {
   if (checkpoint === undefined) return "none";
   if (report.ok) return "ok";
-  return report.reason === "TRUNCATED" && broken === null ? "broken" : "unchecked";
+  return report.reason === "TRUNCATED" ? "broken" : "unchecked";
 }
 
 export function buildTimeline(parsed: ParsedLog, report: VerifyReport, checkpoint?: Checkpoint): Timeline {
   const broken = breakIndex(parsed, report, checkpoint);
   const status = (i: number): RowStatus => (broken === null || i < broken ? "ok" : i === broken ? "broken" : "unchecked");
   const rows = parsed.entries.map((_, i) => ({ ...label(parsed, i), status: status(i) }));
-  return { rows, checkpoint: checkpointStatus(report, broken, checkpoint) };
+  return { rows, checkpoint: checkpointStatus(report, checkpoint) };
 }
