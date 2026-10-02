@@ -4,7 +4,7 @@
 // network going away: connections are dropped, so only the service worker's cache can answer.
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo, Socket } from "node:net";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 
 export interface PagesServerOptions {
@@ -39,24 +39,18 @@ function contentType(path: string): string {
   return TYPES[extname(path)] ?? "application/octet-stream";
 }
 
-/** The file for a path under the mount, or null when it would leave the root or is not a file. */
-async function resolveFile(root: string, rest: string): Promise<string | null> {
-  const wanted = resolve(root, `.${rest.endsWith("/") ? `${rest}index.html` : rest}`);
+/**
+ * `rest` (a path under the mount, starting with "/") as an absolute path inside `root`, when it exists spelled exactly so.
+ * GitHub Pages runs on Linux, where Icons/ and icons/ differ; this Mac would serve both, so the on-disk spelling is compared.
+ */
+async function locate(root: string, rest: string): Promise<{ readonly path: string; readonly directory: boolean } | null> {
+  const wanted = resolve(root, `.${rest}`);
   if (wanted !== root && !wanted.startsWith(root + sep)) return null;
   try {
-    return (await stat(wanted)).isFile() ? wanted : null;
+    if ((await realpath(wanted)) !== wanted) return null;
+    return { path: wanted, directory: (await stat(wanted)).isDirectory() };
   } catch {
     return null;
-  }
-}
-
-async function isDirectory(root: string, rest: string): Promise<boolean> {
-  const wanted = resolve(root, `.${rest}`);
-  if (wanted !== root && !wanted.startsWith(root + sep)) return false;
-  try {
-    return (await stat(wanted)).isDirectory();
-  } catch {
-    return false;
   }
 }
 
@@ -66,7 +60,7 @@ function send(res: ServerResponse, status: number, headers: Record<string, strin
 }
 
 export async function startPagesServer(options: PagesServerOptions): Promise<PagesServer> {
-  const root = resolve(options.root);
+  const root = await realpath(resolve(options.root));
   const bare = options.mount.slice(0, -1);
   const seen: string[] = [];
   const sockets = new Set<Socket>();
@@ -79,9 +73,10 @@ export async function startPagesServer(options: PagesServerOptions): Promise<Pag
     if (url.pathname === bare) return send(res, 301, { location: `${options.mount}${url.search}` });
     if (!url.pathname.startsWith(options.mount)) return send(res, 404, { "content-type": "text/plain" }, "404 not found (outside the mount)");
     const rest = decodeURIComponent(url.pathname.slice(options.mount.length - 1));
-    if (!rest.endsWith("/") && (await isDirectory(root, rest))) return send(res, 301, { location: `${url.pathname}/${url.search}` });
-    const file = await resolveFile(root, rest);
-    if (file === null) return send(res, 404, { "content-type": "text/plain" }, "404 not found");
+    const found = await locate(root, rest.endsWith("/") ? `${rest}index.html` : rest);
+    if (found?.directory === true) return send(res, 301, { location: `${url.pathname}/${url.search}` });
+    if (found === null) return send(res, 404, { "content-type": "text/plain" }, "404 not found");
+    const file = found.path;
     // GitHub Pages sends max-age=600. Here nothing may be cached by the browser: with the server down, only the service
     // worker's own cache can answer, so a missing precache entry fails the offline step instead of hiding in the HTTP cache.
     return send(res, 200, { "content-type": contentType(file), "cache-control": "no-store" }, req.method === "HEAD" ? "" : await readFile(file));
