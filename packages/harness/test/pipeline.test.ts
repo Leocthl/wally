@@ -5,7 +5,7 @@ import { MintError, type JudgePort, type RailPort } from "@laisee/core/ports";
 import { FakeJudge } from "@laisee/core/testing";
 import { MerchantStub } from "@laisee/rail-sim";
 import { createComponents } from "../src/factory";
-import { generateScenarios } from "../src/scenario/generate";
+import { CATEGORY_VARIANTS, generateScenarios } from "../src/scenario/generate";
 import { createSystems } from "../src/systems/create";
 import type { Components } from "../src/systems/types";
 import { governedWorlds } from "../src/worlds/governed";
@@ -82,13 +82,18 @@ describe("B1 and B2 on the fixed seed set, real engine, rail, merchant and execu
 describe("label sweep: B2 agrees with every label across many seeds, so no rare parameter mix is mislabelled", () => {
   it("holds for seeds 100 to 111", async () => {
     const misses: string[] = [];
+    const seen = new Set<string>();
     for (let seed = 100; seed < 112; seed += 1) {
       for (const s of generateScenarios({ seed, n: 100 })) {
+        seen.add(`${s.category}/${s.variant}`);
         const a = labelAgreement(s, await B2!.run(s));
         if (!a.all) misses.push(`seed ${seed} ${s.id} ${s.variant}: ${a.reason}`);
       }
     }
     expect(misses).toEqual([]);
+    // The sweep means nothing for a variant it never ran: every variant of every category must be in it.
+    const every = Object.entries(CATEGORY_VARIANTS).flatMap(([category, variants]) => variants.map((v) => `${category}/${v.name}`));
+    expect(every.filter((v) => !seen.has(v))).toEqual([]);
   }, SWEEP_MS);
 });
 

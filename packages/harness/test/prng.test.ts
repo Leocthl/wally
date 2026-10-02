@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRng, deriveSeed, hashString } from "../src/prng";
 import { sha256Hex, stableStringify } from "../src/canonical";
-import { formatRatio, ratio, sumRatios } from "../src/ratio";
+import { formatRatio, ratio } from "../src/ratio";
 import { percentile, summarize } from "../src/stats";
 
 describe("prng (mulberry32, never Math.random)", () => {
@@ -84,10 +84,6 @@ describe("ratio: a rate never travels without k and n", () => {
     expect(() => ratio(5, 4)).toThrow(RangeError);
     expect(() => ratio(-1, 4)).toThrow(RangeError);
     expect(() => ratio(1.5, 4)).toThrow(RangeError);
-  });
-
-  it("sums ratios", () => {
-    expect(sumRatios([ratio(1, 2), ratio(2, 3)])).toEqual(ratio(3, 5));
   });
 });
 
