@@ -6,7 +6,7 @@ import type { ListingRecord } from "@laisee/core/generated";
 import type { CardView, CheckoutResult, Orchestrator, SubmitResult } from "@laisee/core/orchestrator";
 import type { Clock } from "@laisee/core/ports";
 import type { MerchantMode } from "@laisee/rail-sim";
-import type { RunOutcome, RunSummary, TraceEvent } from "../../src/api/types";
+import type { RunOutcome, RunSummary, TraceEvent } from "../../api/types";
 import { listingsFor, overflowListing, visitorListing, type Catalogue } from "./catalogue";
 import type { RunScenario, RunTracker } from "./events";
 import { BEAT_MODES, cardBeatOf, type ScenarioBeat, type ScenarioEntry, type ScenarioTable } from "./scenarioTable";
@@ -20,6 +20,8 @@ export interface RunnerDeps {
   readonly catalogue: Catalogue;
   readonly table: ScenarioTable;
   readonly runId: () => string;
+  /** Said on a run whose judge gave no usable answer, when nothing else is said (on-device mode: no judge runs there). */
+  readonly judgeOfflineNote?: string;
 }
 
 interface Step {
@@ -76,10 +78,15 @@ export class ScenarioRunner {
       // Fail closed (I5): nothing after the failure mints, and the visitor sees why instead of a frozen screen.
       step = { outcome: "ERROR", note: err instanceof Error ? err.message : "unknown error" };
     }
-    const note = step.note ?? (step.outcome === "ERROR" ? tracker.errorOf(runId) : undefined);
+    const note = step.note ?? (step.outcome === "ERROR" ? tracker.errorOf(runId) : undefined) ?? this.#judgeNote(runId);
     emit({ type: "run.finished", runId, outcome: step.outcome, at: iso(clock.now()), ...(note === undefined ? {} : { note }) });
     tracker.end(runId);
     return { runId, scenario, outcome: step.outcome, ...(step.decisionId === undefined ? {} : { decisionId: step.decisionId }), ...(note === undefined ? {} : { note }) };
+  }
+
+  #judgeNote(runId: string): string | undefined {
+    const note = this.#d.judgeOfflineNote;
+    return note !== undefined && this.#d.tracker.judgeFailed(runId) ? note : undefined;
   }
 
   scenario(entry: ScenarioEntry): Promise<RunSummary> {

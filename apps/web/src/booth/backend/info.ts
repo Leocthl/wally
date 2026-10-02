@@ -1,8 +1,14 @@
-// GET /api/info: which judge and planner run, whether outputs are recorded (replayed), whether Laya answered the
-// warm-up, where the demo keys come from, and the delegator-key DEMO SHORTCUT, said plainly.
-import type { ApiInfo } from "../../src/api/types";
-import { BRAND } from "../../src/brand";
-import type { BoothSettings } from "./settings";
+// GET /api/info of the Node server (live mode): which judge and planner run, whether outputs are recorded (replayed),
+// whether Laya answered the warm-up, where the demo keys come from, and the delegator-key DEMO SHORTCUT, said plainly.
+// The on-device client describes itself in src/api/local/info.ts.
+import type { ApiInfo } from "../../api/types";
+import { BRAND } from "../../brand";
+
+/** The settings the info reads (server/booth/settings.ts BoothSettings has more). */
+export interface InfoSettings {
+  readonly judgeEnv: Readonly<Record<string, string | undefined>>;
+  readonly plannerProvider: "rule" | "replay";
+}
 
 export type JudgeHealth =
   | { readonly state: "not_applicable" | "warming" }
@@ -17,7 +23,7 @@ export interface ServerInfo extends ApiInfo {
 }
 
 export interface InfoInput {
-  readonly settings: BoothSettings;
+  readonly settings: InfoSettings;
   readonly judgeProvider: ApiInfo["judge"]["provider"];
   readonly health: JudgeHealth;
   readonly keySource: "KEY_DIR" | "ephemeral";

@@ -4,7 +4,7 @@
 // One booth run spans several orchestrator operations (submit, then checkouts), so the orchestrator's per-operation
 // run.started/run.finished are dropped: the runner emits one of each per booth run. Cards go out without the handle.
 import type { OrchestratorEvent } from "@laisee/core/orchestrator";
-import type { CardBeat, CardRecord, PlannerTraceInfo, ScenarioId, TraceEvent } from "../../src/api/types";
+import type { CardBeat, CardRecord, PlannerTraceInfo, ScenarioId, TraceEvent } from "../../api/types";
 
 export type RunScenario = ScenarioId | "custom";
 
@@ -25,6 +25,7 @@ export class RunTracker {
   #decisionRuns: ReadonlyMap<string, { readonly runId: string; readonly scenario: RunScenario }> = new Map();
   #planner: ReadonlyMap<string, PlannerSeen> = new Map();
   #errors: ReadonlyMap<string, string> = new Map();
+  #judgeFailed: ReadonlySet<string> = new Set();
 
   begin(runId: string, scenario: RunScenario): void {
     this.#active = new Map([...this.#active, [runId, { scenario, beat: null }]]);
@@ -39,6 +40,7 @@ export class RunTracker {
     this.#active = new Map([...this.#active].filter(([id]) => id !== runId));
     this.#planner = new Map([...this.#planner].filter(([id]) => id !== runId));
     this.#errors = new Map([...this.#errors].filter(([id]) => id !== runId));
+    this.#judgeFailed = new Set([...this.#judgeFailed].filter((id) => id !== runId));
   }
 
   clear(): void {
@@ -46,6 +48,7 @@ export class RunTracker {
     this.#decisionRuns = new Map();
     this.#planner = new Map();
     this.#errors = new Map();
+    this.#judgeFailed = new Set();
   }
 
   isActive(runId: string): boolean {
@@ -79,6 +82,15 @@ export class RunTracker {
 
   errorOf(runId: string): string | undefined {
     return this.#errors.get(runId);
+  }
+
+  /** The judge gave no usable answer (TIMEOUT or ERROR) in this run. */
+  noteJudgeFailure(runId: string): void {
+    this.#judgeFailed = new Set([...this.#judgeFailed, runId]);
+  }
+
+  judgeFailed(runId: string): boolean {
+    return this.#judgeFailed.has(runId);
   }
 }
 
@@ -127,6 +139,7 @@ export function mapEvent(event: OrchestratorEvent, tracker: RunTracker, provider
     case "cart":
       return [{ type: "cart", runId: event.runId, cart: event.cart, listingText: event.listingText, ...(event.plannerNote === undefined ? {} : { plannerNote: event.plannerNote }), planner: plannerInfo(provider, tracker.plannerOf(event.runId)) }];
     case "judge":
+      if (event.judge.status !== "OK") tracker.noteJudgeFailure(event.runId);
       return [{ type: "judge", runId: event.runId, judge: event.judge }];
     case "decision": {
       const runId = routeRun(tracker, event.runId, event.decision.resolves);
