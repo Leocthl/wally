@@ -74,6 +74,16 @@
 
 - The UI uses system font stacks only (the booth is offline). PingFang HK (Apple) and Microsoft JhengHei are system fonts named in the stack and never shipped.
 
+## Submission film and deck (tools, not part of the repo or the app)
+| Tool | Author | Licence | Use |
+|---|---|---|---|
+| onetake (Claude skill) | Patrick (feitangyuan) | PolyForm Noncommercial 1.0.0 | renders the motion film; installed outside the repo and never copied into it; hackathon use is noncommercial |
+| ElevenLabs text-to-speech (free plan, voice Alice, model eleven_flash_v2_5) | ElevenLabs | service terms, free plan needs attribution | narration of the film: "Voice by ElevenLabs"; no audio from it is stored in this repo |
+| pptxgenjs 4.0.1 | Brent Ely and contributors | MIT | builds the editable PowerPoint deck |
+| Playwright, ffmpeg | Microsoft; FFmpeg project | Apache-2.0; LGPL/GPL build | record the app and encode the film |
+
+- Film and music: original, synthesised in code for this film; no sample, loop or stock track. The film and deck files live outside git (`submission/`, gitignored).
+
 ## Not included
 - No third-party logos, brand assets or page content. Public sources are cited in `docs/facts-register.md`, not redistributed.
 - No third-party icon set, illustration or sound: the line icons, the Wally character and the app icons are drawn in this repo (`apps/web/src/ui/icons.tsx`, `apps/web/src/wally/`).
