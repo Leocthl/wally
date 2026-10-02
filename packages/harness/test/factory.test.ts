@@ -45,6 +45,6 @@ describe("describeComponents reads the engine version, it does not trust a decla
 
   it("still lists the stand-ins as not real, so a half-swapped factory cannot claim product evidence", () => {
     const c = describeComponents("core@0.3.1+9be9705");
-    expect([c.rail.real, c.merchant.real, c.executor.real, c.cartBuilder.real]).toEqual([false, false, false, false]);
+    expect([c.rail.real, c.merchant.real, c.executor.real, c.cartBuilder.real, c.judge.real]).toEqual([false, false, false, false, false]);
   });
 });

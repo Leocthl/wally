@@ -33,6 +33,7 @@ export interface ComponentReport {
   readonly merchant: ComponentInfo;
   readonly executor: ComponentInfo;
   readonly cartBuilder: ComponentInfo;
+  readonly judge: ComponentInfo;
 }
 
 export function createComponents(overrides: Partial<Components> = {}): Components {
@@ -58,5 +59,6 @@ export function describeComponents(engineVersion: string): ComponentReport {
     merchant: { name: "createModalMerchant (@laisee/harness)", real: false, note: "SIMULATED merchant modes; replaced by the rail-sim merchant stub" },
     executor: { name: "createInterimExecutor (@laisee/harness)", real: false, note: "interim checkout with R12 re-quote and same-key retry; replaced by core's executor" },
     cartBuilder: { name: "buildCart (@laisee/harness)", real: false, note: "stand-in for core's cart builder" },
+    judge: { name: "ChoiceJudge (@laisee/harness) over Laya typed-decisions", real: false, note: "interim adapter with its own state wording; SystemOneJudge from @laisee/agent/judge replaces it and the judge numbers must then be re-measured (the model itself is the real Laya)" },
   };
 }
