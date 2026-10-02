@@ -5,70 +5,303 @@
   "description": "One line of the append-only JSONL log at LOG_DIR/<log_id>.jsonl. One log per packet; seq 0 is MANDATE_SEALED; seq increases by 1. Bytes hashed and signed (JCS = RFC 8785 canonical JSON, UTF-8): (1) payload_hash = hex SHA-256(JCS(payload)). (2) entry_hash = hex SHA-256(JCS({v, log_id, seq, kind, ts, prev_hash, payload_hash, signer})). (3) prev_hash = entry_hash of seq - 1; for seq 0 it is 64 '0' characters. (4) signature = base64url(Ed25519.sign(engine key, UTF-8('laisee.log.v1:' + entry_hash))). The payload is covered through payload_hash; the signature covers entry_hash only.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["v", "log_id", "seq", "kind", "ts", "prev_hash", "payload", "payload_hash", "entry_hash", "signer", "signature"],
+  "required": [
+    "v",
+    "log_id",
+    "seq",
+    "kind",
+    "ts",
+    "prev_hash",
+    "payload",
+    "payload_hash",
+    "entry_hash",
+    "signer",
+    "signature"
+  ],
   "properties": {
-    "v": { "const": 1 },
-    "log_id": { "$ref": "mandate.schema.json#/$defs/LogId" },
-    "seq": { "type": "integer", "minimum": 0 },
-    "kind": { "enum": ["MANDATE_SEALED", "DECISION", "CARD_MINTED", "CARD_EVENT", "MANDATE_REVOKED", "PACKET_EXPIRED"] },
-    "ts": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "Append time." },
-    "prev_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
-    "payload": { "type": "object", "description": "Shape fixed by kind (oneOf below)." },
-    "payload_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
-    "entry_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
-    "signer": { "$ref": "mandate.schema.json#/$defs/DidKey", "description": "Engine (operator) key. Delegator signatures live inside payloads (mandate, revocation, escalation answer)." },
-    "signature": { "$ref": "mandate.schema.json#/$defs/SignatureB64u" }
+    "v": {
+      "const": 1
+    },
+    "log_id": {
+      "$ref": "mandate.schema.json#/$defs/LogId"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "MANDATE_SEALED",
+        "DECISION",
+        "CARD_MINTED",
+        "CARD_EVENT",
+        "MANDATE_REVOKED",
+        "PACKET_EXPIRED"
+      ]
+    },
+    "ts": {
+      "$ref": "mandate.schema.json#/$defs/Timestamp",
+      "description": "Append time."
+    },
+    "prev_hash": {
+      "$ref": "mandate.schema.json#/$defs/Sha256Hex"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Shape fixed by kind (oneOf below)."
+    },
+    "payload_hash": {
+      "$ref": "mandate.schema.json#/$defs/Sha256Hex"
+    },
+    "entry_hash": {
+      "$ref": "mandate.schema.json#/$defs/Sha256Hex"
+    },
+    "signer": {
+      "$ref": "mandate.schema.json#/$defs/DidKey",
+      "description": "Engine (operator) key. Delegator signatures live inside payloads (mandate credential proof, revocation, escalation answer)."
+    },
+    "signature": {
+      "$ref": "mandate.schema.json#/$defs/SignatureB64u"
+    }
   },
   "oneOf": [
-    { "properties": { "kind": { "const": "MANDATE_SEALED" }, "payload": { "$ref": "mandate.schema.json" } } },
-    { "properties": { "kind": { "const": "DECISION" }, "payload": { "$ref": "decision.schema.json" } } },
-    { "properties": { "kind": { "const": "CARD_MINTED" }, "payload": { "$ref": "card-record.schema.json" } } },
-    { "properties": { "kind": { "const": "CARD_EVENT" }, "payload": { "$ref": "#/$defs/CardEvent" } } },
-    { "properties": { "kind": { "const": "MANDATE_REVOKED" }, "payload": { "$ref": "mandate.schema.json#/$defs/Revocation" } } },
-    { "properties": { "kind": { "const": "PACKET_EXPIRED" }, "payload": { "$ref": "#/$defs/PacketExpired" } } }
+    {
+      "properties": {
+        "kind": {
+          "const": "MANDATE_SEALED"
+        },
+        "payload": {
+          "$ref": "mandate-credential.schema.json"
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "DECISION"
+        },
+        "payload": {
+          "$ref": "decision.schema.json"
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "CARD_MINTED"
+        },
+        "payload": {
+          "$ref": "card-record.schema.json"
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "CARD_EVENT"
+        },
+        "payload": {
+          "$ref": "#/$defs/CardEvent"
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "MANDATE_REVOKED"
+        },
+        "payload": {
+          "$ref": "mandate.schema.json#/$defs/Revocation"
+        }
+      }
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "PACKET_EXPIRED"
+        },
+        "payload": {
+          "$ref": "#/$defs/PacketExpired"
+        }
+      }
+    }
   ],
   "$defs": {
     "CardEvent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["card_id", "event", "at", "simulated"],
+      "required": [
+        "card_id",
+        "event",
+        "at",
+        "simulated"
+      ],
       "description": "Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).",
       "properties": {
-        "card_id": { "$ref": "mandate.schema.json#/$defs/CardId" },
-        "event": { "enum": ["AUTHORISED", "DECLINED", "VOIDED", "EXPIRED"] },
-        "at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
-        "amount_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "Charged (AUTHORISED) or attempted (DECLINED)." },
-        "merchant_domain": { "$ref": "mandate.schema.json#/$defs/Domain" },
-        "decline_code": {
-          "enum": ["OVER_LIMIT", "CARD_USED", "CARD_VOIDED", "CARD_EXPIRED", "UNKNOWN_HANDLE"],
-          "description": "rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md)."
+        "card_id": {
+          "$ref": "mandate.schema.json#/$defs/CardId"
         },
-        "simulated": { "const": true }
+        "event": {
+          "enum": [
+            "AUTHORISED",
+            "DECLINED",
+            "VOIDED",
+            "EXPIRED"
+          ]
+        },
+        "at": {
+          "$ref": "mandate.schema.json#/$defs/Timestamp"
+        },
+        "amount_minor": {
+          "$ref": "mandate.schema.json#/$defs/MoneyMinor",
+          "description": "Charged (AUTHORISED) or attempted (DECLINED)."
+        },
+        "merchant_domain": {
+          "$ref": "mandate.schema.json#/$defs/Domain"
+        },
+        "decline_code": {
+          "enum": [
+            "OVER_LIMIT",
+            "CARD_USED",
+            "CARD_VOIDED",
+            "CARD_EXPIRED",
+            "UNKNOWN_HANDLE",
+            "MERCHANT_MISMATCH"
+          ],
+          "description": "rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md). MERCHANT_MISMATCH is SIMULATED: the real Single Use Card has no merchant lock [F1]."
+        },
+        "idempotency_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+          "description": "AUTHORISED or DECLINED: the key the executor sent. A retry with the same key returns the same event and never charges twice."
+        },
+        "simulated": {
+          "const": true
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "event": { "enum": ["AUTHORISED", "DECLINED"] } }, "required": ["event"] },
-          "then": { "required": ["amount_minor", "merchant_domain"], "properties": { "amount_minor": true, "merchant_domain": true } }
+          "if": {
+            "properties": {
+              "event": {
+                "enum": [
+                  "AUTHORISED",
+                  "DECLINED"
+                ]
+              }
+            },
+            "required": [
+              "event"
+            ]
+          },
+          "then": {
+            "required": [
+              "amount_minor",
+              "merchant_domain"
+            ],
+            "properties": {
+              "amount_minor": true,
+              "merchant_domain": true
+            }
+          }
         },
         {
-          "if": { "properties": { "event": { "const": "DECLINED" } }, "required": ["event"] },
-          "then": { "required": ["decline_code"], "properties": { "decline_code": true } }
+          "if": {
+            "properties": {
+              "event": {
+                "const": "DECLINED"
+              }
+            },
+            "required": [
+              "event"
+            ]
+          },
+          "then": {
+            "required": [
+              "decline_code"
+            ],
+            "properties": {
+              "decline_code": true
+            }
+          }
         }
       ]
     },
     "PacketExpired": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mandate_id", "expired_at"],
+      "required": [
+        "mandate_id",
+        "expired_at"
+      ],
       "description": "Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.",
       "properties": {
-        "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
-        "expired_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+        "mandate_id": {
+          "$ref": "mandate.schema.json#/$defs/MandateId"
+        },
+        "expired_at": {
+          "$ref": "mandate.schema.json#/$defs/Timestamp"
+        }
       }
     }
   },
-  "$comment": "examples[0] is SIMULATED: seq 2, CARD_MINTED for attempt 1 (HK$259 [F21]). Hashes and signature are placeholders and do not verify [F59]; golden vectors are Lane A's job (T-V1).",
+  "$comment": "examples are SIMULATED. examples[0]: seq 0, MANDATE_SEALED for demo mandate M0 (HK$800 [F20]). examples[1]: seq 2, CARD_MINTED for attempt 1 (HK$259 [F21]). Hashes, keys, proofs and signatures are placeholders and do not verify [F59]; golden vectors are Lane A's job (T-V1).",
   "examples": [
+    {
+      "v": 1,
+      "log_id": "log_demoM0",
+      "seq": 0,
+      "kind": "MANDATE_SEALED",
+      "ts": "2026-10-03T02:00:01Z",
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "payload": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://laisee.local/contexts/delegation/v1"
+        ],
+        "type": [
+          "VerifiableCredential",
+          "AgentDelegationCredential"
+        ],
+        "id": "mnd_demoM0",
+        "issuer": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "validFrom": "2026-10-03T02:00:00Z",
+        "validUntil": "2026-10-31T15:59:59Z",
+        "credentialSubject": {
+          "id": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "intent_text": "HK$800, clothes, verified sellers.",
+          "rules": {
+            "budget": {
+              "amount_minor": 80000,
+              "currency": "HKD"
+            },
+            "categories": [
+              "apparel"
+            ],
+            "merchants": {
+              "allow": null,
+              "deny": []
+            },
+            "seller_check": {
+              "require_capture": true
+            }
+          }
+        },
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-10-03T02:00:00Z",
+          "verificationMethod": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX#z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z3FakeProofDemoNotVerifyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        }
+      },
+      "payload_hash": "5b1f0e3a9c7d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a1b3c5d7e9f",
+      "entry_hash": "ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f71",
+      "signer": "did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "signature": "SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
     {
       "v": 1,
       "log_id": "log_demoM0",
@@ -87,6 +320,8 @@
         "minted_at": "2026-10-03T02:05:02Z",
         "expires_at": "2026-10-03T02:35:02Z",
         "state": "ACTIVE",
+        "merchant_lock": "demo-apparel.example",
+        "purpose": "crt_demoA1",
         "simulated": true
       },
       "payload_hash": "042dbdf22682451d37b18c24a92dee4276a2cf92209fc17702caacb83aa32e80",

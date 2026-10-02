@@ -80,12 +80,12 @@
         "check": { "type": "string", "pattern": "^[a-z_]+$", "description": "Sub-check name; for R10 the judge question." },
         "result": { "enum": ["PASS", "FAIL", "SKIPPED"] },
         "verdict": { "enum": ["DENY", "ESCALATE"], "description": "FAIL only." },
-        "inputs": { "type": "object" },
+        "inputs": { "type": "object", "additionalProperties": true },
         "comparator": { "enum": ["<=", "<", ">=", ">", "==", "!=", "in", "not_in", "verify"] },
         "threshold_ref": {
           "type": "string",
           "pattern": "^(F[0-9]{1,3}[a-z]?(\\.[A-Za-z_]+)?|mandate\\.[a-z_.]+|packet\\.[a-z_]+)$",
-          "description": "e.g. packet.remaining_minor, F1.ceiling, F36.T_inj, mandate.rules.per_purchase.hard_cap_minor"
+          "description": "e.g. packet.remaining_minor, F1.ceiling, F36.T_inj, mandate.valid_until, mandate.rules.per_purchase.hard_cap_minor"
         },
         "template_id": { "$ref": "#/$defs/TemplateId" }
       },
@@ -104,13 +104,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["provider", "model", "version", "status", "latency_ms", "shadow"],
-      "description": "Judge call as recorded. jev probabilities are the vendor model's outputs [F11]; llm probabilities are verbalised and uncalibrated, so R10 uses the stricter llm profile [F51]. Escalation answers and R11/R12 decisions copy the record of the decision they resolve.",
+      "description": "Judge call as recorded. laya (local default [F11c]) and jev (hosted, optional [F11]) share the typed wire protocol; replay returns recorded answers in the same shape. R10 reads probabilities only, never the provider's confidence, under the typed profile [F36, F50]. Escalation answers and R11/R12 decisions copy the record of the decision they resolve.",
       "properties": {
-        "provider": { "enum": ["jev", "llm"] },
-        "model": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "minLength": 1 },
+        "provider": { "$ref": "mandate.schema.json#/$defs/JudgeProvider" },
+        "model": { "type": "string", "minLength": 1, "description": "e.g. typed-decisions (laya), jev-1.13.0 (jev [F11b]), the recorded model (replay)." },
+        "version": { "type": "string", "minLength": 1, "description": "Server or checkpoint version reported at runtime." },
         "status": { "enum": ["OK", "TIMEOUT", "ERROR"], "description": "Not OK => R10 FAIL, verdict ESCALATE, template R10.unavailable (I5)." },
-        "fallback_from": { "const": "jev", "description": "Set when llm answered after jev failed or timed out [F34]." },
+        "fallback_from": { "enum": ["laya", "jev"], "description": "Set when another provider answered after laya or jev failed or timed out [F34]." },
+        "input_truncated": { "type": "boolean", "description": "true when Laya reported usage.truncated: the judge did not see the whole listing. status must then be ERROR, so R10 escalates with R10.unavailable (I5)." },
         "latency_ms": { "type": "integer", "minimum": 0, "description": "Wall time of the judge step, MEASURED." },
         "shadow": { "type": "boolean", "description": "true = recorded, not enforced (JUDGE_MODE=shadow)." },
         "answers": { "$ref": "#/$defs/JudgeAnswers" }
@@ -119,6 +120,10 @@
         {
           "if": { "properties": { "status": { "const": "OK" } }, "required": ["status"] },
           "then": { "required": ["answers"], "properties": { "answers": true } }
+        },
+        {
+          "if": { "properties": { "input_truncated": { "const": true } }, "required": ["input_truncated"] },
+          "then": { "properties": { "status": { "const": "ERROR" } } }
         }
       ]
     },
@@ -162,7 +167,7 @@
       "description": "Why, rendered by a pure function from template_id + inputs (D4), never LLM prose. Primary reason = first FAIL in rule order whose verdict equals the outcome. A verifier can re-render and compare.",
       "properties": {
         "template_id": { "$ref": "#/$defs/TemplateId" },
-        "inputs": { "type": "object" },
+        "inputs": { "type": "object", "additionalProperties": true },
         "rendered": { "type": "string", "minLength": 1, "description": "English line." },
         "rendered_zh_hk": { "type": "string", "minLength": 1, "description": "zh-HK line from the same inputs." }
       }
@@ -246,7 +251,7 @@
       },
       "rules": [
         { "id": "R1", "result": "PASS", "inputs": { "signer": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }, "comparator": "verify" },
-        { "id": "R2", "result": "PASS", "inputs": { "revoked": false, "now": "2026-10-03T02:12:00Z", "expires_at": "2026-10-31T15:59:59Z" }, "comparator": "<", "threshold_ref": "mandate.rules.expires_at" },
+        { "id": "R2", "result": "PASS", "inputs": { "revoked": false, "now": "2026-10-03T02:12:00Z", "valid_until": "2026-10-31T15:59:59Z" }, "comparator": "<", "threshold_ref": "mandate.valid_until" },
         { "id": "R3", "result": "FAIL", "verdict": "DENY", "inputs": { "total_minor": 55000, "remaining_minor": 54100 }, "comparator": "<=", "threshold_ref": "packet.remaining_minor", "template_id": "R3.over_remaining" },
         { "id": "R4", "result": "SKIPPED", "inputs": { "per_purchase": null } },
         { "id": "R5", "result": "PASS", "inputs": { "total_minor": 55000, "ceiling_minor": 200000 }, "comparator": "<=", "threshold_ref": "F1.ceiling" },
@@ -262,9 +267,9 @@
         { "id": "R12", "result": "SKIPPED", "inputs": {} }
       ],
       "judge": {
-        "provider": "jev",
-        "model": "jev-VERIFY",
-        "version": "VERIFY",
+        "provider": "laya",
+        "model": "typed-decisions",
+        "version": "typed-decisions@VERIFY",
         "status": "OK",
         "latency_ms": 240,
         "shadow": false,

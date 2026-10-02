@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/propose-cart.schema.json",
+  "title": "ProposeCartInput",
+  "description": "Input of propose_cart, the planner's only tool (I4), and the shape of recorded planner replay outputs. No money fields: the cart builder prices the proposal from the listing record. A proposal is untrusted until the engine decides.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["listing_url", "items"],
+  "properties": {
+    "listing_url": { "type": "string", "format": "uri", "description": "Must equal the url of one listing record given to the planner." },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "qty"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 120, "description": "Exact item title from the listing record." },
+          "qty": { "type": "integer", "minimum": 1, "maximum": 20 }
+        }
+      }
+    },
+    "note": { "type": "string", "maxLength": 280, "description": "Planner's short reason. Display only." }
+  },
+  "$comment": "examples[0] is SIMULATED: the attempt 1 proposal (DM2).",
+  "examples": [
+    {
+      "listing_url": "https://demo-apparel.example/p/tee",
+      "items": [{ "title": "Cotton tee (SIMULATED)", "qty": 1 }],
+      "note": "Plain tee inside the clothing packet."
+    }
+  ]
+}

@@ -2,20 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://laisee.local/schemas/mandate.schema.json",
   "title": "Mandate",
-  "description": "Signed delegation, AP2-shaped Intent mandate [F12], not a full W3C VC: the delegator's plain-language intent_text plus compiled rules, one field per rule chip. Seal = the delegator signs it. Signature: Ed25519 by `delegator` over the UTF-8 bytes of 'laisee.mandate.v1:' + lowercase hex SHA-256 of the RFC 8785 (JCS) canonical JSON of this object without `signature`. This file also holds the shared primitives ($defs) the other schemas reference. Encodings everywhere: money = integer HKD minor units (cents); time = RFC 3339 UTC with 'Z'; hashes = lowercase hex SHA-256; signatures and raw keys = base64url without padding.",
+  "description": "Domain view of the delegation that the policy engine reads, AP2-shaped Intent mandate [F12]. Not signed itself: the signed form is the AgentDelegationCredential (mandate-credential.schema.json), logged as MANDATE_SEALED. mandateFromCredential(vc) derives this view: id = vc.id, delegator = vc.issuer, agent = vc.credentialSubject.id, intent_text, rules and parent from credentialSubject, valid_from = vc.validFrom, valid_until = vc.validUntil. R1 verifies the credential proof; R2 reads valid_until. This file also holds the shared primitives ($defs) the other schemas reference. Encodings everywhere: money = integer HKD minor units (cents); time = RFC 3339 UTC with 'Z'; hashes = lowercase hex SHA-256; log and answer signatures = base64url without padding; credential proofs = multibase base58btc.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["v", "id", "delegator", "agent", "intent_text", "rules", "issued_at", "signature"],
+  "required": ["id", "delegator", "agent", "intent_text", "rules", "valid_from", "valid_until"],
   "properties": {
-    "v": { "const": 1, "description": "Schema version." },
     "id": { "$ref": "#/$defs/MandateId" },
-    "delegator": { "$ref": "#/$defs/DidKey", "description": "Person who seals the packet. Signs this mandate, revokes and escalation answers." },
-    "agent": { "$ref": "#/$defs/DidKey", "description": "Agent identity this mandate authorises. The planner process holds no key and no card material (I4)." },
-    "intent_text": { "type": "string", "minLength": 1, "description": "Plain-language sentence typed by the delegator (DIR1). Display and judge context only; the engine reads `rules`." },
+    "delegator": { "$ref": "#/$defs/DidKey", "description": "Person who seals the packet (credential issuer). Signs the credential, revokes and escalation answers." },
+    "agent": { "$ref": "#/$defs/DidKey", "description": "Agent identity this mandate authorises (credentialSubject.id). The planner process holds no key and no card material (I4)." },
+    "intent_text": { "$ref": "#/$defs/IntentText" },
     "rules": { "$ref": "#/$defs/CompiledRules" },
     "parent": { "$ref": "#/$defs/ParentLink" },
-    "issued_at": { "$ref": "#/$defs/Timestamp" },
-    "signature": { "$ref": "#/$defs/SignatureB64u" }
+    "valid_from": { "$ref": "#/$defs/Timestamp", "description": "vc.validFrom. Seal time." },
+    "valid_until": { "$ref": "#/$defs/Timestamp", "description": "(R2) vc.validUntil. Mandate and packet end. No card TTL runs past it." }
   },
   "$defs": {
     "MoneyMinor": { "type": "integer", "minimum": 0, "description": "Integer HKD minor units (cents). No floats anywhere in money." },
@@ -28,27 +27,41 @@
     },
     "DidKey": {
       "type": "string",
-      "pattern": "^(did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+|ed25519:[A-Za-z0-9_-]{43})$",
-      "description": "Ed25519 public key as did:key (multibase base58btc, multicodec 0xed01). If D9 cuts did:key, use 'ed25519:' + base64url of the 32-byte key; nothing else changes."
+      "pattern": "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+$",
+      "description": "Ed25519 public key as did:key: 'did:key:z' + base58btc(0xed 0x01 || 32-byte key). did:key is no longer in the cut list (D9)."
+    },
+    "DidKeyUrl": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[1-9A-HJ-NP-Za-km-z]+#z6Mk[1-9A-HJ-NP-Za-km-z]+$",
+      "description": "did:key verification method: '<did>#<multibase key>'."
     },
     "Sha256Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256, lowercase hex." },
-    "SignatureB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$", "description": "Ed25519 signature (64 bytes), base64url without padding." },
+    "SignatureB64u": { "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$", "description": "Ed25519 signature (64 bytes), base64url without padding. Used by log entries, revocations and escalation answers." },
     "MandateId": { "type": "string", "pattern": "^mnd_[A-Za-z0-9]{6,40}$" },
     "CartId": { "type": "string", "pattern": "^crt_[A-Za-z0-9]{6,40}$" },
     "DecisionId": { "type": "string", "pattern": "^dec_[A-Za-z0-9]{6,40}$" },
     "LogId": { "type": "string", "pattern": "^log_[A-Za-z0-9]{6,40}$" },
     "CardId": { "type": "string", "pattern": "^crd_[A-Za-z0-9]{6,40}$" },
+    "ListingId": { "type": "string", "pattern": "^lst_[A-Za-z0-9]{3,40}$" },
     "RuleId": { "enum": ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12"] },
     "CategorySlug": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,31}$", "description": "Lowercase category key, e.g. apparel." },
     "Domain": { "type": "string", "pattern": "^([a-z0-9]([a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}$", "description": "Lowercase merchant host name, no scheme or path." },
     "Provenance": { "enum": ["OBSERVED", "SIMULATED", "MEASURED", "ASSUMED"] },
+    "IntentText": { "type": "string", "minLength": 1, "maxLength": 280, "description": "Plain-language sentence typed by the delegator (DIR1). Display and judge context only; the engine reads `rules`." },
+    "JudgeProvider": { "enum": ["laya", "jev", "replay"], "description": "laya = local default [F11c]; jev = hosted, optional [F11]; replay = recorded answers in the same shape (CI and booth fallback)." },
+    "ScameterState": { "enum": ["FLAGGED", "NO_RECORD", "NOT_CHECKED"], "description": "NO_RECORD is not 'safe' [F6]." },
+    "ScameterSearched": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["phone", "fps_id", "page_name", "payment_account", "url"] },
+      "description": "Identifier types searched. Identifier values are never stored."
+    },
     "CompiledRules": {
       "type": "object",
       "additionalProperties": false,
-      "description": "One field per rule chip in the MandateEditor. Defaults for absent optional fields come from config, which cites the facts register.",
-      "required": ["expires_at", "budget", "categories", "merchants", "seller_check"],
+      "description": "One field per rule chip in the MandateEditor; carried in credentialSubject.rules. Expiry is the credential's validUntil (mandate.valid_until), not a rule field. Defaults for absent optional fields come from config, which cites the facts register.",
+      "required": ["budget", "categories", "merchants", "seller_check"],
       "properties": {
-        "expires_at": { "$ref": "#/$defs/Timestamp", "description": "(R2) Mandate and packet end. No card TTL runs past it." },
         "budget": {
           "type": "object",
           "additionalProperties": false,
@@ -118,7 +131,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["mandate_id", "mandate_sha256"],
-      "description": "Teen chain only (cut first, D9). Points at the parent-sealed mandate; caps compose: agent <= teen packet <= parent funding. mandate_sha256 = SHA-256 of JCS of the full signed parent mandate.",
+      "description": "Teen chain only (cut first, D9). Points at the parent-sealed mandate; caps compose: agent <= teen packet <= parent funding. mandate_sha256 = SHA-256 of JCS of the full parent credential, proof included.",
       "properties": {
         "mandate_id": { "$ref": "#/$defs/MandateId" },
         "mandate_sha256": { "$ref": "#/$defs/Sha256Hex" }
@@ -132,29 +145,27 @@
       "properties": {
         "mandate_id": { "$ref": "#/$defs/MandateId" },
         "revoked_at": { "$ref": "#/$defs/Timestamp" },
-        "reason": { "type": "string" },
+        "reason": { "type": "string", "maxLength": 200 },
         "signer": { "$ref": "#/$defs/DidKey" },
         "signature": { "$ref": "#/$defs/SignatureB64u" }
       }
     }
   },
-  "$comment": "examples[0] is SIMULATED: demo mandate M0 (DM1), HK$800 packet [F20], no per-purchase cap, so R3 binds. Keys, signature and dates are placeholders [F59].",
+  "$comment": "examples[0] is SIMULATED: demo mandate M0 (DM1) as derived from the credential example, HK$800 packet [F20], no per-purchase cap, so R3 binds. Keys and dates are placeholders [F59].",
   "examples": [
     {
-      "v": 1,
       "id": "mnd_demoM0",
       "delegator": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       "intent_text": "HK$800, clothes, verified sellers.",
       "rules": {
-        "expires_at": "2026-10-31T15:59:59Z",
         "budget": { "amount_minor": 80000, "currency": "HKD" },
         "categories": ["apparel"],
         "merchants": { "allow": null, "deny": [] },
         "seller_check": { "require_capture": true }
       },
-      "issued_at": "2026-10-03T02:00:00Z",
-      "signature": "SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "valid_from": "2026-10-03T02:00:00Z",
+      "valid_until": "2026-10-31T15:59:59Z"
     }
   ]
 }

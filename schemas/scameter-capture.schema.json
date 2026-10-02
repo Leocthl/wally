@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/scameter-capture.schema.json",
+  "title": "ScameterCapture",
+  "description": "One manual, human-paced Scameter lookup [F6], redacted. The engine never queries live. The cart builder copies state, capture_ref, captured_at and searched into cart.scameter; R9 judges freshness [F52]. Identifier values are never stored, only which types were searched. Flagged-seller fixtures are SIMULATED.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capture_ref", "subject_domain", "state", "captured_at", "searched", "provenance"],
+  "properties": {
+    "capture_ref": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,64}$", "description": "Row in data/capture-sheet.md or a fixture id." },
+    "subject_domain": { "$ref": "mandate.schema.json#/$defs/Domain", "description": "Merchant domain the capture is about." },
+    "state": { "enum": ["FLAGGED", "NO_RECORD"], "description": "NO_RECORD is not 'safe' [F6]." },
+    "captured_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+    "searched": { "$ref": "mandate.schema.json#/$defs/ScameterSearched" },
+    "provenance": { "enum": ["OBSERVED", "SIMULATED"] },
+    "note": { "type": "string", "maxLength": 200 }
+  },
+  "$comment": "examples[0] is SIMULATED: no record for the attempt 1 merchant. Times are placeholders [F59].",
+  "examples": [
+    {
+      "capture_ref": "SIM-scameter-demo-apparel",
+      "subject_domain": "demo-apparel.example",
+      "state": "NO_RECORD",
+      "captured_at": "2026-10-03T01:30:00Z",
+      "searched": ["url"],
+      "provenance": "SIMULATED"
+    }
+  ]
+}

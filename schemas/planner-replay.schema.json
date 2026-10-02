@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/planner-replay.schema.json",
+  "title": "PlannerReplayRecord",
+  "description": "One recorded planner output for the replay backend (PLANNER_PROVIDER=replay; CI and the booth fallback). Keyed by scenario. proposal null = the planner made no proposal. trace is optional and display or audit only; the engine never reads it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario", "listing_ids", "proposal"],
+  "properties": {
+    "scenario": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,40}$", "description": "e.g. attempt-1, attempt-3b." },
+    "listing_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "mandate.schema.json#/$defs/ListingId" },
+      "description": "Listing records the planner was given."
+    },
+    "proposal": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "propose-cart.schema.json" }
+      ]
+    },
+    "trace": { "$ref": "#/$defs/PlannerTrace" }
+  },
+  "$defs": {
+    "PlannerTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "question", "probabilities"],
+      "description": "Laya item-choice probabilities behind the proposal, label -> probability.",
+      "properties": {
+        "provider": { "const": "laya" },
+        "model": { "type": "string", "minLength": 1 },
+        "question": { "type": "string", "pattern": "^[a-z_]{1,40}$" },
+        "probabilities": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 255,
+          "additionalProperties": { "$ref": "decision.schema.json#/$defs/Probability" }
+        },
+        "choice": { "type": "string", "minLength": 1 },
+        "latency_ms": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$comment": "examples[0] is SIMULATED: the attempt 1 replay (DM2). Probabilities and latency are placeholders [F59].",
+  "examples": [
+    {
+      "scenario": "attempt-1",
+      "listing_ids": ["lst_demoTee"],
+      "proposal": {
+        "listing_url": "https://demo-apparel.example/p/tee",
+        "items": [{ "title": "Cotton tee (SIMULATED)", "qty": 1 }],
+        "note": "Plain tee inside the clothing packet."
+      },
+      "trace": {
+        "provider": "laya",
+        "model": "typed-decisions",
+        "question": "item_choice",
+        "probabilities": { "lst_demoTee": 0.92, "none": 0.08 },
+        "choice": "lst_demoTee",
+        "latency_ms": 120
+      }
+    }
+  ]
+}

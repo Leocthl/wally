@@ -50,7 +50,7 @@
       }
     },
     "status": { "enum": ["ACTIVE", "EXHAUSTED", "EXPIRED", "REVOKED"] },
-    "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "mandate.rules.expires_at" },
+    "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "mandate.valid_until (credential validUntil)." },
     "folded_through_seq": { "type": "integer", "minimum": 0, "description": "Last log seq folded in. Decisions record it so a verifier can replay the same state." },
     "computed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "`now` used for EXPIRED status." }
   },
