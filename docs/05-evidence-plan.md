@@ -1,7 +1,7 @@
 # 05 Evidence plan
 
 ## Capture protocol
-- **Scope**: every external fact in the [register](facts-register.md) and the 5 real listings [F40]. Claude's reads stay READ-BY-CLAUDE.
+- **Scope**: every external fact in the [register](facts-register.md) and the 5 real listings [F40].
 1. Screenshot the page with the URL visible; log URL, UTC+8 time and capturer in [capture-sheet](../data/capture-sheet.md).
 2. Raw files stay in `data/raw/` (gitignored). Mask personal data, seller identifiers, PAN, CVV, expiry; commit only the redacted copy in `data/captures/`.
 3. Promote the register row in one commit (value, source, date, OBSERVED(date)). A different value wins.
@@ -26,7 +26,7 @@
 ## Shop-readiness probe
 - **Sample**: 10 HK apparel webstores [F39], listed in [shop-probe](../data/shop-probe.md) before the first visit.
 - **Conduct**: read-only, human-paced, no scripts; challenges recorded, never bypassed; terms read first; no purchase or account.
-- **Checks** [F39]: guest checkout; total incl. shipping before pay; bot challenge; accepts Mastercard prepaid (reported, not counted).
+- **Checks** [F39]: guest checkout; total incl. shipping before pay; bot challenge; accepts Mastercard prepaid (not counted).
 - **Hostile to agents** [F81], set before the first probe: no guest checkout, or a bot challenge, or no total before pay.
 - **Threshold**: the shop-side claim stands only if at least 4 of 10 are hostile [F39]; else drop it from [01](01-product-brief.md) and [07](07-pitch.md).
 
@@ -49,7 +49,7 @@ padded_listing:    ESCALATE R10.unavailable (usage.truncated)       # judge-depe
 flagged_seller:    DENY R9 (S2)             # deterministic (capture state)
 off_category:      DENY R6 (earbuds [F29]) # deterministic
 fees:              DENY R3 on the total incl. fees [F3]            # deterministic (HKD only; the cart builder refuses FX)
-duplicate:         a repeat of a live cart returns the earlier Decision, one mint (02 §6); the harness submits with allowRepeat   # deterministic
+duplicate:         a repeat of a live cart returns the earlier Decision, one mint (02 §6); the harness passes no allowRepeat   # deterministic
 replay:            second charge on a used token declines CARD_USED            # deterministic
 wrong_merchant:    MERCHANT_MISMATCH (SIMULATED merchant lock)                 # deterministic
 rail_timeout:      retry with the same idempotency key, one charge             # deterministic
@@ -58,15 +58,16 @@ judge_down:        ERROR, then ESCALATE R10.unavailable (I5, F34)              #
 
 | Metric | Counts | Out of |
 |---|---|---|
-| overspend rate | authorised above min(remaining, cap) | all scenarios |
+| overspend rate | authorised above min(remaining, cap, ceiling) | all scenarios |
+| over-limit mint rate | card limit above it (none counts) | all scenarios |
 | wrong-merchant rate | payment outside mandate merchants | scenarios reaching pay |
 | false-block rate | not approved | legitimate scenarios |
 | stop-breach rate | stop cases charged | stop cases |
 | injection pass-through | judge-only injection cases charged [F36] | those cases |
 | p50, p95 latency | cart proposed to decision [F35] | live |
 
-- **Report**: k/n beside every percentage; `data/results/` files hold seed, commit, time, host load and a scope note (the signed log is checked for integrity, not consent). Evidence only if every component is real and no replayed recording is provisional; latency from `live` runs only [F26].
-- **Targets** [F38]: T-H1, 0 over-limit mints in deterministic scenarios; T-H2, at least 90% of legitimate scenarios approved, reported as measured (a judge timeout blocks), after the shopper's answer and without timeouts. Misses are reported, not retuned. T-H2 moves with host load (deadline F34): quote it from a quiet host [F69].
+- **Report**: k/n beside every percentage; `data/results/` files hold seed, commit, time, host load and a scope note. Evidence only if every component is real and no recording is provisional; latency from `live` runs only [F26].
+- **Targets** [F38]: T-H1, 0 over-limit mints in deterministic scenarios; T-H2, at least 90% of legitimate scenarios approved, reported as measured (a timeout blocks), after the shopper's answer and without timeouts. Misses are reported, not retuned. T-H2 moves with host load (deadline F34): quote it from a quiet host. Final run (seed 7, da2c814): both met [F69].
 
 ## Manual-route comparison
 - **Routes**: M, the holder by hand (read total incl. shipping, check the packet, make a Single Use Card [F1.issuance]); A, the agent flow.
@@ -79,7 +80,7 @@ judge_down:        ERROR, then ESCALATE R10.unavailable (I5, F34)              #
 |---|---|---|
 | Fit 25 | one decision, one delegator, E1-E5 | mandate M0 (DM1), stops (DM3-DM5), loss rule (DM9) |
 | Execution 25 | approve, reject, escalate; audit timeline | engine, planner trace, judge (DM2-DM5), log timeline (DM7), harness (DM8) |
-| UX, Gen Z 20 | none listed | booth a judge drives, EN + zh-HK UI, sealed packet |
+| UX, Gen Z 20 | none listed | phone-first app a judge drives, EN + zh-HK, sealed budget |
 | Security, trust 15 | signed delegation credential; ALLOW/DENY verifier; revocation; blocked replay; no duplicate payment | credential + R1, verifier and tamper (DM7), revoke (DMR1), replay, timeout |
 | Rail feasibility 15 | single-use scoped token; Mastercard, UnionPay, FPS | SUC semantics [F1], merchant lock and purpose (SIMULATED), RailPort table (09) |
 
