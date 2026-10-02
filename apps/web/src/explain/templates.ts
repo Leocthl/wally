@@ -41,16 +41,16 @@ const isEscalation = (i: Inputs): boolean => i["verdict"] === "ESCALATE";
 
 export const TEMPLATES: Readonly<Record<TemplateId, Template>> = {
   "R1.invalid_signature": {
-    en: () => "Stopped by R1. The mandate signature did not verify.",
-    zh: () => `${stoppedZh(1)}授權書簽名驗證不通過。`,
+    en: () => "Stopped by R1. The signature on your rules did not verify.",
+    zh: () => `${stoppedZh(1)}你的規則簽署驗證不通過。`,
   },
   "R2.revoked": {
-    en: (i) => `Stopped by R2. Mandate revoked at ${time(i, "revoked_at")}.`,
-    zh: (i) => `${stoppedZh(2)}授權已於 ${time(i, "revoked_at")} 撤銷。`,
+    en: (i) => `Stopped by R2. Budget cancelled at ${time(i, "revoked_at")}.`,
+    zh: (i) => `${stoppedZh(2)}預算已於 ${time(i, "revoked_at")} 取消。`,
   },
   "R2.expired": {
-    en: (i) => `Stopped by R2. Mandate expired at ${time(i, "valid_until")}.`,
-    zh: (i) => `${stoppedZh(2)}授權已於 ${time(i, "valid_until")} 過期。`,
+    en: (i) => `Stopped by R2. Budget ended at ${time(i, "valid_until")}.`,
+    zh: (i) => `${stoppedZh(2)}預算已於 ${time(i, "valid_until")} 到期。`,
   },
   "R3.over_remaining": {
     en: (i) => `Stopped by R3. Total ${money(i, "total_minor")} is over the ${money(i, "remaining_minor")} left.`,
@@ -69,11 +69,11 @@ export const TEMPLATES: Readonly<Record<TemplateId, Template>> = {
     zh: (i) => `${stoppedZh(5)}總額 ${money(i, "total_minor")} 超出卡額上限 ${money(i, "ceiling_minor")}。`,
   },
   "R6.off_mandate": {
-    en: (i) => `Stopped by R6. ${text(i, "what", "This purchase")} is outside the mandate.`,
-    zh: (i) => `${stoppedZh(6)}${text(i, "what", "這項購買")}不在授權範圍內。`,
+    en: (i) => `Stopped by R6. ${text(i, "what", "This purchase")} is outside your rules.`,
+    zh: (i) => `${stoppedZh(6)}${text(i, "what", "這項購買")}不在你的規則範圍內。`,
   },
   "R7.velocity": {
-    en: (i) => `Stopped by R7. ${count(i, "n")} mints in ${seconds(i, "window_s")}, the limit is ${count(i, "max")}.`,
+    en: (i) => `Stopped by R7. ${count(i, "n")} cards made in ${seconds(i, "window_s")}, the limit is ${count(i, "max")}.`,
     zh: (i) => `${stoppedZh(7)}${seconds(i, "window_s")}內發卡 ${count(i, "n")} 次，上限為 ${count(i, "max")} 次。`,
   },
   "R8.max_active": {
@@ -97,8 +97,8 @@ export const TEMPLATES: Readonly<Record<TemplateId, Template>> = {
     zh: (i) => `${isEscalation(i) ? askZh(10) : stoppedZh(10)}賣家風險 ${prob(i, "p")} 高於 ${prob(i, "threshold")}。`,
   },
   "R10.scope": {
-    en: (i) => `Escalated by R10. May be outside ${text(i, "category", "the mandate category")}.`,
-    zh: (i) => `${askZh(10)}可能超出「${text(i, "category", "授權類別")}」範圍。`,
+    en: (i) => `Escalated by R10. May be outside ${text(i, "category", "your rules")}.`,
+    zh: (i) => `${askZh(10)}可能超出「${text(i, "category", "你的規則")}」範圍。`,
   },
   "R10.escalate": {
     en: (i) => `Escalated by R10. The judge asks you to decide (${prob(i, "p")} over ${prob(i, "threshold")}).`,

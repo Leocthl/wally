@@ -7,6 +7,7 @@ import { Misses, missesOf } from "../src/evidence/components/Misses";
 import { parseHarnessFile } from "../src/evidence/harnessGuard";
 import type { HarnessRun } from "../src/evidence/types";
 import { useReveal } from "../src/evidence/useReveal";
+import { TEMPLATES } from "../src/explain/templates";
 import { OneOffCard } from "../src/screens/console/OneOffCard";
 import { claimAsk, noteAsk } from "../src/screens/run/askEcho";
 import { Stopped } from "../src/screens/run/components/Stopped";
@@ -192,5 +193,15 @@ describe("the proof strip", () => {
     const stagger = (total: number): string => render(<ChainStrip total={total} result={{ ok: true }} runKey={String(total)} />).container.querySelector<HTMLElement>(".pf-chain")!.style.getPropertyValue("--pf-stagger");
     expect(stagger(5)).toBe("60ms");
     expect(Number.parseInt(stagger(24), 10)).toBeLessThanOrEqual(25);
+  });
+});
+
+describe("the stop sentences Receipts and the Presenter show", () => {
+  it("use the app's words (budget, rules, one-off card), never mandate, mint, packet or 授權", () => {
+    const words = /mandate|\bmint(s|ed)?\b|packet|利是|授權/i;
+    for (const [id, template] of Object.entries(TEMPLATES)) {
+      expect(template.en({}), `${id} en`).not.toMatch(words);
+      expect(template.zh({}), `${id} zh`).not.toMatch(words);
+    }
   });
 });
