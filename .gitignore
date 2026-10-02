@@ -18,3 +18,4 @@ services/laya/*.log
 apps/web/test-results/
 apps/*/test-results/
 playwright-report/
+.metadata_never_index
