@@ -1,6 +1,7 @@
 // App root: language and toasts for everything, the booth connection, and the shell (src/shell). The ApiClient is
 // injected, so the same app runs on the HTTP client, the in-browser engine and the offline mock. #/styleguide renders
-// outside the shell. Optional slots for later waves: suggestRules (Seal reads the sentence) and onAsk (Ask sheet field).
+// outside the shell. The Ask field and the Seal sentence reader use the client's own ask and compileRules; suggestRules
+// and onAsk replace them (tests, other hosts).
 import { useCallback, useState, type ReactElement } from "react";
 import type { ApiClient } from "./api/types";
 import { BoothProvider } from "./hooks/useBooth";
@@ -14,9 +15,9 @@ import { ToastProvider } from "./ui/Toast";
 
 export interface AppProps {
   readonly api: ApiClient;
-  /** Later wave: a model reads the budget sentence into rules. Seal shows "Read my sentence" and never seals by itself. */
+  /** Another reader for the budget sentence than api.compileRules. Seal shows "Read my sentence" and never seals by itself. */
   readonly suggestRules?: SuggestRules;
-  /** Later wave: a natural-language request from the Ask sheet. */
+  /** Another asker than api.ask for the Ask sheet's natural-language field. */
   readonly onAsk?: AskWally;
 }
 

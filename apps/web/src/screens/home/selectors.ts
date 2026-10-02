@@ -2,6 +2,7 @@
 // engine side and the reducer starts over with it (state/booth.ts), so everything in the state is the current budget's.
 import type { CardRecord, Decision, EscalationView, LogEntry } from "../../api/types";
 import type { BoothState } from "../../state/booth";
+import { plainName } from "../run/model/item";
 
 export type DecisionOutcome = Decision["outcome"];
 
@@ -31,8 +32,8 @@ function rowOf(entry: LogEntry, d: Decision): DecisionRow {
     id: d.id,
     seq: entry.seq,
     outcome: d.outcome,
-    title: d.cart.items[0]?.title ?? d.cart.merchant.name,
-    merchant: d.cart.merchant.name,
+    title: plainName(d.cart.items[0]?.title ?? d.cart.merchant.name),
+    merchant: plainName(d.cart.merchant.name),
     totalMinor: d.cart.total_minor,
     at: d.decided_at,
   };
@@ -76,7 +77,7 @@ export function openEscalations(state: BoothState): readonly EscalationView[] {
 export function decisionTitle(state: BoothState, decisionId: string): string | null {
   for (const e of currentEntries(state)) {
     const d = decisionOf(e);
-    if (d?.id === decisionId) return d.cart.items[0]?.title ?? d.cart.merchant.name;
+    if (d?.id === decisionId) return plainName(d.cart.items[0]?.title ?? d.cart.merchant.name);
   }
   return null;
 }

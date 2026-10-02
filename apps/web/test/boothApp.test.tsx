@@ -138,6 +138,8 @@ describe("Needs your OK: from the Budget banner to the answer (S5, R11)", () => 
     expect(screen.getByText("Wally couldn't check this seller recently.")).toBeInTheDocument();
     await go("#/budget");
     const { region, decisionId } = await banner();
+    expect(region).toHaveTextContent("Cotton tee");
+    expect(region).not.toHaveTextContent("(SIMULATED)");
     const review = within(region).getByRole("link", { name: /Review/ });
     expect(review).toHaveAttribute("href", `#/wally?d=${decisionId}`);
     await h.user.click(review);

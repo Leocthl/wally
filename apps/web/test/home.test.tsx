@@ -37,6 +37,8 @@ describe("budget card", () => {
     const first = within(recent).getAllByRole("link")[0]!;
     expect(first).toHaveTextContent(/Approved · #\d+/);
     expect(first).toHaveTextContent("HK$259");
+    expect(first).toHaveTextContent("Cotton tee");
+    expect(first).not.toHaveTextContent("(SIMULATED)"); // the chip says it; the fixture's suffix does not repeat it
     const decisionId = (await h.api.snapshot()).log.entries.filter((e) => e.kind === "DECISION").at(-1)?.payload["id"];
     expect(first).toHaveAttribute("href", `#/wally?d=${String(decisionId)}`);
   });
