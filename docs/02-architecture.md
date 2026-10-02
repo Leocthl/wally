@@ -225,14 +225,11 @@ sequenceDiagram
 
 | Component | Package | Responsibility |
 |---|---|---|
-| **Orchestrator** | core | One per packet, one queue: seal, submit, suggestAlternatives, checkout, answerEscalation, revoke, tick; timers; the log is the only state |
-| **Cart builder, executor** | core | Cart priced from the listing record only, HKD only [F3]; checkout re-quote (R12) |
-| **Engine, crypto, log** | core | Pure `decide`, `decideCheckout` (R1-R12); `foldPacket`; JCS, Ed25519, did:key, `verifyChain` |
-| **Planner, compiler** | agent | Planners `rule`, `local`, `replay`; sentence-to-rules compiler |
-| **Judge adapters** | agent | `SystemOneJudge` (laya, jev), replay judge |
-| **Laya, Qwen** | services | Judge on 127.0.0.1:8808 [F11c]; `llama-server` on 127.0.0.1:8809 for planner and compiler [F27, F63] |
-| **rail-sim** | rail-sim | `RailPort` + merchant stub, F1 semantics |
-| **Web, verifier, harness** | apps, harness | React PWA, Hono booth server [F64]; offline verifier [F66]; seeded replays ([05](05-evidence-plan.md)) |
+| **Orchestrator, cart builder, executor** | core | One per packet, one queue, timers; cart priced from the listing record only, HKD [F3]; checkout re-quote (R12) |
+| **Engine, crypto, log** | core | Pure `decide`, `decideCheckout`; `foldPacket`; JCS, Ed25519, did:key, `verifyChain` |
+| **Planners, compiler, judge adapters** | agent | `rule`, `local`, `replay`; sentence to rules; `SystemOneJudge` (laya, jev), replay judge |
+| **Laya, Qwen** | services | Judge on :8808 [F11c]; planner and compiler on :8809 [F27, F63]; both 127.0.0.1 |
+| **rail-sim, web, mobile, verifier, harness** | rail-sim, apps | `RailPort` + merchant stub; React PWA, Hono booth server [F64]; Capacitor shells; offline verifier [F66]; seeded replays ([05](05-evidence-plan.md)) |
 
 ## 4. Trust boundaries
 
@@ -250,45 +247,27 @@ sequenceDiagram
 
 | ID | Enforcement point | Test |
 |---|---|---|
-| I1 | Mint only after a logged APPROVE with no FAIL rule and a fresh re-fold; a repeat returns the same card | T-I1 |
+| I1 | Mint only after a logged APPROVE and a fresh re-fold; a repeat returns the same card | T-I1 |
 | I2 | `approved_limit_minor = cart.total_minor`; rail-sim mints exactly that | T-I2 |
 | I3 | Judge enters only via R10; outcome = max severity | T-I3 |
 | I4 | No keys in the planner; one `propose_cart` out; lint bans `agent` importing signing or rail-sim; model hosts loopback unless `*_ALLOW_REMOTE` | T-I4 |
 | I5 | Timeouts [F33, F34]; judge TIMEOUT or ERROR → `R10.unavailable`; other errors → `{ ok: false }`, no card | T-I5 |
 | I6 | R2; revoke voids ACTIVE cards; queue orders revoke against mint; mint re-folds the packet | T-I6 |
 | I7 | `appendEntry` before side effects; one DECISION per decide; a stored log is verified before each fold | T-I7, T-V1 |
-| I8 | No PAN/CVV/expiry fields; `appendEntry` refuses card-like text and keys (best effort); CI scans fixtures, prompts | T-I8 |
+| I8 | No PAN/CVV/expiry fields; `appendEntry` refuses card-like text and keys (best effort); CI scans fixtures and prompts | T-I8 |
 
 ## 6. Data model
 
-| Schema | AP2 analogue [F12] | Logged as |
-|---|---|---|
-| MandateCredential | Intent mandate | `MANDATE_SEALED` payload |
-| Cart | Cart mandate | inside `DECISION` |
-| Decision, CardRecord | payment-mandate evidence | `DECISION`, `CARD_MINTED` |
-| LogEntry, PacketState | none | every line; PacketState is folded, never stored |
-
-- **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet is revoked or expires; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`. A failed mint keeps its hold until revoke or expiry (accepted).
+- **AP2 analogues** [F12]: MandateCredential = Intent mandate; Cart = Cart mandate; Decision and CardRecord = payment evidence. PacketState is folded from the log, never stored.
+- **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet ends; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`.
 - **Resolution**: an answer, R11 expiry or R12 drift makes a new Decision with `resolves`; an answer must bind to the escalated cart, the pinned delegator and a verified signature, else DENY R11.
-- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED, unexpired) or an open ESCALATE; `allowRepeat` decides afresh (booth buttons, harness).
+- **Idempotency**: a decision id digests cart id, cart fingerprint, time and outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED, unexpired) or an open ESCALATE; `allowRepeat` decides afresh (booth scenario buttons only).
+- **Family budget** (D17): a credential may carry `parent`. `seal(credential, { parentCredential })` verifies the parent against the pinned parent key, then `checkChildWithinParent` allows only narrowing (budget after siblings' shares, categories, merchants, seller check, per-purchase terms, velocity, end date), else `EXCEEDS_PARENT` and nothing logged. The parent credential is not in the child's log, so the offline verifier cannot check the link.
 
 ## 7. Rule catalogue
 
-| ID | Pass when | On fail |
-|---|---|---|
-| R1 | proof verifies against the pinned delegator; packet and cart match the mandate (budget, currency, expiry, agent) | DENY `R1.invalid_signature` |
-| R2 | not revoked, not expired | DENY `R2.revoked`, `R2.expired` |
-| R3 | total <= remaining | DENY `R3.over_remaining` |
-| R4 | total <= cap and <= `ask_above` | DENY `R4.over_cap`; ESCALATE `R4.ask_above` |
-| R5 | total <= ceiling [F1] | DENY `R5.over_ceiling` |
-| R6 | domain and categories inside the mandate | DENY `R6.off_mandate` |
-| R7 | mints in the window < max [F32] | DENY `R7.velocity` |
-| R8 | active cards < max [F1] | DENY `R8.max_active` |
-| R9 | not FLAGGED; Scameter capture fresh if required [F52] | DENY `R9.flagged`; ESCALATE `R9.unverified` |
-| R10 | judge under thresholds (§9) | DENY or ESCALATE |
-| R11 | escalation answered within the window [F31] | DENY `R11.expired` |
-| R12 | all price fields equal at the re-quote (`decideCheckout`) | DENY `R12.price_drift` + void |
-
+- **R1-R12**: pass conditions and failure outcomes are in [00](00-context.md) (Rules, Stops, template IDs). Failure-only templates: `R1.invalid_signature`, `R5.over_ceiling`, `R6.off_mandate`, `R8.max_active`, `R10.escalate`, `R10.unavailable`.
+- **Details**: R1 also checks that packet and cart match the mandate (budget, currency, expiry, agent). R4 passes when the total is <= the cap and <= `ask_above`. R5 and R8 read the rail limits [F1], R7 the velocity window [F32], R9 a fresh capture if required [F52]. R12 compares every price field at the re-quote (`decideCheckout`) and voids the card. R10 reads the thresholds in §9.
 - **Hard rules** R1-R8, R12 survive any answer; only R4 `ask_above`, R9 unverified and R10 ESCALATE are answerable. Outcome: any DENY, else any ESCALATE, else APPROVE; a FAIL without a verdict is DENY.
 
 ## 8. Explanation templates
@@ -307,9 +286,9 @@ escalate_or_proceed  proceed | escalate                   P(escalate) >= T_esc  
 
 - **Gate**: built in code from the first three questions; `escalate_or_proceed` carries no signal [F50]. Held-out (SIMULATED): 35/47 legitimate carts approved, 2/14 injected; the seller gate is inert. The F38 floor is not met at judge level; the harness meets it end to end [F36, F69].
 - **Providers**: `SystemOneJudge` for `laya` (default [F11c]) and `jev` (optional [F11b]); `replay` for CI and the booth fallback. No LLM judge.
-- **Request**: `model: typed-decisions`, wording v5, rotations averaged back [F26]. The state is a nested JSON object; listing text sits only in `listing.description`, NFKC-normalised, never in instructions.
+- **Request**: `model: typed-decisions`, wording v5, rotations averaged back [F26]. Listing text sits only in `listing.description`, NFKC-normalised, never in instructions.
 - **Failure**: `assess` never throws; timeout F34, no retry; TIMEOUT, ERROR or `usage.truncated` (Laya drops a long state's tail [F26]) → ESCALATE `R10.unavailable`. Windowing off [F55]; limits [F54].
-- **Mode**: `JUDGE_MODE` (default `enforce`) lives in `EngineConfig.judge_mode`; `shadow` marks R10 SKIPPED; the record's `shadow` flag is informational.
+- **Mode**: `JUDGE_MODE` (default `enforce`); `shadow` marks R10 SKIPPED.
 
 ```text
 POST {LAYA_BASE_URL | JEV_BASE_URL}/v1/systemone          exact shape: services/laya/FINDINGS.md
@@ -330,18 +309,18 @@ POST {LAYA_BASE_URL | JEV_BASE_URL}/v1/systemone          exact shape: services/
 | Processed payment cannot be cancelled [F2] | `void` acts on ACTIVE tokens only |
 | No merchant lock or purpose found [F1] | SIMULATED `merchant_lock`, default the approved cart's domain; another merchant → `MERCHANT_MISMATCH`; asked in 09 |
 
-- **Idempotent**: `mint` by `decision.id`; `authorise` by key (a retry returns the first event). The executor logs `eventFor(key)`, the rail's own record, not the merchant's claim.
+- **Idempotent**: `mint` by `decision.id`; `authorise` by key (a retry returns the first event); the executor logs the rail's own record, not the merchant's claim.
 - **Refusals** are typed (§18): the executor refuses unless decision and card are in the log, with at most 3 merchant calls per checkout [F53]. Stub mode `preauth` charges above the quote [F2]: a false block, tolerance asked in 09.
-- **Calibration (T-R1)**: one human-typed real decline [F40], see 05 and `data/real-card-test.md`.
+- **Calibration (T-R1)**: one human-typed real decline [F40] is pending (05); until then sim-only.
 
 ## 11. Crypto
 
 - **Libraries**: `@noble/*`, `@scure/base`, `canonicalize` (RFC 8785); tested on the W3C vc-di-eddsa, RFC 8785 and RFC 8032 vectors.
 - **Keys**: did:key = `did:key:z` + base58btc(0xed 0x01 + public key) for delegator, agent, engine; no rotation, so a leaked key means a new mandate. Demo keys: `pnpm keys:gen` (gitignored `.keys/`).
-- **Credential**: AgentDelegationCredential (VC 2.0, ADR-0007). R1 = `verifyMandateCredential(vc, { expectedIssuer })`; no pinned delegator, no pass. The proof carries the document's `@context`.
+- **Credential**: AgentDelegationCredential (VC 2.0, ADR-0007). R1 = `verifyMandateCredential(vc, { expectedIssuer })`; no pinned delegator, no pass.
 - **Other signatures**: Ed25519 over UTF-8(`<domain>:` + hex SHA-256(JCS(object minus `signature`))); domains `laisee.revoke.v1`, `laisee.resolve.v2` (delegator; answers carry `mandate_id`, `cart_sha256`), `laisee.log.v1` (engine). The head `{log_id, seq, entry_hash}` is published outside the log.
 - **Shortcut**: the web API holds the delegator demo key; on-device mode makes every key in the page (`apps/web/src/api/local/KEYS.md`).
-- **The log proves** tamper, reorder, truncation (with the checkpoint), signatures and, for what is logged, consent and money. Not omissions, a re-fold, or that the shopper meant it.
+- **The log proves** tamper, reorder, truncation (with the checkpoint), signatures and, for what is logged, consent and money; not omissions or intent.
 
 ```text
 AgentDelegationCredential { @context: [credentials/v2, laisee delegation/v1], type: [VerifiableCredential, AgentDelegationCredential],
@@ -378,42 +357,44 @@ verifyChain(entries, publicKeys, headCheckpoint?)  -> ok + head | first failing 
 
 | Threat | Mitigation | Residual risk |
 |---|---|---|
-| **Prompt injection** | Planner reads no descriptions (`includeListingText` is a measurement flag, off), holds no keys (I4); R10 | Judge misses [F36]; shown text moved Qwen in 2/31 cases [F68]; image text unchecked |
+| **Prompt injection** | Planner reads no descriptions (`includeListingText` is off), holds no keys (I4); R10 | Judge misses [F36]; shown text moved Qwen in 2/31 cases [F68]; image text unchecked |
 | **Price change** | Limit = total (I2); re-quote → R12 + void; short TTL [F30] | Pre-auth → false block [F2] |
-| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise` and `submit`; R8; verifier refuses a second card per APPROVE | `allowRepeat` opts out on purpose; the harness result predates idempotent submit [F69]; bounded by R3, R7, R8 |
+| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise` and `submit`; R8; verifier refuses a second card per APPROVE | `allowRepeat` opts out on purpose (booth scenario buttons); bounded by R3, R7, R8 |
 | **Revocation race** | Per-packet queue; revoke voids ACTIVE tokens; later carts, checkouts DENY R2 | A used card is final [F2] |
 | **Log tampering, replay** | Hash chain; signatures bind `log_id`, `seq`, mandate, cart; checkpoint; verifier step 9 | Engine-key holder rewrites after the last checkpoint; unlogged events unseen |
-| **Key custody** | Delegator pinned in orchestrator and verifier; roles separate | Demo shortcut (§11); no rotation |
+| **Key custody** | Delegator pinned in orchestrator and verifier; roles separate | Demo shortcut (§11), Mum's key too; no rotation |
+| **LAN mode** | Pairing token, Host and Origin allowlists (§15) | Plain http, one shared token: its holder can run scenarios, tamper and reset |
 | **Card data in logs** | No PAN/CVV fields; `appendEntry` guard; size caps [F67] | Best effort; the SIMULATED handle is in `CARD_MINTED` by design |
-| **Judge false allow, outage; Scameter miss** | Judge only tightens (I3); hard rules hold; ERROR or truncation → ESCALATE; "no record" is not "safe" [F6, F52] | Clean-looking scam listing; new scam shops; padding if windowing is off |
+| **Judge false allow, outage; Scameter miss** | Judge only tightens (I3); hard rules hold; ERROR or truncation → ESCALATE; "no record" is not "safe" [F6, F52] | Clean-looking scam listing; new scam shops |
 
 ## 13. Stack and repo layout
 
 ```text
 apps/web            Vite + React PWA (incl. Booth), Hono booth server (HTTP + SSE), portable booth backend
 apps/verifier       static offline verifier page (one file, strict CSP)
+apps/mobile         Capacitor 8 shells for iOS and Android around the on-device web build
 packages/core       types from schemas, packet fold, R1-R12, engine, explain, crypto + credential, log, verifier, cart, executor, orchestrator, ports
 packages/rail-sim   RailPort + merchant stub (SIMULATED)
 packages/agent      planners (rule, local, replay), compiler, judge adapters (SystemOneJudge, replay), shadow wrapper, judge fit
 packages/harness    seeded replay scenarios, B0/B1/B2 metrics
 services/laya       local Laya server: setup.sh, serve.sh, stop.sh, smoke.mjs (Python venv and weights gitignored)
 services/qwen       local llama-server for Qwen3.5: setup.sh, serve.sh, stop.sh, smoke.mjs (weights gitignored)
-scripts/            keys-gen, verify-log, demo-reset, booth-check, gen-types, docs-check, trace-check
+scripts/            keys-gen, verify-log, demo-reset, booth-check, gen-types, docs-check, trace-check, rename-scope (run once, last)
 schemas/            JSON Schema 2020-12, source of truth
 data/               fixtures (SIMULATED), captures (OBSERVED), results (MEASURED), public-keys.json
 docs/
 ```
 
-- **JSON Schema first**: generated types; ajv validators compiled ahead of time, so no page needs `eval` (strict CSP on the verifier); `gen-types --check` guards stale output.
+- **JSON Schema first**: generated types; ajv validators compiled ahead of time (no `eval`, strict CSP on the verifier); `gen-types --check` guards stale output.
 - **Append-only JSONL**, no database; a restart on an existing log is refused (`LOG_EXISTS`); `pnpm demo:reset` starts clean. Models run over loopback HTTP outside the TypeScript packages (ADR-0006, ADR-0008, ADR-0009).
-- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); on-device `local` (real engine, orchestrator, rail-sim, signers in the page; recorded answers, so typed text makes the judge ERROR and escalate); `mock` (tests only). The service worker skips `/api`.
+- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); `local` on-device (the real stack and signers in the page, recorded answers, so typed text escalates); `mock` (tests). LAN mode adds a pairing token (§15). The service worker skips `/api`.
 
 ## 14. Planner
 
-- **Providers** (`PLANNER_PROVIDER`): `rule`, `local`, `replay` (CI, booth fallback); the booth server defaults to `auto`: `local` if Qwen's `/health` answers in 1.5 s [F64], else `rule` if Laya's does, else `replay`, chosen once at start. `claude` is removed. All return no proposal on failure (I5), read structured fields only, set no money (I4).
+- **Providers** (`PLANNER_PROVIDER`): `rule`, `local`, `replay`; the booth server defaults to `auto`: `local` if Qwen's `/health` answers in 1.5 s [F64], else `rule` if Laya's does, else `replay`, chosen once at start. All return no proposal on failure (I5), read structured fields only, set no money (I4).
 - **`rule`**: the Laya decision loop in a deterministic harness, not a generative LLM: typed choices (item, variant, next action) logged with probabilities; small margins abstain [F47]; step cap [F46].
 - **`local`**: Qwen3.5-9B reads English, Chinese or Cantonese and returns one grammar-constrained JSON answer; enums come from the supplied catalogue; code clamps quantity and guards near-ties [F58]. On 25 calls: wrong item in 0/26 scenarios; author-written cases, no held-out set [F68]. Qwen never gates a decision (ADR-0009).
-- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: `POST /api/compile` serves the compiler; the Seal screen does not call it yet.
+- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: Seal's "Read my sentence" calls `POST /api/compile`; only the shopper seals.
 
 ## 15. Env config
 
@@ -425,34 +406,38 @@ PLANNER_BASE_URL=http://127.0.0.1:8809    PLANNER_MODEL=qwen3.5-9b-q4km    PLANN
 QWEN_MODEL=9b|4b (serve)   QWEN_MODELS="9b 4b" (setup: which weights to fetch)   QWEN_SKIP_VERIFY=1 (skip the SHA-256 check)   QWEN_SPEC=mtp|off
 JEV_BASE_URL=  JEV_MODEL=jev-1.13.0 [F11b]  TYPESAFE_API_KEY=      optional: hosted jev
 RAIL_MODE=sim    KEY_DIR=./.keys    LOG_DIR=./.data/logs    PORT=8787    VITE_API=local (on-device build)
+HOST=127.0.0.1 (default). Any non-loopback HOST, or the --lan flag, turns LAN mode on
 ```
 
 ```text
 pnpm demo                preflight, build if needed, start API and UI on 127.0.0.1:8787
 pnpm demo:reset          new demo keys, empty logs, back to the sealed packet
+pnpm demo:lan            booth-check --lan, then the server with --lan: binds 0.0.0.0, LAN mode ON, pairing links and a QR code in About and Presenter
 pnpm keys:gen            pnpm verify-log <log> <public-keys> [checkpoint]      pnpm verifier (one-file offline page)      pnpm coverage
 pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]
 pnpm --filter @laisee/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
 services/{laya,qwen}/{setup,serve,stop}.sh
-GET  /api/health /info /snapshot /log /export /events (SSE)
-POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only)
+GET  /api/health /info /snapshot /log /export /events (SSE) /family /lan
+POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only; LAN mode: the guards below)
 ```
 
 - **No variable is required**; no key. Secrets in `.env` only (gitignored).
+- **LAN mode** (off by default): `/api/*` needs the pairing token [F92] (header `X-Wally-Token` or cookie `wally_t`) except `/api/health` and `/api/lan`; a page on the Mac needs none and alone reads `/api/lan` (token, links, QR).
+- **LAN guards** [F92]: Host must be loopback or the Mac's own address or name; a POST Origin must be the page's own, loopback or a native shell.
 
 ## 16. Latency budget
 
-- **Planner** 20 s [F33], local 9B p50 1,735 ms, p95 2,593 ms [F68]. **Judge** 1,500 ms per call [F34], p95 345 ms [F26]; a loaded host can time it out [F69]. **Cart proposed → verdict + mint** p95 <= 3,000 ms [F35]; B2 live p50 147 ms, p95 374 ms [F69].
+- **Planner** 20 s [F33], local 9B p50 1,735 ms, p95 2,593 ms [F68]. **Judge** 1,500 ms per call [F34], p95 345 ms [F26]; a loaded host can time it out [F69]. **Cart proposed → verdict + mint** p95 <= 3,000 ms [F35]; B2 live p50 159.7 ms, p95 388.9 ms [F69].
 
 ## 17. Real vs simulated
 
 | Part | Status |
 |---|---|
-| Card rail, merchant checkout, storyline amounts | SIMULATED; no issuing API found [F1]; amounts [F20-F23] |
+| Card rail, merchant, amounts | SIMULATED; no issuing API found [F1]; [F20-F23] |
 | Credential, signing, chain, verifier | REAL crypto, throwaway keys; demo shortcut (§11) |
-| Judge, planner | REAL local models, Laya and Qwen [F11c, F27]; `replay` and on-device recordings labelled |
+| Judge, planner | REAL local models [F11c, F27]; `replay` and on-device recordings labelled |
 | Scameter | manual REAL captures + SIMULATED flagged fixture [F6] |
-| Calibration decline, shop probe, listings | REAL: one human-typed decline [F40], read-only probe [F39], captures; fixtures SIMULATED |
+| Decline test, shop probe, listings | REAL human-run captures, still pending [F39, F40]; fixtures SIMULATED |
 | Harness numbers | MEASURED(n), simulated rail [F69] |
 
 ## 18. Interfaces
@@ -534,7 +519,7 @@ declare function render(templateId: TemplateId, inputs: Record<string, unknown>,
 // One orchestrator per packet. deps: engine, planner (PlannerFactory), judge, rail, merchant, store, signer (engine key), clock,
 // ids, scameter, appendEntry, delegatorDid (required, pinned), executor?, config?. Every method resolves; none rejects.
 interface Orchestrator {
-  seal(credential: unknown): Promise<SealResult>;                       // R1 first; LOG_EXISTS if the log has entries
+  seal(credential: unknown, options?: { parentCredential?: unknown }): Promise<SealResult>; // R1 first; LOG_EXISTS if the log has entries; a family budget needs the parent credential (EXCEEDS_PARENT if wider)
   submit(req: { requestText: string; listings: ListingRecord[]; checkout?: "auto" | "none"; allowRepeat?: boolean }): Promise<SubmitResult>; // a live repeat returns the earlier decision with duplicate: true
   suggestAlternatives(req: { decisionId: string }): Promise<SubmitResult>;   // after a DENY by R3 or R4; else NOT_APPLICABLE; result carries alternativeTo
   checkout(req: { cardId: string; idempotencyKey?: string }): Promise<CheckoutResult>;   // AUTHORISED | DECLINED | DRIFT | DENIED | TIMEOUT
