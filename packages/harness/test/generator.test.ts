@@ -166,14 +166,19 @@ describe.each(SEEDS)("generator coverage, seed %i", (seed) => {
     }
   });
 
-  it("uses the fx block only in the fx category and keeps fx totals including the fee", () => {
+  it("prices in HKD only: the cart builder has no FX source, so no cart carries an fx block", () => {
     for (const s of scenarios) {
-      if (s.category === "fx") {
-        expect(s.cart.fx, s.id).not.toBeNull();
-        expect(s.cart.fx?.fee_ref, s.id).toBe("F3.fx_settled_hkd");
-      } else {
-        expect(s.cart.fx, s.id).toBeNull();
-      }
+      expect(s.cart.fx, s.id).toBeNull();
+      expect(s.cart.currency, s.id).toBe("HKD");
+    }
+  });
+
+  it("the fees category states its listing fee in the cart and keeps it in the total", () => {
+    const fees = scenarios.filter((s) => s.category === "fees");
+    expect(fees.length).toBeGreaterThan(0);
+    for (const s of fees) {
+      expect(s.cart.fees_minor, s.id).toBeGreaterThan(0);
+      expect(s.cart.total_minor, s.id).toBe(s.cart.subtotal_minor + s.cart.shipping_minor + s.cart.fees_minor);
     }
   });
 

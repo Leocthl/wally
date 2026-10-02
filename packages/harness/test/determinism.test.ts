@@ -90,7 +90,9 @@ describe("determinism: same seed, same scenarios, same results with the recorded
     const run = replay.result["run"] as { judge: { replay: { misses: number } } };
     expect(run.judge.replay.misses).toBeGreaterThan(0);
     expect((replay.result["evidence"] as { reasons: string[] }).reasons.join(" ")).toContain("no recording");
-    expect(replay.outcomes.B2.filter((o) => o.mints.length > 0 && o.judge?.status !== "OK")).toEqual([]); // an unrecorded input never mints
+    // An unrecorded input is an unusable judge, so the engine escalates and the shopper must say yes before anything mints.
+    const unasked = replay.outcomes.B2.filter((o) => o.mints.length > 0 && o.judge?.status !== "OK" && o.escalations.every((e) => e.answer !== "APPROVE"));
+    expect(unasked).toEqual([]);
   }, RUN_MS);
 });
 

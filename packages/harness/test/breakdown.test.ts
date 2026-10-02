@@ -25,6 +25,7 @@ const BASE: Omit<RunOutcome, "scenarioId" | "baseline"> = {
   latencyMs: null,
   error: null,
   log: null,
+  escalations: [],
 };
 const outcome = (s: Scenario, baseline: Baseline, over: Partial<RunOutcome> = {}): RunOutcome => ({ ...BASE, scenarioId: s.id, baseline, ...over });
 const legit = first((s) => s.label.legitimate && s.label.payment.kind === "authorised");

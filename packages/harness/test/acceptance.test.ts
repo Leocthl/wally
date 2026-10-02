@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ACCEPTANCE, SCENARIO_COUNT } from "../src/config";
+import { BENIGN_IMPERATIVES, INJECTION_CORPUS } from "../src/scenario/injections";
+import { FakeJudge } from "@laisee/core/testing";
 import type { RunOutput } from "../src/run";
 import { testRun } from "./support/run-fixture";
 import { RUN_MS } from "./support/timeouts";
@@ -61,22 +63,54 @@ describe("acceptance targets [F38] with the real engine, rail, merchant and exec
   }, RUN_MS);
 });
 
-describe("a run says what it is made of", () => {
-  it("reports the engine, rail, merchant and executor as real and the cart builder as the stand-in", async () => {
-    const { result } = await runFor(7);
-    const c = result["components"] as Record<string, { real: boolean }>;
-    expect(c["engine"]?.real).toBe(true);
-    expect(c["rail"]?.real).toBe(true);
-    expect(c["merchant"]?.real).toBe(true);
-    expect(c["executor"]?.real).toBe(true);
-    expect(c["cartBuilder"]?.real).toBe(false);
+describe("T-H2 three ways, so a reader can see how much of a miss is the machine", () => {
+  const timingOut = (input: { readonly cart: { readonly id: string } }) => (Number.parseInt(input.cart.id.replace(/\D/g, "").slice(-1) || "0", 10) % 3 === 0 ? { status: "TIMEOUT" as const } : {});
+  const judge = new FakeJudge({ respond: timingOut });
+  let run: Promise<RunOutput> | null = null;
+  const timedOutRun = (): Promise<RunOutput> => (run ??= testRun({ seed: 7, judge }));
+  const acceptance = (out: RunOutput, id: string) => out.computed.acceptance.find((a) => a.id === id);
+
+  it("lists the legitimate scenarios whose judge call timed out, with their count and the host load, and never retries them", async () => {
+    const out = await timedOutRun();
+    const legitTimeouts = out.scenarios.filter((s, i) => s.label.legitimate && out.outcomes.B2[i]?.judge?.status === "TIMEOUT");
+    expect(legitTimeouts.length).toBeGreaterThan(0);
+    const detail = (out.result["acceptance_detail"] as { judge_timeout_cases: { count: number; scenarios: string[]; host_load_average_1m: number | null } }).judge_timeout_cases;
+    expect(detail.scenarios).toEqual(legitTimeouts.map((s) => s.id));
+    expect(detail.count).toBe(legitTimeouts.length);
+    expect(out.summary).toContain(`**Judge-timeout cases**: ${legitTimeouts.length} of`);
+    // One judge call per submission, one per corpus item, none for an injected outage, none for an answer: nothing was retried.
+    const submissions = out.scenarios.filter((s) => s.events.judgeFault === "none").reduce((acc, s) => acc + s.events.submissions, 0);
+    expect(judge.calls.length).toBe(submissions + INJECTION_CORPUS.length + BENIGN_IMPERATIVES.length);
   }, RUN_MS);
 
-  it("never calls a run with a stand-in cart builder or a test-double judge product evidence", async () => {
+  it("counts a timeout as a block as measured, as a question the shopper answered, and drops it from the third number", async () => {
+    const out = await timedOutRun();
+    const measured = acceptance(out, "T-H2")?.result;
+    const afterAnswer = acceptance(out, "T-H2-after-answer")?.result;
+    const without = acceptance(out, "T-H2-without-timeouts")?.result;
+    if (!measured || !afterAnswer || !without) throw new Error("a T-H2 number is missing");
+    const legit = out.scenarios.filter((s) => s.label.legitimate).length;
+    const timeouts = (out.result["acceptance_detail"] as { judge_timeout_cases: { count: number } }).judge_timeout_cases.count;
+    expect([measured.n, afterAnswer.n, without.n]).toEqual([legit, legit, legit - timeouts]);
+    expect(measured.k).toBeLessThan(afterAnswer.k); // the shopper said yes to the escalations the timeouts caused
+    expect(without.k).toBeLessThanOrEqual(measured.k);
+    expect(acceptance(out, "T-H2")?.pass, "the pass flag follows the number as measured").toBe(measured.k * 100 >= measured.n * ACCEPTANCE.minLegitimateApprovedPct);
+  }, RUN_MS);
+});
+
+describe("a run says what it is made of", () => {
+  it("reports every component as real, the orchestrator and the real cart builder included", async () => {
     const { result } = await runFor(7);
-    const ev = result["evidence"] as { valid_as_product_evidence: boolean; reasons: string[] };
+    const c = result["components"] as Record<string, { real: boolean }>;
+    for (const name of ["engine", "orchestrator", "planner", "cartBuilder", "rail", "merchant", "executor", "judge"]) expect(c[name]?.real, name).toBe(true);
+  }, RUN_MS);
+
+  it("never calls a run with a test-double judge product evidence, and states the rule it applies", async () => {
+    const { result } = await runFor(7);
+    const ev = result["evidence"] as { valid_as_product_evidence: boolean; reasons: string[]; rule: string };
     expect(ev.valid_as_product_evidence).toBe(false);
-    expect(ev.reasons.join(" ")).toMatch(/cartBuilder/);
     expect(ev.reasons.join(" ")).toMatch(/test doubles/);
+    expect(ev.reasons.join(" ")).not.toMatch(/not the real implementation/);
+    expect(ev.rule).toMatch(/every component is the real implementation/);
   }, RUN_MS);
 });

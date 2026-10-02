@@ -63,7 +63,23 @@ describe("the governed world", () => {
     const paid = await world.checkout(decision, card);
     expect(paid).toMatchObject({ status: "SETTLED", event: { event: "AUTHORISED", amount_minor: s.cart.total_minor } });
     const audit = await world.audit();
-    expect(audit).toEqual({ entries: 4, decisions: 1, chainOk: true, failure: null }); // sealed, decision, card minted, card event
+    const before = s.packet.folded_through_seq + 1; // the sealed credential and the scenario's history
+    expect(audit).toEqual({ entries: before + 3, decisions: 1, chainOk: true, failure: null }); // then the decision, the card, the charge
+  });
+
+  it("folds the packet from its log: the scenario's packet at the start, and the card this decision minted after", async () => {
+    const world = await open(s);
+    const start = await world.packet();
+    expect(start).toEqual(s.packet);
+    const decision = decide(s, true);
+    await world.recordDecision(decision);
+    const card = await world.mint(decision, s.cart.merchant.domain, s.cart.id);
+    await world.recordMint(card);
+    const after = await world.packet();
+    expect(after?.committed_minor).toBe((start?.committed_minor ?? 0) + card.limit_minor);
+    expect(after?.remaining_minor).toBe((start?.remaining_minor ?? 0) - card.limit_minor);
+    expect(after?.active_cards.map((c) => c.id)).toContain(card.id);
+    expect(after?.mint_times).toHaveLength((start?.mint_times.length ?? 0) + 1);
   });
 
   it("the rail will not mint for a decision that is not an APPROVE (I1)", async () => {
@@ -86,7 +102,7 @@ describe("the governed world", () => {
     await first.recordDecision(decision);
     await first.mint(decision, s.cart.merchant.domain, s.cart.id);
     const second = await open(s);
-    expect(await second.audit()).toMatchObject({ entries: 1, decisions: 0, chainOk: true }); // only MANDATE_SEALED
+    expect(await second.audit()).toMatchObject({ entries: s.packet.folded_through_seq + 1, decisions: 0, chainOk: true }); // only the credential and the history
   });
 
   it("a wrong-merchant payment declines MERCHANT_MISMATCH and moves no money", async () => {
@@ -123,9 +139,10 @@ describe("the ungoverned world (B0's card on file)", () => {
   const s = pick("within_budget", "plain");
   const open = (): Promise<World> => createComponents().ungoverned(s);
 
-  it("keeps no log and no proof: nothing was sealed, nothing can be audited", async () => {
+  it("keeps no log and no proof: nothing was sealed, nothing can be audited, no packet is folded", async () => {
     const world = await open();
     expect(world.mandateProofValid).toBeUndefined();
+    expect(await world.packet()).toBeNull();
     expect(await world.audit()).toBeNull();
     expect(await world.recordDecision(decide(s, true))).toBeNull();
   });
