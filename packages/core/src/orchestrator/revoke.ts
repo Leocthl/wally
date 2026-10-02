@@ -8,10 +8,10 @@ import type { Run } from "./events";
 import { activeCardIds, isRevoked } from "./log-view";
 import type { RevokeSuccess } from "./types";
 
-function verified(sealed: Sealed, signedRevocation: unknown): Revocation {
-  const check = verifyRevocation(signedRevocation, sealed.mandate.delegator);
+function verified(ctx: Ctx, sealed: Sealed, signedRevocation: unknown): Revocation {
+  const check = verifyRevocation(signedRevocation, ctx.deps.delegatorDid);
   if (!check.valid) throw new StepError("INVALID_REVOCATION", `revocation refused (${check.reason}): ${check.detail}`);
-  const revocation = signedRevocation as Revocation; // schema-valid and signed by the delegator
+  const revocation = structuredClone(signedRevocation) as Revocation; // schema-valid, signed by the pinned delegator
   if (revocation.mandate_id !== sealed.mandate.id) throw new StepError("INVALID_REVOCATION", "the revocation names another mandate");
   return revocation;
 }
@@ -33,7 +33,7 @@ async function voidActive(ctx: Ctx, run: Run, logId: string): Promise<{ voided: 
 
 /** Inside the packet queue. */
 export async function revokeInQueue(ctx: Ctx, run: Run, sealed: Sealed, signedRevocation: unknown): Promise<RevokeSuccess> {
-  const revocation = verified(sealed, signedRevocation);
+  const revocation = verified(ctx, sealed, signedRevocation);
   const already = isRevoked(await readEntries(ctx, sealed.logId));
   if (!already) await append(ctx, sealed.logId, "MANDATE_REVOKED", revocation);
   await flushLog(ctx, sealed.logId);

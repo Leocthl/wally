@@ -1,5 +1,6 @@
 // Test rig for orchestrator-*.test.ts: the real engine, appendEntry, signers and credential, with fakes for the
 // planner, judge, rail, merchant and store. SIMULATED storyline data [F20-F23].
+import { ENGINE_CONFIG } from "../src/config";
 import { createEngine } from "../src/engine";
 import type { ListingRecord, LogEntry, MandateCredential, ProposeCartInput, Revocation } from "../src/generated";
 import { appendEntry, signEscalationAnswer, signRevocation } from "../src/log";
@@ -84,7 +85,7 @@ export function rig(options: RigOptions = {}): Rig {
   const cartIds = sequentialCartIds("orch");
   let runs = 0;
   const orchestrator = createOrchestrator({
-    engine: options.engine ?? createEngine(),
+    engine: options.engine ?? createEngine({ config: { ...ENGINE_CONFIG, judge_mode: "enforce" } }), // JUDGE_MODE=enforce
     planner: options.planner ?? planners.factory,
     judge: options.judge ?? new FakeJudge(),
     rail,
@@ -95,6 +96,7 @@ export function rig(options: RigOptions = {}): Rig {
     ids: { cartId: options.cartIds ?? (() => cartIds.cartId()), runId: () => `run_${String((runs += 1)).padStart(4, "0")}` },
     scameter: lookupOf(),
     appendEntry,
+    delegatorDid: keys.delegator.did,
     ...(options.config === undefined ? {} : { config: options.config }),
   });
   const events: OrchestratorEvent[] = [];

@@ -1,6 +1,6 @@
 // Escalation answers and R11 expiry (A-23, T-S5), revoke and the revoke race (A-24, T-S4), expiry (A-25, T-S6)
 // and repeated checkout on one card, with fakes. The serialised queue orders revoke against mint (I6).
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ENGINE_CONFIG } from "../src/config";
 import type { Cart, Decision } from "../src/generated";
 import type { DecidedResult } from "../src/orchestrator";
@@ -8,6 +8,8 @@ import type { CardEvent, JudgeInput, JudgePort, JudgeRecord, MerchantPort, Merch
 import { FakeJudge, FakeMerchant, type FakeRail } from "../src/testing";
 import { LISTING_TEE, PROPOSAL_A1 } from "./cart-helpers";
 import { deferred, rig, settle, type Rig } from "./orchestrator-helpers";
+
+vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded
 
 const UNCHECKED_TEE = [{ ...LISTING_TEE, scameter_ref: null }]; // NOT_CHECKED => ESCALATE R9.unverified
 const TEE = [LISTING_TEE];
@@ -51,22 +53,23 @@ describe("escalation answers (A-23)", () => {
     expect(result).toMatchObject({ ok: true, outcome: "DENY", card: null, escalation: { state: "DENIED" } });
   });
 
-  it("an answer signed by anyone but the delegator is a logged DENY R11 (signature_invalid), never approval", async () => {
+  it("an answer signed by anyone but the pinned delegator is refused before decide; a tampered answer too", async () => {
     const r = await sealed();
     const esc = await escalate(r);
     const { signEscalationAnswer } = await import("../src/log");
     const forged = signEscalationAnswer({ decision_id: esc.id, choice: "APPROVE", answered_at: r.clock.now() }, r.keys.engine);
-    const result = await r.orchestrator.answerEscalation(forged);
-    expect(result).toMatchObject({ ok: true, outcome: "DENY", card: null, decision: { explanation: { template_id: "R11.expired" } } });
-    expect((result as DecidedResult).decision.rules.find((x) => x.id === "R11")?.inputs["answer_problem"]).toBe("signature_invalid");
-    const tampered = { ...r.answer(esc.id, "APPROVE"), choice: "DENY" as const };
-    expect(await r.orchestrator.answerEscalation(tampered)).toMatchObject({ ok: false, code: "ESCALATION_CLOSED" });
+    expect(await r.orchestrator.answerEscalation(forged)).toMatchObject({ ok: false, code: "INVALID_ANSWER" });
+    const tampered = { ...r.answer(esc.id, "DENY"), choice: "APPROVE" as const };
+    expect(await r.orchestrator.answerEscalation(tampered)).toMatchObject({ ok: false, code: "INVALID_ANSWER" });
+    expect(await r.kinds()).toEqual(["MANDATE_SEALED", "DECISION"]);
+    expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "OPEN" })]);
   });
 
   it("malformed, unknown or repeated answers make no Decision", async () => {
     const r = await sealed();
     const esc = await escalate(r);
     expect(await r.orchestrator.answerEscalation({ decision_id: esc.id, choice: "MAYBE" })).toMatchObject({ ok: false, code: "INVALID_ANSWER" });
+    expect(await r.orchestrator.answerEscalation(r.answer("dec_noSuchDecision1", "APPROVE"))).toMatchObject({ ok: false, code: "UNKNOWN_ESCALATION" });
     expect(await r.orchestrator.answerEscalation(r.answer("dec_noSuchDecision1", "APPROVE"))).toMatchObject({ ok: false, code: "UNKNOWN_ESCALATION" });
     await r.orchestrator.answerEscalation(r.answer(esc.id, "DENY"));
     expect(await r.orchestrator.answerEscalation(r.answer(esc.id, "APPROVE"))).toMatchObject({ ok: false, code: "ESCALATION_CLOSED" });

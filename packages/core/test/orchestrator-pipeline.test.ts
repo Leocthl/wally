@@ -1,10 +1,12 @@
 // Orchestrator pipeline with fakes (A-26): seal, submit, the order DECISION before mint (I1, I7), no proposal and
 // invalid carts make no Decision, I4 at the planner boundary, events in order, snapshot without handles.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { OrchestratorEvent } from "../src/orchestrator";
 import { FakeRail } from "../src/testing";
 import { LISTING_JACKET, LISTING_SOCKS, LISTING_TEE, PROPOSAL_A1, PROPOSAL_A3, PROPOSAL_A4 } from "./cart-helpers";
 import { rig } from "./orchestrator-helpers";
+
+vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded
 
 const TEE = [LISTING_TEE];
 

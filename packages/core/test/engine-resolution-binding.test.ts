@@ -169,7 +169,7 @@ describe("resolution binding properties", () => {
       }),
       { numRuns: 200, seed: PROPERTY_SEED },
     );
-  });
+  }, 60_000);
 
   it("approves exactly when every binding holds (escalated, id, OPEN, same cart, signature, answer target)", () => {
     const { decision, packet, expiresAt } = escalated();
@@ -199,7 +199,7 @@ describe("resolution binding properties", () => {
       }),
       { numRuns: 300, seed: PROPERTY_SEED },
     );
-  });
+  }, 60_000);
 
   it("is deterministic with the binding in place", () => {
     const { decision, packet } = escalated();

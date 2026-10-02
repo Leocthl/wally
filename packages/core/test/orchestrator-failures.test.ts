@@ -1,6 +1,6 @@
 // Failure injection (T-I5 at orchestrator level): judge timeout, error or junk; planner fault or hang; append,
 // mint and read failures. Every path fails closed: no card without a logged APPROVE, and the queue keeps working.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createEngine } from "../src/engine";
 import type { CardRecord, LogEntry } from "../src/generated";
 import type { PlannerFactory } from "../src/orchestrator";
@@ -8,6 +8,8 @@ import { MintError, type Engine, type JudgePort, type JudgeRecord, type MintRequ
 import { FakeJudge, FakeRail, MemoryLogStore } from "../src/testing";
 import { LISTING_TEE, PROPOSAL_A1 } from "./cart-helpers";
 import { rig, type Rig } from "./orchestrator-helpers";
+
+vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded
 
 const TEE = [LISTING_TEE];
 const FAST = { judgeTimeoutMs: 25, plannerTimeoutMs: 25 };

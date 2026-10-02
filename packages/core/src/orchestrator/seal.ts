@@ -5,15 +5,21 @@ import { checkpointOf } from "../log/checkpoint";
 import { logIdForMandate } from "../log/ids";
 import { mandateFromCredential } from "../vc/mandate";
 import { verifyMandateCredential } from "../vc/proof";
-import { StepError, append, flushLog, now, readEntries, readLogState, type Ctx } from "./context";
+import { StepError, append, describe, flushLog, now, readLogState, readUnsealed, type Ctx } from "./context";
 import type { Run } from "./events";
 import type { SealSuccess } from "./types";
 
+/** A private copy, verified against the pinned delegator; the mandate is built from this same object (no TOCTOU). */
 function verified(ctx: Ctx, credential: unknown): MandateCredential {
-  const expected = ctx.deps.delegatorDid;
-  const check = verifyMandateCredential(credential, expected === undefined ? {} : { expectedIssuer: expected });
+  let copy: unknown;
+  try {
+    copy = structuredClone(credential);
+  } catch (err) {
+    throw new StepError("INVALID_CREDENTIAL", `credential is not plain data: ${describe(err)}`);
+  }
+  const check = verifyMandateCredential(copy, { expectedIssuer: ctx.deps.delegatorDid });
   if (!check.valid) throw new StepError("INVALID_CREDENTIAL", `credential refused (${check.reason}): ${check.detail}`);
-  return credential as MandateCredential; // schema-valid and proof-checked by verifyMandateCredential
+  return copy as MandateCredential; // schema-valid, issued and proof-signed by the pinned delegator
 }
 
 /** Inside the packet queue. */
@@ -22,7 +28,7 @@ export async function sealInQueue(ctx: Ctx, run: Run, credential: unknown): Prom
   const vc = verified(ctx, credential);
   const mandate = mandateFromCredential(vc);
   const logId = logIdForMandate(mandate.id);
-  if ((await readEntries(ctx, logId)).length > 0) throw new StepError("LOG_EXISTS", `${logId} already has entries; reset the demo data to seal it again`);
+  if ((await readUnsealed(ctx, logId)).length > 0) throw new StepError("LOG_EXISTS", `${logId} already has entries; reset the demo data to seal it again`);
   await append(ctx, logId, "MANDATE_SEALED", vc);
   ctx.memory.sealed = { logId, mandate };
   const state = await readLogState(ctx, logId, now(ctx));

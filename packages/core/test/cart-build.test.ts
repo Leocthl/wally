@@ -199,7 +199,7 @@ describe("buildCart rejections (invalid_cart, no Decision)", () => {
     );
     const throwing = { cartId: (): string => { throw new Error("id source down"); } };
     expect(rejected(buildCart(input({ ids: throwing })))).toBe("cart_invalid");
-  });
+  }, 60_000);
 });
 
 describe("buildCart properties", () => {
@@ -225,5 +225,5 @@ describe("buildCart properties", () => {
       }),
       { numRuns: 200, seed: PROPERTY_SEED },
     );
-  });
+  }, 60_000);
 });

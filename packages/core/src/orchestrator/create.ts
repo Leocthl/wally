@@ -1,8 +1,11 @@
 // createOrchestrator: wires the injected ports into one packet pipeline. Every public method resolves (never
 // rejects, snapshot aside): a failure is an OperationFailure plus an error event, and the queue keeps working (I5).
+import { parseDidKey } from "../crypto/did-key";
 import { createExecutor } from "../executor";
+import type { Executor } from "../executor/types";
 import { createExclusive } from "../executor/queue";
-import { resolveConfig } from "./config";
+import { attestMerchant } from "./attest";
+import { OrchestratorConfigError, resolveConfig } from "./config";
 import { checkoutCard } from "./checkout";
 import { PACKET_QUEUE_KEY, StepError, describe, sealedOrThrow, type Ctx } from "./context";
 import { createEmitter, createReporter, type Run } from "./events";
@@ -61,16 +64,25 @@ async function operate<T extends { readonly ok: boolean }>(
   }
 }
 
+/** The default executor charges through the attested merchant, so the log carries the rail's own events (H5). */
+function executorFor(deps: OrchestratorDeps): Executor {
+  if (deps.executor !== undefined) return deps.executor;
+  const merchant = attestMerchant(deps.merchant, deps.rail);
+  return createExecutor({ merchant, rail: deps.rail, store: deps.store, signer: deps.signer, appendEntry: deps.appendEntry, clock: deps.clock });
+}
+
 export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
+  if (typeof deps.delegatorDid !== "string" || parseDidKey(deps.delegatorDid) === null) {
+    throw new OrchestratorConfigError("delegatorDid must be the pinned delegator's Ed25519 did:key");
+  }
   const emitter = createEmitter();
-  const executor = deps.executor ?? createExecutor({ merchant: deps.merchant, rail: deps.rail, store: deps.store, signer: deps.signer, appendEntry: deps.appendEntry, clock: deps.clock });
   const ctx: Ctx = {
     deps,
     config: resolveConfig(deps.config),
-    executor,
+    executor: executorFor(deps),
     report: createReporter(emitter, deps.clock, deps.ids),
     queue: createExclusive(),
-    memory: { sealed: null, emittedThrough: -1 },
+    memory: { sealed: null, emittedThrough: -1, checkpoint: null },
   };
   const inQueue = <T>(task: () => Promise<T>): Promise<T> => ctx.queue(PACKET_QUEUE_KEY, task);
   return {

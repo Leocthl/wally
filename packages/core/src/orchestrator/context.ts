@@ -6,6 +6,8 @@ import type { Exclusive } from "../executor/queue";
 import type { LogEntry, LogEntryKind, LogPayloadByKind, Mandate, MandateCredential, PacketState } from "../generated";
 import { checkpointOf } from "../log/checkpoint";
 import { foldPacket } from "../packet/fold";
+import type { Checkpoint } from "../ports";
+import { verifyChain } from "../verify/chain";
 import { mandateFromCredential } from "../vc/mandate";
 import { verifyMandateCredential } from "../vc/proof";
 import type { Reporter, FailureExtra } from "./events";
@@ -21,6 +23,8 @@ export interface Memory {
   sealed: Sealed | null;
   /** seq of the last log entry delivered as a `log` event (-1 before seal). */
   emittedThrough: number;
+  /** Last head checkpoint published; every later read must still contain it (no truncation, no rewrite). */
+  checkpoint: Checkpoint | null;
 }
 
 export interface Ctx {
@@ -66,12 +70,27 @@ export interface LogState {
   readonly packet: PacketState;
 }
 
-export async function readEntries(ctx: Ctx, logId: string): Promise<readonly LogEntry[]> {
+async function readRaw(ctx: Ctx, logId: string): Promise<readonly LogEntry[]> {
   try {
     return await ctx.deps.store.read(logId);
   } catch (err) {
     throw new StepError("LOG_UNAVAILABLE", `the log could not be read: ${describe(err)}`);
   }
+}
+
+/** Entries of a log that must not exist yet (seal). No verification: an empty log has nothing to verify. */
+export const readUnsealed = (ctx: Ctx, logId: string): Promise<readonly LogEntry[]> => readRaw(ctx, logId);
+
+/**
+ * The stored log, verified before anything acts on it: hash chain, engine signatures (the pinned engine key),
+ * the seq 0 credential against the pinned delegator, and the last published checkpoint (truncation, rewrite).
+ */
+export async function readEntries(ctx: Ctx, logId: string): Promise<readonly LogEntry[]> {
+  const entries = await readRaw(ctx, logId);
+  const keys = { engine: [ctx.deps.signer.did], delegator: ctx.deps.delegatorDid };
+  const report = verifyChain(entries, keys, ctx.memory.checkpoint ?? undefined);
+  if (!report.ok) throw new StepError("LOG_INVALID", `the stored log fails verification at seq ${report.failedSeq} (${report.reason})`);
+  return entries;
 }
 
 export async function readLogState(ctx: Ctx, logId: string, at: Date): Promise<LogState> {
@@ -100,7 +119,8 @@ export async function flushLog(ctx: Ctx, logId: string): Promise<void> {
   const last = fresh.at(-1);
   if (last === undefined) return;
   ctx.memory.emittedThrough = last.seq;
-  ctx.report.emit({ type: "checkpoint", head: checkpointOf(last) });
+  ctx.memory.checkpoint = checkpointOf(last);
+  ctx.report.emit({ type: "checkpoint", head: ctx.memory.checkpoint });
 }
 
 /** Appends one signed entry (I7). Fails with LOG_APPEND_FAILED and no entry written. */

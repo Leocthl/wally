@@ -65,11 +65,17 @@ export interface OrchestratorDeps {
   /** Scameter capture lookup for the cart builder. */
   readonly scameter: ScameterLookup;
   readonly appendEntry: AppendEntry;
-  /** Default: createExecutor from merchant, rail, store, signer, appendEntry and clock. */
+  /**
+   * Default: createExecutor over the merchant wrapped by attestMerchant (the rail's own event is logged, never the
+   * merchant's claim) plus rail, store, signer, appendEntry and clock. An injected executor must do the same.
+   */
   readonly executor?: Executor;
   readonly config?: Partial<OrchestratorConfig>;
-  /** When set, seal refuses a credential from any other issuer (did:key of the delegator). */
-  readonly delegatorDid?: string;
+  /**
+   * The pinned delegator did:key (required). Seal refuses any other issuer; revocations and escalation answers
+   * must be signed by it; every stored log is verified against it and the engine key before a fold.
+   */
+  readonly delegatorDid: string;
 }
 
 // ---------- Views (no card handle: it never leaves the orchestrator except inside log entries) ----------
@@ -150,6 +156,10 @@ export type OrchestratorErrorCode =
   | "LOG_APPEND_FAILED"
   | "ENGINE_FAILED"
   | "DUPLICATE_DECISION"
+  /** The re-fold right before mint said no: packet not ACTIVE, approval resolved or already minted, or not a clean APPROVE. */
+  | "MINT_ABORTED"
+  /** The stored log failed verification against the pinned keys or the last published checkpoint. */
+  | "LOG_INVALID"
   | "MINT_REFUSED"
   | "MINT_FAILED"
   | "CHECKOUT_FAILED"
@@ -212,7 +222,17 @@ export interface CheckoutTimeoutResult {
   readonly idempotencyKey: string;
 }
 
-export type CheckoutResult = CheckoutSettledResult | CheckoutDriftResult | CheckoutTimeoutResult | OperationFailure;
+/** R1 or R2 at checkout (revoked, expired, proof): the engine's DENY is logged, the card voided, nothing presented. */
+export interface CheckoutDeniedResult {
+  readonly ok: true;
+  readonly runId: string;
+  readonly status: "DENIED";
+  readonly cardId: string;
+  readonly decision: Decision;
+  readonly voided: boolean;
+}
+
+export type CheckoutResult = CheckoutSettledResult | CheckoutDriftResult | CheckoutDeniedResult | CheckoutTimeoutResult | OperationFailure;
 
 /** engine.decide ran and its Decision is in the log. */
 export interface DecidedResult {

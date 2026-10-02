@@ -7,7 +7,7 @@ import { validateCardRecord } from "../schema";
 import { purposeOf } from "./config";
 import { StepError, append, describe, emitPacket, flushLog, now, readLogState, type Ctx } from "./context";
 import type { Run } from "./events";
-import { escalationViewOf, findDecision, toCardView } from "./log-view";
+import { decisions, escalationViewOf, findDecision, toCardView } from "./log-view";
 import { checkoutCard } from "./checkout";
 import type { CardView, CheckoutMode, CheckoutResult, DecidedResult, EscalationView } from "./types";
 
@@ -91,7 +91,25 @@ async function voidAtOnce(ctx: Ctx, cardId: string): Promise<string> {
   }
 }
 
+/** Why this decision must not be minted now, from a clean APPROVE check and a fresh fold of the log; or null. */
+async function mintBlocker(ctx: Ctx, logId: string, decision: Decision): Promise<string | null> {
+  if (decision.outcome !== "APPROVE") return "the decision is not an APPROVE (I1)";
+  if (decision.rules.some((r) => r.result === "FAIL")) return "the APPROVE carries a FAIL rule";
+  if (decision.approved_limit_minor !== decision.cart.total_minor) return "the approved limit is not the cart total (I2)";
+  const state = await readLogState(ctx, logId, now(ctx)); // re-fold: another writer may have logged since the decide
+  if (state.packet.status !== "ACTIVE") return `the packet is ${state.packet.status} now (I6)`;
+  if (findDecision(state.entries, decision.id) === undefined) return "the approval is not in the log (I7)";
+  if (decisions(state.entries).some((d) => d.resolves === decision.id)) return "the approval was resolved by a later decision";
+  if (state.entries.some((e) => e.kind === "CARD_MINTED" && e.payload.decision_id === decision.id)) return "a card was already minted for this approval";
+  return null;
+}
+
 async function mintFor(ctx: Ctx, run: Run, logId: string, decision: Decision): Promise<CardView> {
+  const blocker = await mintBlocker(ctx, logId, decision);
+  if (blocker !== null) {
+    ctx.report.stage(run, "rail", "skipped", { note: "mint aborted" });
+    throw new StepError("MINT_ABORTED", `no mint: ${blocker}`, { decision });
+  }
   ctx.report.stage(run, "rail", "running");
   let card: CardRecord;
   try {

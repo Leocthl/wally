@@ -1,6 +1,7 @@
-// Escalation answers (A-23): the delegator's signed answer is verified here; the engine decides the resolution
-// with the ESCALATE decision read from the log (resolution.escalated) and the signature result. A malformed answer,
-// an unknown or already closed escalation is refused without a Decision; a bad signature is a logged DENY R11.
+// Escalation answers (A-23): the answer is verified against the PINNED delegator before anything else; a malformed
+// or forged answer is refused without a Decision, so the escalation stays open for the real delegator. The engine
+// then decides the resolution with the ESCALATE decision read from the log (resolution.escalated: its own cart,
+// its judge record) and still checks the binding itself. An unknown or already resolved escalation is refused.
 import type { EscalationAnswer, LogEntry } from "../generated";
 import { verifyEscalationAnswer } from "../log/delegator";
 import { PACKET_QUEUE_KEY, StepError, readEntries, sealedOrThrow, type Ctx } from "./context";
@@ -19,9 +20,9 @@ function openEscalation(entries: readonly LogEntry[], decisionId: string) {
 /** Throws StepError; the caller turns it into an OperationFailure. */
 export async function answerSteps(ctx: Ctx, run: Run, signedAnswer: unknown, options: AnswerOptions): Promise<DecidedResult> {
   const sealed = sealedOrThrow(ctx);
-  const check = verifyEscalationAnswer(signedAnswer, sealed.mandate.delegator);
-  if (!check.valid && check.reason === "SCHEMA") throw new StepError("INVALID_ANSWER", `the answer fails its schema: ${check.detail}`);
-  const answer = signedAnswer as EscalationAnswer; // schema-valid (checked above)
+  const check = verifyEscalationAnswer(signedAnswer, ctx.deps.delegatorDid);
+  if (!check.valid) throw new StepError("INVALID_ANSWER", `answer refused (${check.reason}): ${check.detail}`);
+  const answer = structuredClone(signedAnswer) as EscalationAnswer; // schema-valid and signed by the pinned delegator
   return ctx.queue(PACKET_QUEUE_KEY, async () => {
     const escalated = openEscalation(await readEntries(ctx, sealed.logId), answer.decision_id);
     return decideAndRecord(ctx, {
@@ -30,7 +31,7 @@ export async function answerSteps(ctx: Ctx, run: Run, signedAnswer: unknown, opt
       cart: escalated.cart,
       judge: Promise.resolve(escalated.judge), // a resolution copies the judge record of the decision it resolves
       resolution: { resolves: escalated.id, answer, escalated },
-      answerSignatureValid: check.valid,
+      answerSignatureValid: true, // verified above; the engine refuses any answer without it
       checkout: options.checkout ?? "none",
     });
   });
