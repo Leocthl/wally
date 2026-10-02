@@ -1,12 +1,13 @@
-// Audit (lane s-audit): binding of a delegator's escalation answer. The answer signs only
-// {decision_id, choice, answered_at, signer}; nothing ties the decision that consumes it to the cart the
-// delegator was shown, and nothing stops one answer from being consumed twice in the verifier.
+// Audit (lane s-audit): binding of a delegator's escalation answer. The answer signed only
+// {decision_id, choice, answered_at, signer}; nothing tied the decision that consumes it to the cart the
+// delegator was shown, and nothing stopped one answer from being consumed twice in the verifier.
+// Lane s-fix-crypto: answers are laisee.resolve.v2 (mandate_id and cart_sha256 signed).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { engine } from "../src/engine";
 import type { Cart, Decision } from "../src/generated";
-import { signEscalationAnswer } from "../src/log";
+import { cartSha256, signEscalationAnswer } from "../src/log";
 import { foldPacket } from "../src/packet";
 import type { EscalationAnswer } from "../src/ports";
 import { loadFixture } from "../src/testing/fixtures";
@@ -28,6 +29,8 @@ const CART_SWAPPED: Cart = {
 
 const answer = (decisionId: string): EscalationAnswer => ({
   decision_id: decisionId,
+  mandate_id: M0.id,
+  cart_sha256: cartSha256(CART_SHOWN), // v2 binding: the answer names the cart the delegator was shown
   choice: "APPROVE",
   answered_at: "2026-10-03T02:12:30Z",
   signer: M0.delegator,
@@ -82,7 +85,10 @@ async function logWith(resolving: (answer: EscalationAnswer) => Decision[]) {
   const keys = demoKeys();
   const cartA = loadFixture("carts/attempt-1.json", "cart");
   const escalate: Decision = { ...structuredClone(DECISION_EXAMPLE), id: "dec_demoE1", cart: cartA, outcome: "ESCALATE", escalation: { state: "OPEN", expires_at: EXPIRES } };
-  const signed = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "APPROVE", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.delegator);
+  const signed = signEscalationAnswer(
+    { decision_id: "dec_demoE1", mandate_id: escalate.mandate_id, cart: cartA, choice: "APPROVE", answered_at: new Date("2026-10-03T02:20:30Z") },
+    keys.delegator,
+  );
   const steps: DemoStep[] = [
     { kind: "MANDATE_SEALED", payload: demoCredential(keys) },
     { kind: "DECISION", payload: escalate },
@@ -116,7 +122,16 @@ const NO_ANSWER_LOG = await logWith(() => [
 ]);
 const DENIED_LOG = await (async () => {
   const keys = demoKeys();
-  const deny = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.delegator);
+  const deny = signEscalationAnswer(
+    {
+      decision_id: "dec_demoE1",
+      mandate_id: "mnd_demoM0",
+      cart: loadFixture("carts/attempt-1.json", "cart"),
+      choice: "DENY",
+      answered_at: new Date("2026-10-03T02:20:30Z"),
+    },
+    keys.delegator,
+  );
   return logWith(() => [
     approveOf("dec_demoE2", loadFixture("carts/attempt-1.json", "cart"), { resolves: "dec_demoE1", escalation: { state: "APPROVED", expires_at: EXPIRES, answer: deny } }),
   ]);

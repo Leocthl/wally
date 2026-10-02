@@ -1,8 +1,9 @@
 // verifyChain step 7 (PAYLOAD_SIGNATURE): delegator material and mandate bindings. The seq 0 credential
-// must verify against the expected delegator and root a log named after its mandate (no replay into
-// another log); later payloads must name the sealed mandate; revocations and escalation answers must be
-// the delegator's, and an answer must resolve an earlier ESCALATE decision of this log.
-import type { Decision, LogEntry, MandateCredential } from "../generated";
+// must verify against the pinned delegator and root a log named after its mandate (no replay into another
+// log); later payloads must name the sealed mandate; revocations and escalation answers must be the
+// delegator's, and an answer must be bound (laisee.resolve.v2) to an earlier ESCALATE decision of this log,
+// to this mandate and to that decision's cart.
+import type { Cart, Decision, LogEntry, MandateCredential } from "../generated";
 import { verifyEscalationAnswer, verifyRevocation } from "../log/delegator";
 import { logIdForMandate } from "../log/ids";
 import { mandateIdFromCredentialId } from "../vc/mandate";
@@ -12,8 +13,10 @@ export interface Sealed {
   readonly logId: string;
   readonly mandateId: string;
   readonly delegator: string;
-  /** ids of ESCALATE decisions seen so far. */
-  readonly escalations: ReadonlySet<string>;
+  /** The sealed budget (credentialSubject.rules.budget.amount_minor), for the semantics pass. */
+  readonly budgetMinor: number;
+  /** ESCALATE decisions seen so far: id -> the escalated cart an answer must be bound to. */
+  readonly escalations: ReadonlyMap<string, Cart>;
 }
 
 export type Delegated = { readonly ok: true; readonly sealed: Sealed } | { readonly ok: false; readonly detail: string };
@@ -28,19 +31,25 @@ export function checkSeal(entry: LogEntry, expectedDelegator: string): Delegated
   if (logIdForMandate(mandateId) !== entry.log_id) {
     return bad(`credential for ${mandateId} cannot root ${entry.log_id} (replayed into another log)`);
   }
-  return { ok: true, sealed: { logId: entry.log_id, mandateId, delegator: vc.issuer, escalations: new Set() } };
+  const budgetMinor = vc.credentialSubject.rules.budget.amount_minor;
+  return { ok: true, sealed: { logId: entry.log_id, mandateId, delegator: vc.issuer, budgetMinor, escalations: new Map() } };
+}
+
+function checkAnswer(decision: Decision, sealed: Sealed): string | null {
+  const answer = decision.escalation?.answer;
+  if (answer === undefined) return null;
+  if (decision.resolves !== answer.decision_id) return "escalation answer is not for the decision this one resolves";
+  const cart = sealed.escalations.get(answer.decision_id);
+  if (cart === undefined) return "escalation answer resolves no earlier ESCALATE in this log";
+  const check = verifyEscalationAnswer(answer, sealed.delegator, { decision_id: answer.decision_id, mandate_id: sealed.mandateId, cart });
+  return check.valid ? null : `escalation answer ${check.reason}: ${check.detail}`;
 }
 
 function checkDecision(decision: Decision, sealed: Sealed): Delegated {
-  const answer = decision.escalation?.answer;
-  if (answer !== undefined) {
-    const check = verifyEscalationAnswer(answer, sealed.delegator);
-    if (!check.valid) return bad(`escalation answer ${check.reason}: ${check.detail}`);
-    if (decision.resolves !== answer.decision_id) return bad("escalation answer is not for the decision this one resolves");
-    if (!sealed.escalations.has(answer.decision_id)) return bad("escalation answer resolves no earlier ESCALATE in this log");
-  }
+  const problem = checkAnswer(decision, sealed);
+  if (problem !== null) return bad(problem);
   if (decision.outcome !== "ESCALATE") return { ok: true, sealed };
-  return { ok: true, sealed: { ...sealed, escalations: new Set([...sealed.escalations, decision.id]) } };
+  return { ok: true, sealed: { ...sealed, escalations: new Map([...sealed.escalations, [decision.id, decision.cart]]) } };
 }
 
 /** Step 7 for seq > 0. */

@@ -15,6 +15,7 @@ export {
 export { toJsonl, toJsonlLine } from "./jsonl";
 export { findCardData, luhnValid } from "./i8";
 export { checkpointOf, headCheckpoint, parseCheckpoint } from "./checkpoint";
+export { cartSha256 } from "./cart-sha256";
 export {
   DelegatorSignError,
   delegatorSigningMessage,
@@ -24,6 +25,7 @@ export {
   signRevocation,
   verifyEscalationAnswer,
   verifyRevocation,
+  type AnswerBinding,
   type DelegatorCheck,
   type DelegatorDomain,
   type DelegatorFailure,

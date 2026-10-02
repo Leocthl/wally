@@ -624,10 +624,18 @@ export interface Escalation {
   answer?: EscalationAnswer;
 }
 /**
- * Delegator-signed answer to an ESCALATE. Signature over UTF-8 of 'laisee.resolve.v1:' + hex SHA-256(JCS(this object without signature)). Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.
+ * Delegator-signed answer to an ESCALATE, bound to the mandate and to the cart the delegator was shown. Signature over UTF-8 of 'laisee.resolve.v2:' + hex SHA-256(JCS(this object without signature)); a v1 answer (no mandate_id or cart_sha256) is refused. Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.
  */
 export interface EscalationAnswer {
   decision_id: DecisionId;
+  /**
+   * The sealed mandate the escalated decision belongs to.
+   */
+  mandate_id: string;
+  /**
+   * SHA-256, lowercase hex.
+   */
+  cart_sha256: string;
   choice: "APPROVE" | "DENY";
   answered_at: Timestamp;
   signer: DidKey;

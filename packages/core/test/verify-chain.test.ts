@@ -3,12 +3,12 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { createSigner, verificationMethodId } from "../src/crypto";
-import type { MandateCredential } from "../src/generated";
+import type { Cart, Decision, MandateCredential } from "../src/generated";
 import { signEscalationAnswer, signRevocation } from "../src/log";
 import { signMandateCredential } from "../src/vc";
 import { verifyChain } from "../src/verify";
 import { testSeed } from "./crypto-independent";
-import { asJson, buildDemoLog, buildLog, demoKeys, demoSteps, LOG_ID, resignChain } from "./log-helpers";
+import { asJson, buildDemoLog, buildLog, demoKeys, demoSteps, LOG_ID, MANDATE_ID, resignChain } from "./log-helpers";
 
 const demo = await buildDemoLog();
 const KEYS = demo.keys.publicKeys;
@@ -177,9 +177,13 @@ describe("verifyChain: delegator material (step 7)", () => {
     expect(resigned(withPayload(8, () => ({ ...forged, signer: KEYS.delegator })))).toMatchObject({ failedSeq: 8, reason: "PAYLOAD_SIGNATURE" });
   });
 
-  it("an escalation answer must be the delegator's and bind the escalated decision", () => {
-    const answerBy = (signer: typeof OTHER, decisionId: string) =>
-      signEscalationAnswer({ decision_id: decisionId, choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") }, signer);
+  it("an escalation answer must be the delegator's and bind the escalated decision, mandate and cart", () => {
+    const escalated = payloadOf(fresh()[6]) as unknown as Decision;
+    const answerBy = (signer: typeof OTHER, decisionId: string, binding: { mandate_id?: string; cart?: Cart } = {}) =>
+      signEscalationAnswer(
+        { decision_id: decisionId, mandate_id: MANDATE_ID, cart: escalated.cart, ...binding, choice: "DENY", answered_at: new Date("2026-10-03T02:20:30Z") },
+        signer,
+      );
     const withAnswer = (answer: unknown, resolves = "dec_demoE1") =>
       withPayload(7, (p) => ({ ...p, resolves, escalation: { ...(p["escalation"] as Json), answer } }));
     expect(resigned(withAnswer(answerBy(OTHER, "dec_demoE1")))).toMatchObject({ failedSeq: 7, reason: "PAYLOAD_SIGNATURE" });
@@ -188,6 +192,15 @@ describe("verifyChain: delegator material (step 7)", () => {
       reason: "PAYLOAD_SIGNATURE",
     });
     expect(resigned(withAnswer(answerBy(demo.keys.delegator, "dec_demoE1"), "dec_demoA3"))).toMatchObject({
+      failedSeq: 7,
+      reason: "PAYLOAD_SIGNATURE",
+    });
+    const otherCart = { ...escalated.cart, merchant: { ...escalated.cart.merchant, domain: "other-shop.example" } };
+    expect(resigned(withAnswer(answerBy(demo.keys.delegator, "dec_demoE1", { cart: otherCart })))).toMatchObject({
+      failedSeq: 7,
+      reason: "PAYLOAD_SIGNATURE",
+    });
+    expect(resigned(withAnswer(answerBy(demo.keys.delegator, "dec_demoE1", { mandate_id: "mnd_otherM1" })))).toMatchObject({
       failedSeq: 7,
       reason: "PAYLOAD_SIGNATURE",
     });
@@ -201,11 +214,16 @@ describe("verifyChain: delegator material (step 7)", () => {
   });
 });
 
-describe("verifyChain: every log appendEntry writes verifies (T-I7, property)", () => {
-  it("passes for random sequences of decisions, card events, revocation and expiry", async () => {
+describe("verifyChain: every log appendEntry writes passes steps 1-8 (T-I7, property)", () => {
+  // Random orders of the demo steps break consent and money rules (a card before its APPROVE, two cards for one
+  // decision, a decision id twice), so step 9 may fail them: only with a semantic reason, never an integrity one.
+  // verify-semantics.test.ts generates logs that follow the rules and checks they always pass.
+  const SEMANTIC = new Set(["NO_DECISION", "DUPLICATE", "CONSENT", "OVERSPEND", "AFTER_REVOKE"]);
+
+  it("fails random sequences of decisions, card events, revocation and expiry only on semantics", async () => {
     const keys = demoKeys();
     const steps = demoSteps(keys);
-    // Step 7 answers the ESCALATE of step 6, so a 7 is kept only after some 6.
+    // Step 7 answers the ESCALATE of step 6 (step 7 checks that binding), so a 7 is kept only after some 6.
     const picks = fc.array(fc.constantFrom(1, 2, 3, 4, 5, 6, 7, 8, 9), { maxLength: 10 }).map((xs) => {
       const firstEscalate = xs.indexOf(6);
       return xs.filter((x, i) => x !== 7 || (firstEscalate >= 0 && i > firstEscalate));
@@ -214,10 +232,19 @@ describe("verifyChain: every log appendEntry writes verifies (T-I7, property)", 
       fc.asyncProperty(picks, async (sequence) => {
         const log = await buildLog([steps[0]!, ...sequence.map((i) => steps[i]!)], keys);
         const result = verifyChain(asJson(log.entries), keys.publicKeys, log.checkpoint);
-        return result.ok && result.head.seq === sequence.length;
+        return result.ok ? result.head.seq === sequence.length : SEMANTIC.has(result.reason);
       }),
       { numRuns: 25 },
     );
+  }, 60_000);
+
+  it("passes the demo storyline in order, and each of its prefixes", async () => {
+    const keys = demoKeys();
+    const steps = demoSteps(keys);
+    for (let n = 1; n <= steps.length; n += 1) {
+      const log = await buildLog(steps.slice(0, n), keys);
+      expect(verifyChain(asJson(log.entries), keys.publicKeys, log.checkpoint), `prefix ${n}`).toMatchObject({ ok: true });
+    }
   }, 60_000);
 });
 

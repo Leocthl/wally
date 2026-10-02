@@ -134,7 +134,15 @@ const answerArb = (delegator: string): fc.Arbitrary<EscalationAnswer> =>
       answeredOffset: fc.integer({ min: 0, max: 2 * DAY_MS }),
       signer: fc.constantFrom(delegator, delegator, OTHER_SIGNER),
     })
-    .map(({ decision_id, choice, answeredOffset, signer }) => ({ decision_id, choice, answered_at: iso(T0 + answeredOffset), signer, signature: "A".repeat(86) }));
+    .map(({ decision_id, choice, answeredOffset, signer }) => ({
+      decision_id,
+      mandate_id: M0.id,
+      cart_sha256: "c".repeat(64), // laisee.resolve.v2 binding; placeholder: the engine checks binding and timing, not the cart hash
+      choice,
+      answered_at: iso(T0 + answeredOffset),
+      signer,
+      signature: "A".repeat(86),
+    }));
 
 export const resolutionArb: fc.Arbitrary<EscalationResolution | undefined> = fc.option(
   fc

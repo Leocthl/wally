@@ -1,6 +1,7 @@
 // R11 unanswered escalation after the window [F31], R12 price drift at checkout (A-13, A-14).
 import { describe, expect, it } from "vitest";
 import { ENGINE_CONFIG } from "../src/config";
+import { cartSha256 } from "../src/log";
 import type { EscalationAnswer } from "../src/ports";
 import { evaluateR11, evaluateR12 } from "../src/rules";
 import { CART_A1, M0, PACKET_AFTER_A1, at, packetWith } from "./engine-helpers";
@@ -10,6 +11,8 @@ const EXPIRES = "2026-10-03T02:13:00.000Z";
 const packet = packetWith(PACKET_AFTER_A1, { open_escalations: [{ decision_id: ESC_ID, expires_at: EXPIRES }] });
 const answer = (patch: Partial<EscalationAnswer> = {}): EscalationAnswer => ({
   decision_id: ESC_ID,
+  mandate_id: M0.id,
+  cart_sha256: cartSha256(CART_A1), // laisee.resolve.v2 binding (unsigned here: R11 checks binding and timing)
   choice: "APPROVE",
   answered_at: "2026-10-03T02:12:30Z",
   signer: M0.delegator,

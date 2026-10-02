@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ENGINE_CONFIG } from "../src/config";
 import { engine } from "../src/engine";
 import type { Cart, Decision, PacketState } from "../src/generated";
+import { cartSha256 } from "../src/log";
 import { foldPacket } from "../src/packet";
 import type { EscalationAnswer, MerchantQuote } from "../src/ports";
 import { validateDecision } from "../src/schema";
@@ -21,6 +22,8 @@ function escalated(): { decision: Decision; packet: PacketState; expiresAt: stri
 
 const answer = (decisionId: string, choice: "APPROVE" | "DENY", answeredAt = "2026-10-03T02:12:30Z"): EscalationAnswer => ({
   decision_id: decisionId,
+  mandate_id: M0.id,
+  cart_sha256: cartSha256(UNVERIFIED), // laisee.resolve.v2 binding (unsigned here: the engine checks binding and timing)
   choice,
   answered_at: answeredAt,
   signer: M0.delegator,

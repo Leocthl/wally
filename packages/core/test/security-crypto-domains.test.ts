@@ -15,11 +15,16 @@ import {
   verifyEscalationAnswer,
   verifyRevocation,
 } from "../src/log";
+import { loadFixture } from "../src/testing/fixtures";
 import { signMandateCredential, verifyMandateCredential, type UnsignedMandateCredential } from "../src/vc";
 import { demoCredential, demoKeys } from "./log-helpers";
 
 const keys = demoKeys();
 const HASH = "ab".repeat(32);
+const CART = loadFixture("carts/attempt-1.json", "cart");
+const BINDING = { decision_id: "dec_demoE1", mandate_id: "mnd_demoM0", cart: CART } as const;
+const answerBy = (signer: typeof keys.delegator, choice: "APPROVE" | "DENY" = "APPROVE") =>
+  signEscalationAnswer({ ...BINDING, choice, answered_at: new Date("2026-10-03T02:20:30Z") }, signer);
 
 describe("domain separation of signed messages", () => {
   it("log, revoke and resolve messages differ in prefix and length from each other and from 64-byte credential hashData", () => {
@@ -32,24 +37,24 @@ describe("domain separation of signed messages", () => {
     expect(new Set(lengths).size).toBe(3);
     expect(lengths).not.toContain(64);
     const text = messages.map((m) => new TextDecoder().decode(m));
-    expect(text.map((t) => t.slice(0, t.indexOf(":")))).toEqual(["laisee.log.v1", "laisee.revoke.v1", "laisee.resolve.v1"]);
+    expect(text.map((t) => t.slice(0, t.indexOf(":")))).toEqual(["laisee.log.v1", "laisee.revoke.v1", "laisee.resolve.v2"]);
   });
 
   it("a delegator revocation signature does not verify as an escalation answer, even with the same key", () => {
     const revocation = signRevocation({ mandate_id: "mnd_demoM0", revoked_at: new Date("2026-10-03T02:30:00Z") }, keys.delegator);
-    const answer = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "APPROVE", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.delegator);
+    const answer = answerBy(keys.delegator);
     expect(verifyRevocation(revocation, keys.delegator.did).valid).toBe(true);
-    expect(verifyEscalationAnswer({ ...answer, signature: revocation.signature }, keys.delegator.did)).toMatchObject({ valid: false, reason: "SIGNATURE" });
+    expect(verifyEscalationAnswer({ ...answer, signature: revocation.signature }, keys.delegator.did, BINDING)).toMatchObject({ valid: false, reason: "SIGNATURE" });
   });
 
   it("an answer signed by the engine key (a different role) is SIGNER, never accepted", () => {
-    const answer = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "APPROVE", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.engine);
-    expect(verifyEscalationAnswer(answer, keys.delegator.did)).toMatchObject({ valid: false, reason: "SIGNER" });
+    const answer = answerBy(keys.engine);
+    expect(verifyEscalationAnswer(answer, keys.delegator.did, BINDING)).toMatchObject({ valid: false, reason: "SIGNER" });
   });
 });
 
 describe("strict encodings of delegator signatures", () => {
-  const answer = signEscalationAnswer({ decision_id: "dec_demoE1", choice: "APPROVE", answered_at: new Date("2026-10-03T02:20:30Z") }, keys.delegator);
+  const answer = answerBy(keys.delegator);
   const bytes = Buffer.from(answer.signature, "base64url");
 
   it.each([
@@ -58,7 +63,7 @@ describe("strict encodings of delegator signatures", () => {
     ["spare bits set", answer.signature.slice(0, -1) + (answer.signature.endsWith("A") ? "B" : "A")],
   ])("rejects a %s signature spelling", (_name, signature) => {
     if (signature === answer.signature) return; // the standard alphabet can coincide with base64url
-    expect(verifyEscalationAnswer({ ...answer, signature }, keys.delegator.did).valid).toBe(false);
+    expect(verifyEscalationAnswer({ ...answer, signature }, keys.delegator.did, BINDING).valid).toBe(false);
   });
 });
 
