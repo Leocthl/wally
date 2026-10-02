@@ -7,7 +7,7 @@
 | Seal + one-off card | 0:25-1:05 | 1:00-2:15 | One sentence, "HK$800, clothes, verified sellers" [F20]; Wally turns it into rules you check and sign. It can only ask. Two models run on this laptop: Qwen picks the item (About names the planner), Laya judges the listing. An approved cart gets a one-off card for the exact total, shipping included [F1]. Charge more: declined. Use it twice: declined. |
 | Three stops | 1:05-2:10 | 2:15-3:30 | Seller flagged: no card exists. Over budget by HK$9 once shipping lands [F22]: stopped before paying. Orders hidden in the listing: Laya scores them, the rules stop them. Unsure: Needs your OK, and a yes never overrides a fixed rule. Try to trick it yourself. |
 | Proof | 2:10-2:40 | 3:30-4:15 | Every decision is a signed receipt; flip one byte and Proof fails. In 150 replayed scenarios a model-only gate overspent in 6.0 percent and let 43 of 84 traps through [F69]. Ours: none, and none [F69]. |
-| Limits + ask | 2:40-3:00 | 4:15-5:00 | The rail is simulated. Both models are third-party open source on this Mac. Every number is from our harness. HKT has the wallet, the card and an agent-ID pilot [F1, F2, F8]; we found no delegation API [F1]. Here is our one-page ask. |
+| Limits + ask | 2:40-3:00 | 4:15-5:00 | The rail is simulated. Both models are third-party open source on this Mac. Every number is from our harness. HKT has the wallet, the card and an agent-ID pilot [F1, F2, F8]; we found no delegation API [F1]. Our one-page ask follows. |
 
 - **Then**: 2 min Q&A or hands-on [F45]; finalists Q&A [F14]; see [06](06-demo-script.md).
 - **Model-only gate** = our B0 baseline: Laya trusted, no arithmetic, no card limit. No claims about LLM agents.
@@ -48,7 +48,7 @@
 | Why not a card limit? | A Single Use Card limit is set by hand [F1] and knows no seller or budget. Ours sizes each card to the cart (I2); the agent cannot mint (I4) or do the arithmetic; R12 voids on drift. |
 | No Scameter record? [F6] | Not safe. R9 escalates; unanswered, R11 denies [F31]. |
 | Offline? Our data? | On-device mode: the real engine, recorded answers, no network. On the booth Mac both models bind 127.0.0.1. Voice may send audio to the browser's speech service. |
-| Phones, Mum? | LAN is plain http with one shared token [F92]: demo plumbing. The verifier checks the child's receipts, not Mum's credential. |
+| Phones? Family budget? | LAN is plain http with one shared token [F92]: demo plumbing. The verifier checks the child's receipts, not Mum's credential. |
 
 ## Honesty slide
 | Status | What |
