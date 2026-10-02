@@ -8,6 +8,7 @@ import "./design/base.css";
 import "./design/chips.css";
 import "./design/components.css";
 import "./design/shell.css";
+import "./pwa/register";
 
 /** The offline mock replays the SIMULATED storyline; the HTTP + SSE client replaces it behind the same ApiClient. */
 const SWEEP_EVERY_MS = 1000;

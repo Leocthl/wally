@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "Wally",
+  "short_name": "Wally",
+  "description": "Give Wally a budget. Fixed rules decide every purchase, an approved one gets a one-off card, and every decision is signed. Prototype: payments are simulated.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#F4F7FE",
+  "background_color": "#F4F7FE",
+  "categories": ["finance", "shopping"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Booth", "short_name": "Booth", "url": "./#/booth" },
+    { "name": "Seal a budget", "short_name": "Seal", "url": "./#/seal" }
+  ]
+}

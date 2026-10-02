@@ -25,3 +25,14 @@
 - Every figure goes through `Num` with a provenance chip; no bare numbers.
 - Money is integer minor units; times are HKT for display only.
 - Mock outputs say SIMULATED; typed text meets a keyword stand-in, not Laya.
+
+## PWA and style guide (lane m-design)
+| Item | Detail |
+|---|---|
+| Style guide | `#/styleguide`: sample screens, Wally, palette with contrast ratios, type, every primitive; EN/繁, light/dark, cool/warm |
+| Install | `manifest.webmanifest` (standalone, portrait, `start_url` and `scope` `./`), icons 192/512/maskable 512/SVG, apple-touch 180 |
+| Service worker | `src/pwa/sw.ts`, built to `sw.js` by `src/pwa/vitePlugin.ts`; precaches the hashed shell, assets, icons and `offline.html`; never touches `/api` or the SSE stream |
+| When it registers | production build, secure context only (https, `localhost`, `127.0.0.1`); `localStorage["wally:sw"]="off"` opts out |
+| Updates | a new build waits; the "New version ready" toast reloads into it, so nothing swaps mid-demo |
+| LAN booth over http | not a secure context: no service worker, no install prompt; it runs as a normal page and iOS "Add to Home Screen" makes a home-screen icon without offline support |
+| Regenerate | `pnpm exec tsx scripts/gen-icons.ts` (icons, favicon, offline page; uses the cached Chromium) and `pnpm exec tsx scripts/gen-token-fallback.ts` |

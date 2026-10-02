@@ -13,9 +13,11 @@ export interface PwaState {
   readonly updateReady: boolean;
   /** Set while a waiting worker exists, so "Reload" can tell it to take over. */
   readonly waiting: ServiceWorker | null;
+  /** Last registration or update failure, shown in the About sheet; the app itself keeps working without a worker. */
+  readonly error: string | null;
 }
 
-export const INITIAL_PWA: PwaState = { installEvent: null, installed: false, updateReady: false, waiting: null };
+export const INITIAL_PWA: PwaState = { installEvent: null, installed: false, updateReady: false, waiting: null, error: null };
 
 let state: PwaState = INITIAL_PWA;
 const listeners = new Set<() => void>();
