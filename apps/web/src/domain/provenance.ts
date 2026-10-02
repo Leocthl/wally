@@ -44,3 +44,13 @@ export function sameProv(a: Prov, b: Prov): boolean {
 export function cartProv(cart: { readonly provenance: "OBSERVED" | "SIMULATED"; readonly price_observed_at: string }): Prov {
   return cart.provenance === "SIMULATED" ? SIMULATED : observed(cart.price_observed_at, "listing capture");
 }
+
+/** A judge probability: a recorded replay is SIMULATED; a live Laya or Jev call is one run of ours, MEASURED(n=1) (docs/04 Run). */
+export function judgeProv(provider: string): Prov {
+  return provider === "replay" ? SIMULATED : measured(1);
+}
+
+/** Stage latencies: the mock replays fixture numbers (SIMULATED); a live client reports its own timing, MEASURED(n=1). */
+export function latencyProv(api: "mock" | "http"): Prov {
+  return api === "mock" ? SIMULATED : measured(1);
+}

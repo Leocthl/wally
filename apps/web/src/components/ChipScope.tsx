@@ -16,13 +16,15 @@ export interface ChipScopeProps {
   readonly className?: string;
   /** Where the chips sit. "start" is the header position. */
   readonly place?: "start" | "end";
+  /** Extra class for the chip row, e.g. to turn the chip into a stamp. */
+  readonly chipsClassName?: string;
 }
 
-export function ChipScope({ provs, children, className, place = "start" }: ChipScopeProps): ReactElement {
+export function ChipScope({ provs, children, className, place = "start", chipsClassName }: ChipScopeProps): ReactElement {
   const outer = useContext(ChipScopeContext);
   const keys = [...outer, ...provs.map(chipText)];
   const chips = (
-    <span className="chip-scope__chips">
+    <span className={`chip-scope__chips ${chipsClassName ?? ""}`.trim()}>
       {provs.map((p) => (
         <ProvChip key={chipText(p)} prov={p} />
       ))}

@@ -3,7 +3,7 @@
 // Input key names follow the schema convention: *_minor money, p / threshold for the judge, window_s / max for config.
 import { formatHkd } from "../domain/money";
 import { ASSUMED, SIMULATED, type Prov } from "../domain/provenance";
-import { formatHkTime } from "../domain/time";
+import { formatHkDateTime, formatHkTime } from "../domain/time";
 
 export interface FigureContext {
   /** Amounts and times of the storyline: SIMULATED, or the cart's own tag. */
@@ -31,6 +31,12 @@ export function figureContext(args: { readonly api: "mock" | "http"; readonly mo
   };
 }
 
+/** One recorded rule input as a figure, or null when it is not a quantity (ids, words, flags). */
+export function inputFigure(key: string, value: unknown, ctx: FigureContext): { readonly text: string; readonly prov: Prov } | null {
+  const [text] = formattings(key, value);
+  return text ? { text, prov: classify(key, ctx) } : null;
+}
+
 export type Segment = { readonly figure: false; readonly text: string } | { readonly figure: true; readonly text: string; readonly prov: Prov };
 
 const TOKEN = /\d{1,2}:\d{2}(?::\d{2})?|HK\$\d[\d,]*(?:\.\d+)?|(?<![A-Za-z$\d.])\d+(?:\.\d+)?(?:\s?(?:ms|min|s)\b|%)?/g;
@@ -45,11 +51,11 @@ function classify(key: string, ctx: FigureContext): Prov {
 }
 
 function formattings(key: string, value: unknown): string[] {
-  if (typeof value === "string") return ISO.test(value) ? [formatHkTime(value)] : [];
+  if (typeof value === "string") return ISO.test(value) ? [key === "valid_until" ? `${formatHkDateTime(value)} UTC+8` : formatHkTime(value)] : [];
   if (typeof value !== "number" || !Number.isFinite(value)) return [];
   if (key.endsWith("_minor") && Number.isSafeInteger(value)) return [formatHkd(value)];
   if (key.endsWith("_s")) return [`${value} s`, value % 60 === 0 ? `${value / 60} min` : ""].filter(Boolean);
-  return [value.toFixed(2), String(value)];
+  return Number.isInteger(value) ? [String(value)] : [value.toFixed(2)];
 }
 
 function lookup(inputs: Readonly<Record<string, unknown>>, ctx: FigureContext): ReadonlyMap<string, Prov> {

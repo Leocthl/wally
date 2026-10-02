@@ -51,6 +51,10 @@ export async function proposeAndDecide(s: MockSession, spec: PurchaseSpec): Prom
   s.emit({ type: "decision", runId: spec.runId, decision });
   s.emit({ type: "stage", runId: spec.runId, stage: "engine", status: "done", latencyMs: DISPLAY_PACING_MS.engine, at: s.nowIso() });
   if (decision.outcome === "ESCALATE") openEscalation(s, spec.runId, decision);
+  if (decision.outcome !== "APPROVE") {
+    const note = decision.outcome === "ESCALATE" ? "no card yet, waiting for an answer" : "no card exists";
+    s.emit({ type: "stage", runId: spec.runId, stage: "rail", status: "skipped", note, at: s.nowIso() });
+  }
   return { decision, cart };
 }
 
