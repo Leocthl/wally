@@ -38,12 +38,12 @@ describe("style guide route", () => {
     const { App } = await import("../src/App");
     render(<App api={new MockApiClient({ sleep: async () => undefined, pace: 0 })} />);
     expect(await screen.findByRole("heading", { level: 2, name: "Screens" })).toBeInTheDocument();
-    expect(document.querySelector(".site-header")).toBeNull();
+    expect(document.querySelector(".shell-bar")).toBeNull();
   });
 
   it("the booth still boots on #/booth", async () => {
     await bootApp("#/booth");
-    expect(document.querySelector(".site-header")).not.toBeNull();
+    expect(document.querySelector(".shell-bar")).not.toBeNull();
   });
 });
 

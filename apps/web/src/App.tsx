@@ -1,85 +1,40 @@
-// App shell: header (PACKET), rail badge top right, screens by hash route, footer on every screen.
-// The ApiClient is injected, so the same shell runs on the offline mock and, later, on the HTTP + SSE client.
-import type { ReactElement } from "react";
+// App root: language and toasts for everything, the booth connection, and the shell (src/shell). The ApiClient is
+// injected, so the same app runs on the HTTP client, the in-browser engine and the offline mock. #/styleguide renders
+// outside the shell. Optional slots for later waves: suggestRules (Seal reads the sentence) and onAsk (Ask sheet field).
+import { useCallback, useState, type ReactElement } from "react";
 import type { ApiClient } from "./api/types";
-import { Footer, RailBadge } from "./components/RailBadge";
-import { Bi } from "./components/Bi";
-import { BoothProvider, useBoothContext } from "./hooks/useBooth";
-import { ROUTES, useRoute, type Route } from "./hooks/useRoute";
-import { S } from "./i18n/strings";
-import { BoothScreen } from "./screens/BoothScreen";
-import { EvidenceScreen } from "./screens/EvidenceScreen";
-import { LogPanel } from "./screens/LogPanel";
-import { PacketPanel } from "./screens/PacketPanel";
-import { PresenterScreen } from "./screens/PresenterScreen";
-import { RunPanel } from "./screens/RunPanel";
-import { SealPanel } from "./screens/SealPanel";
+import { BoothProvider } from "./hooks/useBooth";
 import { StyleGuideRoute, useStyleGuideRoute } from "./screens/StyleGuideRoute";
+import type { SuggestRules } from "./screens/seal/sealModel";
+import type { AskWally } from "./shell/AskSheet";
+import { AppShell } from "./shell/AppShell";
+import { ErrorBoundary, ScreenError } from "./shell/ErrorBoundary";
+import { LocaleProvider } from "./ui/locale";
+import { ToastProvider } from "./ui/Toast";
 
-const NAV: readonly { readonly route: Route; readonly title: typeof S.navBooth }[] = [
-  { route: "booth", title: S.navBooth },
-  { route: "seal", title: S.navSeal },
-  { route: "presenter", title: S.navPresenter },
-  { route: "evidence", title: S.navEvidence },
-];
-
-function Screen({ route }: { readonly route: Route }): ReactElement {
-  switch (route) {
-    case "seal":
-      return <SealPanel />;
-    case "run":
-      return <RunPanel />;
-    case "console":
-      return <PacketPanel />;
-    case "log":
-      return <LogPanel />;
-    case "presenter":
-      return <PresenterScreen />;
-    case "booth":
-      return <BoothScreen />;
-    case "evidence":
-      return <EvidenceScreen />;
-  }
+export interface AppProps {
+  readonly api: ApiClient;
+  /** Later wave: a model reads the budget sentence into rules. Seal shows "Read my sentence" and never seals by itself. */
+  readonly suggestRules?: SuggestRules;
+  /** Later wave: a natural-language request from the Ask sheet. */
+  readonly onAsk?: AskWally;
 }
 
-function Shell(): ReactElement {
-  const [route] = useRoute();
-  const { info, error, clearError } = useBoothContext();
+export function App({ api, suggestRules, onAsk }: AppProps): ReactElement {
+  const styleGuide = useStyleGuideRoute();
+  // Retry after a failed first load: a new provider asks the client for info and a snapshot again.
+  const [generation, setGeneration] = useState(0);
+  const retry = useCallback(() => setGeneration((n) => n + 1), []);
+  if (styleGuide) return <StyleGuideRoute />;
   return (
-    <div className="shell" data-route={route}>
-      <a className="sr-only" href="#main">Skip to content</a>
-      <header className="site-header" data-register="packet">
-        <h1>
-          <span>{S.appName.en}</span>
-          <span lang="zh-HK">{S.appName.zh}</span>
-        </h1>
-        <RailBadge />
-        <nav className="nav" aria-label="Screens">
-          {NAV.map(({ route: r, title }) => (
-            <a key={r} href={`#/${r}`} {...(route === r || (r === "booth" && !NAV.some((n) => n.route === route) && ROUTES.includes(route)) ? { "aria-current": "page" as const } : {})}>
-              <Bi text={title} />
-            </a>
-          ))}
-        </nav>
-      </header>
-      {error ? (
-        <p role="alert" className="app-error">
-          {error} <button type="button" className="btn tap" onClick={clearError}>Dismiss</button>
-        </p>
-      ) : null}
-      <main id="main" tabIndex={-1}>
-        <Screen route={route} />
-      </main>
-      <Footer replayed={info?.replayed ?? false} />
-    </div>
-  );
-}
-
-export function App({ api }: { readonly api: ApiClient }): ReactElement {
-  if (useStyleGuideRoute()) return <StyleGuideRoute />;
-  return (
-    <BoothProvider api={api}>
-      <Shell />
-    </BoothProvider>
+    <LocaleProvider>
+      <ToastProvider>
+        <ErrorBoundary resetKey={String(generation)} fallback={() => <ScreenError onRetry={retry} />}>
+          <BoothProvider key={generation} api={api}>
+            <AppShell onRetry={retry} {...(suggestRules ? { suggestRules } : {})} {...(onAsk ? { onAsk } : {})} />
+          </BoothProvider>
+        </ErrorBoundary>
+      </ToastProvider>
+    </LocaleProvider>
   );
 }

@@ -1,14 +1,14 @@
-// Off-category item [F29] in the offline mock and the booth picker: earbuds HK$399 from a clothes mandate stop at R6
+// Off-category item [F29] in the offline mock and Try asking: earbuds HK$399 from a clothes mandate stop at R6
 // and the card never exists.
 import { FakeClock } from "@laisee/core/testing";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0SealRequest } from "../src/api/mock/presets";
-import { PICKER } from "../src/booth/scenarios";
+import { TRY_ITEMS } from "../src/screens/home/tryCatalog";
 
 describe("off_category", () => {
-  it("is a booth button in the Stops group", () => {
-    expect(PICKER.find((p) => p.id === "off_category")).toMatchObject({ group: "stops" });
+  it("is a Try asking card in the Stops group", () => {
+    expect(TRY_ITEMS.find((p) => p.id === "off_category")).toMatchObject({ group: "stops" });
   });
 
   it("stops the earbuds at R6 in the mock, no card", async () => {

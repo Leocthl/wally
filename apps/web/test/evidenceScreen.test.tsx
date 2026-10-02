@@ -25,7 +25,8 @@ function show(...runs: HarnessRun[]): HTMLElement {
 describe("Evidence screen on the committed files", () => {
   it("is reachable from the nav, shows the chosen file and why, and passes every honesty scan", async () => {
     await bootApp("#/evidence");
-    expect(screen.getByRole("link", { name: /Evidence/ })).toHaveAttribute("aria-current", "page");
+    // Evidence is reached from Proof ("Why trust Wally?"), so the Proof tab stays lit.
+    expect(screen.getByRole("link", { name: "Proof" })).toHaveAttribute("aria-current", "page");
     expect(document.querySelector("[data-pick-reason]")?.textContent).toMatch(/Showing harness-.*\.json/);
     expect(honestyProblems(document.querySelector("main")!)).toEqual(CLEAN);
   });
