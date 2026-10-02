@@ -1,7 +1,7 @@
 // engine.decide (A-15): pure and deterministic over recorded inputs; the only producer of a Decision.
 // Runs R1-R12 in order, applies an escalation answer when one resolves an earlier ESCALATE, and never
 // reads a clock or does I/O. Malformed judge records and missing proof flags fail closed (I5).
-import { ENGINE_CONFIG, validateEngineConfig, type EngineConfig } from "../config";
+import { ENGINE_CONFIG, pinConfig, validateEngineConfig, type EngineConfig } from "../config";
 import type { Cart, Decision, Escalation, Mandate, PacketState, RuleResult } from "../generated";
 import type { DecideContext, Engine, EscalationResolution, JudgeRecord } from "../ports";
 import {
@@ -111,7 +111,7 @@ export function createEngine(options: EngineOptions = {}): LaiseeEngine {
   const config = options.config ?? ENGINE_CONFIG;
   const issues = validateEngineConfig(config);
   if (issues.length > 0) throw new EngineConfigError(issues);
-  const pinned: EngineConfig = Object.freeze(structuredClone(config));
+  const pinned = pinConfig(config);
   const meta: Decision["engine"] = { version: options.version ?? ENGINE_VERSION, config_sha256: configSha256(pinned) };
   return {
     version: meta.version,

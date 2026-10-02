@@ -69,6 +69,11 @@ export const ENGINE_CONFIG: EngineConfig = deepFreeze({
   },
 });
 
+/** A deep-frozen copy of a config, so the values in force cannot drift from engine.config_sha256. */
+export function pinConfig(config: EngineConfig): EngineConfig {
+  return deepFreeze(structuredClone(config));
+}
+
 /** threshold_ref values recorded on rule results (decision.schema.json RuleResult.threshold_ref). */
 export const THRESHOLD_REFS = Object.freeze({
   ceiling: "F1.ceiling",

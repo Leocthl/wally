@@ -33,6 +33,15 @@ describe("engine.config_sha256 pins the thresholds in force", () => {
     expect(d).toMatchObject({ outcome: "ESCALATE", explanation: { template_id: "R10.scope" }, engine: { version: "core@test+abc123" } });
   });
 
+  it("pins a deep-frozen copy, so a later change to the caller's object cannot drift from config_sha256", () => {
+    const mine = structuredClone(ENGINE_CONFIG) as { judge: { t_inj: number } } & typeof ENGINE_CONFIG;
+    const pinned = createEngine({ config: mine });
+    mine.judge.t_inj = 0.99;
+    expect(pinned.config.judge.t_inj).toBe(ENGINE_CONFIG.judge.t_inj);
+    expect(Object.isFrozen(pinned.config.judge)).toBe(true);
+    expect(pinned.configSha256).toBe(engine.configSha256);
+  });
+
   it("refuses an invalid config at construction (fail fast)", () => {
     expect(() => createEngine({ config: { ...ENGINE_CONFIG, judge: { ...ENGINE_CONFIG.judge, t_inj: 2 } } })).toThrow(/t_inj/);
   });
