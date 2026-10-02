@@ -1,7 +1,7 @@
 # TASKS
 
 ## Top 10 do-first
-1. **M-07, C-03** Mobile-first screens (rebuild in progress): the Seal screen calls `POST /api/compile`, the ask box `POST /api/ask`, "See cheaper options" `POST /api/alternatives`. Then **M-09, M-10** key on the phone, LAN mode with a pairing QR.
+1. **M-07, C-03** Mobile-first screens (rebuild in progress): fill the Seal flow's `suggestRules` slot from `POST /api/compile`, and call `POST /api/ask` and `POST /api/alternatives` from the Ask sheet and "See cheaper options". Then **M-09, M-10** key on the phone, LAN mode with a pairing QR.
 2. **X-11, X-17** T-E2E and the booth smoke with network off and Laya stopped.
 3. **Known gaps**: the harness `duplicate` category submits with `allowRepeat`, which opts out of idempotent submit; remaining audit items; the judge wording freeze, after which D-11 is re-recorded on a quiet host.
 4. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
@@ -135,7 +135,7 @@
 | M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile. Built as `@laisee/agent/compiler`, served by `POST /api/compile`; the Seal screen does not call it yet | [TEAM] | 1.5h | M-02 | M2 | [x] |
 | M-05 | Design system phase A: cool-wallet tokens, Wally character, primitives, style guide route | [TEAM] | 2h | none | M2 | [x] |
 | M-06 | PWA shell: manifest, icons, service worker, install prompt, offline fallback | [TEAM] | 1.5h | M-05 | M2 | [x] |
-| M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle. In progress: the Wally, Receipts and Proof screens, the presenter and the evidence restyle are merged | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [ ] |
+| M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle. In progress: the app shell, Budget home, Seal flow, console, Ask sheet, Wally, Receipts, Proof, presenter and evidence screens are merged; the Seal flow's model slot (`suggestRules`) is empty | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [ ] |
 | M-08 | Local mode: real engine, orchestrator, RailSim and signers in the browser with recorded model answers; static public build | [TEAM] | 3h | e-orch merged, M-07 | M3 | [x] |
 | M-09 | Delegator key on the phone: generate and sign seal, revoke and escalation answers on the device; the server only verifies. Groundwork merged: async signer adapter and the design in `apps/web/src/api/local/KEYS.md` | [TEAM] | 2h | M-08 | M4 | [ ] |
 | M-10 | LAN mode: server `--lan` with a pairing token, Host and Origin checks and a QR on the booth screen so phones drive the Mac | [TEAM] | 2h | e-server merged | M4 | [ ] |
