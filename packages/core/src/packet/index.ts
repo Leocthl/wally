@@ -1,2 +1,2 @@
-// @laisee/core/packet: placeholder from the foundation scaffold. Owner: lane A.
-export {};
+// @laisee/core/packet: foldPacket (A-02, U1). Pure and browser-safe.
+export { PacketFoldError, foldPacket } from "./fold";
