@@ -54,6 +54,13 @@
 | Testing Library (react, dom, jest-dom, user-event) | 16.3, 10.4, 7.0, 14.6 | MIT | component tests | in use |
 | jsdom | 30.1 | MIT | DOM for component tests | in use |
 | @types/node, @types/react, @types/react-dom | 22.20, 19.3, 19.3 | MIT | type definitions | in use |
+| Capacitor (@capacitor/core, cli, ios, android) | 8.5 | MIT | native iOS and Android shells around the web build (apps/mobile) | in use |
+| Capacitor plugins (@capacitor/app, haptics, splash-screen, status-bar) | 8.1, 8.0, 8.0, 8.0 | MIT | Android back button, native haptics, splash and status bar in the shells | in use |
+| @capacitor/assets | 3.0 | MIT | dev tool: icon and splash sets for both shells | in use |
+| sharp | 0.34 | Apache-2.0; its libvips binaries (npm packages @img/sharp-libvips-*) are LGPL-3.0-or-later | dev tool only, renders the icon masters; not shipped in the apps | in use |
+| esbuild | 0.28 | MIT | bundles the native bridge script | in use |
+| AndroidX (appcompat, core, core-splashscreen, webkit, activity, fragment, coordinatorlayout) and Android Gradle Plugin 8.13 | per Capacitor 8 | Apache-2.0 | Android shell, resolved by Gradle from Google and Maven Central | in use |
+| capacitor-swift-pm (Capacitor and Cordova xcframeworks for iOS) | 8.5 | MIT, Apache-2.0 (Cordova) | iOS shell, resolved by SwiftPM | in use |
 
 ## Fonts
 | Font | Author | Licence | Use |

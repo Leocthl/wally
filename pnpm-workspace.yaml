@@ -5,3 +5,9 @@ packages:
 # Only these dependencies may run install scripts (pnpm 12 setting).
 allowBuilds:
   esbuild: true
+  # Not run: sharp 0.34 ships its binaries as npm packages (apps/mobile dev tool @capacitor/assets only).
+  sharp: false
+
+# @capacitor/assets pins sharp 0.32, whose install script downloads binaries from GitHub; 0.34 resolves them from npm.
+overrides:
+  sharp: 0.34.5

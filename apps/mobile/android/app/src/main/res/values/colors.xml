@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Page background (light). Source: the c-bg token in apps/web/src/design/tokens.css; test/hygiene.test.ts keeps them equal. -->
+    <color name="wally_background">#F4F7FE</color>
+</resources>
