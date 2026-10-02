@@ -15,7 +15,7 @@
 |---|---|
 | Policy engine, credential, signed log, offline verifier | Real code |
 | Judge | Laya, a third-party open-source typed model, running on the demo laptop; listing text never leaves it [F11c] |
-| Planner | `rule` (default): a Laya decision loop in a deterministic harness, typed and logged. `local`: Qwen3.5 on the laptop, built and measured, not in the booth path yet [F27]. `replay`: recorded. No generative model gates a decision |
+| Planner | Chosen at start: `local` Qwen3.5 on the laptop if it answers [F27], else `rule` (a Laya decision loop in a deterministic harness, typed and logged), else `replay` (recorded). No generative model gates a decision |
 | On-device mode | The real engine, log and SIMULATED rail run in the page with recorded planner and judge answers; typed text escalates; the page holds every key |
 | Card rail (Single Use Card semantics [F1]), merchant lock | SIMULATED |
 | Merchants and the flagged-seller fixture | SIMULATED |
@@ -39,7 +39,7 @@ pnpm install
 services/laya/setup.sh && services/laya/serve.sh   # judge, once; weights are not committed
 pnpm demo                                          # preflight, build, API and UI on http://127.0.0.1:8787
 ```
-- Without Laya the booth still runs and every decision escalates (`R10.unavailable`). `?api=local` runs the page alone. `services/qwen/` holds the optional planner model. Checks: `pnpm typecheck && pnpm lint && pnpm test`.
+- Without Laya the booth still runs and every decision escalates (`R10.unavailable`). `?api=local` runs the page alone. Start `services/qwen/serve.sh` as well and the booth uses Qwen as planner. Checks: `pnpm typecheck && pnpm lint && pnpm test`.
 
 ## Repo map
 ```

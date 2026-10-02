@@ -4,8 +4,8 @@
 
 ## Status
 - **Event**: HacKU 2026, FinTech track "Give a Machine a Wallet", 2026-10-02 to 2026-10-04 [F13]; HKT problem statement declared [F13, F17]. Not affiliated with HKT, Tap & Go or Mastercard.
-- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D13, D15). Merged: engine, crypto, log, offline verifier, rail-sim, cart builder, executor, orchestrator, booth server, judge, planners, harness, PWA shell and on-device mode. Open: screens are being rebuilt, and the Qwen planner and compiler are built and measured but not yet in the booth path (see `TASKS.md`).
-- **Local-first, two local models**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac as the judge [F11c]. Qwen3.5 under llama.cpp, also loopback only, is the planner and the sentence-to-rules compiler [F27]; it never gates a decision. There is no LLM judge. Planner providers: `rule` (Laya decision loop, default), `local` (Qwen), `replay` (recorded; CI default). The `claude` provider is removed; hosted Jev is optional.
+- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D13, D15). Merged: engine, crypto, log, offline verifier, rail-sim, cart builder, executor, orchestrator, booth server, judge, planners, harness, PWA shell and on-device mode. Open: screens are being rebuilt (the Seal screen does not call `/api/compile` yet); see `TASKS.md`.
+- **Local-first, two local models**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac as the judge [F11c]. Qwen3.5 under llama.cpp, also loopback only, is the planner and the sentence-to-rules compiler [F27]; it never gates a decision. There is no LLM judge. Planner providers: `rule` (Laya decision loop), `local` (Qwen), `replay` (recorded; CI default); the booth server's default `auto` picks `local` if Qwen answers at start, else `rule` if Laya does, else `replay`. The `claude` provider is removed; hosted Jev is optional.
 - **Freeze**: no commits after Sun 2026-10-04 13:00 HKT [F16]. The repo is public by then and submitted with deck, video and declaration [F18]. Procedure: 03 §Freeze.
 - **Open**: assumptions in `docs/00-context.md`; unknowns and re-captures in the register's VERIFY queue.
 - **Sources of truth**: numbers `docs/facts-register.md` · IDs `docs/00-context.md` · data shapes `schemas/` · design tokens `docs/04-design-language.md` · backlog `TASKS.md`.
@@ -47,16 +47,16 @@ packages/harness                            lane D
 ## Commands
 - **Docs checks** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
 - **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`.
-- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE); `POST /api/seal /scenario/:id /propose /revoke /escalation/answer /verify /tamper /restore /reset`.
+- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE); `POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
 - **Evidence**: `pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]`, `pnpm --filter @laisee/agent judge:fit`.
 - **Local models** (loopback only): `services/laya/{setup,serve,stop}.sh` and `node services/laya/smoke.mjs`; `services/qwen/{setup,serve,stop}.sh` and `node services/qwen/smoke.mjs`. Warm both up after every start (the first call is slow).
 
 ## Known gaps (say them, never hide them)
-- **Duplicate submission**: the same cart submitted twice gets two APPROVEs and two cards; idempotency by cart fingerprint is not built (02 §6, harness `duplicate` [F69]).
+- **Duplicate submission**: `submit` is idempotent by cart fingerprint, but booth buttons and the harness pass `allowRepeat`; the committed harness result predates the fix and still shows 2/84 through in B2 [F69].
 - **Judge**: held-out, the F38 floor of 90% legitimate approved is not met at judge level, and the seller gate is inert [F36]; the end-to-end harness meets F38 [F69].
 - **Keys**: the web API holds the delegator demo key; on-device mode makes every key in the page; a did:key cannot be rotated.
 - **Log**: proves tamper, reorder, truncation (with the checkpoint), signatures, and consent and money for what is logged. Not omissions, a re-fold, or the shopper's intent.
-- **Qwen**: evaluated on author-written cases with no held-out set [F68]; not yet wired into the booth server or the Seal screen.
+- **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal.
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.
