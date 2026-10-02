@@ -9,10 +9,10 @@
 | Attempt | Cart | Outcome | Rule | Left |
 |---|---|---|---|---|
 | Seal M0 | packet HK$800 [F20] | sealed | R1 | HK$800 |
-| 1 | HK$259 [F21] | mint; overshoot declined (limit held), exact charge authorised | all pass; rail `OVER_LIMIT` | HK$541 |
-| 2 | seller flagged | stop S2 | R9 | HK$541 [F21] |
+| 1 | HK$259 [F21] | mint; overshoot declined (limit held), exact charge authorised, replay declined | all pass; rail `OVER_LIMIT`, `CARD_USED` | HK$541 |
+| 2 | HK$180, seller flagged [F28] | stop S2 | R9 | HK$541 [F21] |
 | 3 | subtotal HK$520 + HK$30 shipping = HK$550 [F22] | stop S1, no card | R3 | HK$541 [F21] |
-| 3b (live) | injected listing | stop S3 | R10 | HK$541 [F21] |
+| 3b (live) | HK$150, injected listing [F28] | stop S3 | R10 | HK$541 [F21] |
 | 4 | HK$120 [F23] | mint | all pass | HK$421 |
 
 Illustrative SIMULATED amounts [F20-F23]; rail and flagged seller SIMULATED.
@@ -23,6 +23,7 @@ Illustrative SIMULATED amounts [F20-F23]; rail and flagged seller SIMULATED.
 - **M2** time-boxed, escalation: "HK$800 for clothes over the next 7 days, verified sellers only; ask me above HK$300" [F20, F90].
 
 ```
+all R1 proof = AgentDelegationCredential (VC 2.0), issuer = delegator did:key, signed at Seal
 M0  R3 budget = HK$800 [F20]
     R2 expiry = month end
     R6 category = clothes

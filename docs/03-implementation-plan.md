@@ -3,19 +3,20 @@
 ## First-hour checklist
 - Window: H0 to H1 [F61].
 
-- [ ] **Ask organisers** (D-01): prize structure, judging weights, pitch length, pre-existing code rule, HKT sandbox and mentors, track counts [F14-F17].
-- [ ] **Jev key smoke test** (B-01): one typed call; confirm model string and limits [F11b], record latency.
-- [ ] **Lock scope** (X-09): ONE decision, ONE delegator (SR1); live stops S2, S1, S3; rail stays SIMULATED; cut order D9.
+- [ ] **Foundation** (X-01 to X-08, A-01): scaffold, V2 schemas, ports, fixtures, stub engine; the lead merges.
+- [ ] **Worktrees** (X-15): `.worktrees/<name>` on branch `lane/<name>` for A, B, C, D.
+- [ ] **Laya smoke test** (B-01): four questions on 127.0.0.1:8808 [F11c]; shape in `services/laya/FINDINGS.md`.
+- [ ] **Ask organisers** (D-01): HKT sandbox and mentors [F17], booth power and network, submission form [F18].
+- [ ] **Lock scope** (X-09): ONE decision, ONE delegator (SR1); live stops S2, S1, S3; rail stays SIMULATED; Laya is the only model; cut order D9.
 - [ ] **Capture 5 real listings** (D-05), screenshot and timestamp [F40].
-- [ ] **Roles** (X-09): one owner per lane A-D and X; one Plus/Pro holder for kill test 1 [F1]; one zh-HK reader.
-- [ ] **Repo** (X-01 to X-03): repo, remote, one branch or git worktree per lane, CI skeleton.
+- [ ] **Roles** (X-09): lane owners; a Plus/Pro holder for kill test 1 [F1]; a zh-HK reader; booth rota (D-27).
 - [ ] **Kill tests D10**: start all three (below).
 
 ## Contracts first (H0-H2 [F41])
 | Step | Output | Task |
 |---|---|---|
-| Schemas to types | `schemas/` Mandate, Cart, Decision, LogEntry, CardRecord, PacketState; generated types in `packages/core` (02 §Data model) | X-05 |
-| Ports | `JudgePort`, `RailPort`, `LogStore`, `Clock` (00-context), `PlannerPort`, `Signer` (02 §Interfaces) | X-06 |
+| Schemas to types | `schemas/` MandateCredential, Mandate, Cart, Decision, LogEntry, CardRecord, PacketState; generated types in `packages/core` (02 §Data model) | X-05 |
+| Ports | `JudgePort`, `RailPort`, `LogStore`, `Clock`, `PlannerPort`, `Signer` (02 §Interfaces) | X-06 |
 | Fixtures | mandate M0, packet [F20], attempts [F21-F23], flagged seller, injected listing; all SIMULATED | X-07 |
 | Stub engine | `decide()` returns DENY citing a rule ID; in-memory log | A-01 |
 
@@ -23,46 +24,46 @@
 
 ## Lanes
 ### A: policy + rail
-- **Tasks**: A-01 to A-31. Packet math, R1-R12 (tests first), engine, crypto, log, rail-sim, calibration, orchestrator.
+- **Tasks**: A-01 to A-35: rules tests first, credential, log, rail-sim, orchestrator, booth API.
 - **In**: schemas, fixtures, judge record from B, the real decline (D-03).
-- **Out**: `engine.decide`, `verifyChain`, `RailPort` implementation (SIMULATED rail), orchestrator API for C, engine and rail-sim for D.
-- **Done**: every rule R1-R12 unit-tested with tests written first; T-I1..T-I8, T-S1..T-S6, T-R1 green; log verifies offline (T-V1); coverage of `packages/core` meets [F44]; no PAN or CVV anywhere (I8); rail outputs carry a SIMULATED label; `pnpm test` green.
+- **Out**: `engine.decide`, `verifyCredential`, `verifyChain`, `RailPort` (SIMULATED rail), orchestrator API for C, engine and rail-sim for D.
+- **Done**: every rule R1-R12 unit-tested with tests written first; T-I1..T-I8, T-S1..T-S6, T-R1 green; mandate credential and log verify offline (T-V1); coverage of `packages/core` meets [F44]; no PAN or CVV anywhere (I8); rail outputs carry a SIMULATED label; `pnpm test` green.
 
-### B: agent + Jev
-- **Tasks**: B-01 to B-13. Planner, `JudgePort` contract tests, llm fallback, Jev adapter, shadow mode.
-- **In**: Cart schema, listing text, Scameter capture, thresholds [F36, F50, F51].
-- **Out**: `JudgePort` implementations (`jev`, `llm`), planner, judge logs.
-- **Done**: planner can call only `propose_cart` (I4); Jev adapter and llm fallback pass the JudgePort contract tests including timeout and error ⇒ fail closed (I5); shadow mode logs judge output with no effect; model version and latency logged; fixtures for S2 and S3 give the expected judge outputs; no secrets in the repo.
+### B: agent + judge
+- **Tasks**: B-01 to B-20 (B-16, B-17 dropped): Laya, `SystemOneJudge`, Laya decision-loop planner, `replay`, corpora, threshold fit.
+- **In**: Cart schema, structured listings, description text, Scameter capture, thresholds [F36, F50].
+- **Out**: `JudgePort` (`laya`, `jev`, `replay`), `PlannerPort` (`rule`, `replay`, `claude`), judge and planner traces.
+- **Done**: planner can call only `propose_cart` (I4) and runs without any API key; the Laya/Jev adapter and the replay judge pass the JudgePort contract tests including timeout, error and truncated input ⇒ fail closed (I5); rotation averaging is on; shadow mode logs judge output with no effect; model version and latency logged; fixtures for S2 and S3 give the expected judge outputs; no secrets in the repo.
 
 ### C: UI + verifier
-- **Tasks**: C-01 to C-14. Tokens, shell, seal, run, console, log, verifier, evidence, presenter, accessibility.
+- **Tasks**: C-01 to C-20: screens, verifier, booth, scenario picker, credential panel, accessibility.
 - **In**: orchestrator API (stub until A-26), log entries, harness results (D-11), 04.
 - **Out**: `apps/web`, `apps/verifier`.
-- **Done**: screens seal, run, console, log + verifier, evidence, presenter built to 04; every number wears a provenance chip; stop banners render from rule templates; verifier works offline and fails on tamper (T-V1); contrast and 44px touch targets pass; mobile-first view; reduced motion respected.
+- **Done**: screens seal, run, console, log + verifier, evidence, presenter and booth built to 04; the booth works with no network and no API key; every number wears a provenance chip; stop banners render from rule templates; verifier works offline and fails on tamper (T-V1); contrast and 44px touch targets pass; mobile-first view; reduced motion respected.
 
 ### D: evidence + pitch
-- **Tasks**: D-01 to D-21. Asks, kill tests, captures, harness, baselines, metrics, stopwatch, 09, deck, rehearsals, video.
-- **In**: engine, rail-sim, judge adapters, fixtures, injection corpus (B-11).
-- **Out**: harness results, `data/` captures, 05-07 and 09, deck, backup video.
-- **Done**: at least 100 seeded scenarios (target 150-200) [F37] run through B0, B1, B2 with MEASURED(n) results; captures logged in data/capture-sheet.md; real-card test and shop probe done or marked skipped with the reason; four timed rehearsals [F41]; backup video recorded; deck matches 07; every touched register row is OBSERVED or still READ-BY-CLAUDE.
+- **Tasks**: D-01 to D-28: kill tests, captures, harness and baselines, deck, video, submission, freeze.
+- **In**: engine, rail-sim, judge adapters, fixtures, corpora (B-11, B-19).
+- **Out**: harness results, `data/` captures, 05-07 and 09, deck, 3-minute video, submission package, booth kit.
+- **Done**: at least 100 seeded scenarios (target 150-200) [F37] run through B0, B1, B2 with MEASURED(n) results; captures logged in `data/capture-sheet.md`; real-card test and shop probe done or marked skipped with the reason; four timed rehearsals [F41]; submission package ready before the freeze: public repo, deck, 3-minute video, declaration [F18]; every touched register row is OBSERVED or still READ-BY-CLAUDE.
 
 ### X: cross-lane
-- **Tasks**: X-01 to X-14. Repo, CI, docs-check, schemas, ports, fixtures, integration, T-E2E, gate checks.
-- **In**: lane branches. **Out**: `schemas/`, `data/fixtures/`, CI, green `main`.
+- **Tasks**: X-01 to X-19: worktrees, CI, contracts, integration, T-E2E with booth smoke, freeze guard, credits.
+- **In**: branches `lane/a` to `lane/d`. **Out**: `schemas/`, `data/fixtures/`, CI, green `main`.
 - **Merge**: at each gate, in the order X, A, B, C, D; a red lane does not merge.
 - **Done**: CI green (typecheck, lint, test, docs-check); T-E2E passes DM1-DM7; each gate M1-M5 recorded in TASKS.md; no lane merged red.
 
 ## Gates
-- Critical path to M1: X-05, X-06, A-01, A-15, A-26; A-17 to A-19, A-22, A-31 run alongside.
+- Critical path to M1: X-05, X-06, A-01, A-32, A-15, A-26; A-17 to A-19, A-22, A-31, B-15 run alongside.
 
-| Gate | Hour [F41] | Pass test |
-|---|---|---|
-| M1 | H6 | End-to-end happy path (seal, propose, decide, mint, checkout) plus one stop; signed log verifies offline; judge and rail may be fakes |
-| M2 | H12 | Rail-sim (SIMULATED rail) and judge gate live, shadow mode allowed; T-S1 to T-S3 green |
-| M3 | H20 | Harness runs at least 100 scenarios [F37] through B0, B1, B2 |
-| M4 | H28 | UI complete (seal, run, console, log + verifier, evidence, presenter); T-E2E green |
-| M5 | H34 | Freeze: judge thresholds fixed, bug fixes only |
-| M6 | after M5 | Four timed rehearsals [F41] and backup video; pitch time TBC (D-01) |
+| Gate | Hour [F41] | HKT [F41] | Pass test |
+|---|---|---|---|
+| M1 | H6 | Sat 02:45 | End-to-end happy path (seal credential, propose, decide, mint, checkout) plus one stop; signed log verifies offline; judge and rail may be fakes |
+| M2 | H12 | Sat 08:45 | Rail-sim with token features and the Laya judge live, shadow mode allowed; T-S1 to T-S3 green |
+| M3 | H20 | Sat 16:45 | Harness runs at least 100 scenarios [F37] through B0, B1, B2; booth screen runs on the real engine |
+| M4 | H28 | Sun 00:45 | UI complete incl. booth; T-E2E with booth smoke green |
+| M5 | H34 | Sun 06:45 | Feature freeze: thresholds fixed, bug fixes only |
+| M6 | after M5 | Sun 07:00-12:00 | Four timed rehearsals [F41], 3-minute video, submission (§Freeze) |
 
 ## Kill tests (D10)
 - Start all three before H2; test 1 has a hard stop at H12 [F41].
@@ -76,32 +77,37 @@
 ## Triggers [F41]
 | Hour | Condition | Action |
 |---|---|---|
-| H2 | No Jev key | `JUDGE_PROVIDER=llm` only; Jev adapter stays a stub behind `JudgePort` |
-| H6 | No end-to-end stop | Cut crypto to hash-chain only; label the log unsigned in UI and deck |
+| H2 | Laya smoke test fails | Planner `replay`; recorded judge outputs, labelled; live judge calls ESCALATE (I5) |
+| H6 | No end-to-end stop | Cut log signing to hash-chain only (credential proof stays); label the log unsigned |
 | H10 | End-to-end stop still failing | Contingency D8 (see 08) |
 | H12 | No real-card test | Sim-only; drop the calibration claim; say so in UI, README, deck |
+
+## Freeze and submission [F16, F18, F41]
+- [ ] **M6**: rehearsals on both clocks [F45, F42]; video (D-18); deck (D-15).
+- [ ] **Before Sun 13:00 HKT**: final merge to `main`; repo public, link checked logged out; README Credits and `THIRD_PARTY.md` complete [F16]; declaration of the HKT problem statement, Raccoon only if really used [F15]; form submitted with deck, repo link, video (D-25).
+- [ ] **After Sun 13:00 HKT**: no commits, pushes, tags or repo setting changes [F16]; freeze guard on (X-18). The booth and the stage run from the frozen commit.
 
 ## Collapse plan, team of 3 [F13]
 | Person | Lanes |
 |---|---|
 | P1 | A + X (critical path) |
-| P2 | B + harness (D-08 to D-11), starting when A-20 lands |
-| P3 | D-01 to D-07 and D-12 first, then C |
-| All | After M4 [F41], share D-13 to D-21: P1 demo script and rehearsals, P2 evidence map, P3 deck and ask page |
+| P2 | B + harness (D-08 to D-11, D-22, D-28), starting when A-20 lands |
+| P3 | D-01 to D-07 and D-12 first, then C (booth first) |
+| All | After M4 [F41]: P1 demo and rehearsals, P2 evidence map, P3 deck, video, submission |
 
 - Pre-cut A-30, B-13, D-19. Then apply D9 in order at each missed gate.
 
 ## Sleep rota
 - One person off 4 h at a time [F41]. Windows do not overlap and do not span a gate or trigger check.
-- Back to back from M2 [F41]: A, B, C, D owners (team of 3: A, B, C).
+- From M2 [F41], in lane order A, B, C, D.
 - Before leaving: tick Done boxes in TASKS.md, add one hand-off line per open task.
 
 ## Cut order (D9)
 1. Teen chain (A-30)
 2. Screenshot intake (B-13)
 3. Reconciliation (D-19)
-4. did:key (keep Ed25519)
-5. Harness 200 to 100 scenarios [F37]
-6. Scameter to manual capture only (D-07)
+4. Harness 200 to 100 scenarios [F37]
+5. Scameter to manual capture only (D-07)
 
+- did:key and the credential are not cut: HKT's workshop centres on DID-VC [F19]. Optional by design, never on the critical path: hosted Jev, claude planner.
 - Cut the next item when a gate is missed. Sleep is not on the list.

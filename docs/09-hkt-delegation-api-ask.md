@@ -3,40 +3,45 @@
 **Proposal, not an HKT commitment. Not affiliated with HKT.**
 
 ## Observed gaps
-- **Issuance**: an issuing API for delegates: not found in public sources as of 2026-10-02. Cards are made by hand in the app; up to HK$2,000 each, 2 active, valid up to 2 months [F1].
-- **Delegate role**: a role for software acting for a holder: not found in public sources as of 2026-10-02. The T&C: platform-only role, no disclosure of security details including the CVV, no cancelling a processed payment [F2].
-- **Card terms and fee**: the separate Single Use Card terms and any card fee: not located in public sources as of 2026-10-02 [F1, F3].
-- **Loss rule**: who bears a delegated purchase the holder did not intend: not found in public sources as of 2026-10-02. Dispute fee: HK$150 per transaction [F3.dispute_fee].
+- **Not found in public sources as of 2026-10-02**: an issuing API for delegates (cards made by hand, limits as [F1]); a role for software acting for a holder (T&C: platform-only role, no disclosure of security details, no cancel after payment [F2]); Single Use Card terms or fee [F1, F3]; a merchant lock or purpose [F1]; a loss rule for unintended delegated purchases (dispute fee HK$150 [F3.dispute_fee]).
 
 ## Proposed API
 | Method | Purpose | Notes |
 |---|---|---|
-| `POST /delegates` | Create delegate | Holder names the software and mandate hash; can list and remove delegates |
-| `POST /delegates/{id}/cards` | Mint card | `limit`, `ttl`, optional `merchant_lock` and `preauth_tolerance` (merchants may pre-authorise above the final charge [F2.preauth]); one-use as today [F1.expiry]; credentials go to the executor service only, the planner sees a handle |
+| `POST /delegates` | Create delegate | Holder names the software and credential hash |
+| `POST /delegates/{id}/cards` | Mint token | `limit`, `ttl`, `merchant_lock`, `purpose`, `preauth_tolerance` (merchants may pre-authorise above the charge [F2.preauth]); `Idempotency-Key`; one use as today [F1.expiry]; credentials to the executor only |
 | `POST /cards/{id}/revoke` | Revoke | Before first use; no effect after a processed payment [F2.cancel] |
-| Webhook | Card events | `authorised`, `declined`, `voided`, `expired`; signed |
-| `GET /delegates/{id}/audit` | Audit export | Append-only, signed; a third party can check it without trusting the delegate |
+| Webhook | Card events | `authorised`, `declined` (incl. merchant mismatch, replay), `voided`, `expired`; signed |
+| `GET /delegates/{id}/audit` | Audit export | Append-only, signed; checkable without trusting the delegate |
 
-- Names are illustrative. `limit` within the HK$2,000 ceiling [F1.ceiling]; `ttl` 30 min [F30] (ASSUMED).
+- Names are illustrative. `limit` within the HK$2,000 ceiling [F1.ceiling]; `ttl` 30 min [F30] (ASSUMED). Our merchant lock and purpose are SIMULATED today.
+
+## Rail portability
+| `RailPort` contract | Mastercard SUC today [F1] | FPS | UnionPay |
+|---|---|---|---|
+| `mint` with limit, expiry | by hand; ceiling and validity as [F1]; no API found | to verify with HKT | to verify with HKT |
+| One use, replay declined | credentials end after one payment [F1] | to verify with HKT | to verify with HKT |
+| `merchant_lock`, `purpose` | not found [F1]; asked above | to verify with HKT | to verify with HKT |
+| Idempotent `authorise` | not found | to verify with HKT | to verify with HKT |
+| `void` before use, events | not found; no cancel after payment [F2] | to verify with HKT | to verify with HKT |
+
+- The engine, credential and log stay the same on any rail; only the `RailPort` adapter changes. HKT's workshop names all three rails [F19].
 
 ## T&C addendum: delegated use
-- **Delegate role**: named, revocable, acts only inside the holder's mandate.
-- **Credentials**: held only by executor software, never by a language model, prompt or log.
-- **Secrecy carve-out**: the clause on security details [F2.secrecy] permits executor software to hold PAN and CVV, provided it never shows them to an LLM.
-- **Loss allocation**: a written rule for purchases the mandate allowed and did not allow, including who pays the dispute fee [F3.dispute_fee]. Our v0: [01](01-product-brief.md).
+- **Delegate role**: named, revocable, acts only inside the holder's credential.
+- **Credentials**: executor software only, never a model, prompt or log; a carve-out in the secrecy clause [F2.secrecy].
+- **Loss allocation**: a written rule, including who pays the dispute fee [F3.dispute_fee]; our v0 in [01](01-product-brief.md).
 
 ## Pilot scope
-- **Prepaid** first: Pro holders (18+ [F2.pro]) aged 21-30 [F24]; teens 11-17 on Plus(ii) [F2.plus2] later, with parent consent.
-- **Phases**: sandbox, no live money; small adult group; teens last.
+- **Prepaid** first: Pro holders (18+ [F2.pro]) aged 21-30 [F24]; teens on Plus(ii) [F2.plus2] last, with parent consent; sandbox first.
 
 ## Success metrics
-- **Targets (ASSUMED)**: 0 over-limit mints in deterministic scenarios and at least 90% of legitimate scenarios approved [F38]; p95 decision latency at or under 3,000 ms [F35]. Our MEASURED value goes beside each.
-- **Our results**: overspend, prompt-only limit [X] against full pipeline [Y], MEASURED(n) with seed and commit. TODO(D-11): fill after M3.
-- **Pilot adds**: disputes per delegated purchase; cards used before expiry. No target set.
+- **Targets (ASSUMED)**: 0 over-limit mints in deterministic scenarios, at least 90% of legitimate scenarios approved [F38]; p95 decision latency at or under 3,000 ms [F35]; MEASURED values beside them.
+- **Our results**: overspend of a model-only gate [X] against the full pipeline [Y], MEASURED(n) with seed and commit; filled after M3 (D-11).
 
 ## Fit with the agent-ID pilot
-- HKT Payment and Red Date announced an Agentic ID pilot on 2026-08-27 (DIDs and verifiable credentials for payment flows) [F8]. A delegate record could carry such an ID; our mandate is AP2-shaped [F12], so a credential can wrap it later. No claim about the pilot's results.
+- The Agentic ID pilot (HKT Payment and Red Date, 2026-08-27) uses DIDs and verifiable credentials [F8]. Our mandate is already a VC 2.0 AgentDelegationCredential with did:key identities [F19]; a delegate record could carry such an ID. No claim about the pilot's results.
 
 ## Our side
-- **Rail**: SIMULATED, mirrors [F1]; our software accesses no HKT system. TODO(D-03): add the real-card decline result and date.
+- **Rail**: SIMULATED, mirrors [F1]; our software accesses no HKT system. Real-card decline result and date: added after D-03.
 - **Sources**: public pages, READ-BY-CLAUDE until a teammate captures them [F1, F2, F3]; send only after OBSERVED. Corrections welcome.

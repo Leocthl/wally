@@ -6,10 +6,10 @@
 | For | mandate creation, the delegator's view | recorded decisions, logs, verifier, evidence |
 | Feel | warm paper, tactile, vermilion and brass, EN then zh-HK | cool neutral, hairlines, monospace data, tabular numerals |
 
-- **Rule**: the delegator holds the packet, the system writes the receipt; a register changes at a component edge, never inside one. `data-register="packet|ledger"` sets the semantic tokens (`--bg`, `--fg`, `--radius`, `--font-data`).
+- **Rule**: the delegator holds the packet, the system writes the receipt; registers change only at a component edge, via `data-register`.
 
 ## Provenance chips
-- **No bare number.** Every figure renders through `Num` (value + `ProvChip`); a column with one provenance may carry the chip in its header. Never MEASURED for a vendor figure such as Jev latency [F11]. UNKNOWN rows show text, no number.
+- **No bare number.** Every figure renders through `Num` (value + `ProvChip`); one chip may sit in a column header. Vendor figures are never MEASURED [F11c]; our Laya latency is [F26]. UNKNOWN shows text, no number.
 
 | Chip | Text | Look | Maps from register status |
 |---|---|---|---|
@@ -26,23 +26,26 @@
 | ESCALATED | amber `--escalated` | hourglass | `ESCALATED <rule ID>`, countdown to R11 [F31] |
 | PENDING | grey `--pending` | dashed square | `PENDING` |
 
-- **Colour never alone.** Brass carries no state; amber carries only ESCALATED.
+- **Colour never alone.** Brass has no state; amber is only ESCALATED.
 
 ## StopBanner
-- Full width, `role="alert"`, text = rule template + recorded inputs. Example: "Stopped by R3. Total HK$550 is over the HK$541 left." [F22, F21]. Other texts: templates in 01 §Stop catalogue, keyed by the template IDs in 00-context. Each template supplies EN and zh-HK lines.
+- Full width, `role="alert"`, text = rule template + recorded inputs (01 §Stop catalogue), e.g. "Stopped by R3. Total HK$550 is over the HK$541 left." [F22, F21]; EN and zh-HK lines.
 
 ## Components
 | Component | Register | Props | Behaviour |
 |---|---|---|---|
 | MandateEditor | PACKET | `value, compiled: RuleChip[], onSeal` | Sentence beside editable rule chips; Seal disabled while a chip is invalid |
-| PacketMeter | PACKET | `packet: PacketState` | Remaining bar in an envelope outline; drops on mint, restores on VOIDED or EXPIRED |
+| PacketMeter | PACKET | `packet: PacketState` | Remaining bar; drops on mint, restores on VOIDED or EXPIRED |
 | CartCard | PACKET | `cart: Cart` | Lines, shipping, fees, FX, total (the figure R3 compares) |
-| DecisionCard | LEDGER | `decision: Decision, judge?: JudgeRecord` | Rule ID, inputs, comparator, judge probabilities, outcome; template text only |
-| StopBanner | LEDGER | `decision, templateId` | Full width; sentence from template + recorded inputs |
-| CardTicket | PACKET | `card: CardRecord` | Masked last4, limit, TTL, state; SIMULATED stamp always on |
+| DecisionCard | LEDGER | `decision: Decision, judge?: JudgeRecord` | Rule ID, inputs, comparator, judge and planner probabilities, outcome; template text only |
+| StopBanner | LEDGER | `decision, templateId` | §StopBanner |
+| CardTicket | PACKET | `card: CardRecord` | Masked last4, limit, TTL, state, merchant lock; SIMULATED stamp |
 | RevokeButton | PACKET | `onRevoke` | Hold `--dur-hold`; early release cancels; keyboard holds Space or Enter |
 | LogTimeline | LEDGER | `entries: LogEntry[]` | Mono rows: seq, kind, outcome, rule IDs, hash prefix |
 | VerifierPanel | LEDGER | `entries, keys, head` | Pass, or first failing seq; Tamper flips one byte of a copy |
+| CredentialPanel | LEDGER | `vc, r1` | Issuer did:key, validity, rules, proof; R1 result chip |
+| ScenarioPicker | LEDGER | `scenarios, onRun, onReset` | Preset buttons, "Try to trick the agent" box, Reset (§Booth) |
+| BudgetStopActions | PACKET | `decision` | On R3 or R4: "See alternatives", "Top up packet" (§Booth) |
 | EvidenceCharts | LEDGER | `harness: HarnessResult, manual: ManualRoute` | B0, B1, B2 bars with n; no value without a chip |
 | PresenterBar | LEDGER | `step, mode, onStep, onReset, onMode` | Step DM1 to DM9, Reset, SIMULATED/REAL toggle (06) |
 
@@ -51,13 +54,23 @@
 ## Screens
 | Screen | Register | Content |
 |---|---|---|
-| Seal | PACKET | MandateEditor over a PacketMeter preview; Seal writes `MANDATE_SEALED` |
-| Run | LEDGER under a PACKET header | Lanes planner, judge, engine, rail; CartCard in, DecisionCard out, StopBanner pinned above; latency chips MEASURED(n=1) |
+| Seal | PACKET | MandateEditor, PacketMeter preview, CredentialPanel after Seal |
+| Run | LEDGER, PACKET header | Lanes planner, judge, engine, rail; CartCard in, DecisionCard out, StopBanner above; latency MEASURED(n=1) |
 | Packet console | PACKET | PacketMeter, CardTickets, open escalation, RevokeButton |
 | Log + verifier | LEDGER | LogTimeline, VerifierPanel, Tamper button |
 | Evidence | LEDGER | EvidenceCharts, manual-route table (E3), OBSERVED captures (E5), the one real decline |
-| Presenter | both | Big screen: Run two thirds, PacketMeter one third; numerals `--fs-6` up; PresenterBar bottom; rail badge top right |
-| Phone | PACKET first | One column, 360 px; tabs Packet, Run, Log; Seal and Revoke in thumb reach; StopBanner above the fold |
+| Booth | both | §Booth; also the finalist stage in presenter mode |
+| Presenter | both | Run two thirds, PacketMeter one third; numerals `--fs-6` up; PresenterBar bottom; rail badge top right |
+| Phone | PACKET first | One column, 360 px; tabs Packet, Run, Log; Seal and Revoke in thumb reach |
+
+## Booth
+- **For** a judge's 5-minute visit [F14]: no login; M0 sealed on load; one tap per scenario; Reset always visible.
+- **Layout** (landscape): ScenarioPicker left; live trace centre (planner choice, judge probabilities, rule, rail event); packet, token, credential and log right, with Verify and Tamper.
+- **Scenarios**: normal purchase, flagged seller, shipping overflow, injected listing, off-category [F29], revoke, replay, wrong merchant, price drift, rail timeout.
+- **Free text**: "Try to trick the agent" fills the listing description; only the judge reads it. Title, price and shipping stay structured.
+- **Budget stops** (R3, R4): "See alternatives" re-runs the pipeline; "Top up packet" opens Seal for a new signed mandate; an answer never overrides a hard rule.
+- **Failure**: Laya down shows an ESCALATED banner, never a blank screen.
+- **Language**: zh-HK in UI copy only; listings stay English (Laya [F26]).
 
 ## Tokens
 - **Fonts**: system sans; self-hosted Noto Sans HK subset for CJK, `lang="zh-HK"` on every Chinese run; mono for logs and hashes; figures use `--num`.
@@ -143,10 +156,10 @@
 ```
 
 ## Accessibility
-- **Checked** with a throwaway Python script (WCAG 2.x relative luminance): every text/background and UI pair, light and dark, on all four surfaces. Kept: text at 4.5:1 or better, UI at 3:1 or better. Lowest text pair 5.55:1 light, 5.84:1 dark; lowest UI pair 3.95:1 light, 4.46:1 dark. Hairlines, `--brass-fill` and disabled controls carry no meaning and sit outside the set.
+- **Checked** (WCAG 2.x, light and dark, four surfaces): text 4.5:1, UI 3:1 or better; ratios in token comments; hairlines and `--brass-fill` carry no meaning.
 - **Targets** at least `--tap` (44 px), 8 px apart; **focus** ring 3 px `--focus`; inputs 16 px.
 - **Live regions**: StopBanner `role="alert"`, MINTED `role="status"`, countdown announced at start and end only.
-- **Reduced motion**: durations 0 ms; state still shows colour, icon, text; hold-to-confirm fills in steps.
+- **Reduced motion**: durations 0 ms; state keeps colour, icon, text; hold fills in steps.
 - 200% zoom holds; no hover-only content.
 - [ ] Lane C adds a token test with the same floors.
 
@@ -158,10 +171,10 @@
 | Stop | banner height expands once, meter holds still (`--dur-stop`) |
 | Expire | linear bar drains, ticket greys (`--dur-expire`) |
 
-- One motion per event; no loops, confetti or sound. Reduced motion makes each instant.
+- One motion per event; no loops, confetti or sound.
 
 ## Microcopy
-- **Rules**: plain English, zh-HK on the second line; name the rule ID and the next step; glossary terms only (00-context), no synonyms; no "AI magic" or chat voice. Decisions: rule templates only.
+- **Rules**: plain English, zh-HK second line; name the rule ID and the next step; glossary terms only; no "AI magic" or chat voice; all wording from templates, never generated text.
 
 | Where | EN | zh-HK |
 |---|---|---|
@@ -170,16 +183,14 @@
 | Rail badge | SIMULATED rail. No money moves. | 模擬發卡層，沒有款項轉移 |
 | Verifier fail | Chain broken at entry {seq} | 紀錄鏈於第 {seq} 筆中斷 |
 
-- Open (C-12): native zh-HK read of these strings. The 01 templates are EN only, so zh-HK template lines are owed.
+- Open (C-12, C-19): native zh-HK read; zh-HK template lines owed.
 
 ## Deck
-- 16:9, **one idea per slide**, numerals at `--fs-6` or larger, each with its chip.
-- Same two registers: PACKET for the delegator's story, LEDGER for proof.
-- No stock imagery, robot clip-art or logos.
+- 16:9, **one idea per slide**, numerals `--fs-6` or larger with chips; PACKET for the story, LEDGER for proof; no stock imagery, clip-art or logos.
 
 ## Branding guard
-- **Accent** (state colours aside): deep, brownish vermilion `--vermilion` with brass `--brass-line`; no signal red, no orange-yellow; brass stays outline and rule, never a large fill.
-- **Motif**: envelope outline with flap, square chop seal (封). No two overlapping circles, in charts or the deck.
-- **Excluded**: logos, wordmarks or lookalikes of HKT, Tap & Go or Mastercard; purple gradients; glassmorphism; emoji.
+- **Accent**: brownish `--vermilion` with `--brass-line`; no signal red or orange-yellow; brass is outline only.
+- **Motif**: envelope with flap, square chop seal (封); no two overlapping circles.
+- **Excluded**: HKT, Tap & Go or Mastercard logos and lookalikes; purple gradients; glassmorphism; emoji.
 - **Footer** on every screen and slide: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard."
-- [ ] Before the freeze [F41], compare the palette with the sponsor's and card network's public pages (not sampled from them).
+- [ ] Before the freeze [F41], compare the palette with the sponsor's and card network's public pages.

@@ -116,5 +116,5 @@ print("\n".join(out) or "  ok   all linked files exist"); out.clear()
 
 print("\n== schema fields named in 01 chips vs mandate schema")
 ms = read("schemas/mandate.schema.json")
-for field in ["budget", "hard_cap", "ask_above", "seller_check", "expires_at", "categories"]:
+for field in ["budget", "hard_cap", "ask_above", "seller_check", "valid_until", "categories"]:
     print("  %-14s %s" % (field, "in mandate.schema.json" if field in ms else "MISSING"))

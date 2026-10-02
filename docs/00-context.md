@@ -44,9 +44,9 @@
 |---|---|---|
 | D1 | Mandate engine on HKT rails + four upgrades (D6). Title "Lai See Agent"; red-packet metaphor is branding only, the technical plan must not depend on it | none |
 | D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Option: teen on Plus(ii) [F2] with a parent-sealed packet (parent → teen → agent, caps compose: agent <= teen packet <= parent funding). Minors are not the headline | ADR-0005 |
-| D3 | Chain: signed mandate → planner (Claude, untrusted) → judge (Jev, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
+| D3 | Chain: signed mandate → planner (Laya-driven, untrusted) → judge (Laya, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
 | D4 | Invariants I1-I8 (below). Explanations render from rule templates + recorded inputs, never LLM prose | ADR-0002 |
-| D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); llm fallback with the same schema; shadow mode first; report only latency and cost we measure | ADR-0001 |
+| D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); recorded replay for CI and as the booth fallback; shadow mode first; report only latency and cost we measure | ADR-0001 |
 | D6 | Upgrades: U1 decrementing sealed packet; U2 mint-on-approval; U3 seller-risk gate before minting; U4 rail simulator calibrated on one real decline + 10-shop readiness probe | ADR-0003 |
 | D7 | No issuing API found [F1]: rail is SIMULATED and labelled so everywhere. A processed payment cannot be cancelled [F2]: demo revocation before mint or before first use; after payment use dispute + loss rule | ADR-0003 |
 | D8 | Contingency only: if the H10 trigger fires [F41], switch to Track 4 "overnight desk that escalates" | 08 |
@@ -114,7 +114,7 @@
 | Packet status | `ACTIVE`, `EXHAUSTED`, `EXPIRED`, `REVOKED` |
 | Escalation state | `OPEN`, `APPROVED`, `DENIED`, `EXPIRED` |
 | Judge questions | `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` |
-| Judge provider | `laya` (default, local), `jev` (hosted, optional), `llm` (fallback) |
+| Judge provider | `laya` (default, local), `jev` (hosted, optional), `replay` (recorded answers for CI and the booth fallback) |
 | Planner provider | `rule` (default), `replay`, `claude` (optional) |
 | Money | integer minor units (HKD cents), currency `HKD` |
 
@@ -122,7 +122,7 @@
 ```
 seal      Delegator signs the AgentDelegationCredential (VC 2.0) → log MANDATE_SEALED → PacketState (folded from the log)
 propose   Planner (untrusted; only tool: propose_cart) → Cart
-assess    judge.assess(cart, listing, scameterCapture) → JudgeRecord               // laya (local), jev or llm; never throws, status OK | TIMEOUT | ERROR
+assess    judge.assess(cart, listing, scameterCapture) → JudgeRecord               // laya (local), jev or replay; never throws, status OK | TIMEOUT | ERROR
 decide    engine.decide(mandate, packet, cart, judgeResult, now) → Decision       // pure, deterministic, R1-R12
 record    log.append(DECISION)                                                     // I7, before any side effect
 mint      on APPROVE: rail.mint(limit = cart.total, ttl) → CardRecord; log.append(CARD_MINTED)
@@ -140,7 +140,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | Lane | Scope | Paths (npm scope `@laisee/*`) |
 |---|---|---|
 | A | policy + rail | `packages/core` (schemas→types, packet math, R1-R12, engine, crypto, log, orchestrator), `packages/rail-sim` |
-| B | agent + judge | `packages/agent` (planner backends, judge adapters laya/jev + llm, shadow mode), `services/laya` (local judge server scripts) |
+| B | agent + judge | `packages/agent` (planner backends, judge adapters laya/jev + replay, shadow mode), `services/laya` (local judge server scripts) |
 | C | UI + verifier | `apps/web` (UI + thin API), `apps/verifier` (offline page) |
 | D | evidence + pitch | `packages/harness`, `data/`, `docs/05`-`07`, `docs/09` |
 | X | cross-lane | `schemas/`, fixtures in `data/fixtures/`, CI |
@@ -226,8 +226,8 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Decision** | Engine output for one cart: APPROVE, DENY or ESCALATE + rule results |
 | **Mint** | Create a one-off card whose limit equals the approved total (U2) |
 | **Stop** | A DENY, an unanswered ESCALATE, or a revoke; catalogue S1-S6 |
-| **Planner** | Untrusted agent (rule parser + Laya typed item choice, or recorded replay; Claude optional); may only call `propose_cart` |
-| **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or LLM fallback); can only tighten a decision |
+| **Planner** | Untrusted agent: a Laya-driven decision loop over structured listings in a deterministic harness, or recorded replay; may only call `propose_cart` |
+| **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or recorded replay); can only tighten a decision |
 | **Policy engine** | Deterministic code that applies R1-R12 and is the only source of a Decision |
 | **Rail** | Card issuing layer; SIMULATED, mirrors Single Use Card semantics [F1] |
 | **Log / Verifier** | Signed hash-chained decision log / offline page that checks it |

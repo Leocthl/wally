@@ -1,0 +1,7 @@
+# ADR-0008: Local-first judge and planner on one model (Laya)
+
+- **Status**: Accepted (2026-10-02, contract V2 as amended). Links: D5, D12, I4, I5, [02 §9 and §14](../02-architecture.md), ADR-0001.
+- **Context**: The booth demo must run with no network and no API key [F14]; hosted judge access is waitlisted [F11b]. Laya runs locally under Apache-2.0 and answers typed questions with probabilities [F11c]; measured latency on this Mac fits the judge timeout [F26, F34]. Laya cannot read raw pages, do arithmetic or write text.
+- **Decision**: Laya is the only model. The judge asks it typed questions. The planner is a Laya decision loop inside a deterministic harness: item, variant and next action, rotation-averaged, abstaining on a small margin, under a step cap. Listings arrive structured; arithmetic, cart building and all wording are code and templates. `replay` backs both for CI and the booth. Claude stays an optional planner backend if a key ever appears.
+- **Consequences**: No vendor, no key, no data leaving the Mac. Planner and judge share one model, so their errors can correlate; the engine rules and the rail limit are model-free. "Why this item" is answered from the logged planner trace (E4).
+- **Rejected alternatives**: a second, generative local model for the planner (a multi-gigabyte download and a second model to explain; considered and dropped); a hosted Claude planner (needs a key and a network at the booth).

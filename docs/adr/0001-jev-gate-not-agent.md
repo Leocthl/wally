@@ -1,7 +1,7 @@
-# ADR-0001: Jev is a gate, not the agent
+# ADR-0001: Typed judge is a gate, not the agent; Laya local
 
-- **Status**: Accepted (planning pass). Links: D5, I3, R10, [02 §9](../02-architecture.md).
-- **Context**: Jev returns typed probabilities, generates no text and cannot browse or plan [F11]. Schema-valid output is not correct output. The scoring sheet rewards a visible stop and a stated rule (E2, E4).
-- **Decision**: Claude plans; Jev answers `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed`. Its output reaches the engine only through R10 and can only move APPROVE to DENY or ESCALATE (I3). Thresholds in config [F36, F50]. Fallback: llm with the same schema and stricter thresholds [F51]. Shadow mode first.
-- **Consequences**: A Jev outage or false allow cannot overspend; hard rules still hold. Every Decision records provider, model, version and MEASURED latency. Vendor latency and price stay VENDOR-REPORTED [F11].
-- **Rejected alternative**: Jev as the main agent ("overnight desk", Track 4). Closer to Jev's own pitch, but it cannot write a cart or explain a stop, and access is waitlisted [F11b]. Kept as the D8 contingency.
+- **Status**: Accepted (revised 2026-10-02, contract V2). Links: D5, I3, I5, R10, [02 §9](../02-architecture.md), ADR-0008.
+- **Context**: Typed models return option probabilities, write no text and cannot browse [F11, F11c]. Schema-valid output is not correct output; Laya's probabilities are soft and its own limits are stated [F11c, F26]. The scoring sheet rewards a visible stop and a stated rule (E2, E4).
+- **Decision**: The judge answers `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` through `SystemOneJudge`: Laya `typed-decisions` on 127.0.0.1 by default, hosted Jev optional on the same wire format, `replay` for CI and the booth fallback. Output reaches the engine only through R10 and can only move APPROVE to DENY or ESCALATE (I3). Rotations averaged; thresholds in config [F36, F50]; timeout, error or truncated input ESCALATE (I5). Shadow mode first.
+- **Consequences**: A judge outage or false allow cannot overspend; hard rules and the rail limit use no model. No key, and no data leaves the Mac. Every Decision records provider, model, version and MEASURED latency [F26]; vendor figures stay VENDOR-REPORTED.
+- **Rejected alternatives**: hosted Jev as the default (waitlisted, US-hosted [F11b]); an LLM judge (verbalised, uncalibrated probabilities, needs a key); the judge as the main agent (Track 4, kept as the D8 contingency).
