@@ -1,6 +1,6 @@
 // Service worker policy (pure): same-origin GETs inside the scope only; /api and SSE never; navigations get the shell.
 import { describe, expect, it } from "vitest";
-import { cacheName, classify, isApiPath, isStaleCache, precacheUrls, scopedPath, type RequestInfo } from "../src/pwa/swPolicy";
+import { cacheName, classify, isApiPath, isStaleCache, isVerifierPath, precacheUrls, scopedPath, type RequestInfo } from "../src/pwa/swPolicy";
 import { fillWorker, shellVersion } from "../src/pwa/vitePlugin";
 
 const SCOPE = "https://booth.example/wally/";
@@ -25,6 +25,17 @@ describe("classify", () => {
     expect(classify(req(`${SCOPE}assets/a.js`, { method: "HEAD" }), SCOPE)).toBe("ignore");
     expect(classify(req("https://cdn.example/wally/assets/a.js"), SCOPE)).toBe("ignore");
     expect(classify(req("https://booth.example/other/index.html"), SCOPE)).toBe("ignore");
+  });
+
+  it("leaves the offline verifier page to the network: it is its own page, never the app shell", () => {
+    for (const url of [`${SCOPE}verifier/`, `${SCOPE}verifier`, `${SCOPE}verifier/index.html`]) {
+      expect(classify(req(url, { mode: "navigate" }), SCOPE), url).toBe("ignore");
+      expect(classify(req(url), SCOPE), url).toBe("ignore");
+    }
+    expect(classify(req("https://booth.example/verifier/", { mode: "navigate" }), "https://booth.example/")).toBe("ignore");
+    // Only the path segment: an app file that merely has the word in its name is still the app's.
+    expect(classify(req(`${SCOPE}assets/verifier-abc.js`), SCOPE)).toBe("asset");
+    expect([isVerifierPath("verifier/"), isVerifierPath("verifier"), isVerifierPath("v1/verifier/x"), isVerifierPath("verifiers/"), isVerifierPath("assets/verifier.js")]).toEqual([true, true, true, false, false]);
   });
 
   it("serves navigations from the shell and other in-scope GETs cache first", () => {
