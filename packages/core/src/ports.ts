@@ -177,10 +177,15 @@ export type AppendEntry = <K extends LogEntryKind>(
 
 // ---------- Engine, explanations, verifier (implemented by lane A) ----------
 
-/** No answer and now >= expires_at => R11. */
+/**
+ * No answer and now >= expires_at => R11. The engine accepts a resolution only when `escalated` is the OPEN
+ * ESCALATE decision named by `resolves` and was made on the same cart (fingerprint); otherwise DENY R11.
+ */
 export interface EscalationResolution {
   readonly resolves: string;
   readonly answer?: EscalationAnswer;
+  /** The ESCALATE decision being answered, read from the log by the orchestrator. Absent => DENY R11. */
+  readonly escalated?: Decision;
 }
 
 export type PacketState = Decision["packet"];
@@ -189,6 +194,21 @@ export type PacketState = Decision["packet"];
 export interface DecideContext {
   /** Result of verifying the mandate credential's proof (R1). Absent means invalid: fail closed (I5). */
   readonly mandateProofValid?: boolean;
+  /** Result of verifying the escalation answer's delegator signature. Anything but true with an answer => DENY R11. */
+  readonly answerSignatureValid?: boolean;
+}
+
+/** engine.decideCheckout input (R12 at checkout). */
+export interface CheckoutDecisionInput {
+  readonly mandate: Mandate;
+  /** Current packet (folded now), so a revoke or expiry after approval is seen. */
+  readonly packet: PacketState;
+  /** The APPROVE decision behind the card. */
+  readonly approved: Decision;
+  /** MerchantPort.quote at checkout. */
+  readonly quote: MerchantQuote;
+  readonly now: Date;
+  readonly ctx?: DecideContext;
 }
 
 export interface Engine {
@@ -202,6 +222,8 @@ export interface Engine {
     resolution?: EscalationResolution,
     ctx?: DecideContext,
   ): Decision;
+  /** R12 at checkout: null when the approval stands, else a DENY that resolves it (the caller voids the card). */
+  decideCheckout(input: CheckoutDecisionInput): Decision | null;
 }
 
 export type FoldPacket = (entries: readonly LogEntry[], now: Date) => PacketState;

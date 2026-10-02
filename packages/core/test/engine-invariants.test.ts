@@ -7,21 +7,25 @@ import { engine } from "../src/engine";
 import type { Decision, JudgeRecord } from "../src/generated";
 import { HARD_RULES } from "../src/rules";
 import { validateDecision } from "../src/schema";
-import { PROPERTY_SEED, brokenJudgeArb, cartArb, ctxArb, judgeArb, mandateArb, nowArb, packetArb, resolutionArb } from "./engine-arbitraries";
+import { cartFingerprint } from "../src/engine";
+import { PROPERTY_SEED, bindResolution, bindingArb, brokenJudgeArb, cartArb, ctxArb, judgeArb, mandateArb, nowArb, packetArb, resolutionArb } from "./engine-arbitraries";
 import { CLEAN_JUDGE, PROOF_OK } from "./engine-helpers";
 
 const RANK: Readonly<Record<Decision["outcome"], number>> = { APPROVE: 0, ESCALATE: 1, DENY: 2 };
 const RUNS = { numRuns: 400, seed: PROPERTY_SEED };
 
-const scenario = fc.record({
-  mandate: mandateArb,
-  packet: packetArb,
-  cart: cartArb,
-  judge: judgeArb,
-  now: nowArb,
-  resolution: resolutionArb,
-  ctx: ctxArb,
-});
+const scenario = fc
+  .record({
+    mandate: mandateArb,
+    packet: packetArb,
+    cart: cartArb,
+    judge: judgeArb,
+    now: nowArb,
+    resolution: resolutionArb,
+    binding: bindingArb,
+    ctx: ctxArb,
+  })
+  .map(({ binding, ...s }) => ({ ...s, resolution: bindResolution(s.resolution, binding, s.cart, s.packet) }));
 
 type Scenario = typeof scenario extends fc.Arbitrary<infer S> ? S : never;
 const decide = (s: Scenario, judge: unknown = s.judge): Decision =>
@@ -127,7 +131,7 @@ describe("engine invariants", () => {
     );
   });
 
-  it("only an in-time answer from the delegator for that decision can approve a resolution", () => {
+  it("only an in-time, signed answer from the delegator for that decision and that cart can approve a resolution", () => {
     fc.assert(
       fc.property(scenario, (s) => {
         if (s.resolution === undefined) return;
@@ -140,6 +144,9 @@ describe("engine invariants", () => {
         const open = s.packet.open_escalations.find((e) => e.decision_id === s.resolution?.resolves);
         expect(Date.parse(a?.answered_at ?? "")).toBeLessThan(Date.parse(open?.expires_at ?? ""));
         expect(d).toMatchObject({ resolves: s.resolution.resolves, escalation: { state: "APPROVED" } });
+        expect(s.ctx?.answerSignatureValid).toBe(true);
+        expect(s.resolution.escalated?.id).toBe(s.resolution.resolves);
+        expect(cartFingerprint(s.resolution.escalated?.cart ?? s.cart)).toBe(cartFingerprint(s.cart));
       }),
       RUNS,
     );

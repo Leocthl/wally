@@ -1,6 +1,8 @@
-// Canonical JSON (sorted keys, RFC 8785 style for plain JSON data) and SHA-256 via node:crypto.
-// Local on purpose: the engine does not depend on the crypto lane's module. Node-only.
-import { createHash } from "node:crypto";
+// Canonical JSON (sorted keys, RFC 8785 style for plain JSON data) and SHA-256 via @noble/hashes.
+// Local on purpose: the engine does not depend on the crypto lane's module. Browser-safe (no node: imports);
+// outputs are pinned in test/engine-hash-pinned.test.ts, so the backend swap changed no byte.
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import type { EngineConfig } from "../config";
 import type { Cart } from "../generated";
 
@@ -30,7 +32,7 @@ export function canonicalJson(value: unknown): string {
 
 /** Lowercase hex SHA-256 of the UTF-8 bytes of text. */
 export function sha256Hex(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
+  return bytesToHex(sha256(utf8ToBytes(text)));
 }
 
 /** engine.config_sha256: SHA-256 of the canonical JSON of the thresholds in force. */

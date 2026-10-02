@@ -127,16 +127,18 @@ describe("R10 judge thresholds (typed profile [F36, F50]); the judge can only ti
     expect(evaluate(judge)[0]).toMatchObject({ verdict: "ESCALATE", template_id: "R10.unavailable" });
   });
 
-  it("records SKIPPED with the shadow verdict in shadow mode", () => {
-    const results = evaluate({ ...JUDGE_INJECTED, shadow: true });
+  it("records SKIPPED with the shadow verdict when the config says shadow; an unusable record still escalates (I5)", () => {
+    const shadowConfig = { ...ENGINE_CONFIG, judge_mode: "shadow" as const };
+    const results = evaluateR10({ mandate: M0, judge: JUDGE_INJECTED, config: shadowConfig });
     expect(results.every((r) => r.result === "SKIPPED")).toBe(true);
     expect(results.find((r) => r.check === "injection_risk")?.inputs).toMatchObject({ shadow: true, shadow_verdict: "DENY", shadow_template_id: "R10.injection" });
     expect(results.find((r) => r.check === "scope_fit")?.inputs).toMatchObject({ shadow_verdict: "PASS" });
-    const down = evaluate({ ...JUDGE_TEE, status: "TIMEOUT", answers: undefined, shadow: true });
-    expect(down[0]).toMatchObject({ result: "SKIPPED", inputs: { shadow_verdict: "ESCALATE", shadow_template_id: "R10.unavailable" } });
+    const down = evaluateR10({ mandate: M0, judge: { ...JUDGE_TEE, status: "TIMEOUT", answers: undefined }, config: shadowConfig });
+    expect(down[0]).toMatchObject({ result: "FAIL", verdict: "ESCALATE", template_id: "R10.unavailable" });
   });
 
-  it("enforces unless shadow is exactly true", () => {
+  it("enforces whatever the record's own shadow flag says (the mode comes from config, audit S-JUDGE-1)", () => {
     expect(evaluate({ ...JUDGE_INJECTED, shadow: "true" }).some((r) => r.result === "FAIL")).toBe(true);
+    expect(evaluate({ ...JUDGE_INJECTED, shadow: true }).some((r) => r.result === "FAIL")).toBe(true);
   });
 });

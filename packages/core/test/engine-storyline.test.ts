@@ -1,7 +1,7 @@
 // Storyline F20-F23 end to end at engine level, plus the stops T-S1, T-S2, T-S3, T-S6 (A-15).
 import { describe, expect, it } from "vitest";
 import { ENGINE_CONFIG } from "../src/config";
-import { engine } from "../src/engine";
+import { createEngine, engine } from "../src/engine";
 import type { Cart, Decision, JudgeRecord, LogEntry, PacketState } from "../src/generated";
 import { foldPacket } from "../src/packet";
 import { validateDecision } from "../src/schema";
@@ -145,8 +145,10 @@ describe("stops at engine level", () => {
     expect(engine.decide(M0, PACKET_INITIAL, CART_A1, okWithoutAnswers, at(now), undefined, PROOF_OK).outcome).toBe("ESCALATE");
   });
 
-  it("records the judge without effect in shadow mode", () => {
-    const d = decideValid(PACKET_INITIAL, CART_A3B, { ...JUDGE_INJECTED, shadow: true }, now);
+  it("records the judge without effect when the engine config says shadow", () => {
+    const shadowEngine = createEngine({ config: { ...ENGINE_CONFIG, judge_mode: "shadow" } });
+    const d = shadowEngine.decide(M0, PACKET_INITIAL, CART_A3B, JUDGE_INJECTED, at(now), undefined, PROOF_OK);
+    expect(validateDecision(d).ok).toBe(true);
     expect(d.outcome).toBe("APPROVE");
     expect(d.rules.find((r) => r.check === "injection_risk")).toMatchObject({ result: "SKIPPED", inputs: { shadow_verdict: "DENY" } });
   });

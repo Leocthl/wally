@@ -16,7 +16,12 @@ export interface JudgeThresholds {
   readonly t_esc: number;
 }
 
+/** JUDGE_MODE (docs/02 section 15): enforce (default, the demo) or shadow. Never read from the judge record. */
+export type JudgeMode = "enforce" | "shadow";
+
 export interface EngineConfig {
+  /** R10 effect. shadow records a usable reading as SKIPPED; an unusable record still ESCALATEs (I5). */
+  readonly judge_mode: JudgeMode;
   readonly rail: { readonly ceiling_minor: number; readonly max_active_cards: number };
   readonly card: { readonly ttl_ms: number };
   readonly escalation: { readonly window_ms: number };
@@ -36,6 +41,7 @@ function deepFreeze<T>(value: T): T {
 }
 
 export const ENGINE_CONFIG: EngineConfig = deepFreeze({
+  judge_mode: "enforce", // JUDGE_MODE default; the judge record's own shadow flag is informational (audit S-JUDGE-1)
   rail: {
     ceiling_minor: 200_000, // per-card limit ceiling [F1.ceiling] (R5)
     max_active_cards: 2, // active cards at once [F1.active] (R8)
@@ -92,6 +98,7 @@ type Check = readonly [path: string, ok: boolean];
 
 const isPositiveInt = (v: unknown): boolean => typeof v === "number" && Number.isSafeInteger(v) && v > 0;
 const isProbability = (v: unknown): boolean => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1;
+const isJudgeMode = (v: unknown): v is JudgeMode => v === "enforce" || v === "shadow";
 
 function section(config: unknown, key: string): Record<string, unknown> {
   const value = config !== null && typeof config === "object" ? (config as Record<string, unknown>)[key] : undefined;
@@ -102,7 +109,9 @@ function section(config: unknown, key: string): Record<string, unknown> {
 export function validateEngineConfig(config: unknown): readonly string[] {
   const s = (key: string) => section(config, key);
   const judge = s("judge");
+  const mode = config !== null && typeof config === "object" ? (config as Record<string, unknown>)["judge_mode"] : undefined;
   const checks: readonly Check[] = [
+    ["judge_mode", isJudgeMode(mode)],
     ["rail.ceiling_minor", isPositiveInt(s("rail")["ceiling_minor"])],
     ["rail.max_active_cards", isPositiveInt(s("rail")["max_active_cards"])],
     ["card.ttl_ms", isPositiveInt(s("card")["ttl_ms"])],

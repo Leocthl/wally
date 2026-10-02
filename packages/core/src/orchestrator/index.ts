@@ -1,2 +1,47 @@
-// @laisee/core/orchestrator: placeholder from the foundation scaffold. Owner: lane A.
-export {};
+// @laisee/core/orchestrator (A-26): pipeline per docs/00 Pipeline contract v0, one serialised queue per packet.
+// Node and browser: no node: imports (the FileLogStore is injected by the composition root).
+export { createOrchestrator } from "./create";
+export { ORCHESTRATOR_DEFAULTS, OrchestratorConfigError, purposeOf } from "./config";
+export { RailMismatchError, attestMerchant } from "./attest";
+export type {
+  AnswerOptions,
+  AnswerResult,
+  CardEventCause,
+  CardView,
+  CheckoutDeniedResult,
+  CheckoutDriftResult,
+  CheckoutMode,
+  CheckoutRequest,
+  CheckoutResult,
+  CheckoutSettledResult,
+  CheckoutTimeoutResult,
+  DecidedResult,
+  EscalationView,
+  InvalidCartResult,
+  NoProposalReason,
+  NoProposalResult,
+  OperationFailure,
+  OperationName,
+  OperationOptions,
+  Orchestrator,
+  OrchestratorConfig,
+  OrchestratorDeps,
+  OrchestratorErrorCode,
+  OrchestratorEvent,
+  OrchestratorIds,
+  OrchestratorListener,
+  OrchestratorSnapshot,
+  PlannerFactory,
+  RevokeResult,
+  RevokeSuccess,
+  RunOutcome,
+  SealResult,
+  SealSuccess,
+  Stage,
+  StageStatus,
+  SubmitRequest,
+  SubmitResult,
+  TickProblem,
+  TickResult,
+  Unsubscribe,
+} from "./types";

@@ -1,4 +1,4 @@
-// @laisee/core/engine (A-15): the policy engine. Node-only (node:crypto for ids and config_sha256).
+// @laisee/core/engine (A-15): the policy engine. Browser-safe: SHA-256 for ids and config_sha256 via @noble/hashes.
 import { createEngine } from "./decide";
 
 /** Default engine bound to the register-pinned ENGINE_CONFIG. */

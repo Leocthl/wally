@@ -18,8 +18,10 @@ import {
   evaluateR11,
   skipped,
   timeOf,
+  type R11Outcome,
 } from "../rules";
 import { assembleDecision, outcomeOf } from "./assemble";
+import { bindingProblem, refusedR11 } from "./binding";
 import { checkoutDecision, type CheckoutInput } from "./checkout";
 import { configSha256 } from "./hash";
 import { resolveRules, resolvedEscalation } from "./resolution";
@@ -81,9 +83,17 @@ function decidedAtOf(a: DecideArgs): string {
   return ms === null ? a.cart.proposed_at : new Date(ms).toISOString();
 }
 
+/** R11, then the resolution binding (escalated decision, cart fingerprint, answer signature): any failure => DENY R11. */
+function r11Of(config: EngineConfig, a: DecideArgs): R11Outcome {
+  const base = evaluateR11({ mandate: a.mandate, packet: a.packet, resolution: a.resolution, now: a.now, config });
+  if (a.resolution === undefined) return base;
+  const problem = bindingProblem(a.resolution, a.cart, a.ctx);
+  return problem === null ? base : refusedR11(base, a.resolution, problem);
+}
+
 function decideWith(config: EngineConfig, meta: Decision["engine"], a: DecideArgs): Decision {
   const decidedAt = decidedAtOf(a);
-  const r11 = evaluateR11({ mandate: a.mandate, packet: a.packet, resolution: a.resolution, now: a.now, config });
+  const r11 = r11Of(config, a);
   const rules = [...resolveRules(preflightAndJudge(config, a), r11), skipped("R12")];
   const outcome = outcomeOf(rules);
   const escalation: Escalation | undefined =

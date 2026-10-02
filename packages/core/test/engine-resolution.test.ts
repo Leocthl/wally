@@ -27,6 +27,9 @@ const answer = (decisionId: string, choice: "APPROVE" | "DENY", answeredAt = "20
   signature: "A".repeat(86),
 });
 
+/** Proof verified and the answer's delegator signature verified (the orchestrator's checks, ADR-0007). */
+const SIGNED = { mandateProofValid: true, answerSignatureValid: true } as const;
+
 function valid(d: Decision): Decision {
   const check = validateDecision(d);
   expect(check.ok, JSON.stringify(check)).toBe(true);
@@ -37,7 +40,7 @@ describe("escalation resolution", () => {
   it("T-S5: unanswered past the window => DENY R11.expired that resolves the ESCALATE [F31]", () => {
     const { decision, packet, expiresAt } = escalated();
     expect(packet.open_escalations).toEqual([{ decision_id: decision.id, expires_at: expiresAt }]);
-    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at(expiresAt), { resolves: decision.id }, PROOF_OK));
+    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at(expiresAt), { resolves: decision.id, escalated: decision }, PROOF_OK));
     expect(d).toMatchObject({ outcome: "DENY", resolves: decision.id, escalation: { state: "EXPIRED", expires_at: expiresAt } });
     expect(d.explanation).toMatchObject({ template_id: "R11.expired", rendered: "Stopped by R11. No answer in 1 min." });
     expect(d.id).not.toBe(decision.id);
@@ -48,14 +51,14 @@ describe("escalation resolution", () => {
   it("a delegator APPROVE turns the answerable ESCALATE into APPROVE", () => {
     const { decision, packet, expiresAt } = escalated();
     const reply = answer(decision.id, "APPROVE");
-    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: reply }, PROOF_OK));
+    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: reply, escalated: decision }, SIGNED));
     expect(d).toMatchObject({ outcome: "APPROVE", approved_limit_minor: 25900, resolves: decision.id, escalation: { state: "APPROVED", expires_at: expiresAt, answer: reply } });
     expect(d.rules.find((r) => r.id === "R9")).toMatchObject({ result: "PASS", inputs: { cleared_by: "delegator" } });
   });
 
   it("a delegator DENY reuses the escalating rule's template", () => {
     const { decision, packet } = escalated();
-    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id, "DENY") }, PROOF_OK));
+    const d = valid(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id, "DENY"), escalated: decision }, SIGNED));
     expect(d).toMatchObject({ outcome: "DENY", escalation: { state: "DENIED" }, explanation: { template_id: "R9.unverified" } });
     expect(d.explanation?.rendered).toBe("Stopped by R9. Seller not checked on Scameter.");
   });
@@ -63,25 +66,25 @@ describe("escalation resolution", () => {
   it("an APPROVE answer never overrides a hard rule (revoked meanwhile, R2)", () => {
     const { decision, packet } = escalated();
     const revoked = packetWith(packet, { status: "REVOKED" });
-    const d = valid(engine.decide(M0, revoked, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id, "APPROVE") }, PROOF_OK));
+    const d = valid(engine.decide(M0, revoked, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: answer(decision.id, "APPROVE"), escalated: decision }, SIGNED));
     expect(d).toMatchObject({ outcome: "DENY", explanation: { template_id: "R2.revoked" }, escalation: { state: "DENIED" } });
     expect(d.approved_limit_minor).toBeUndefined();
   });
 
   it("an APPROVE answer never overrides a budget stop (R3) or a judge DENY (R10.injection)", () => {
     const { decision, packet } = escalated();
-    const reply = { resolves: decision.id, answer: answer(decision.id, "APPROVE") };
+    const reply = { resolves: decision.id, answer: answer(decision.id, "APPROVE"), escalated: decision };
     const poor = packetWithRemaining(packet, 100);
-    expect(engine.decide(M0, poor, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), reply, PROOF_OK).explanation?.template_id).toBe("R3.over_remaining");
-    expect(engine.decide(M0, packet, UNVERIFIED, JUDGE_INJECTED, at("2026-10-03T02:12:40Z"), reply, PROOF_OK).explanation?.template_id).toBe("R10.injection");
+    expect(engine.decide(M0, poor, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), reply, SIGNED).explanation?.template_id).toBe("R3.over_remaining");
+    expect(engine.decide(M0, packet, UNVERIFIED, JUDGE_INJECTED, at("2026-10-03T02:12:40Z"), reply, SIGNED).explanation?.template_id).toBe("R10.injection");
   });
 
   it("a late or forged answer is DENY R11, never approval", () => {
     const { decision, packet, expiresAt } = escalated();
-    const late = engine.decide(M0, packet, UNVERIFIED, decision.judge, at(expiresAt), { resolves: decision.id, answer: answer(decision.id, "APPROVE", expiresAt) }, PROOF_OK);
+    const late = engine.decide(M0, packet, UNVERIFIED, decision.judge, at(expiresAt), { resolves: decision.id, answer: answer(decision.id, "APPROVE", expiresAt), escalated: decision }, SIGNED);
     expect(late).toMatchObject({ outcome: "DENY", explanation: { template_id: "R11.expired", inputs: { answer_problem: "answered_late" } } });
     const forged = { ...answer(decision.id, "APPROVE"), signer: "did:key:z6MkMalloryXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" };
-    expect(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: forged }, PROOF_OK).outcome).toBe("DENY");
+    expect(engine.decide(M0, packet, UNVERIFIED, decision.judge, at("2026-10-03T02:12:40Z"), { resolves: decision.id, answer: forged, escalated: decision }, SIGNED).outcome).toBe("DENY");
   });
 
   it("the window comes from config [F31]", () => {
