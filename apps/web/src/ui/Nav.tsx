@@ -172,8 +172,9 @@ export function Segmented<V extends string>({ options, value, onChange, label, s
     group.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next ?? 0]?.focus();
   };
   return (
-    <div ref={group} role="radiogroup" aria-label={label} className={cx("w-seg", `w-seg--${size}`, className)} style={{ "--seg-i": index, "--seg-n": options.length } as CSSProperties}>
-      <span className="w-seg__thumb" aria-hidden="true" />
+    <div ref={group} role="radiogroup" aria-label={label} className={cx("w-seg", `w-seg--${size}`, className)} style={{ "--seg-n": options.length } as CSSProperties}>
+      {/* The thumb carries its own transform (not a variable on the group), so a change restyles one element. */}
+      <span className="w-seg__thumb" aria-hidden="true" style={{ transform: `translateX(${index * 100}%)` }} />
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={o.value === value} aria-label={o.ariaLabel} tabIndex={o.value === value ? 0 : -1} lang={o.lang} className="w-seg__opt" onClick={() => onChange(o.value)} onKeyDown={onKey}>
           {o.label}

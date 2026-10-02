@@ -110,8 +110,8 @@
 .w-tabs__panel { padding-top: var(--sp-4); }
 .w-tabs__panel:focus-visible { outline-offset: 4px; border-radius: var(--r-sm); }
 
-/* Segmented: same track, compact. Equal columns; one thumb slides to the chosen option (transform only, so a quick second
-   tap retargets it from where it is). Mounting draws the thumb already in place. */
+/* Segmented: same track, compact. Equal columns; one thumb slides to the chosen option (its inline transform; a transition,
+   so a quick second tap retargets it from where it is). Mounting draws the thumb already in place. */
 .w-seg { --seg-pad: 0.1875rem; position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: var(--seg-pad); border-radius: var(--r-pill); background: var(--c-surface-sunken); isolation: isolate; }
 .w-seg__thumb {
   position: absolute;
@@ -123,7 +123,6 @@
   border-radius: var(--r-pill);
   background: var(--c-surface);
   box-shadow: var(--shadow-1);
-  transform: translateX(calc(var(--seg-i, 0) * 100%));
   transition: transform var(--dur-fast) var(--ease-out);
   pointer-events: none;
 }
