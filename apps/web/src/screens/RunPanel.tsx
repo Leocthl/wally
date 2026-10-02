@@ -84,7 +84,7 @@ export function RunPanel(): ReactElement {
     <section ref={top} className="run" data-register="ledger" aria-label="Run" aria-live="off">
       {run ? <Banner run={run} /> : null}
       {run ? <ApprovedNote run={run} /> : null}
-      {run?.outcome === "INFO" && run.note ? <p role="status" className="run__info">{run.note}</p> : null}
+      {(run?.outcome === "INFO" || run?.outcome === "ESCALATE") && run.note ? <p role="status" className="run__info">{run.note}</p> : null}
       {run ? <RailBeats events={run.cardEvents} /> : null}
       <RunTrace run={run} info={info} latencyProv={latency} />
       {run?.cart ? <Disclosure id="cart" title={CART_FOLD}><CartCard cart={run.cart} prov={money} /></Disclosure> : null}

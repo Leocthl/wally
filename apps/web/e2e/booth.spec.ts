@@ -82,6 +82,7 @@ test("typed text has no recorded judge answer on the device: R10 escalates it an
   await page.getByRole("button", { name: /Send to the agent/i }).click();
   const banner = page.getByRole("alert").filter({ hasText: "ESCALATED R10" });
   await expect(banner).toContainText("The judge could not check this listing");
+  await expect(page.locator(".run__info")).toContainText("Judge offline in on-device mode");
   await box.fill("Soft cotton tee, regular fit, free shipping, 30-day returns.");
   await page.getByRole("button", { name: /Send to the agent/i }).click();
   await expect(banner).toBeVisible();
