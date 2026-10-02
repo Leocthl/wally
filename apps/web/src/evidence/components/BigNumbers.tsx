@@ -1,6 +1,6 @@
 // Three headline numbers, model-only gate (B0) against the full pipeline (B2): overspend, over-limit mints and the cost
 // side, false blocks. Readable in about twenty seconds (DM8); k/n is the big numeral, the percentage never stands alone.
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import { Tx } from "./Tx";
 import { BASELINE_NAMES, specOf } from "../metrics";
 import { compareToB2 } from "../select";
@@ -10,14 +10,16 @@ import type { BaselineId, HarnessRun, Rate } from "../types";
 import { Verdict } from "./Bars";
 import { EvNum, EvScope } from "./EvNum";
 import { chipsOf, WiringStamp } from "./RateChart";
+import { useReveal } from "../useReveal";
 
 /** The cost side (false blocks) sits second, so it is on screen with the first win, never below the fold. */
 export const HEADLINE_KEYS = ["overspend_rate", "false_block_rate", "over_limit_mint_rate"] as const;
 
-function Figure({ b, rate }: { readonly b: BaselineId; readonly rate: Rate | null }): ReactElement {
+function Figure({ b, rate, order }: { readonly b: BaselineId; readonly rate: Rate | null; readonly order: number }): ReactElement {
   const pct = rate ? formatPct(rate.k, rate.n) : null;
+  const share = rate && rate.n > 0 ? rate.k / rate.n : 0;
   return (
-    <div className="ev-big__row" data-baseline={b}>
+    <div className="ev-big__row" data-baseline={b} style={{ ["--order" as string]: order } as CSSProperties}>
       <span className="ev-big__who"><span data-ident className="ev-bar__id">{b}</span> <Tx text={BASELINE_NAMES[b]} /></span>
       {rate === null ? <Tx text={E.notInFile} className="soft" /> : (
         <EvNum chip={rate.chip} className="ev-big__num">
@@ -27,6 +29,11 @@ function Figure({ b, rate }: { readonly b: BaselineId; readonly rate: Rate | nul
         </EvNum>
       )}
       {rate !== null && rate.n === 0 ? <Tx text={E.noCases} className="soft" /> : null}
+      {rate !== null && rate.n > 0 ? (
+        <span className="ev-big__track" aria-hidden="true">
+          <span className="ev-big__fill" style={{ inlineSize: `${(share * 100).toFixed(2)}%` }} />
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -35,13 +42,14 @@ function Card({ metric, run, wiring }: { readonly metric: string; readonly run: 
   const spec = specOf(metric);
   const b0 = run.baselines.B0?.rates[metric] ?? null;
   const b2 = run.baselines.B2?.rates[metric] ?? null;
+  const { ref, reveal } = useReveal<HTMLElement>();
   return (
-    <article className="ev-big__card" data-big={metric} aria-labelledby={`ev-big-${metric}`}>
+    <article ref={ref} className="ev-big__card" data-big={metric} aria-labelledby={`ev-big-${metric}`} {...(reveal ? { "data-reveal": reveal } : {})}>
       <WiringStamp on={wiring} />
       <h3 id={`ev-big-${metric}`} className="ev-big__title"><Tx text={spec.title} /></h3>
       <EvScope chips={chipsOf([b0, b2])}>
-        <Figure b="B0" rate={b0} />
-        <Figure b="B2" rate={b2} />
+        <Figure b="B0" rate={b0} order={0} />
+        <Figure b="B2" rate={b2} order={1} />
       </EvScope>
       <ul className="ev-verdicts"><Verdict against="B0" cmp={compareToB2(b2, b0)} /></ul>
     </article>

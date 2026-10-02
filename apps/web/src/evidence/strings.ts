@@ -44,6 +44,8 @@ export const E = {
   higher: label("higher", "較高"), // NEEDS-REVIEW zh-HK
   equal: label("equal", "相同"), // NEEDS-REVIEW zh-HK
   noCompare: label("cannot compare", "無法比較"), // NEEDS-REVIEW zh-HK
+  missesTitle: label("Where the full pipeline is not better", "完整流程未有更好的地方"), // NEEDS-REVIEW zh-HK
+  missesAgainst: label("against", "對比"), // NEEDS-REVIEW zh-HK
   better: label("B2 better here", "此項 B2 較好"), // NEEDS-REVIEW zh-HK
   worse: label("B2 worse here", "此項 B2 較差"), // NEEDS-REVIEW zh-HK
   same: label("no difference", "沒有分別"), // NEEDS-REVIEW zh-HK

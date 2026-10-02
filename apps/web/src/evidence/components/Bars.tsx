@@ -1,6 +1,6 @@
 // One horizontal bar per baseline with k/n, the percentage and the Wilson interval, all inside one chipped figure.
 // Bars are HTML; the chart's text alternative is its aria-label plus the all-metrics table (docs/04 Accessibility).
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import { Tx } from "./Tx";
 import type { LabelPair } from "../../i18n/label";
 import type { Comparison } from "../select";
@@ -30,13 +30,15 @@ export interface BarRowProps {
   readonly rate: Rate | null;
   /** B0, B1 or B2: sets the bar pattern (hatched, solid blue, solid ink). */
   readonly tone: string;
+  /** Position in the chart, for the staggered wipe-in. */
+  readonly order?: number;
 }
 
-export function BarRow({ ident, name, rate, tone }: BarRowProps): ReactElement {
+export function BarRow({ ident, name, rate, tone, order = 0 }: BarRowProps): ReactElement {
   const ci = rate ? wilson(rate.k, rate.n) : null;
   const fill = rate && rate.n > 0 ? (rate.k / rate.n) * 100 : 0;
   return (
-    <div className="ev-bar" data-baseline={tone} data-empty={rate === null || rate.n === 0}>
+    <div className="ev-bar" data-baseline={tone} data-empty={rate === null || rate.n === 0} style={{ ["--order" as string]: order } as CSSProperties}>
       <span className="ev-bar__name">
         <span data-ident className="ev-bar__id">{ident}</span> <Tx text={name} />
       </span>

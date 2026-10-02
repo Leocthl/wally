@@ -49,7 +49,7 @@ test("offline, ?api=local: the storyline on the real stack, then Verify PASS and
   await expect(wally(page).locator('[data-kind="exact"]')).toContainText("Charged the exact HK$259.");
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
-  await expect(page.locator('.console-ticket, [data-card-state="USED"]').first()).toBeVisible();
+  await expect(page.locator('.oc, [data-card-state="USED"]').first()).toBeVisible();
 
   await press(page, "flagged");
   await expect(stop(page, "This seller is flagged as a possible scam.")).toBeVisible();

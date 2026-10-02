@@ -79,8 +79,23 @@ describe("evidence stylesheet", () => {
     expect(CSS.replace(/\/\*[\s\S]*?\*\//g, "")).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
   });
 
-  it("has no motion at all, so reduced motion holds trivially", () => {
-    expect(CSS).not.toMatch(/animation|transition|infinite/);
+  it("moves only inside a no-preference block (a bar wiping in once), so reduced motion holds", () => {
+    const marker = "@media (prefers-reduced-motion: no-preference)";
+    let rest = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+    for (let at = rest.indexOf(marker); at !== -1; at = rest.indexOf(marker)) {
+      let depth = 0;
+      let end = rest.indexOf("{", at);
+      for (let i = end; i < rest.length; i += 1) {
+        if (rest[i] === "{") depth += 1;
+        else if (rest[i] === "}" && (depth -= 1) === 0) {
+          end = i;
+          break;
+        }
+      }
+      rest = rest.slice(0, at) + rest.slice(end + 1);
+    }
+    expect(rest).not.toMatch(/animation|transition|infinite/);
+    expect(CSS).not.toMatch(/infinite/);
   });
 
   it("keeps the tables inside the screen on a phone (stacked cards under the wide breakpoint)", () => {

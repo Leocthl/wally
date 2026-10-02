@@ -74,3 +74,17 @@
 - **Add to Home Screen** (iOS): works over http as a web clip with an icon and full-screen launch. Plain http is not a secure context: no service worker, no install prompt, no offline mode. The clip may start without the pairing cookie and then shows on-device mode: open the QR link in Safari instead.
 - **Native app**: About, "Connect to the booth Mac". Paste the link (Copy link on the Mac, then Universal Clipboard on an iPhone). Only a 192.168, 10, 172.16 address, loopback or a `.local` name is accepted. The Mac is asked for `/api/info` with the token first; only an answer saves the address (`wally:server`, `wally:token`) and reloads into live mode. The first call on an iPhone shows the local network permission prompt: Allow, then Connect again. "Disconnect" goes back to on-device mode. Native config: `apps/mobile/README.md`.
 - **Browser storage keys**: `wally:token` (session storage; local storage in the native app), `wally:server` (local storage, native app only). A page address with `?t=` (a dev server in front of the booth server) is read once and cleaned.
+
+## Design decisions (polish lane B: action and proof)
+| Route (dev server only) | Compares |
+|---|---|
+| `#/styleguide/variants/run` | index of the three moments |
+| `#/styleguide/variants/run/stopped?v=1&c=budget` | Stopped before paying: Quiet guard (shipped), Ghost card, Where it stopped. Cases `budget`, `seller`, `injected`, `off` |
+| `#/styleguide/variants/run/card?v=1&c=ready` | The one-off card: Wallet card (shipped), Ticket stub, Live card. Cases `ready`, `declined`, `paid`, `replay`, `drift` |
+| `#/styleguide/variants/run/ok?v=1` | Needs your OK: Consent sheet (shipped), Hold to approve, Permission slip |
+
+- **Picker**: keys `1` to `3` and the arrows flip, `R` replays the entrance. The page is the real shell around a real result from the mock client; nothing in `StyleGuideRoute.tsx` loads it in a production build (`import.meta.env.DEV`), so it is not in the bundle or the PWA precache. The dev server needs `vite --config` with the `node:` stubs (the on-device bundle reaches `node:fs`); the production build shims them.
+- **Stopped before paying**: one calm card, the reason first, the four-step path (picked, read, rules, no card), a green strip that says no card was made and the budget is untouched. The pink slab, the ghost card (duplicates the strip, a stamp reads as shouting) and the settled steps list (buttons fall below the fold, the reason hides in a step) lost.
+- **The one-off card**: the card is the hero, the amount big, a live "ends in" clock and life line, Pay now directly under it, a stamp when used, cancelled or expired. The ticket stub (taller, reads as a coupon) and the live ring card (the time twice) lost. One `OneOffCard` (`screens/console/`) serves Wally and Budget.
+- **Needs your OK**: a consent sheet that spells out what yes does, the clock, both answers pinned, and "signed and saved as a receipt". Hold to approve adds friction to every demo; the slip is calm but a long in-page block.
+- **Libraries**: NumberFlow rejected (the 650 ms count-up is a 20-line hook; a custom element with a shadow root hides digits from `getByText`, axe and the Playwright checks); motion rejected (CSS, WAAPI and the existing sheet drag cover every gesture here); base-ui and Sonner rejected (the Sheet, Dialog and Toast primitives exist and meet the focus and dismissal rules). The only new dependency is the axe scanner for tests.

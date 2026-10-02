@@ -1,5 +1,6 @@
-/* Evidence, "Why trust Wally?" (and the presenter's DM8 and DM9 beats). Phone column first, tokens only, no motion:
-   the page holds still under any setting. Cards on a calm background; tables turn into stacked cards on a phone. */
+/* Evidence, "Why trust Wally?" (and the presenter's DM8 and DM9 beats). Phone column first, tokens only. The numbers
+   never move; the only motion is a bar wiping in once when its card first shows (below), off under reduced motion. Cards
+   on a calm background; tables turn into stacked cards on a phone. */
 .ev { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--sp-4); color: var(--c-ink); }
 .ev > *, .ev-harness > *, .ev-charts > * { min-width: 0; }
 .ev-lead { margin-top: calc(-1 * var(--sp-3)); color: var(--c-ink-muted); line-height: var(--lh-snug); }
@@ -46,6 +47,16 @@
 .ev-headline__target { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-3); border-radius: var(--r-pill); background: var(--c-surface-sunken); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .ev-headline__target--missed { outline: 1.5px dashed var(--c-line-strong); outline-offset: -1.5px; }
 .ev-headline__foot { font-size: var(--text-sm); color: var(--c-ink-muted); }
+
+/* Where the full pipeline is not better: a dashed card inside the bottom line, said before any chart. */
+.ev-misses { display: grid; gap: var(--sp-2); padding: var(--sp-3); border: 1.5px dashed var(--c-line-strong); border-radius: var(--r-md); background: var(--c-surface-sunken); }
+.ev-misses__title { font-size: var(--text-md); font-weight: var(--weight-bold); }
+.ev-misses__list { display: grid; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.ev-misses__row { display: grid; gap: var(--sp-1); min-width: 0; }
+.ev-misses__what { font-size: var(--text-sm); }
+.ev-misses__figures { display: grid; gap: var(--sp-1); }
+.ev-misses__figures .chip-scope__chips { margin: 0; }
+.ev-misses__fig { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 
 /* Run picker */
 .ev-picker { display: grid; gap: var(--sp-2); background: var(--c-surface-sunken); border-color: transparent; }
@@ -165,6 +176,13 @@
 .ev-big__pct { font-size: var(--text-xl); font-weight: var(--weight-semibold); }
 .ev-big__ci { font-size: var(--text-sm); font-weight: var(--weight-regular); color: var(--c-ink-muted); }
 .ev-big[data-wiring="true"] .ev-big__kn { font-weight: var(--weight-medium); }
+/* The share as a bar under the numerals: B0 hatched, B2 solid, on the same 0 to 100 scale as the charts below. */
+.ev-big__row + .ev-big__row { margin-top: var(--sp-3); }
+.ev-big__track { display: block; margin-top: var(--sp-1); block-size: 0.625rem; overflow: hidden; border-radius: var(--r-pill); background: var(--c-surface-sunken); }
+.ev-big__fill { display: block; block-size: 100%; border-radius: var(--r-pill); }
+.ev-big__row[data-baseline="B0"] .ev-big__fill { background: repeating-linear-gradient(45deg, var(--c-ink-muted) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--c-ink-muted); }
+.ev-big__row[data-baseline="B2"] .ev-big__fill { background: var(--c-primary); }
+.ev-big--stage .ev-big__track { display: none; }
 
 /* Stage (presenter DM8): one full-width row per metric, B0 and B2 side by side, legible from the back of the room. */
 .ev--stage { gap: var(--sp-4); }
@@ -185,6 +203,14 @@
 @media (min-width: 60rem) {
   .ev-big--stage .ev-big__card { position: relative; }
   .ev-big--stage .ev-big__card > .chip-scope > .chip-scope__chips { position: absolute; top: var(--sp-4); right: var(--sp-5); }
+}
+
+/* The wipe-in: a bar draws left to right once, when its card first shows. Only when the browser can tell (data-reveal is
+   set by useReveal) and motion is allowed; otherwise the bars simply stand there. clip-path moves nothing in layout. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] .ev-bar__fill, [data-reveal] .ev-big__fill { transition: clip-path var(--dur-slow) var(--ease-out); transition-delay: calc(var(--order, 0) * var(--dur-press)); }
+  [data-reveal="pending"] .ev-bar__fill, [data-reveal="pending"] .ev-big__fill { clip-path: inset(0 100% 0 0); }
+  [data-reveal="in"] .ev-bar__fill, [data-reveal="in"] .ev-big__fill { clip-path: inset(0 0 0 0); }
 }
 
 /* Presenter DM9 */

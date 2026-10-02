@@ -203,12 +203,20 @@
 .pf-chain__link--fail { height: 2rem; background: var(--c-stop); box-shadow: none; }
 .pf-chain__link--after { background: transparent; box-shadow: none; outline: 1.5px dashed var(--c-line-strong); outline-offset: -1.5px; }
 .pf-chain__more { flex: none; width: 0.375rem; height: 0.375rem; border-radius: 50%; background: var(--c-line-strong); }
+/* The check, read left to right: each link lights in turn (the stagger is set by the strip so the whole wipe takes about
+   the same time for any length of log), a broken link lands last and shakes once, and the links after it stay dashed.
+   The card changes colour softly. Everything is off under reduced motion; the colours and words still say it. */
+.pf-card { transition: background-color var(--dur-base) var(--ease-out); }
 @media (prefers-reduced-motion: no-preference) {
-  .pf-chain__link--ok, .pf-chain__link--fail { animation: pf-link-in var(--dur-base) var(--ease-spring) both; animation-delay: calc(var(--i, 0) * var(--pf-stagger)); }
-  .pf-card__icon--fail, .pf-card__icon--pass { animation: pf-pop var(--dur-slow) var(--ease-spring) both; }
+  .pf-chain__link--ok { animation: pf-link-in var(--dur-base) var(--ease-out) both; animation-delay: calc(var(--i, 0) * var(--pf-stagger)); }
+  .pf-chain__link--fail { animation: pf-link-in var(--dur-base) var(--ease-out) both, pf-break var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * var(--pf-stagger)), calc(var(--i, 0) * var(--pf-stagger) + var(--dur-fast)); }
+  .pf-chain__link--after { animation: pf-fade var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * var(--pf-stagger)); }
+  .pf-card__icon--fail, .pf-card__icon--pass { animation: pf-pop var(--dur-slow) var(--ease-spring) both; animation-delay: var(--dur-press); }
 }
-.pf-chain { --pf-stagger: 18ms; }
+.pf-chain { --pf-stagger: 40ms; }
 @keyframes pf-link-in { from { transform: scaleY(0.4); opacity: 0.3; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes pf-break { 0% { transform: translateX(0); } 20% { transform: translateX(-3px); } 45% { transform: translateX(3px); } 70% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
+@keyframes pf-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pf-pop { from { transform: scale(0.7); } to { transform: scale(1); } }
 
 .pf-copy { display: flex; align-items: flex-start; gap: var(--sp-3); }

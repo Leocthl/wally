@@ -72,7 +72,7 @@ test("DM2 rail beats: overshoot declined (limit held), exact charge, replay decl
   await press(page, "overshoot");
   await expect(wally(page).locator('[data-kind="overshoot"]')).toContainText("The shop asked for HK$268. Declined, the HK$259 limit held.");
   await page.getByRole("link", { name: "Budget", exact: true }).click();
-  await expect(page.locator('.console-ticket[data-card-state="ACTIVE"]')).toHaveCount(1);
+  await expect(page.locator('.oc[data-card-state="ACTIVE"]')).toHaveCount(1);
   await press(page, "normal");
   await expect(wally(page).locator('[data-kind="exact"]')).toContainText("Charged the exact HK$259.");
   await press(page, "replay");
@@ -108,7 +108,7 @@ test("Needs your OK: the Budget banner leads to the question and Approve makes t
   const banner = page.getByRole("region", { name: "Wally needs your OK" });
   await banner.getByRole("link", { name: /Review/ }).click();
   await expect(page).toHaveURL(/#\/wally\?d=dec_/);
-  await wally(page).getByRole("button", { name: "Approve" }).click();
+  await page.getByRole("dialog", { name: "Needs your OK" }).getByRole("button", { name: "Approve" }).click();
   await expect(wally(page).getByText("You said yes, so Wally went ahead.")).toBeVisible();
   await expect(wally(page).getByRole("article", { name: "One-off card" })).toBeVisible();
 });
