@@ -110,11 +110,11 @@ textarea[aria-invalid="true"] { border: 2px solid var(--stopped); }
   background: var(--bg);
 }
 @media (min-width: 600px) {
-  .row { grid-template-columns: 9.5rem 2.5rem minmax(0, 1fr) auto; grid-template-areas: "status seq kind ts" "tag tag tag tag"; }
+  .row { grid-template-columns: 11.5rem 2.5rem minmax(0, 1fr); grid-template-areas: "status seq kind" ". . ts" "tag tag tag"; }
 }
 .row--ok { border-left-color: var(--minted); }
 .row--broken { border-left-color: var(--stopped); background: var(--stopped-bg); font-weight: 600; }
-.row__status { grid-area: status; display: inline-flex; align-items: center; gap: var(--sp-1); }
+.row__status { grid-area: status; display: inline-flex; align-items: center; gap: var(--sp-1); white-space: nowrap; }
 .row--ok .row__status { color: var(--minted); }
 .row--broken .row__status { color: var(--stopped); }
 .row--unchecked .row__status { color: var(--pending); }
