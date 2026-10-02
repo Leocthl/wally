@@ -2,7 +2,7 @@
 // SHA-256 of JCS of the full parent credential, proof included (mandate.schema.json ParentLink), so a child cannot be
 // replayed under a different or edited parent. The parent credential is not part of the child's log: the offline verifier
 // checks the child as it always does and cannot check this chain; the parent credential is exported next to the log.
-import { jcsSha256Hex } from "../crypto";
+import { jcsSha256Hex } from "../crypto/jcs";
 import type { Mandate, MandateCredential, ParentLink } from "../generated";
 import { mandateIdFromCredentialId } from "../vc";
 import type { ParentSummary } from "./types";

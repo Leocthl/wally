@@ -2,6 +2,7 @@
 // rejects, snapshot aside): a failure is an OperationFailure plus an error event, and the queue keeps working (I5).
 import { parseDidKey } from "../crypto/did-key";
 import { createExecutor } from "../executor";
+import { createAllocationLedger } from "../family";
 import type { Executor } from "../executor/types";
 import { createExclusive } from "../executor/queue";
 import { OrchestratorConfigError, resolveConfig } from "./config";
@@ -74,6 +75,9 @@ export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
   if (typeof deps.delegatorDid !== "string" || parseDidKey(deps.delegatorDid) === null) {
     throw new OrchestratorConfigError("delegatorDid must be the pinned delegator's Ed25519 did:key");
   }
+  if (deps.parentDid !== undefined && (typeof deps.parentDid !== "string" || parseDidKey(deps.parentDid) === null)) {
+    throw new OrchestratorConfigError("parentDid must be the pinned parent's Ed25519 did:key");
+  }
   const emitter = createEmitter();
   const ctx: Ctx = {
     deps,
@@ -82,12 +86,13 @@ export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
     report: createReporter(emitter, deps.clock, deps.ids),
     queue: createExclusive(),
     memory: { sealed: null, emittedThrough: -1, checkpoint: null, stops: new Map() },
+    allocations: deps.allocations ?? createAllocationLedger(),
   };
   const inQueue = <T>(task: () => Promise<T>): Promise<T> => ctx.queue(PACKET_QUEUE_KEY, task);
   return {
-    seal: (credential) => {
-      const run = ctx.report.start("seal");
-      return operate(ctx, run, () => inQueue(() => sealInQueue(ctx, run, credential)), () => ({ outcome: "INFO", code: "SEALED" }));
+    seal: (credential, options = {}) => {
+      const run = ctx.report.start("seal", options?.runId);
+      return operate(ctx, run, () => inQueue(() => sealInQueue(ctx, run, credential, options)), () => ({ outcome: "INFO", code: "SEALED" }));
     },
     submit: (request) => {
       const run = ctx.report.start("submit", request?.runId);

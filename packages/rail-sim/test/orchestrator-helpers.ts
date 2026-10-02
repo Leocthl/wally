@@ -10,7 +10,7 @@ import { createEngine } from "@laisee/core/engine";
 import type { ListingRecord, MandateCredential, ProposeCartInput, ScameterCapture } from "@laisee/core/generated";
 import { appendEntry, signEscalationAnswer, signRevocation } from "@laisee/core/log";
 import { FileLogStore } from "@laisee/core/log/file";
-import { createOrchestrator, type Orchestrator, type OrchestratorEvent } from "@laisee/core/orchestrator";
+import { createOrchestrator, type Orchestrator, type OrchestratorDeps, type OrchestratorEvent } from "@laisee/core/orchestrator";
 import type { EscalationAnswer, JudgeRecord, MerchantPort, Signer } from "@laisee/core/ports";
 import { FakeClock, FakeJudge, FakePlanner } from "@laisee/core/testing";
 import { loadFixture } from "@laisee/core/testing/fixtures";
@@ -88,7 +88,7 @@ export interface Integration {
 /** Optional merchant wrapper (for hostile merchants); the stub stays reachable for setMode. */
 export type MerchantWrap = (stub: MerchantStub, rail: RailSim) => MerchantPort;
 
-export async function integration(mode: MerchantMode = "honest", wrap?: MerchantWrap): Promise<Integration> {
+export async function integration(mode: MerchantMode = "honest", wrap?: MerchantWrap, extra: Partial<OrchestratorDeps> = {}): Promise<Integration> {
   const dir = await mkdtemp(join(tmpdir(), "laisee-orch-"));
   const k = keys();
   const clock = new FakeClock(SEAL_AT);
@@ -116,6 +116,7 @@ export async function integration(mode: MerchantMode = "honest", wrap?: Merchant
     scameter,
     appendEntry,
     delegatorDid: k.delegator.did,
+    ...extra,
   });
   const events: OrchestratorEvent[] = [];
   orchestrator.subscribe((e) => events.push(e));
