@@ -7,6 +7,7 @@ import type { BoothBackend } from "../backend";
 import { readJsonObject, type JsonObject } from "./body";
 import { BoothError, errorBody, type BoothErrorStatus } from "./errors";
 import { checkPostOrigin, isAllowedHost, isJsonContentType, isLoopbackHostname } from "./guards";
+import { lanPostOrigin, type LanOptions } from "./lan";
 import type { SseHub } from "./sse";
 import {
   parseAlternativesRequest,
@@ -35,6 +36,8 @@ export interface RouteOptions {
   readonly logger: Logger;
   /** Default loopback only. */
   readonly hostAllowed?: (hostname: string) => boolean;
+  /** LAN mode (http/lan.ts): a POST Origin may also be this page's own address or a native shell. Default off. */
+  readonly lan?: LanOptions;
 }
 
 export const EVENT_SEQ_HEADER = "x-event-seq";
@@ -54,10 +57,10 @@ function hostOf(c: Context): string | undefined {
   }
 }
 
-function guardRequest(c: Context, hostAllowed: (hostname: string) => boolean): Response | null {
+function guardRequest(c: Context, hostAllowed: (hostname: string) => boolean, lan: LanOptions | undefined): Response | null {
   if (!isAllowedHost(hostOf(c), hostAllowed)) return fail(c, 403, "FORBIDDEN_HOST", "this API answers loopback hosts only");
   if (c.req.method !== "POST") return null;
-  const verdict = checkPostOrigin(c.req.header("origin"), c.req.header("sec-fetch-site"));
+  const verdict = lan === undefined ? checkPostOrigin(c.req.header("origin"), c.req.header("sec-fetch-site")) : lanPostOrigin(c, lan);
   if (verdict !== "ok") return fail(c, 403, "FORBIDDEN_ORIGIN", "this API accepts requests from this machine's own pages only");
   if (!isJsonContentType(c.req.header("content-type"))) return fail(c, 415, "UNSUPPORTED_MEDIA_TYPE", "content type must be application/json");
   return null;
@@ -74,7 +77,7 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
   const be = (): BoothBackend => opts.backend();
 
   app.use("/api/*", async (c, next) => {
-    const refused = guardRequest(c, opts.hostAllowed ?? isLoopbackHostname);
+    const refused = guardRequest(c, opts.hostAllowed ?? isLoopbackHostname, opts.lan);
     if (refused !== null) return refused;
     return next();
   });

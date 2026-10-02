@@ -56,6 +56,7 @@
 | @types/node, @types/react, @types/react-dom | 22.20, 19.3, 19.3 | MIT | type definitions | in use |
 | Capacitor (@capacitor/core, cli, ios, android) | 8.5 | MIT | native iOS and Android shells around the web build (apps/mobile) | in use |
 | Capacitor plugins (@capacitor/app, haptics, splash-screen, status-bar) | 8.1, 8.0, 8.0, 8.0 | MIT | Android back button, native haptics, splash and status bar in the shells | in use |
+| uqr | 0.1.3 | MIT | QR codes as SVG for the phone pairing links, rendered on the booth server (LAN mode), no dependencies | in use |
 | @capacitor/assets | 3.0 | MIT | dev tool: icon and splash sets for both shells | in use |
 | sharp | 0.34 | Apache-2.0; its libvips binaries (npm packages @img/sharp-libvips-*) are LGPL-3.0-or-later | dev tool only, renders the icon masters; not shipped in the apps | in use |
 | esbuild | 0.28 | MIT | bundles the native bridge script | in use |

@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 // pnpm demo preflight: a short PASS / WARN / FAIL list before the booth starts. Laya being down is a WARN, not a FAIL:
 // the booth still runs and every decision escalates (R10.unavailable) until Laya is back. Network: loopback only.
-// Usage: node scripts/booth-check.mjs [--build-if-needed]
+// Usage: node scripts/booth-check.mjs [--build-if-needed] [--lan]
 //   --build-if-needed  builds the booth UI (pnpm --filter @laisee/web build) when apps/web/dist is missing
+//   --lan              checklist for phones on the booth Wi-Fi (pnpm demo:lan): this Mac's addresses, the macOS firewall,
+//                      client isolation; the port is checked on every interface instead of loopback only
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
+import { hostname, networkInterfaces, platform } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +22,7 @@ const dirFromEnv = (name, fallback) => {
   const value = (env[name] ?? "").trim() || fallback;
   return isAbsolute(value) ? value : resolve(ROOT, value);
 };
+const lan = process.argv.includes("--lan");
 const results = [];
 const record = (level, what, detail) => results.push({ level, what, detail });
 
@@ -93,14 +97,35 @@ async function checkLaya() {
 function checkPort() {
   const raw = (env.PORT ?? "").trim();
   const port = raw === "" ? DEFAULT_PORT : Number(raw);
+  const host = lan ? (env.HOST ?? "").trim() || "0.0.0.0" : "127.0.0.1";
   return new Promise((done) => {
     const server = createServer();
     server.once("error", () => {
-      record("FAIL", "port", `127.0.0.1:${port} is in use (is the booth already running? stop it or set PORT)`);
+      record("FAIL", "port", `${host}:${port} is in use (is the booth already running? stop it or set PORT)`);
       done();
     });
-    server.listen(port, "127.0.0.1", () => server.close(() => (record("PASS", "port", `127.0.0.1:${port} free`), done())));
+    server.listen(port, host, () => server.close(() => (record("PASS", "port", `${host}:${port} free`), done())));
   });
+}
+
+/** Non-internal IPv4 addresses, as the server lists them for the QR code. */
+function lanAddresses() {
+  const all = Object.values(networkInterfaces()).flatMap((list) => (list ?? []).filter((i) => !i.internal && String(i.family) === "IPv4" && !i.address.startsWith("169.254.")).map((i) => i.address));
+  return [...new Set(all)];
+}
+
+function checkLan() {
+  const addresses = lanAddresses();
+  record(addresses.length > 0 ? "PASS" : "WARN", "lan address", addresses.length > 0 ? addresses.join(", ") : "none: join a Wi-Fi network or turn on Personal Hotspot, then start again");
+  const name = hostname().toLowerCase().replace(/\.local$/, "");
+  record("NOTE", "bonjour name", `${name}.local works on iPhones; some Android phones need the IP link instead`);
+  if (platform() === "darwin") {
+    const fw = spawnSync("/usr/libexec/ApplicationFirewall/socketfilterfw", ["--getglobalstate"], { encoding: "utf8" });
+    const on = /enabled|State = [12]/i.test(fw.stdout ?? "");
+    record(on ? "WARN" : "PASS", "firewall", on ? "macOS firewall is on: click Allow when it asks to let node accept incoming connections (once, on the Mac)" : "macOS firewall is off");
+  }
+  record("NOTE", "wi-fi", "venue Wi-Fi often isolates clients, so phones cannot reach the Mac: use the Mac's Personal Hotspot or a phone hotspot");
+  record("NOTE", "pairing", "the token is new on every start: scan the QR in About or Presenter on the Mac, or open the link printed by the server");
 }
 
 async function main() {
@@ -111,6 +136,7 @@ async function main() {
   await checkLogDir();
   await checkLaya();
   await checkPort();
+  if (lan) checkLan();
   for (const r of results) process.stdout.write(`${r.level.padEnd(4)}  ${r.what.padEnd(14)} ${r.detail}\n`);
   const failed = results.some((r) => r.level === "FAIL");
   process.stdout.write(failed ? "booth-check: FAIL\n" : "booth-check: ok (WARN items do not stop the booth)\n");

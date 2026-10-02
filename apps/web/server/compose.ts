@@ -31,6 +31,7 @@ import { loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
 import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
+import type { LanOptions } from "./http/lan";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
 
@@ -63,6 +64,8 @@ export interface ComposeOptions {
   readonly keys?: () => DemoKeys;
   /** The planner chosen at start (selectPlanner). Default: what PLANNER_PROVIDER names, the rule planner when it is unset. */
   readonly planner?: PlannerChoice;
+  /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
+  readonly lan?: LanOptions;
 }
 
 export interface Booth {
@@ -163,7 +166,13 @@ export function composeBooth(opts: ComposeOptions): Booth {
   });
   const hub = new SseHub({ keepAliveMs: KEEP_ALIVE_MS, maxQueuedChunks: SSE_MAX_QUEUED });
   const off = backend.subscribe((event) => hub.publish(event));
-  const app = createHttpApp({ backend: () => backend, hub, logger, ...(opts.extraRoutes === undefined ? {} : { extraRoutes: opts.extraRoutes }) });
+  const app = createHttpApp({
+    backend: () => backend,
+    hub,
+    logger,
+    ...(opts.lan === undefined ? {} : { lan: opts.lan }),
+    ...(opts.extraRoutes === undefined ? {} : { extraRoutes: opts.extraRoutes }),
+  });
   let timer: ReturnType<typeof setInterval> | null = null;
 
   async function warmUp(): Promise<void> {
