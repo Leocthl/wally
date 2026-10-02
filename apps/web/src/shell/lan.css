@@ -1,0 +1,48 @@
+/* Phones on the booth Wi-Fi (lane m-lan): the QR panel on the booth Mac and the native app's Connect row. Tokens only.
+   The QR code is an <img> whose SVG draws its own white background, so it scans in dark mode too. */
+.lan-phone {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+.lan-phone__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.lan-phone__title { font-size: var(--text-md); font-weight: var(--weight-bold); }
+.lan-phone__body { display: grid; gap: var(--sp-4); justify-items: center; }
+.lan-phone__qr { width: min(100%, 15rem); height: auto; aspect-ratio: 1; border-radius: var(--r-md); }
+.lan-phone__text { display: grid; gap: var(--sp-2); width: 100%; min-width: 0; }
+.lan-phone__note { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); }
+.lan-phone__urls { display: grid; gap: var(--sp-1); margin: 0; padding: 0; list-style: none; }
+.lan-phone__url {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-surface-sunken);
+  color: var(--c-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.lan-phone__url[aria-pressed="true"] { border-color: var(--c-primary); background: var(--c-primary-tint); }
+.lan-phone__url:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+/* The presenter and the booth's big screen: the code is the point, so it is large and sits beside the text. */
+.lan-phone[data-variant="stage"] { padding: var(--sp-5); }
+.lan-phone[data-variant="stage"] .lan-phone__body { grid-template-columns: auto minmax(0, 1fr); justify-items: stretch; align-items: center; }
+.lan-phone[data-variant="stage"] .lan-phone__qr { width: min(36vw, 20rem); }
+.lan-phone[data-variant="stage"] .lan-phone__title { font-size: var(--text-xl); }
+@media (max-width: 40rem) {
+  .lan-phone[data-variant="stage"] .lan-phone__body { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .lan-phone[data-variant="stage"] .lan-phone__qr { width: min(100%, 15rem); }
+}
+
+.lan-connect { display: grid; gap: var(--sp-3); }
+.lan-connect__status { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); overflow-wrap: anywhere; }

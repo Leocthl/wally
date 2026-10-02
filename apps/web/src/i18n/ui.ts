@@ -682,6 +682,37 @@ export const UI = {
     },
   },
 
+  // Lane m-lan: phones on the booth Wi-Fi. On the booth Mac, a QR code and link to open Wally on a phone (LAN mode only);
+  // in the native app, a field to connect to that Mac. zh-HK lines are drafts for the native read.
+  lan: {
+    title: label("Open Wally on your phone", "喺你部手機打開 Wally"), // NEEDS-REVIEW
+    on: label("LAN mode is ON", "區域網絡模式已開啟"), // NEEDS-REVIEW
+    sameWifi: label("Same Wi-Fi as this Mac.", "要同呢部 Mac 用同一個 Wi-Fi。"), // NEEDS-REVIEW
+    scan: label("Scan with the phone camera, then tap the link.", "用手機相機掃描，再撳連結。"), // NEEDS-REVIEW
+    qrAlt: label("QR code that opens Wally on your phone", "喺手機打開 Wally 的 QR 碼"), // NEEDS-REVIEW
+    copy: label("Copy link", "複製連結"), // NEEDS-REVIEW
+    copied: label("Copied", "已複製"), // NEEDS-REVIEW
+    codeNote: label("The link holds a pairing code. It changes when the booth server restarts.", "連結內有配對碼，展位伺服器重新啟動後會更新。"), // NEEDS-REVIEW
+    noAddress: label("This Mac has no network address yet. Join a Wi-Fi network or start a hotspot, then open this again.", "呢部 Mac 暫時未有網絡地址。請連接 Wi-Fi 或開啟個人熱點，然後再開一次。"), // NEEDS-REVIEW
+    connectTitle: label("Connect to the booth Mac", "連接展位 Mac"), // NEEDS-REVIEW
+    linkLabel: label("Link from the booth screen", "展位螢幕上的連結"), // NEEDS-REVIEW
+    linkHint: label("Paste the link shown under the QR code on the Mac (About or Presenter). Same Wi-Fi.", "貼上 Mac 上 QR 碼下面的連結（關於或講者模式），要用同一個 Wi-Fi。"), // NEEDS-REVIEW
+    connect: label("Connect", "連接"), // NEEDS-REVIEW
+    disconnect: label("Disconnect", "中斷連接"), // NEEDS-REVIEW
+    connected: (host: string): LabelPair => label(`Live on ${host}`, `已連接 ${host}`), // NEEDS-REVIEW
+    savedDown: (host: string): LabelPair => label(`${host} is saved but not answering. Running on this device.`, `已儲存 ${host}，但冇回應。現時喺本機運行。`), // NEEDS-REVIEW
+    problem: {
+      empty: label("Paste the link first.", "請先貼上連結。"), // NEEDS-REVIEW
+      not_url: label("That does not look like a link.", "呢個唔似連結。"), // NEEDS-REVIEW
+      scheme: label("The link must start with http.", "連結要以 http 開頭。"), // NEEDS-REVIEW
+      credentials: label("Take the user name and password out of the link.", "請移除連結內的用戶名稱同密碼。"), // NEEDS-REVIEW
+      host: label("Only a Mac on your own network works: a 192.168, 10 or 172.16 address, or a name ending in .local.", "只可連接你自己網絡內的 Mac：192.168、10 或 172.16 開頭的地址，或以 .local 結尾的名稱。"), // NEEDS-REVIEW
+      token: label("The pairing code in the link is not valid. Copy the whole link again.", "連結內的配對碼無效，請重新複製完整連結。"), // NEEDS-REVIEW
+      unreachable: label("No answer. Check the phone is on the same Wi-Fi as the Mac and that LAN mode is on.", "冇回應。請檢查手機同 Mac 用同一個 Wi-Fi，並確認區域網絡模式已開啟。"), // NEEDS-REVIEW
+      refused: label("The Mac did not accept the pairing code. Copy the link from its screen again.", "Mac 唔接受配對碼，請重新由佢嘅螢幕複製連結。"), // NEEDS-REVIEW
+    },
+  },
+
   simulated: label("Simulated. No money moves.", "模擬示範，沒有真錢轉移。"), // NEEDS-REVIEW
   simulatedShort: label("Simulated", "模擬"), // NEEDS-REVIEW
 

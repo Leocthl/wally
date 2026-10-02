@@ -4,6 +4,7 @@
 import { Hono } from "hono";
 import type { BoothBackend } from "./backend";
 import { BoothError, errorBody } from "./http/errors";
+import { registerLan, type LanOptions } from "./http/lan";
 import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
 
@@ -25,8 +26,10 @@ export interface HttpAppOptions {
   readonly logger?: Logger;
   readonly maxBodyBytes?: number;
   readonly maxListingTextChars?: number;
-  /** Which Host names the API answers. Default: loopback only (a LAN option would widen this, off by default). */
+  /** Which Host names the API answers. Default: loopback only; LAN mode widens it to this machine's addresses and names. */
   readonly hostAllowed?: (hostname: string) => boolean;
+  /** LAN mode (http/lan.ts, server/lanMode.ts): pairing token, Origin and CORS rules for phones. Off by default. */
+  readonly lan?: LanOptions;
   /** Registered after the API routes, e.g. static files (Node composition only). */
   readonly extraRoutes?: (app: Hono) => void;
 }
@@ -34,13 +37,16 @@ export interface HttpAppOptions {
 export function createHttpApp(opts: HttpAppOptions): Hono {
   const logger = opts.logger ?? SILENT_LOGGER;
   const app = new Hono();
+  if (opts.lan !== undefined) registerLan(app, opts.lan);
+  const hostAllowed = opts.lan?.hostAllowed ?? opts.hostAllowed;
   registerApiRoutes(app, {
     backend: opts.backend,
     hub: opts.hub,
     logger,
     maxBodyBytes: opts.maxBodyBytes ?? MAX_BODY_BYTES,
     maxListingTextChars: opts.maxListingTextChars ?? MAX_LISTING_TEXT_CHARS,
-    ...(opts.hostAllowed === undefined ? {} : { hostAllowed: opts.hostAllowed }),
+    ...(hostAllowed === undefined ? {} : { hostAllowed }),
+    ...(opts.lan === undefined ? {} : { lan: opts.lan }),
   });
   opts.extraRoutes?.(app);
   app.notFound((c) => c.json(errorBody("NOT_FOUND", "not found"), 404));

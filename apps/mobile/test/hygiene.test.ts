@@ -1,5 +1,6 @@
-// What must stay true of the native shells: sealed config (no server, no cleartext), one app id everywhere, colours equal
-// to the design tokens, and no signing material or banned wording in the committed native sources.
+// What must stay true of the native shells: bundled files and no server url (plain http only for the booth Mac on the
+// LAN), one app id everywhere, colours equal to the design tokens, and no signing material or banned wording in the
+// committed native sources.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -24,14 +25,27 @@ function sources(dir: string): string[] {
 const native = [...sources("ios"), ...sources("android")];
 
 describe("capacitor.config", () => {
-  it("serves the bundled files only: no server url, no cleartext, https scheme on Android", () => {
+  it("serves the bundled files only: no server url, https scheme on Android", () => {
     expect(config.appId).toBe("app.wally.demo");
     expect(config.appName).toBe("Wally");
     expect(config.webDir).toBe("www");
     expect(config.server?.url).toBeUndefined();
     expect(config.server?.cleartext).not.toBe(true);
     expect(config.server?.androidScheme).toBe("https");
-    expect(config.android?.allowMixedContent).toBe(false);
+  });
+});
+
+describe("LAN mode door", () => {
+  it("lets the page reach the booth Mac over plain http on the Wi-Fi: Android mixed content and cleartext, iOS local networking", () => {
+    expect(config.android?.allowMixedContent).toBe(true);
+    expect(read("android/app/src/main/AndroidManifest.xml")).toContain('android:usesCleartextTraffic="true"');
+    const plist = read("ios/App/App/Info.plist");
+    expect(plist).toMatch(/<key>NSAllowsLocalNetworking<\/key>\s*<true\/>/);
+    expect(plist).toContain("NSLocalNetworkUsageDescription");
+  });
+
+  it("does not open iOS to arbitrary loads", () => {
+    expect(read("ios/App/App/Info.plist")).not.toContain("NSAllowsArbitraryLoads");
   });
 });
 

@@ -1,5 +1,7 @@
 // Starts the booth server on 127.0.0.1 only (PORT, default 8787): the API, the SSE trace, the built UI at / and the
 // offline verifier page at /verifier/. Run: pnpm --filter @laisee/web api (or pnpm demo from the repo root).
+// LAN mode (opt-in, pnpm demo:lan, `--lan` or HOST): binds the network and asks every API call for a pairing token, so
+// phones on the same Wi-Fi can open the live app (server/lanMode.ts, server/http/lan.ts).
 // This file is the startup logger: the only place the server writes to the console.
 import { resolve } from "node:path";
 import { serve } from "@hono/node-server";
@@ -7,7 +9,9 @@ import { BRAND } from "../src/brand";
 import { composeBooth } from "./compose";
 import { selectPlanner } from "./booth/plannerSelect";
 import { REPO_ROOT, settingsFromEnv } from "./booth/settings";
+import type { LanOptions } from "./http/lan";
 import type { Logger } from "./http/routes";
+import { createLanOptions, launchFromEnv } from "./lanMode";
 import { registerStaticRoutes } from "./static";
 
 const logger: Logger = {
@@ -17,14 +21,25 @@ const logger: Logger = {
 
 const roots = { ui: resolve(REPO_ROOT, "apps/web/dist"), verifier: resolve(REPO_ROOT, "apps/verifier/dist") };
 
+function logLan(lan: LanOptions, host: string, port: number): void {
+  logger.info(`LAN mode ON, bound to ${host}:${port}. Every API call needs the pairing token (new on every start).`);
+  const urls = lan.urls();
+  if (urls.length === 0) logger.info("LAN mode: this Mac has no network address yet. Join a Wi-Fi network or start a hotspot, then reload the booth page.");
+  else logger.info(`Phones on the same Wi-Fi open one of these (or scan the QR in About or Presenter):\n${urls.map((u) => `  ${u}`).join("\n")}`);
+}
+
 async function main(): Promise<void> {
-  const planner = await selectPlanner(settingsFromEnv(process.env)); // once, here: nothing switches planner during a run
+  const settings = settingsFromEnv(process.env);
+  const launch = launchFromEnv(process.env, process.argv.slice(2));
+  const lan = launch.lan ? createLanOptions({ port: settings.port }) : undefined;
+  const planner = await selectPlanner(settings); // once, here: nothing switches planner during a run
   logger.info(`planner ${planner.provider} (${planner.chosenBy}): ${planner.detail}`);
-  const booth = composeBooth({ env: process.env, logger, planner, extraRoutes: (app) => registerStaticRoutes(app, roots) });
+  const booth = composeBooth({ env: process.env, logger, planner, ...(lan === undefined ? {} : { lan }), extraRoutes: (app) => registerStaticRoutes(app, roots) });
   await booth.start();
   const info = await booth.backend.info();
-  const server = serve({ fetch: booth.app.fetch, hostname: "127.0.0.1", port: booth.settings.port }, (addr) => {
+  const server = serve({ fetch: booth.app.fetch, hostname: launch.host, port: booth.settings.port }, (addr) => {
     logger.info(`${BRAND.name} booth on http://127.0.0.1:${addr.port}/#/booth (rail SIMULATED; verifier at /verifier/)`);
+    if (lan !== undefined) logLan(lan, launch.host, addr.port);
     logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}, sentence reader ${info.features.compile}`);
   });
   const stop = (): void => {

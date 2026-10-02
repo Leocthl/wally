@@ -14,7 +14,9 @@ import { useLocale } from "../ui/locale";
 import { Segmented } from "../ui/Nav";
 import { Sheet } from "../ui/Overlay";
 import { List, ListRow } from "../ui/Surface";
+import { BoothConnect } from "./BoothConnect";
 import { LegalNote } from "./LegalNote";
+import { PhoneQr } from "./PhoneQr";
 import { ResetDemo } from "./ResetDemo";
 import { LanguageSwitch } from "./ShellBar";
 
@@ -67,6 +69,8 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
             <ModeInfo info={info} />
           </section>
         ) : null}
+        <PhoneQr />
+        <BoothConnect />
         <section className="shell-about__block" aria-labelledby="about-more">
           <h3 id="about-more" className="shell-about__heading">{t(UI["shell.more"])}</h3>
           <List inset label={t(UI["shell.more"])}>
