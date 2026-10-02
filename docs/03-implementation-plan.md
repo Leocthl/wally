@@ -3,11 +3,11 @@
 ## First-hour checklist
 - Window: H0 to H1 [F61].
 
-- [ ] **Foundation** (X-01 to X-08, A-01): scaffold, V2 schemas, ports, fixtures, stub engine; the lead merges.
-- [ ] **Worktrees** (X-15): `.worktrees/<name>` on branch `lane/<name>` for A, B, C, D.
-- [ ] **Laya smoke test** (B-01): four questions on 127.0.0.1:8808 [F11c]; shape in `services/laya/FINDINGS.md`.
+- [x] **Foundation** (X-02 to X-08, A-01): scaffold, V2 schemas, ports, fixtures, stub engine; the lead merges.
+- [x] **Worktrees** (X-15): `.worktrees/<name>` on branch `lane/<name>` per lane.
+- [x] **Laya smoke test** (B-01): four questions on 127.0.0.1:8808 [F11c]; shape in `services/laya/FINDINGS.md`.
 - [ ] **Ask organisers** (D-01): HKT sandbox and mentors [F17], booth power and network, submission form [F18].
-- [ ] **Lock scope** (X-09): ONE decision, ONE delegator (SR1); live stops S2, S1, S3; rail stays SIMULATED; Laya is the only model; cut order D9.
+- [ ] **Lock scope** (X-09): ONE decision, ONE delegator (SR1); live stops S2, S1, S3; rail stays SIMULATED; two local models, Laya judges and Qwen plans (D15); cut order D9.
 - [ ] **Capture 5 real listings** (D-05), screenshot and timestamp [F40].
 - [ ] **Roles** (X-09): lane owners; a Plus/Pro holder for kill test 1 [F1]; a zh-HK reader; booth rota (D-27).
 - [ ] **Kill tests D10**: start all three (below).
@@ -16,7 +16,7 @@
 | Step | Output | Task |
 |---|---|---|
 | Schemas to types | `schemas/` MandateCredential, Mandate, Cart, Decision, LogEntry, CardRecord, PacketState; generated types in `packages/core` (02 §Data model) | X-05 |
-| Ports | `JudgePort`, `RailPort`, `LogStore`, `Clock`, `PlannerPort`, `Signer` (02 §Interfaces) | X-06 |
+| Ports | `JudgePort`, `RailPort`, `MerchantPort`, `LogStore`, `Clock`, `PlannerPort`, `Signer` (02 §Interfaces) | X-06 |
 | Fixtures | mandate M0, packet [F20], attempts [F21-F23], flagged seller, injected listing; all SIMULATED | X-07 |
 | Stub engine | `decide()` returns DENY citing a rule ID; in-memory log | A-01 |
 
@@ -26,32 +26,36 @@
 ### A: policy + rail
 - **Tasks**: A-01 to A-35: rules tests first, credential, log, rail-sim, orchestrator, booth API.
 - **In**: schemas, fixtures, judge record from B, the real decline (D-03).
-- **Out**: `engine.decide`, `verifyCredential`, `verifyChain`, `RailPort` (SIMULATED rail), orchestrator API for C, engine and rail-sim for D.
-- **Done**: every rule R1-R12 unit-tested with tests written first; T-I1..T-I8, T-S1..T-S6, T-R1 green; mandate credential and log verify offline (T-V1); coverage of `packages/core` meets [F44]; no PAN or CVV anywhere (I8); rail outputs carry a SIMULATED label; `pnpm test` green.
+- **Out**: `engine.decide`, `verifyMandateCredential`, `verifyChain`, `RailPort` (SIMULATED rail), the orchestrator for C, engine and rail-sim for D.
+- **Done**: CLAUDE.md, Definition of done, lane A.
 
 ### B: agent + judge
-- **Tasks**: B-01 to B-20 (B-16, B-17 dropped): Laya, `SystemOneJudge`, Laya decision-loop planner, `replay`, corpora, threshold fit.
+- **Tasks**: B-01 to B-21 (B-02, B-05, B-16, B-17 dropped): Laya, `SystemOneJudge`, Laya decision-loop planner, `replay`, corpora, threshold fit.
 - **In**: Cart schema, structured listings, description text, Scameter capture, thresholds [F36, F50].
-- **Out**: `JudgePort` (`laya`, `jev`, `replay`), `PlannerPort` (`rule`, `replay`, `claude`), judge and planner traces.
-- **Done**: planner can call only `propose_cart` (I4) and runs without any API key; the Laya/Jev adapter and the replay judge pass the JudgePort contract tests including timeout, error and truncated input ⇒ fail closed (I5); rotation averaging is on; shadow mode logs judge output with no effect; model version and latency logged; fixtures for S2 and S3 give the expected judge outputs; no secrets in the repo.
+- **Out**: `JudgePort` (`laya`, `jev`, `replay`), `PlannerPort` (`rule`, `local`, `replay`), judge and planner traces.
+- **Done**: CLAUDE.md, Definition of done, lane B.
 
 ### C: UI + verifier
 - **Tasks**: C-01 to C-20: screens, verifier, booth, scenario picker, credential panel, accessibility.
 - **In**: orchestrator API (stub until A-26), log entries, harness results (D-11), 04.
-- **Out**: `apps/web`, `apps/verifier`.
-- **Done**: screens seal, run, console, log + verifier, evidence, presenter and booth built to 04; the booth works with no network and no API key; every number wears a provenance chip; stop banners render from rule templates; verifier works offline and fails on tamper (T-V1); contrast and 44px touch targets pass; mobile-first view; reduced motion respected.
+- **Out**: `apps/web` (PWA, booth server), `apps/verifier`.
+- **Done**: CLAUDE.md, Definition of done, lane C.
 
 ### D: evidence + pitch
 - **Tasks**: D-01 to D-28: kill tests, captures, harness and baselines, deck, video, submission, freeze.
 - **In**: engine, rail-sim, judge adapters, fixtures, corpora (B-11, B-19).
 - **Out**: harness results, `data/` captures, 05-07 and 09, deck, 3-minute video, submission package, booth kit.
-- **Done**: at least 100 seeded scenarios (target 150-200) [F37] run through B0, B1, B2 with MEASURED(n) results; captures logged in `data/capture-sheet.md`; real-card test and shop probe done or marked skipped with the reason; four timed rehearsals [F41]; submission package ready before the freeze: public repo, deck, 3-minute video, declaration [F18]; every touched register row is OBSERVED or still READ-BY-CLAUDE.
+- **Done**: CLAUDE.md, Definition of done, lane D.
+
+### M: mobile, second model, brand
+- **Tasks**: M-01 to M-11: Wally rename, Qwen service, local planner and compiler, design system, PWA shell, screens, on-device mode, key on the phone, LAN mode, device pass.
+- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode.
 
 ### X: cross-lane
 - **Tasks**: X-01 to X-19: worktrees, CI, contracts, integration, T-E2E with booth smoke, freeze guard, credits.
-- **In**: branches `lane/a` to `lane/d`. **Out**: `schemas/`, `data/fixtures/`, CI, green `main`.
+- **In**: the `lane/<name>` branches. **Out**: `schemas/`, `data/fixtures/`, CI, green `main`.
 - **Merge**: at each gate, in the order X, A, B, C, D; a red lane does not merge.
-- **Done**: CI green (typecheck, lint, test, docs-check); T-E2E passes DM1-DM7; each gate M1-M5 recorded in TASKS.md; no lane merged red.
+- **Done**: CLAUDE.md, Definition of done, lane X.
 
 ## Gates
 - Critical path to M1: X-05, X-06, A-01, A-32, A-15, A-26; A-17 to A-19, A-22, A-31, B-15 run alongside.
@@ -109,5 +113,5 @@
 4. Harness 200 to 100 scenarios [F37]
 5. Scameter to manual capture only (D-07)
 
-- did:key and the credential are not cut: HKT's workshop centres on DID-VC [F19]. Optional by design, never on the critical path: hosted Jev, claude planner.
+- did:key and the credential are not cut: HKT's workshop centres on DID-VC [F19]. Optional by design, never on the critical path: hosted Jev. The claude planner is removed.
 - Cut the next item when a gate is missed. Sleep is not on the list.

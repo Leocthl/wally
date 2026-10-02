@@ -44,20 +44,20 @@
 |---|---|---|
 | D1 | Mandate engine on HKT rails + four upgrades (D6). Title "Lai See Agent", renamed Wally (D14); the technical plan never depended on the metaphor | none |
 | D2 | Delegator: HK Gen Z shopper [F24] seals a monthly clothing packet [F20] and delegates apparel buying from shop links. Option: teen on Plus(ii) [F2] with a parent-sealed packet (parent → teen → agent, caps compose: agent <= teen packet <= parent funding). Minors are not the headline | ADR-0005 |
-| D3 | Chain: signed mandate → planner (Laya-driven, untrusted) → judge (Laya, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
+| D3 | Chain: signed mandate → planner (untrusted: Laya loop, local Qwen or replay) → judge (Laya, veto/escalate only) → policy engine (deterministic) → rail (SUC semantics) → merchant. Every decision → signed hash-chained log → offline verifier | ADR-0002 |
 | D4 | Invariants I1-I8 (below). Explanations render from rule templates + recorded inputs, never LLM prose | ADR-0002 |
-| D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); recorded replay for CI and as the booth fallback; shadow mode first; report only latency and cost we measure | ADR-0001 |
+| D5 | The judge is a typed probabilistic gate, not the agent. Default provider Laya running locally on the Mac [F11c] (Jev-compatible wire protocol; hosted Jev optional [F11]); recorded replay for CI and as the booth fallback; `enforce` is the default mode, `shadow` only records; report only latency and cost we measure | ADR-0001 |
 | D6 | Upgrades: U1 decrementing sealed packet; U2 mint-on-approval; U3 seller-risk gate before minting; U4 rail simulator calibrated on one real decline + 10-shop readiness probe | ADR-0003 |
 | D7 | No issuing API found [F1]: rail is SIMULATED and labelled so everywhere. A processed payment cannot be cancelled [F2]: demo revocation before mint or before first use; after payment use dispute + loss rule | ADR-0003 |
 | D8 | Contingency only: if the H10 trigger fires [F41], switch to Track 4 "overnight desk that escalates" | 08 |
 | D9 | Cut order, first to go: teen chain, screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is no longer cut: HKT's workshop centres on DID-VC [F19] | 03 |
 | D10 | First-2-hour kill tests: real-card decline [F40]; shop probe [F39]; ask an HKT mentor whether a delegate SUC API is planned [F17] | 03, 05 |
 | D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
-| D12 | Laya-only, local-first, no API keys to run the demo: judge = Laya on 127.0.0.1; planner = PlannerPort with a `rule` backend (structured parser + Laya typed item choice) and `replay` backend; `claude` stays an optional backend; no generative LLM [F27] | ADR-0008 |
+| D12 | Superseded by D15 for the planner. Still in force: local-first, no API keys to run the demo, judge = Laya on 127.0.0.1. Was: planner = `rule` (structured parser + Laya typed item choice) and `replay` only, `claude` optional, no second model [F27] | ADR-0008 |
 | D13 | Booth first: the demo is built for a judge who drives it for 5 min [F14]; the finalist pitch reuses it. Single-use token semantics include a blocked replay and a SIMULATED merchant lock [F19] | 06, 07 |
 | D14 | Name: Wally (user decision 2026-10-02). No red-packet theming: cool-wallet look (light fintech UI, blue primary, teal accent, a wallet character), red or orange only for stop and error. No HKT, Tap & Go or Mastercard logos; the look may be aligned to Tap & Go's design language once the team supplies references | none |
-| D15 | A second local model is allowed (supersedes D12): a local Qwen plans natural-language requests (English, Chinese, Cantonese) and compiles the sentence into rule chips; Laya stays the judge; rules, the rail limit and Laya's gate stay in charge; `rule` and `replay` planners remain the fallbacks. There is still no LLM judge | ADR-0008 |
-| D16 | Mobile first: a PWA-ready web app first (manifest, service worker, install prompt, safe areas), phones are the main target; a local mode runs the real engine in the browser with recorded model answers; iOS and Android wrappers only if time allows | 03 |
+| D15 | A second local model is allowed (supersedes D12): Qwen3.5-9B (4B selectable) on llama.cpp, 127.0.0.1 only [F27, F63], plans natural-language requests (English, Chinese, Cantonese) and compiles the sentence into suggested rule chips the shopper confirms. Laya stays the judge; Qwen never gates a decision; rules, the rail limit and Laya's gate stay in charge; `rule` and `replay` planners remain the fallbacks. There is still no LLM judge. The `claude` provider is removed | ADR-0008, ADR-0009 |
+| D16 | Mobile first: a PWA-first web app (manifest, service worker that never caches `/api`, install prompt, safe areas), phones are the main target; on-device mode runs the real engine in the browser with recorded model answers; iOS and Android wrappers only if time allows | 03 |
 
 ## Canonical IDs
 - **One name per thing.** Use these exactly. Do not rename or renumber.
@@ -86,7 +86,7 @@
 | R7 | Velocity inside limit [F32] | DENY |
 | R8 | Active cards below rail maximum [F1] | DENY |
 | R9 | Seller check: Scameter capture state + seller identifiers; "no record" is not "safe" [F6] | flagged DENY, unverified ESCALATE |
-| R10 | Judge thresholds [F36, F50, F51]: injection, scope fit, seller risk, escalate_or_proceed | DENY or ESCALATE |
+| R10 | Judge thresholds [F36, F50]: injection, scope fit, seller risk, escalate_or_proceed | DENY or ESCALATE |
 | R11 | Escalation unanswered after the window [F31] | DENY |
 | R12 | Price drift between approval and checkout voids the approval | DENY; new cart, new DECISION |
 
@@ -118,7 +118,8 @@
 | Escalation state | `OPEN`, `APPROVED`, `DENIED`, `EXPIRED` |
 | Judge questions | `scope_fit`, `injection_risk`, `seller_risk`, `escalate_or_proceed` |
 | Judge provider | `laya` (default, local), `jev` (hosted, optional), `replay` (recorded answers for CI and the booth fallback) |
-| Planner provider | `rule` (default), `replay`, `claude` (optional) |
+| Planner provider | `rule` (Laya decision loop), `local` (Qwen), `replay` (recorded fixtures; CI default); the booth server's `auto` picks one at start. `claude` is removed |
+| Client mode | `http` (booth server), `local` (on-device, recorded answers), `mock` (tests only) |
 | Money | integer minor units (HKD cents), currency `HKD` |
 
 ### Pipeline contract v0
@@ -126,26 +127,28 @@
 seal      Delegator signs the AgentDelegationCredential (VC 2.0) → log MANDATE_SEALED → PacketState (folded from the log)
 propose   Planner (untrusted; only tool: propose_cart) → Cart
 assess    judge.assess(cart, listing, scameterCapture) → JudgeRecord               // laya (local), jev or replay; never throws, status OK | TIMEOUT | ERROR
-decide    engine.decide(mandate, packet, cart, judgeResult, now) → Decision       // pure, deterministic, R1-R12
+decide    engine.decide(mandate, packet, cart, judge, now, resolution?, ctx?) → Decision   // pure, deterministic, R1-R12
 record    log.append(DECISION)                                                     // I7, before any side effect
-mint      on APPROVE: rail.mint(limit = cart.total, ttl) → CardRecord; log.append(CARD_MINTED)
-escalate  on ESCALATE: open escalation; delegator resolves or window ends → R11
-checkout  executor (deterministic code, never the planner) presents the card handle to the merchant stub;
-          rail.authorise → log.append(CARD_EVENT); planner sees status only, never PAN/CVV (I8)
+mint      on APPROVE: re-fold the log, then rail.mint(limit = cart.total, ttl) → CardRecord; log.append(CARD_MINTED)
+escalate  on ESCALATE: open escalation; a signed answer bound to that cart resolves it, or the window ends → R11
+checkout  executor (deterministic code, never the planner) re-quotes (engine.decideCheckout, R12), presents the card
+          handle to the merchant stub; log.append(the rail's own CARD_EVENT); planner sees status only, never PAN/CVV (I8)
 revoke    Delegator signs revoke → log MANDATE_REVOKED → rail.void(unused cards) → CARD_EVENT(VOIDED)
 verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first failing seq
 ```
-- **Ports in `core`**: `PlannerPort`, `JudgePort`, `RailPort`, `LogStore`, `Clock`, plus a `Signer`. `agent` and `rail-sim` implement them, `apps/web` composes. No package cycles. Exact signatures: 02 §18.
-- **Packet accounting**: commit on mint, release on `VOIDED`/`EXPIRED`, settle on `AUTHORISED` with the actual amount (difference released).
-- **Judge runs in parallel with preflight (R1-R8)** to save latency. The engine is the only producer of a Decision.
+- **Ports in `core`**: `PlannerPort`, `JudgePort`, `RailPort`, `MerchantPort`, `LogStore`, `Clock`, plus a `Signer`. `agent` and `rail-sim` implement them, `apps/web` composes. No package cycles. Exact signatures: 02 §18.
+- **Packet accounting**: an APPROVE holds its limit (inside `committed_minor`) until its card is logged, a later decision resolves it, or the packet is revoked or expires. Then the card commits its limit; `VOIDED`/`EXPIRED` release it; `AUTHORISED` settles the charged amount and releases the difference.
+- **Orchestrator**: one per packet; `seal`, `submit`, `suggestAlternatives`, `checkout`, `answerEscalation`, `revoke`, `tick`, `snapshot`, `subscribe`; one serialised queue; the log is the only state. A repeat of a live cart returns the earlier decision unless `allowRepeat`. A failure returns `{ ok: false, code }` and fails closed (I5). The delegator did:key is pinned at construction.
+- **Judge starts as soon as the cart is built**, in parallel with the fold. The engine is the only producer of a Decision.
 
 ### Packages and lanes
 | Lane | Scope | Paths (npm scope `@laisee/*`) |
 |---|---|---|
 | A | policy + rail | `packages/core` (schemas→types, packet math, R1-R12, engine, crypto, log, orchestrator), `packages/rail-sim` |
-| B | agent + judge | `packages/agent` (planner backends, judge adapters laya/jev + replay, shadow mode), `services/laya` (local judge server scripts) |
+| B | agent + judge | `packages/agent` (planner `rule`/`local`/`replay`, sentence compiler, judge adapters laya/jev + replay, shadow mode), `services/laya` (local judge), `services/qwen` (local planner model) |
 | C | UI + verifier | `apps/web` (UI + thin API), `apps/verifier` (offline page) |
 | D | evidence + pitch | `packages/harness`, `data/`, `docs/05`-`07`, `docs/09` |
+| M | mobile, second model, brand | PWA shell and design system in `apps/web`, on-device mode, `services/qwen` with the local planner and compiler |
 | X | cross-lane | `schemas/`, fixtures in `data/fixtures/`, CI |
 
 ### Canonical demo (storyboard in 01, choreography in 06)
@@ -187,7 +190,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 - [ ] **Team** is 3-4 and writes TypeScript; at least one member reads zh-HK for copy review
 - [ ] **Someone holds** a Tap & Go Plus(ii) or Pro account (needed for the real-card test and F1 re-capture)
 - [x] **Judge runs locally** (Laya on 127.0.0.1): no key, no vendor, listing text never leaves the Mac. Hosted Jev stays optional [F11c]
-- [x] **Laya only**: no second model; the user declined a local LLM planner [F27]
+- [x] **Two local models, no key** (D15): Laya judges, Qwen plans and compiles; both bind 127.0.0.1, so listing text and the shopper's request stay on the Mac [F11c, F27]
 - [ ] **Scameter**: manual, human-paced captures only. No terms on automated use were found and the Important Notice limits reproduction [F6]. The engine reads captures and never queries live
 - [ ] **Dates**: no Mastercard or Visa announcement date goes on a slide until re-captured [F7a, F7b]
 - [x] **Track declaration** submitted (confirmed by the user) [F13]
@@ -195,7 +198,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 - [ ] **HKT** mentor or sandbox reachable at the venue [F17]
 - [ ] **Optional**: SenseTime Raccoon award needs a declaration and real use of Raccoon [F15]; decide before the submission form closes
 - [ ] **Rail is SIMULATED**; the judges accept this when labelled and calibrated on one real decline
-- [ ] **Demo stops** are S2, S1, S3 live; thresholds [F36] and the HK$800 storyline [F20-F23] are the lead's defaults
+- [ ] **Demo stops** are S2, S1, S3 live; the HK$800 storyline [F20-F23] is the lead's default; thresholds [F36] are fitted on a SIMULATED corpus, one annotator
 - [x] **Name** Wally (D14)
 
 ## Non-goals
@@ -229,8 +232,9 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Decision** | Engine output for one cart: APPROVE, DENY or ESCALATE + rule results |
 | **Mint** | Create a one-off card whose limit equals the approved total (U2) |
 | **Stop** | A DENY, an unanswered ESCALATE, or a revoke; catalogue S1-S6 |
-| **Planner** | Untrusted agent: a Laya-driven decision loop over structured listings in a deterministic harness, or recorded replay; may only call `propose_cart` |
-| **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or recorded replay); can only tighten a decision |
+| **Planner** | Untrusted agent: the Laya decision loop (`rule`), one grammar-constrained Qwen answer (`local`) or recorded replay; reads structured listings, never descriptions; may only call `propose_cart` |
+| **Judge** | Typed probabilistic gate (Laya local by default, Jev-compatible; or recorded replay); can only tighten a decision. Qwen is never the judge |
+| **Compiler** | Turns the mandate sentence into suggested rule chips (Qwen, rule-based fallback); the shopper edits and confirms; it never seals |
 | **Policy engine** | Deterministic code that applies R1-R12 and is the only source of a Decision |
 | **Rail** | Card issuing layer; SIMULATED, mirrors Single Use Card semantics [F1] |
 | **Log / Verifier** | Signed hash-chained decision log / offline page that checks it |

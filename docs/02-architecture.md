@@ -7,38 +7,40 @@
 ```mermaid
 flowchart LR
   subgraph UNTRUSTED
-    LS[Listing: structured fields + description text incl. booth free text]
-    P[Planner: Laya decision loop in a deterministic harness; replay]
+    LS["Listing: structured fields + description text incl. booth free text"]
+    P["Planner: rule (Laya loop), local (Qwen), replay"]
   end
-  subgraph LOCAL[this Mac, 127.0.0.1:8808]
-    LY[Laya server: typed-decisions]
+  subgraph LOCAL["this Mac, loopback only"]
+    LY["Laya :8808 typed-decisions: the judge"]
+    QW["Qwen3.5 llama-server :8809: planner, compiler"]
   end
-  subgraph CORE[packages/core, deterministic]
-    O[Orchestrator: cart builder, executor, timers]
-    E[Policy engine: R1-R12, pure]
-    LG[(Log: JSONL, signed chain)]
+  subgraph CORE["packages/core, deterministic"]
+    O["Orchestrator: cart builder, executor, timers"]
+    E["Policy engine: R1-R12, pure"]
+    LG[("Log: JSONL, signed chain")]
   end
-  subgraph SIM[SIMULATED]
-    R[rail-sim: single-use tokens]
-    M[Merchant stub]
+  subgraph SIM["SIMULATED"]
+    R["rail-sim: single-use tokens"]
+    M["Merchant stub"]
   end
-  D[Delegator: phone UI] -- sealed credential, revoke, answer --> O
-  LS -- title, price, shipping --> P
-  P -- typed decisions --> LY
+  D["Delegator: phone UI"] -- "sealed credential, revoke, answer" --> O
+  D -- sentence --> CP["Compiler: suggests rule chips"]
+  CP -- typed fields --> QW
+  LS -- "title, price, shipping" --> P
+  P -- "rule: typed decisions" --> LY
+  P -- "local: one constrained answer" --> QW
   P -- propose_cart --> O
-  LS -- description as data --> O
-  O -- assess --> J[Judge adapter: laya; replay fallback; jev optional]
-  J -- typed questions --> LY
+  LS -- "description as data" --> O
+  O -- assess --> J["Judge adapter: laya; replay fallback; jev optional"]
+  J -- "typed questions" --> LY
   O -- decide --> E
   O -- append --> LG
-  O -- mint, void --> R
-  O -- token handle + idempotency key --> M
+  O -- "mint, void" --> R
+  O -- "token handle + idempotency key" --> M
   M -- authorise --> R
-  SC[Scameter captures, manual] --> O
-  LG -- export + head checkpoint --> V[Verifier: offline page]
+  SC["Scameter captures, manual"] --> O
+  LG -- "export + head checkpoint" --> V["Verifier: offline page"]
 ```
-
-- **Single writer**: one orchestrator queue per packet.
 
 ## 2. Sequences
 
@@ -54,25 +56,26 @@ sequenceDiagram
   participant R as rail-sim
   participant M as Merchant stub
   D->>O: AgentDelegationCredential (seal)
-  O->>E: verify proof (R1)
+  O->>E: verify proof against the pinned delegator (R1)
   O->>L: MANDATE_SEALED (seq 0, payload = credential)
-  O->>P: intent + structured listing records
-  P->>P: Laya decision loop: item, variant, next action (logged)
+  O->>P: intent + listing records
+  P->>P: rule: Laya decision loop (logged); local: one Qwen answer, checked in code
   P-->>O: propose_cart
-  O->>O: cart builder prices from listing record
+  O->>O: cart builder prices from the listing record
   par judge
     O->>J: assess(cart, listing, scameter)
-  and preflight
-    O->>E: fold packet, R1-R8
+  and fold
+    O->>L: read the log, fold the packet
   end
   O->>E: decide(mandate, packet, cart, judge, now)
   E-->>O: APPROVE
-  O->>L: DECISION
-  O->>R: mint(limit = total, ttl, merchantLock, purpose)
+  O->>L: DECISION (holds the limit)
+  O->>O: re-fold: packet ACTIVE, approval unresolved, no card yet
+  O->>R: mint(limit = total, ttl, merchantLock = cart domain, purpose)
   O->>L: CARD_MINTED
   O->>M: executor re-quotes (R12), presents handle + key
   M->>R: authorise(amount, key)
-  O->>L: CARD_EVENT(AUTHORISED)
+  O->>L: CARD_EVENT(AUTHORISED), the rail's own event
   M->>R: authorise again (replay, new key)
   R-->>O: DECLINED CARD_USED
   O->>L: CARD_EVENT(DECLINED)
@@ -91,9 +94,9 @@ sequenceDiagram
   E-->>O: DENY R3.over_remaining (no card)
   O->>L: DECISION(DENY)
   Note over O,M: after a mint, checkout re-quote differs
-  O->>E: decide(re-quoted cart, resolves APPROVE)
+  O->>E: decideCheckout(approved decision, re-quote)
   E-->>O: DENY R12.price_drift
-  O->>L: DECISION(DENY)
+  O->>L: DECISION(DENY, resolves the APPROVE)
   O->>R: void(card)
   O->>L: CARD_EVENT(VOIDED)
   Note over M,R: merchant overshoot mode charges above the limit
@@ -129,7 +132,7 @@ sequenceDiagram
   O->>E: decide(cart, scameter FLAGGED)
   E-->>O: DENY R9.flagged (card never exists)
   O->>L: DECISION(DENY)
-  Note over O,E: NOT_CHECKED or stale capture => ESCALATE R9.unverified, then S5 path
+  Note over O,E: NOT_CHECKED or stale capture => ESCALATE R9.unverified, then the S5 path or an answer
 ```
 
 ```mermaid
@@ -140,11 +143,29 @@ sequenceDiagram
   participant E as Engine
   participant L as Log
   Note over O: the description never reaches the planner
-  O->>J: assess(description in a delimited data block)
+  O->>J: assess(description in listing.description of the state)
   J-->>O: P(suspicious or injection) over threshold, or ERROR (incl. truncated)
   O->>E: decide
   E-->>O: DENY R10.injection (ERROR => ESCALATE R10.unavailable)
   O->>L: DECISION
+```
+
+```mermaid
+sequenceDiagram
+  title Escalation answered (R4 ask_above, R9 unverified, R10)
+  participant D as Delegator
+  participant O as Orchestrator
+  participant E as Engine
+  participant L as Log
+  participant R as rail-sim
+  O->>L: DECISION(ESCALATE, expires_at)
+  O-->>D: ask, with countdown
+  D->>O: signed answer (decision, mandate, cart_sha256, choice)
+  O->>O: verify against the pinned delegator; read the ESCALATE from the log
+  O->>E: decide(..., resolution{resolves, answer, escalated}, answerSignatureValid)
+  E-->>O: APPROVE, or DENY R11 with answer_problem
+  O->>L: DECISION(resolves)
+  O->>R: mint, on APPROVE
 ```
 
 ```mermaid
@@ -159,7 +180,7 @@ sequenceDiagram
   O->>L: MANDATE_REVOKED
   O->>R: void(ACTIVE cards)
   O->>L: CARD_EVENT(VOIDED)
-  O->>E: decide(any later cart)
+  O->>E: decide(any later cart) or checkout of a live card
   E-->>O: DENY R2.revoked
   O->>L: DECISION(DENY)
 ```
@@ -176,7 +197,7 @@ sequenceDiagram
   O->>L: DECISION(ESCALATE, expires_at)
   O-->>D: ask, with countdown
   Note over D: no answer
-  O->>E: decide(..., resolution: none, now >= expires_at)
+  O->>E: tick: decide(..., resolution: none, now >= expires_at)
   E-->>O: DENY R11.expired, resolves the ESCALATE
   O->>L: DECISION(DENY)
 ```
@@ -204,105 +225,97 @@ sequenceDiagram
 
 | Component | Package | Responsibility |
 |---|---|---|
-| **Orchestrator** | core | Pipeline, per-packet queue, timers (R11, TTL, expiry), booth scenarios, checkpoint |
-| **Cart builder** | core | `propose_cart` → Cart priced from the listing record incl. shipping, fees, FX [F3] |
-| **Executor** | core | Checkout: re-quote (R12), handle + idempotency key, CARD_EVENT |
-| **Policy engine** | core | Pure `decide` over R1-R12; `foldPacket`; template renderers |
-| **Crypto + log** | core | JCS, SHA-256, Ed25519, did:key, credential proof, `verifyChain` |
-| **Planner** | agent | Laya decision loop (`rule`), `replay`, optional `claude` |
-| **Judge adapters** | agent | `SystemOneJudge` (laya, jev), replay judge, shadow wrapper |
-| **Laya server** | services/laya | The only model, 127.0.0.1:8808 [F11c] |
+| **Orchestrator** | core | One per packet, one queue: seal, submit, suggestAlternatives, checkout, answerEscalation, revoke, tick; timers; the log is the only state |
+| **Cart builder, executor** | core | Cart priced from the listing record only, HKD only [F3]; checkout re-quote (R12) |
+| **Engine, crypto, log** | core | Pure `decide`, `decideCheckout` (R1-R12); `foldPacket`; JCS, Ed25519, did:key, `verifyChain` |
+| **Planner, compiler** | agent | Planners `rule`, `local`, `replay`; sentence-to-rules compiler |
+| **Judge adapters** | agent | `SystemOneJudge` (laya, jev), replay judge |
+| **Laya, Qwen** | services | Judge on 127.0.0.1:8808 [F11c]; `llama-server` on 127.0.0.1:8809 for planner and compiler [F27, F63] |
 | **rail-sim** | rail-sim | `RailPort` + merchant stub, F1 semantics |
-| **Web, verifier** | apps | React UI incl. Booth, thin Hono API, SSE trace; static offline verifier |
-| **Harness** | harness | Seeded replays through the same ports ([05](05-evidence-plan.md)) |
+| **Web, verifier, harness** | apps, harness | React PWA, Hono booth server [F64]; offline verifier [F66]; seeded replays ([05](05-evidence-plan.md)) |
 
 ## 4. Trust boundaries
 
 | Component | Can | Cannot |
 |---|---|---|
-| **Planner** | read structured fields; ask Laya typed questions; output `propose_cart` | read descriptions, keys, handle, PAN/CVV or log; set money; decide |
+| **Planner** | read structured fields, the request; output `propose_cart` | read descriptions, keys, PAN/CVV, log; set money |
 | **Judge** | return option probabilities | browse, plan, write; loosen a decision (I3) |
 | **Engine** | return a Decision | do I/O, read a clock, mint |
-| **Orchestrator** | sign entries, call the rail | mint without a logged APPROVE (I1); edit a Decision |
+| **Orchestrator** | sign entries (engine key), call the rail | mint without a logged APPROVE (I1); sign for the delegator |
 | **rail-sim** | mint, void, authorise under F1 rules | exceed ceiling or max active [F1]; emit PAN/CVV |
-| **Delegator** | seal, revoke, answer escalations | override hard rules by answering |
+| **Delegator** | seal, revoke, answer | override hard rules |
 | **Verifier** | check entries, keys, checkpoint | trust the operator; go online |
 
 ## 5. Invariants
 
 | ID | Enforcement point | Test |
 |---|---|---|
-| I1 | Mint only after an appended APPROVE; `mint` rejects non-APPROVE, a repeat returns the same card | T-I1 |
-| I2 | `approved_limit_minor = cart.total_minor` only if R3 and R5 pass; rail-sim mints exactly that | T-I2 |
-| I3 | Judge enters only via R10 (DENY/ESCALATE); outcome = max severity | T-I3 (property) |
-| I4 | No keys in the planner (optional claude: `ANTHROPIC_API_KEY` only); output = one `propose_cart` input; lint bans `agent` importing signing or rail-sim | T-I4 |
-| I5 | Typed port failures under timeouts [F33, F34]; judge TIMEOUT or ERROR → `R10.unavailable`; rail or engine error → no card | T-I5 (fault injection) |
-| I6 | R2; revoke voids ACTIVE cards; queue orders revoke against mint | T-I6 |
-| I7 | `appendEntry` before side effects; one DECISION per decide | T-I7, T-V1 |
-| I8 | No PAN/CVV/expiry fields (`additionalProperties: false`); CI scans logs, fixtures, prompts for Luhn-valid runs and "cvv" | T-I8 |
+| I1 | Mint only after a logged APPROVE with no FAIL rule and a fresh re-fold; a repeat returns the same card | T-I1 |
+| I2 | `approved_limit_minor = cart.total_minor`; rail-sim mints exactly that | T-I2 |
+| I3 | Judge enters only via R10; outcome = max severity | T-I3 |
+| I4 | No keys in the planner; one `propose_cart` out; lint bans `agent` importing signing or rail-sim; model hosts loopback unless `*_ALLOW_REMOTE` | T-I4 |
+| I5 | Timeouts [F33, F34]; judge TIMEOUT or ERROR → `R10.unavailable`; other errors → `{ ok: false }`, no card | T-I5 |
+| I6 | R2; revoke voids ACTIVE cards; queue orders revoke against mint; mint re-folds the packet | T-I6 |
+| I7 | `appendEntry` before side effects; one DECISION per decide; a stored log is verified before each fold | T-I7, T-V1 |
+| I8 | No PAN/CVV/expiry fields; `appendEntry` refuses card-like text and keys (best effort); CI scans fixtures, prompts | T-I8 |
 
 ## 6. Data model
 
-- **Source of truth**: `schemas/` (draft 2020-12). Money = integer HKD cents; time = RFC 3339 UTC; hashes = hex SHA-256; log signatures = base64url; `proofValue` = base58btc.
+| Schema | AP2 analogue [F12] | Logged as |
+|---|---|---|
+| MandateCredential | Intent mandate | `MANDATE_SEALED` payload |
+| Cart | Cart mandate | inside `DECISION` |
+| Decision, CardRecord | payment-mandate evidence | `DECISION`, `CARD_MINTED` |
+| LogEntry, PacketState | none | every line; PacketState is folded, never stored |
 
-| Schema | AP2 analogue [F12] | Producer | Logged as |
-|---|---|---|---|
-| MandateCredential | Intent mandate | delegator | `MANDATE_SEALED` payload |
-| Mandate (domain view) | none | `mandateFromCredential` | never stored |
-| Cart | Cart mandate | cart builder | inside `DECISION` |
-| Decision, CardRecord | payment-mandate evidence | engine, rail-sim | `DECISION`, `CARD_MINTED` |
-| LogEntry, PacketState | none | orchestrator, `foldPacket` | every line; never stored |
-
-- **Packet accounting**: commit on `CARD_MINTED`; release on `VOIDED`/`EXPIRED`; `AUTHORISED` moves the actual amount to spent.
-- **Resolution**: an answer, R11 expiry or R12 drift creates a new Decision with `resolves`.
-- **Idempotency**: cart fingerprint = SHA-256(JCS(cart minus `id`, `proposed_at`)); mint keyed by `decision.id`; `authorise` by the executor's idempotency key.
+- **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet is revoked or expires; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`. A failed mint keeps its hold until revoke or expiry (accepted).
+- **Resolution**: an answer, R11 expiry or R12 drift makes a new Decision with `resolves`; an answer must bind to the escalated cart, the pinned delegator and a verified signature, else DENY R11.
+- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED, unexpired) or an open ESCALATE; `allowRepeat` decides afresh (booth buttons, harness).
 
 ## 7. Rule catalogue
 
-| ID | Inputs | Pass when | On fail | Module `core/src/rules/` |
-|---|---|---|---|---|
-| R1 | credential, issuer did:key | proof verifies (eddsa-jcs-2022) | DENY `R1.invalid_signature` | `mandate.ts` |
-| R2 | revocations, `validUntil`, now | not revoked, not expired | DENY `R2.revoked`, `R2.expired` | `mandate.ts` |
-| R3 | total, remaining | total <= remaining | DENY `R3.over_remaining` | `money.ts` |
-| R4 | total, `per_purchase`, remaining | total <= cap and <= `ask_above` | DENY `R4.over_cap`; ESCALATE `R4.ask_above` | `money.ts` |
-| R5 | total, ceiling [F1] | total <= ceiling | DENY `R5.over_ceiling` | `money.ts` |
-| R6 | domain, item categories | allowed, not denied, categories listed | DENY `R6.off_mandate` | `scope.ts` |
-| R7 | `mint_times`, limit [F32] or override | mints in window < max | DENY `R7.velocity` | `rate.ts` |
-| R8 | active cards, max [F1] | active < max | DENY `R8.max_active` | `rate.ts` |
-| R9 | Scameter state, capture age [F52] | not FLAGGED; captured and fresh if required | DENY `R9.flagged`; ESCALATE `R9.unverified` | `seller.ts` |
-| R10 | JudgeRecord, profile | under thresholds (§9) | DENY or ESCALATE | `judge.ts` |
-| R11 | escalation, window [F31] | answered in time | DENY `R11.expired` | `escalation.ts` |
-| R12 | approved cart, checkout re-quote | prices equal | DENY `R12.price_drift` + void | `drift.ts` |
+| ID | Pass when | On fail |
+|---|---|---|
+| R1 | proof verifies against the pinned delegator; packet and cart match the mandate (budget, currency, expiry, agent) | DENY `R1.invalid_signature` |
+| R2 | not revoked, not expired | DENY `R2.revoked`, `R2.expired` |
+| R3 | total <= remaining | DENY `R3.over_remaining` |
+| R4 | total <= cap and <= `ask_above` | DENY `R4.over_cap`; ESCALATE `R4.ask_above` |
+| R5 | total <= ceiling [F1] | DENY `R5.over_ceiling` |
+| R6 | domain and categories inside the mandate | DENY `R6.off_mandate` |
+| R7 | mints in the window < max [F32] | DENY `R7.velocity` |
+| R8 | active cards < max [F1] | DENY `R8.max_active` |
+| R9 | not FLAGGED; Scameter capture fresh if required [F52] | DENY `R9.flagged`; ESCALATE `R9.unverified` |
+| R10 | judge under thresholds (§9) | DENY or ESCALATE |
+| R11 | escalation answered within the window [F31] | DENY `R11.expired` |
+| R12 | all price fields equal at the re-quote (`decideCheckout`) | DENY `R12.price_drift` + void |
 
-- **Hard rules** R1-R8, R12 survive any answer; only R4 `ask_above`, R9 unverified, R10 ESCALATE are answerable. Outcome: any DENY, else any ESCALATE, else APPROVE.
+- **Hard rules** R1-R8, R12 survive any answer; only R4 `ask_above`, R9 unverified and R10 ESCALATE are answerable. Outcome: any DENY, else any ESCALATE, else APPROVE; a FAIL without a verdict is DENY.
 
 ## 8. Explanation templates
 
-- **Format** `<rule>.<variant>`; `render(templateId, inputs, locale)` is pure: no I/O, clock or LLM.
-- **Primary reason**: first FAIL in rule order whose verdict equals the outcome. A delegator DENY reuses the escalating rule's template.
-- **IDs**: full list in [00-context](00-context.md) (Stops). Example: `R3.over_remaining` → "Stopped by R3. Total HK$550 is over the HK$541 left." [F22]
+- Ids `<rule>.<variant>`: [00-context](00-context.md). `render(templateId, inputs, locale)` is pure (no I/O, clock or LLM).
 
 ## 9. Judge adapter
 
-| Question | Options | Metric | Threshold [F36, F50] | Effect |
-|---|---|---|---|---|
-| `scope_fit` | in_scope, out_of_scope | P(in_scope) | below `T_scope` | ESCALATE `R10.scope` |
-| `injection_risk` | clean, suspicious, injection | P(suspicious) + P(injection) | at or above `T_inj` | DENY `R10.injection` |
-| `seller_risk` | low_risk, high_risk | P(high_risk) | `T_sell_deny` DENY, `T_sell_esc` ESCALATE | `R10.seller_risk` |
-| `escalate_or_proceed` | proceed, escalate | P(escalate) | at or above `T_esc` | ESCALATE `R10.escalate` |
+```text
+question             options                              effect (thresholds F36, F50)
+scope_fit            in_scope | out_of_scope              P(in_scope) < T_scope                 -> ESCALATE R10.scope
+injection_risk       clean | suspicious | injection       P(suspicious) + P(injection) >= T_inj  -> DENY R10.injection
+seller_risk          low_risk | high_risk                 P(high_risk) >= T_sell_deny -> DENY; >= T_sell_esc -> ESCALATE   R10.seller_risk
+escalate_or_proceed  proceed | escalate                   P(escalate) >= T_esc                  -> ESCALATE R10.escalate
+```
 
-- **Gate**: built in code from `scope_fit`, `injection_risk`, `seller_risk`; `escalate_or_proceed` stays in the contract, no signal in our run [F50].
-- **Providers**: `SystemOneJudge` for `laya` (default, local [F11c]) and `jev` (hosted, optional [F11b]), one wire format; `replay` returns recorded JudgeRecords (CI, booth fallback). No LLM judge.
-- **Request**: one call, `model: typed-decisions`, semantic labels only (no yes/no); each question as k option-order rotations, probabilities averaged back [F11c, F26].
-- **Probabilities only**: Laya's `confidence` is not Jev's. Thresholds in config, refit on the harness (B-20), frozen at M5 [F41].
-- **Padding attack**: Laya silently drops a long state's tail [F26]; any `usage.truncated` → ERROR with `input_truncated: true` → ESCALATE `R10.unavailable`. Stretch: chunks, worst case wins.
-- **Contract**: `assess` never throws; JudgeRecord carries `status` (OK, TIMEOUT, ERROR), provider, model, version, MEASURED `latency_ms`. Timeout F34, retries 0; TIMEOUT or ERROR → ESCALATE `R10.unavailable` (I5). Only tightens (I3).
-- **Inputs**: intent, rules, cart summary, description as delimited data, Scameter state; English [F26]; no PAN, CVV or personal data (I8).
-- **Shadow** (`JUDGE_MODE=shadow`): R10 SKIPPED, `inputs.shadow_verdict` logged; demo runs `enforce`.
+- **Gate**: built in code from the first three questions; `escalate_or_proceed` carries no signal [F50]. Held-out (SIMULATED): 35/47 legitimate carts approved, 2/14 injected; the seller gate is inert. The F38 floor is not met at judge level; the harness meets it end to end [F36, F69].
+- **Providers**: `SystemOneJudge` for `laya` (default [F11c]) and `jev` (optional [F11b]); `replay` for CI and the booth fallback. No LLM judge.
+- **Request**: `model: typed-decisions`, wording v5, rotations averaged back [F26]. The state is a nested JSON object; listing text sits only in `listing.description`, NFKC-normalised, never in instructions.
+- **Failure**: `assess` never throws; timeout F34, no retry; TIMEOUT, ERROR or `usage.truncated` (Laya drops a long state's tail [F26]) → ESCALATE `R10.unavailable`. Windowing off [F55]; limits [F54].
+- **Mode**: `JUDGE_MODE` (default `enforce`) lives in `EngineConfig.judge_mode`; `shadow` marks R10 SKIPPED; the record's `shadow` flag is informational.
 
 ```text
 POST {LAYA_BASE_URL | JEV_BASE_URL}/v1/systemone          exact shape: services/laya/FINDINGS.md
-{ model: "typed-decisions", state: { mandate, listing: { title, description, price, seller, shipping } },
+{ model: "typed-decisions",
+  state: { mandate: <intent text>, rules: "categories: ...", cart: "<qty> x <title> at HKD <price>", scameter: "<state>",
+           listing: { title, description, part? } },          // description = untrusted listing text, a JSON string
   questions: { "<name>__r<k>": { type: "choice", instructions, option_order, criteria: { "<label>": "<description>" } }, ... } }
 -> answers.<name>.{ choice, probabilities: { "<label>": p }, answer_confidence, confidence }
    usage.{ input_tokens, state_tokens, state_tokens_dropped, truncated, truncated_questions }
@@ -312,140 +325,142 @@ POST {LAYA_BASE_URL | JEV_BASE_URL}/v1/systemone          exact shape: services/
 
 | F1 semantic | rail-sim behaviour |
 |---|---|
-| Virtual prepaid card, unique number, expiry, CVV | Single-use token: `handle` + random `last4`; no PAN, CVV or expiry (I8) |
-| Limit set by user, ceiling HK$2,000 [F1] | Limit = approved total (I2); above ceiling → `OVER_CEILING` |
-| Max 2 active [F1] | Extra mint → `MAX_ACTIVE` |
-| Validity <= 2 months [F1] | TTL = min(F30, mandate expiry, F1 validity), else `TTL_TOO_LONG` |
+| Ceiling HK$2,000, max 2 active, validity <= 2 months [F1] | Token = `handle` + random `last4`, no PAN, CVV or expiry (I8); limit = approved total (I2); over ceiling → `OVER_CEILING`; third active → `MAX_ACTIVE`; TTL = min(F30, mandate expiry, F1 validity), else `TTL_TOO_LONG` |
 | Credentials end after one payment [F1] | First AUTHORISED → USED; a replay declines `CARD_USED` (DM2) |
 | Processed payment cannot be cancelled [F2] | `void` acts on ACTIVE tokens only |
-| No merchant lock or purpose found [F1] | SIMULATED `merchant_lock` (domain), `purpose` (cart reference); other merchant → `MERCHANT_MISMATCH`; asked in 09 |
+| No merchant lock or purpose found [F1] | SIMULATED `merchant_lock`, default the approved cart's domain; another merchant → `MERCHANT_MISMATCH`; asked in 09 |
 
-- **Idempotent**: `mint` by `decision.id` (same CardRecord); `authorise` by idempotency key (a retry returns the first event).
-- **Declines**: `OVER_LIMIT` (limit held), `CARD_USED`, `CARD_VOIDED`, `CARD_EXPIRED`, `UNKNOWN_HANDLE`, `MERCHANT_MISMATCH`. Mint errors throw; the orchestrator fails closed.
-- **Merchant stub modes**: `honest`, `overshoot` (S1), `drift` (R12), `preauth` (above the quote [F2]; false block, tolerance asked in 09), `timeout` (one charge after retry), `wrong_merchant`.
-- **Calibration (T-R1)**: one human-typed real decline [F40] per 05, recorded in `data/real-card-test.md`.
+- **Idempotent**: `mint` by `decision.id`; `authorise` by key (a retry returns the first event). The executor logs `eventFor(key)`, the rail's own record, not the merchant's claim.
+- **Refusals** are typed (§18): the executor refuses unless decision and card are in the log, with at most 3 merchant calls per checkout [F53]. Stub mode `preauth` charges above the quote [F2]: a false block, tolerance asked in 09.
+- **Calibration (T-R1)**: one human-typed real decline [F40], see 05 and `data/real-card-test.md`.
 
 ## 11. Crypto
 
-- **Libraries**: `@noble/curves`, `@noble/hashes`, `@scure/base`, an RFC 8785 JCS port tested on the RFC vectors; same code in Node and browser.
-- **did:key**: `did:key:z` + base58btc(0xed 0x01 + public key) for delegator, agent and engine. Kept, not cut: HKT's workshop centres on DID-VC [F19].
-- **Mandate = AgentDelegationCredential** (VC Data Model 2.0, ADR-0007), shape below; `mandateFromCredential(vc)` gives the engine's Mandate; R1 = `verifyCredential`; golden vectors in `packages/core` tests.
-- **Other signatures**: Ed25519 over UTF-8(`<domain>:` + hex SHA-256(JCS(object minus `signature`))). Domains `laisee.revoke.v1`, `laisee.resolve.v1` (delegator); `laisee.log.v1` over `entry_hash` (engine).
-- **Head checkpoint**: after each append, publish `{log_id, seq, entry_hash}` outside the log.
-- **Demo keys**: `pnpm keys:gen` writes throwaway keys to gitignored `.keys/`; public keys in `data/public-keys.json`; the web API holds the delegator demo key (honesty slide).
+- **Libraries**: `@noble/*`, `@scure/base`, `canonicalize` (RFC 8785); tested on the W3C vc-di-eddsa, RFC 8785 and RFC 8032 vectors.
+- **Keys**: did:key = `did:key:z` + base58btc(0xed 0x01 + public key) for delegator, agent, engine; no rotation, so a leaked key means a new mandate. Demo keys: `pnpm keys:gen` (gitignored `.keys/`).
+- **Credential**: AgentDelegationCredential (VC 2.0, ADR-0007). R1 = `verifyMandateCredential(vc, { expectedIssuer })`; no pinned delegator, no pass. The proof carries the document's `@context`.
+- **Other signatures**: Ed25519 over UTF-8(`<domain>:` + hex SHA-256(JCS(object minus `signature`))); domains `laisee.revoke.v1`, `laisee.resolve.v2` (delegator; answers carry `mandate_id`, `cart_sha256`), `laisee.log.v1` (engine). The head `{log_id, seq, entry_hash}` is published outside the log.
+- **Shortcut**: the web API holds the delegator demo key; on-device mode makes every key in the page (`apps/web/src/api/local/KEYS.md`).
+- **The log proves** tamper, reorder, truncation (with the checkpoint), signatures and, for what is logged, consent and money. Not omissions, a re-fold, or that the shopper meant it.
 
 ```text
 AgentDelegationCredential { @context: [credentials/v2, laisee delegation/v1], type: [VerifiableCredential, AgentDelegationCredential],
-  id: mnd_..., issuer: <delegator did:key>, validFrom, validUntil,
+  id: urn:laisee:mandate:mnd_..., issuer: <delegator did:key>, validFrom, validUntil,
   credentialSubject: { id: <agent did:key>, intent_text, rules, parent? }, proof: DataIntegrityProof }
 
-signCredential(vc, delegatorKey)                                  Data Integrity, eddsa-jcs-2022
+signMandateCredential(vc, delegatorKey)                          Data Integrity, eddsa-jcs-2022
  unsecured   = vc without proof
- proofConfig = {type: DataIntegrityProof, cryptosuite: eddsa-jcs-2022, created,
-                verificationMethod: <issuer did>#<fragment>, proofPurpose: assertionMethod, @context: vc.@context}
+ proofConfig = {@context: vc.@context, type: DataIntegrityProof, cryptosuite: eddsa-jcs-2022, created,
+                verificationMethod: <issuer did>#<fragment>, proofPurpose: assertionMethod}
  hashData    = SHA-256(JCS(proofConfig)) || SHA-256(JCS(unsecured))           config hash first
  proofValue  = "z" + base58btc(Ed25519.sign(hashData))
-verifyCredential(vc): rebuild hashData, Ed25519.verify with the issuer did:key; any mismatch => R1 DENY
+verifyMandateCredential(vc, {expectedIssuer}): issuer == pinned delegator, proof @context == document @context, rebuild hashData,
+  Ed25519.verify; any mismatch => R1 DENY (reasons SCHEMA, ISSUER_UNPINNED, WRONG_ISSUER, ISSUER_KEY, VERIFICATION_METHOD, PROOF_VALUE, SIGNATURE)
 
-verifyChain(entries, publicKeys, headCheckpoint?)  -> ok + head | first failing seq + reason
- 1 parse each line; validate against log-entry.schema.json                      SCHEMA
- 2 seq == line index                                                            SEQ
- 3 prev_hash == entry_hash of seq-1 (seq 0: 64 x "0")                           PREV_HASH
- 4 payload_hash == hex(SHA256(JCS(payload)))                                    PAYLOAD_HASH
+verifyChain(entries, publicKeys, headCheckpoint?)  -> ok + head | first failing seq + reason, per entry in this order
+ 0 publicKeys: a delegator did:key is pinned and is not also an engine key                KEYS
+ 1 parse each line; validate against log-entry.schema.json                              SCHEMA
+ 2 seq == line index                                                                    SEQ
+ 3 prev_hash == entry_hash of seq-1 (seq 0: 64 x "0")                                   PREV_HASH
+ 4 payload_hash == hex(SHA256(JCS(payload)))                                            PAYLOAD_HASH
  5 entry_hash == hex(SHA256(JCS({v,log_id,seq,kind,ts,prev_hash,payload_hash,signer})))   ENTRY_HASH
  6 signer in publicKeys.engine and Ed25519.verify(signature, "laisee.log.v1:" + entry_hash) SIGNATURE
- 7 seq 0 credential (verifyCredential); revocations and answers vs the issuer did:key        PAYLOAD_SIGNATURE
- 8 if headCheckpoint: entry at checkpoint.seq exists with the same entry_hash   TRUNCATED
- 9 stretch: re-fold PacketState and re-render explanations; report mismatches
+ 7 seq 0 credential vs the pinned delegator, log id derived from its mandate; revocations and answers signed by the delegator,
+   answers bound to the mandate and to an earlier ESCALATE                              PAYLOAD_SIGNATURE
+ 8 if headCheckpoint: entry at checkpoint.seq exists with the same entry_hash           TRUNCATED
+ 9 consent and money against the signed terms, what is logged only: a card follows one APPROVE at its limit (NO_DECISION, DUPLICATE);
+   ask_above and escalations rest on an in-time APPROVE answer for the same cart (CONSENT); caps, card limits, budget hold (OVERSPEND);
+   nothing approved or minted outside validity or after a revoke or expiry (AFTER_REVOKE)
+ not checked: re-fold of PacketState, re-rendered explanations, rule results, entries never logged
 ```
 
 ## 12. Threat model
 
 | Threat | Mitigation | Residual risk |
 |---|---|---|
-| **Prompt injection** (description, review, booth text) | Planner never reads descriptions and holds no keys (I4); cart builder prices; R10 | Judge misses; image text unchecked |
-| **Price change** after approval | Limit = total (I2); re-quote → R12 + void; short TTL [F30] | Pre-auth above total → false block [F2] |
-| **Replay** | Domain-separated signatures; entries bind `log_id`, `seq`, `prev_hash`; used token → `CARD_USED` | Low |
-| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise`; R8 | Two carts for one item, bounded by R3, R7, R8 |
-| **Revocation race** | Per-packet queue; revoke voids ACTIVE tokens; later carts DENY R2 | A used card is final [F2]: dispute, loss rule ([01](01-product-brief.md)) |
-| **Log truncation** | Hash chain, signatures, external checkpoint | Engine-key holder rewrites after the last checkpoint |
-| **Judge false allow or outage** | Judge only tightens (I3); hard rules hold; ERROR → ESCALATE | Clean-looking scam listing, no Scameter record |
-| **Padding attack** | `usage.truncated` → ESCALATE [F26] | Chunking is a stretch |
-| **Scameter false negative** | "No record" is not "safe" [F6]; freshness [F52] | New scam shops [F6] |
+| **Prompt injection** | Planner reads no descriptions (`includeListingText` is a measurement flag, off), holds no keys (I4); R10 | Judge misses [F36]; shown text moved Qwen in 2/31 cases [F68]; image text unchecked |
+| **Price change** | Limit = total (I2); re-quote → R12 + void; short TTL [F30] | Pre-auth → false block [F2] |
+| **Double mint or charge** | Mint keyed by `decision.id`; idempotent `authorise` and `submit`; R8; verifier refuses a second card per APPROVE | `allowRepeat` opts out on purpose; the harness result predates idempotent submit [F69]; bounded by R3, R7, R8 |
+| **Revocation race** | Per-packet queue; revoke voids ACTIVE tokens; later carts, checkouts DENY R2 | A used card is final [F2] |
+| **Log tampering, replay** | Hash chain; signatures bind `log_id`, `seq`, mandate, cart; checkpoint; verifier step 9 | Engine-key holder rewrites after the last checkpoint; unlogged events unseen |
+| **Key custody** | Delegator pinned in orchestrator and verifier; roles separate | Demo shortcut (§11); no rotation |
+| **Card data in logs** | No PAN/CVV fields; `appendEntry` guard; size caps [F67] | Best effort; the SIMULATED handle is in `CARD_MINTED` by design |
+| **Judge false allow, outage; Scameter miss** | Judge only tightens (I3); hard rules hold; ERROR or truncation → ESCALATE; "no record" is not "safe" [F6, F52] | Clean-looking scam listing; new scam shops; padding if windowing is off |
 
 ## 13. Stack and repo layout
 
 ```text
-apps/web            Vite + React UI (incl. Booth), thin Node API on Hono (HTTP + SSE)
-apps/verifier       static offline verifier page
-packages/core       types from schemas, packet fold, R1-R12, engine, explain, crypto + credential, log, orchestrator, ports
+apps/web            Vite + React PWA (incl. Booth), Hono booth server (HTTP + SSE), portable booth backend
+apps/verifier       static offline verifier page (one file, strict CSP)
+packages/core       types from schemas, packet fold, R1-R12, engine, explain, crypto + credential, log, verifier, cart, executor, orchestrator, ports
 packages/rail-sim   RailPort + merchant stub (SIMULATED)
-packages/agent      planner backends, judge adapters (SystemOneJudge, replay), shadow wrapper
+packages/agent      planners (rule, local, replay), compiler, judge adapters (SystemOneJudge, replay), shadow wrapper, judge fit
 packages/harness    seeded replay scenarios, B0/B1/B2 metrics
 services/laya       local Laya server: setup.sh, serve.sh, stop.sh, smoke.mjs (Python venv and weights gitignored)
+services/qwen       local llama-server for Qwen3.5: setup.sh, serve.sh, stop.sh, smoke.mjs (weights gitignored)
+scripts/            keys-gen, verify-log, demo-reset, booth-check, gen-types, docs-check, trace-check
 schemas/            JSON Schema 2020-12, source of truth
-data/               fixtures (SIMULATED), captures (OBSERVED), public-keys.json
+data/               fixtures (SIMULATED), captures (OBSERVED), results (MEASURED), public-keys.json
 docs/
 ```
 
-- **TypeScript + pnpm workspaces** (`@laisee/*`): one language for engine, UI and verifier; `core` owns the ports, no cycles; Vitest + `fast-check`.
-- **JSON Schema first**: types from `json-schema-to-typescript`; ajv 2020 strict at every boundary.
-- **Append-only JSONL**, no database.
-- **Laya over HTTP**: the only model, a Python service outside the TypeScript packages (ADR-0006, ADR-0008).
+- **JSON Schema first**: generated types; ajv validators compiled ahead of time, so no page needs `eval` (strict CSP on the verifier); `gen-types --check` guards stale output.
+- **Append-only JSONL**, no database; a restart on an existing log is refused (`LOG_EXISTS`); `pnpm demo:reset` starts clean. Models run over loopback HTTP outside the TypeScript packages (ADR-0006, ADR-0008, ADR-0009).
+- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); on-device `local` (real engine, orchestrator, rail-sim, signers in the page; recorded answers, so typed text makes the judge ERROR and escalate); `mock` (tests only). The service worker skips `/api`.
 
 ## 14. Planner
 
-- **Laya decision loop in a deterministic harness**, not a generative LLM. State: shopper request, mandate summary, remaining budget, structured candidate items, last stop reason.
-- **Typed decisions**, rotation-averaged, logged with probabilities and top-two margin: which item; which variant (size or colour); next action `propose`, `replan_cheaper`, `ask_shopper` or `give_up`. A small margin abstains: ask the shopper.
-- **Code acts**: builds the cart, emits one `propose_cart` input (quantity 1, no money fields), fetches alternatives; step cap and margin in config. Wording from templates only.
-- **Why this item**: answered from the trace logged with the cart (E4).
-- **Limits**: Laya cannot read raw pages, do arithmetic or write text, so listings arrive structured and arithmetic is code. Planner and judge share one model, so errors can correlate; engine rules and the rail limit are model-free.
-- **Backends**: `rule` (this loop, default); `replay` (recorded; CI, booth fallback); `claude` only if a key appears.
-- **Fail closed**: Laya down, timeout [F33], step cap or `give_up` = no proposal (I5). The description stays with the judge (I4).
+- **Providers** (`PLANNER_PROVIDER`): `rule`, `local`, `replay` (CI, booth fallback); the booth server defaults to `auto`: `local` if Qwen's `/health` answers in 1.5 s [F64], else `rule` if Laya's does, else `replay`, chosen once at start. `claude` is removed. All return no proposal on failure (I5), read structured fields only, set no money (I4).
+- **`rule`**: the Laya decision loop in a deterministic harness, not a generative LLM: typed choices (item, variant, next action) logged with probabilities; small margins abstain [F47]; step cap [F46].
+- **`local`**: Qwen3.5-9B reads English, Chinese or Cantonese and returns one grammar-constrained JSON answer; enums come from the supplied catalogue; code clamps quantity and guards near-ties [F58]. On 25 calls: wrong item in 0/26 scenarios; author-written cases, no held-out set [F68]. Qwen never gates a decision (ADR-0009).
+- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: `POST /api/compile` serves the compiler; the Seal screen does not call it yet.
 
 ## 15. Env config
 
 ```text
-JUDGE_PROVIDER=laya|jev|replay     JUDGE_MODE=shadow|enforce (demo: enforce)
-LAYA_BASE_URL=http://127.0.0.1:8808    LAYA_MODEL=typed-decisions
-PLANNER_PROVIDER=rule|replay|claude (default rule; CI and booth fallback: replay)
-ANTHROPIC_API_KEY=                 optional: claude planner only
+JUDGE_PROVIDER=laya|jev|replay     JUDGE_MODE=enforce|shadow (default enforce)
+LAYA_BASE_URL=http://127.0.0.1:8808    LAYA_MODEL=typed-decisions    LAYA_ALLOW_REMOTE=1 (listing text then leaves the Mac)    LAYA_API_KEY=
+PLANNER_PROVIDER=auto|rule|local|replay (default auto, see §14; CI and booth fallback: replay)
+PLANNER_BASE_URL=http://127.0.0.1:8809    PLANNER_MODEL=qwen3.5-9b-q4km    PLANNER_ALLOW_REMOTE=1 (the request then leaves the Mac)
+QWEN_MODEL=9b|4b (serve)   QWEN_MODELS="9b 4b" (setup: which weights to fetch)   QWEN_SKIP_VERIFY=1 (skip the SHA-256 check)   QWEN_SPEC=mtp|off
 JEV_BASE_URL=  JEV_MODEL=jev-1.13.0 [F11b]  TYPESAFE_API_KEY=      optional: hosted jev
-RAIL_MODE=sim    KEY_DIR=./.keys    LOG_DIR=./.data/logs
+RAIL_MODE=sim    KEY_DIR=./.keys    LOG_DIR=./.data/logs    PORT=8787    VITE_API=local (on-device build)
 ```
 
-- **No variable is required** to run the demo. Secrets in `.env` only (gitignored).
+```text
+pnpm demo                preflight, build if needed, start API and UI on 127.0.0.1:8787
+pnpm demo:reset          new demo keys, empty logs, back to the sealed packet
+pnpm keys:gen            pnpm verify-log <log> <public-keys> [checkpoint]      pnpm verifier (one-file offline page)      pnpm coverage
+pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]
+pnpm --filter @laisee/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
+services/{laya,qwen}/{setup,serve,stop}.sh
+GET  /api/health /info /snapshot /log /export /events (SSE)
+POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only)
+```
+
+- **No variable is required**; no key. Secrets in `.env` only (gitignored).
 
 ## 16. Latency budget
 
-| Stage | Budget | Source |
-|---|---|---|
-| Planner loop | 20 s timeout, outside F35 | [F33] ASSUMED |
-| Judge, one request | 1,500 ms timeout [F34] | MEASURED p95 345 ms (4 questions), 431 ms (9 rotation rows) on this Mac [F26]; warm up after a restart [F26] |
-| decide + sign + append + mint | rest of F35 | MEASURE |
-| Cart proposed → verdict + mint | p95 <= 3,000 ms | [F35] ASSUMED until MEASURED(n) |
+- **Planner** 20 s [F33], local 9B p50 1,735 ms, p95 2,593 ms [F68]. **Judge** 1,500 ms per call [F34], p95 345 ms [F26]; a loaded host can time it out [F69]. **Cart proposed → verdict + mint** p95 <= 3,000 ms [F35]; B2 live p50 147 ms, p95 374 ms [F69].
 
 ## 17. Real vs simulated
 
 | Part | Status |
 |---|---|
-| Card rail: token, mint, void, authorise, merchant lock | SIMULATED; no issuing API found [F1] |
-| Calibration decline | REAL, one human-typed test [F40]; OBSERVED |
-| Credential, signing, chain, verifier | REAL crypto, throwaway keys; web API holds the delegator demo key |
-| Judge | REAL model: Laya, third-party open source, on this Mac [F11c]; `replay` labelled |
-| Planner | Laya decision loop in a deterministic harness; `replay` labelled |
+| Card rail, merchant checkout, storyline amounts | SIMULATED; no issuing API found [F1]; amounts [F20-F23] |
+| Credential, signing, chain, verifier | REAL crypto, throwaway keys; demo shortcut (§11) |
+| Judge, planner | REAL local models, Laya and Qwen [F11c, F27]; `replay` and on-device recordings labelled |
 | Scameter | manual REAL captures + SIMULATED flagged fixture [F6] |
-| Merchant checkout | SIMULATED stub |
-| Shop probe, listings | REAL, read-only [F39]; REAL captures [F40] + SIMULATED fixtures |
-| Storyline amounts | SIMULATED [F20-F23] |
-| Harness numbers | MEASURED(n) on the simulated rail (T-H3) |
+| Calibration decline, shop probe, listings | REAL: one human-typed decline [F40], read-only probe [F39], captures; fixtures SIMULATED |
+| Harness numbers | MEASURED(n), simulated rail [F69] |
 
 ## 18. Interfaces
 
-- **Ports** in `packages/core/src/ports.ts`, types generated from `schemas/`; `core` never imports `agent`.
+- **Ports** in `packages/core/src/ports.ts`, types generated from `schemas/`; `core` never imports `agent`. Failures return `{ ok: false, code }` and fail closed.
 
 ```ts
-import type { Mandate, MandateCredential, Cart, Decision, LogEntry, CardRecord, PacketState } from "./generated";
+import type { Mandate, MandateCredential, Cart, Decision, LogEntry, CardRecord, PacketState, ListingRecord } from "./generated";
 type JudgeRecord = Decision["judge"];
 type EscalationAnswer = NonNullable<NonNullable<Decision["escalation"]>["answer"]>;
 type CardEvent = Extract<LogEntry, { kind: "CARD_EVENT" }>["payload"];
@@ -455,21 +470,18 @@ type Checkpoint = { log_id: string; seq: number; entry_hash: string };
 interface Clock { now(): Date }
 interface Signer { did: string; sign(message: Uint8Array): Uint8Array }
 
-interface ProposeCartInput { listing_url: string; items: { title: string; variant?: string; qty: number }[]; note?: string } // qty 1
-// structured fields only: the description text never reaches the planner (the judge reads it)
-interface PlannerItem { url: string; title: string; variants: string[]; priceMinor: number; shippingMinor: number; seller: string }
-interface PlannerContext { request: string; mandateSummary: string; remainingMinor: number; candidates: PlannerItem[]; lastStop?: TemplateId }
-type PlannerDecision = "item" | "variant" | "next_action"; // next_action: propose | replan_cheaper | ask_shopper | give_up
-interface PlannerStep { decision: PlannerDecision; options: string[]; probabilities: Record<string, number>; margin: number; abstained: boolean }
-interface PlannerTrace { steps: PlannerStep[]; model: string; latencyMs: number } // logged with the cart proposal; step cap in config
-interface PlannerOpts { timeoutMs: number; onTrace?: (trace: PlannerTrace) => void }
+interface ProposeCartInput { listing_url: string; items: { title: string; variant?: string; qty: number }[]; note?: string } // no money fields
+// listing text is untrusted data: backends keep it in a delimited block or ignore it (the booth default ignores it)
+interface PlannerContext { intentText: string; listings: { url: string; text: string }[] }
+interface PlannerStop { templateId: TemplateId; remainingMinor: number }                  // R3 or R4 stops only
+interface PlannerTraceStep { step: number; question: string; choice: string; probabilities: Record<string, number>; margin: number; source?: "typed" | "generative"; latencyMs?: number }
+interface PlannerOptions { timeoutMs: number; onTrace?: (step: PlannerTraceStep) => void }
+type PlannerProvider = "rule" | "replay" | "local" | "claude";                               // the factory refuses "claude"
 interface PlannerPort {
-  readonly provider: "rule" | "replay" | "claude"; // rule = the Laya decision loop
-  // null = no proposal (Laya down, timeout, step cap, give_up, ask_shopper)
-  propose(ctx: PlannerContext, opts: PlannerOpts): Promise<ProposeCartInput | null>;
-  // after an R3 or R4 stop: replan_cheaper over the remaining candidates; still only a proposal
-  alternatives?(ctx: PlannerContext, opts: PlannerOpts): Promise<ProposeCartInput | null>;
+  propose(ctx: PlannerContext, opts: PlannerOptions): Promise<ProposeCartInput | null>;     // null = no proposal; never throws
+  alternatives?(ctx: PlannerContext, stop: PlannerStop, opts: PlannerOptions): Promise<ProposeCartInput | null>;
 }
+type PlannerFactory = (listings: ListingRecord[]) => PlannerPort;                           // the orchestrator builds one per submit
 
 interface JudgeInput { intentText: string; rules: Mandate["rules"]; cart: Cart; listingText: string; scameter: Cart["scameter"] }
 interface JudgePort {
@@ -477,7 +489,11 @@ interface JudgePort {
   assess(input: JudgeInput, opts: { timeoutMs: number; signal?: AbortSignal }): Promise<JudgeRecord>; // never throws
 }
 
-type MintErrorCode = "NOT_APPROVED" | "OVER_CEILING" | "MAX_ACTIVE" | "TTL_TOO_LONG";
+type MintErrorCode = "NOT_APPROVED" | "ALREADY_MINTED" | "OVER_CEILING" | "MAX_ACTIVE" | "TTL_TOO_LONG"; // NOT_APPROVED also for an APPROVE carrying a FAIL
+type DeclineCode = "OVER_LIMIT" | "CARD_USED" | "CARD_VOIDED" | "CARD_EXPIRED" | "UNKNOWN_HANDLE" | "MERCHANT_MISMATCH";
+type StubMode = "honest" | "overshoot" | "drift" | "preauth" | "timeout" | "wrong_merchant"; // merchant stub (SIMULATED)
+// executor refuses before any merchant call unless decision and card are in the log as given:
+type ExecutorRefusal = "MANDATE_REVOKED" | "PACKET_EXPIRED" | "APPROVAL_NOT_LOGGED" | "APPROVAL_RESOLVED" | "CARD_NOT_LOGGED" | "LOG_INVALID" | "RAIL_MISMATCH";
 interface RailPort {
   // limit = decision.approved_limit_minor; idempotent by decision.id (a repeat returns the same CardRecord); throws MintError
   mint(req: { decision: Decision; ttlMs: number; now: Date; merchantLock?: string; purpose?: string }): Promise<CardRecord>;
@@ -485,6 +501,11 @@ interface RailPort {
   authorise(req: { handle: string; amountMinor: number; merchantDomain: string; idempotencyKey: string; now: Date }): Promise<CardEvent>;
   void(cardId: string, now: Date): Promise<CardEvent>;
   expireDue(now: Date): Promise<CardEvent[]>;
+  eventFor?(idempotencyKey: string): Promise<CardEvent | null>;     // the rail's own record for a key; the executor logs this
+}
+interface MerchantPort {
+  quote(input: { cart: Cart; now: Date }): Promise<MerchantQuote>;                           // checkout re-quote (R12)
+  checkout(input: { cart: Cart; handle: string; idempotencyKey: string; now: Date }): Promise<CardEvent>;
 }
 
 interface LogStore {
@@ -494,19 +515,38 @@ interface LogStore {
 }
 
 declare function appendEntry(store: LogStore, signer: Signer, logId: string, kind: LogEntry["kind"], payload: LogEntry["payload"], now: Date): Promise<LogEntry>;
-declare function signCredential(unsigned: Omit<MandateCredential, "proof">, signer: Signer, created: Date): MandateCredential;
-declare function verifyCredential(vc: MandateCredential): { ok: true } | { ok: false; reason: "SCHEMA" | "CRYPTOSUITE" | "ISSUER" | "PROOF" };
+declare function signMandateCredential(unsigned: Omit<MandateCredential, "proof">, signer: Signer, opts: { created: Date }): MandateCredential;
+declare function verifyMandateCredential(input: unknown, opts: { expectedIssuer: string }): { valid: true } | { valid: false; reason: string; detail: string };
 declare function mandateFromCredential(vc: MandateCredential): Mandate;
 
-interface EscalationResolution { resolves: string; answer?: EscalationAnswer } // no answer and now >= expires_at => R11
+interface EscalationResolution { resolves: string; answer?: EscalationAnswer; escalated?: Decision } // escalated = the OPEN ESCALATE read from the log; absent => DENY R11
+interface DecideContext { mandateProofValid?: boolean; answerSignatureValid?: boolean }            // absent or not true => fail closed
+interface EngineConfig { judge_mode: "enforce" | "shadow"; /* rail, card, escalation, velocity, seller, judge, timeouts, latency: one row each in the register */ }
 declare const engine: {
   // pure and total over schema-valid input; the only producer of a Decision
-  decide(mandate: Mandate, packet: PacketState, cart: Cart, judge: JudgeRecord, now: Date, resolution?: EscalationResolution): Decision;
+  decide(mandate: Mandate, packet: PacketState, cart: Cart, judge: JudgeRecord, now: Date, resolution?: EscalationResolution, ctx?: DecideContext): Decision;
+  // R12 at checkout: null when the approval stands, else a DENY that resolves it (the caller voids the card)
+  decideCheckout(input: { mandate: Mandate; packet: PacketState; approved: Decision; quote: MerchantQuote; now: Date; ctx?: DecideContext }): Decision | null;
 };
-declare function foldPacket(entries: LogEntry[], now: Date): PacketState;
+declare function foldPacket(entries: LogEntry[], now: Date): PacketState;                  // throws PacketFoldError on a log it cannot trust
 declare function render(templateId: TemplateId, inputs: Record<string, unknown>, locale: "en" | "zh-HK"): string;
 
-type VerifyFailure = "SCHEMA" | "SEQ" | "PREV_HASH" | "PAYLOAD_HASH" | "ENTRY_HASH" | "SIGNATURE" | "PAYLOAD_SIGNATURE" | "TRUNCATED";
+// One orchestrator per packet. deps: engine, planner (PlannerFactory), judge, rail, merchant, store, signer (engine key), clock,
+// ids, scameter, appendEntry, delegatorDid (required, pinned), executor?, config?. Every method resolves; none rejects.
+interface Orchestrator {
+  seal(credential: unknown): Promise<SealResult>;                       // R1 first; LOG_EXISTS if the log has entries
+  submit(req: { requestText: string; listings: ListingRecord[]; checkout?: "auto" | "none"; allowRepeat?: boolean }): Promise<SubmitResult>; // a live repeat returns the earlier decision with duplicate: true
+  suggestAlternatives(req: { decisionId: string }): Promise<SubmitResult>;   // after a DENY by R3 or R4; else NOT_APPLICABLE; result carries alternativeTo
+  checkout(req: { cardId: string; idempotencyKey?: string }): Promise<CheckoutResult>;   // AUTHORISED | DECLINED | DRIFT | DENIED | TIMEOUT
+  answerEscalation(signedAnswer: unknown): Promise<AnswerResult>;
+  revoke(signedRevocation: unknown): Promise<RevokeResult>;
+  tick(): Promise<TickResult>;                                          // R11 expiry, card expiry, PACKET_EXPIRED
+  snapshot(): Promise<OrchestratorSnapshot>;
+  subscribe(listener: (event: OrchestratorEvent) => void): () => void;
+}
+
+type VerifyFailure = "KEYS" | "SCHEMA" | "SEQ" | "PREV_HASH" | "PAYLOAD_HASH" | "ENTRY_HASH" | "SIGNATURE" | "PAYLOAD_SIGNATURE" | "TRUNCATED"
+  | "NO_DECISION" | "DUPLICATE" | "CONSENT" | "OVERSPEND" | "AFTER_REVOKE";
 type VerifyResult = { ok: true; head: Checkpoint } | { ok: false; failedSeq: number; reason: VerifyFailure };
 declare function verifyChain(entries: LogEntry[], publicKeys: { engine: string[]; delegator: string }, headCheckpoint?: Checkpoint): VerifyResult;
 ```
