@@ -49,8 +49,8 @@ export interface PlannerStop {
   readonly remainingMinor: number;
 }
 
-/** PLANNER_PROVIDER: rule (default, deterministic parser), replay (recorded fixtures), claude (optional). */
-export type PlannerProvider = "rule" | "replay" | "claude";
+/** PLANNER_PROVIDER: rule (default, deterministic parser), replay (recorded fixtures), local (Qwen on this Mac), claude (optional). */
+export type PlannerProvider = "rule" | "replay" | "local" | "claude";
 
 /** One typed planner decision (question asked of the judge model, its answer and probabilities). */
 export interface PlannerTraceStep {
@@ -60,6 +60,10 @@ export interface PlannerTraceStep {
   readonly probabilities: Readonly<Record<string, number>>;
   /** Gap between the top two probabilities; a small margin makes the planner ask the shopper instead. */
   readonly margin: number;
+  /** typed: a probability-bearing choice (Laya); generative: one constrained LLM answer, no probabilities (margin 0). */
+  readonly source?: "typed" | "generative";
+  /** Model call time for this step, when measured. */
+  readonly latencyMs?: number;
 }
 
 export interface PlannerOptions {

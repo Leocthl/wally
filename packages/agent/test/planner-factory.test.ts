@@ -1,8 +1,15 @@
-// PLANNER_PROVIDER selection: rule (default) and replay; claude is not built.
+// PLANNER_PROVIDER selection: rule (default), replay and local (lane m-qwen); claude is not built.
 import { describe, expect, it } from "vitest";
 import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
 import { PlannerConfigError } from "../src/planner/config";
-import { createPlanner, layaUrlFromEnv, plannerProviderFromEnv } from "../src/planner/factory";
+import {
+  createPlanner,
+  layaUrlFromEnv,
+  localPlannerAllowRemoteFromEnv,
+  localPlannerModelFromEnv,
+  localPlannerUrlFromEnv,
+  plannerProviderFromEnv,
+} from "../src/planner/factory";
 import { DEFAULT_PLANNER_PROVIDER, PLANNER_PROVIDERS } from "../src/planner";
 import { ALL_FIXTURE_LISTINGS, OPTS, ctxOf, fixtureListing } from "./support/planner/data";
 
@@ -14,8 +21,9 @@ describe("plannerProviderFromEnv", () => {
     expect(DEFAULT_PLANNER_PROVIDER).toBe("rule");
   });
 
-  it("accepts replay", () => {
+  it("accepts replay and local", () => {
     expect(plannerProviderFromEnv({ PLANNER_PROVIDER: "replay" })).toBe("replay");
+    expect(plannerProviderFromEnv({ PLANNER_PROVIDER: "local" })).toBe("local");
   });
 
   it("refuses claude (not built) and unknown names at start-up", () => {
@@ -24,7 +32,7 @@ describe("plannerProviderFromEnv", () => {
   });
 
   it("lists only the built providers", () => {
-    expect([...PLANNER_PROVIDERS]).toEqual(["rule", "replay"]);
+    expect([...PLANNER_PROVIDERS]).toEqual(["rule", "replay", "local"]);
   });
 });
 
@@ -38,6 +46,18 @@ describe("layaUrlFromEnv", () => {
     expect(layaUrlFromEnv({ LAYA_BASE_URL: "http://127.0.0.1:9001" })).toBe("http://127.0.0.1:9001");
     expect(layaUrlFromEnv({ LAYA_BASE_URL: "http://127.0.0.1:9001", LAYA_URL: "http://localhost:9000" })).toBe("http://127.0.0.1:9001");
     expect(layaUrlFromEnv({ LAYA_BASE_URL: "  ", LAYA_URL: "http://localhost:9000" })).toBe("http://localhost:9000");
+  });
+});
+
+describe("local planner env", () => {
+  it("defaults to the local Qwen server and the chosen model, loopback only", () => {
+    expect(localPlannerUrlFromEnv({})).toBe("http://127.0.0.1:8809");
+    expect(localPlannerUrlFromEnv({ PLANNER_BASE_URL: " http://localhost:9009 " })).toBe("http://localhost:9009");
+    expect(localPlannerModelFromEnv({})).toMatch(/^qwen3\.5-(9b|4b)-q4km$/);
+    expect(localPlannerModelFromEnv({ PLANNER_MODEL: "qwen3.5-4b-q4km" })).toBe("qwen3.5-4b-q4km");
+    expect(localPlannerAllowRemoteFromEnv({})).toBe(false);
+    expect(localPlannerAllowRemoteFromEnv({ PLANNER_ALLOW_REMOTE: "1" })).toBe(true);
+    expect(localPlannerAllowRemoteFromEnv({ PLANNER_ALLOW_REMOTE: "yes" })).toBe(false);
   });
 });
 
@@ -55,6 +75,13 @@ describe("createPlanner", () => {
     const records: PlannerReplayRecord[] = [{ scenario: "t", listing_ids: [tee.id], proposal: { listing_url: tee.url, items: [{ title: tee.items[0]?.title ?? "", qty: 1 }] } }];
     const planner = createPlanner({ provider: "replay", records, catalogue: [tee], scenario: "t" });
     expect((await planner.propose(ctxOf("x", [tee]), OPTS))?.listing_url).toBe(tee.url);
+  });
+
+  it("builds a local planner that refuses a remote url unless allowed", () => {
+    expect(() => createPlanner({ provider: "local", catalogue: ALL_FIXTURE_LISTINGS, localUrl: "https://example.com" })).toThrow(/loopback/i);
+    expect(() => createPlanner({ provider: "local", catalogue: ALL_FIXTURE_LISTINGS, localUrl: "https://example.com", allowRemote: true })).not.toThrow();
+    const planner = createPlanner({ provider: "local", catalogue: ALL_FIXTURE_LISTINGS });
+    expect(Object.keys(planner).sort()).toEqual(["alternatives", "propose"]);
   });
 
   it("refuses the claude provider", () => {
