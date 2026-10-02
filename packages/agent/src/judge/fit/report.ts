@@ -19,8 +19,9 @@ import {
   type Suggestion,
 } from "./metrics";
 import { percentile, summarize, type Summary } from "./stats";
-import { suggestedThresholds, systemLevel, type SystemLevel } from "./system";
+import { outcomeFor, suggestedThresholds, systemLevel, type Outcome, type SystemLevel } from "./system";
 import type { GateThresholds } from "./thresholds";
+import type { WindowingOptions } from "../windows";
 import type { CaseResult } from "./types";
 import { verdictsAt, type Verdicts } from "./verdicts";
 
@@ -54,6 +55,8 @@ export interface ReportInput {
   readonly results: readonly CaseResult[];
   /** Same cases without option-order rotations; null when the comparison pass was skipped. */
   readonly canonical: readonly CaseResult[] | null;
+  /** The long cases judged in windows; null when the pass was skipped. */
+  readonly windowed: { readonly options: WindowingOptions; readonly results: readonly CaseResult[] } | null;
   readonly anchors: readonly AnchorResult[];
 }
 
@@ -90,6 +93,21 @@ export interface FailClosedRow {
   readonly shouldStop: boolean;
 }
 
+export interface WindowRow {
+  readonly id: string;
+  readonly category: string;
+  readonly textChars: number;
+  readonly injectionLabel: string;
+  readonly sellerLabel: string;
+  readonly plain: { readonly status: CaseResult["status"]; readonly outcome: Outcome };
+  readonly windowed: {
+    readonly status: CaseResult["status"];
+    readonly outcome: Outcome;
+    readonly injectionRisk: number | null;
+    readonly sellerRisk: number | null;
+  };
+}
+
 export interface FitReport {
   readonly schema: typeof REPORT_SCHEMA;
   readonly provenance: "MEASURED(n) on SIMULATED inputs, single-annotator labels";
@@ -114,6 +132,8 @@ export interface FitReport {
   readonly misses: readonly Miss[];
   readonly anchors: readonly (AnchorResult & { readonly liveVerdicts: Verdicts | null; readonly recordedVerdicts: Verdicts | null })[];
   readonly rotation: readonly QuestionComparison[] | null;
+  /** Long listings judged whole (truncated, so ERROR) against judged in windows; null when the pass was skipped. */
+  readonly windows: { readonly windowChars: number; readonly overlapChars: number; readonly maxWindows: number; readonly rows: readonly WindowRow[] } | null;
   readonly cases: readonly CaseResult[];
 }
 
@@ -175,6 +195,30 @@ function missesAt(results: readonly CaseResult[], thresholds: GateThresholds): r
   );
 }
 
+function windowRows(plain: readonly CaseResult[], windowed: readonly CaseResult[], t: GateThresholds): readonly WindowRow[] {
+  return windowed.flatMap((w) => {
+    const p = plain.find((r) => r.id === w.id);
+    if (p === undefined) return [];
+    const risk = (r: CaseResult, pick: (a: NonNullable<CaseResult["answers"]>) => number): number | null => (r.answers === null ? null : pick(r.answers));
+    return [
+      {
+        id: w.id,
+        category: w.category,
+        textChars: w.textChars,
+        injectionLabel: w.labels.injection_risk,
+        sellerLabel: w.labels.seller_risk,
+        plain: { status: p.status, outcome: outcomeFor(p, t) },
+        windowed: {
+          status: w.status,
+          outcome: outcomeFor(w, t),
+          injectionRisk: risk(w, (a) => a.injection_risk.suspicious + a.injection_risk.injection),
+          sellerRisk: risk(w, (a) => a.seller_risk.high_risk),
+        },
+      },
+    ];
+  });
+}
+
 export function buildReport(input: ReportInput): FitReport {
   const { results, thresholds } = input;
   const gates = GATES.map((gate) => gateReport(results, thresholds, gate));
@@ -195,6 +239,10 @@ export function buildReport(input: ReportInput): FitReport {
       recordedVerdicts: a.recorded === null ? null : verdictsAt(a.recorded, thresholds),
     })),
     rotation: input.canonical === null ? null : compareRuns(results, input.canonical),
+    windows:
+      input.windowed === null
+        ? null
+        : { windowChars: input.windowed.options.windowChars, overlapChars: input.windowed.options.overlapChars, maxWindows: input.windowed.options.maxWindows, rows: windowRows(results, input.windowed.results, thresholds) },
     cases: results,
   };
 }

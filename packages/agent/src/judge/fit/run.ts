@@ -24,6 +24,7 @@ async function runOne(c: CorpusCase, opts: RunOptions): Promise<CaseResult> {
     category: c.category,
     labels: c.labels,
     scameterState: c.scameter_state,
+    textChars: c.listing.text.length,
     status: record.status,
     inputTruncated: record.input_truncated === true,
     latencyMs: record.latency_ms,

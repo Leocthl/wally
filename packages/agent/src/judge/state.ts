@@ -3,10 +3,11 @@
 // (`listing.description`), where JSON string escaping stops it from adding or replacing fields, and it is never
 // placed in a question's `instructions`.
 //
-// Why a nested object and not text markers: on the SIMULATED corpus (MEASURED(n=72), data/results/judge-fit-*)
-// text markers such as `<<<LISTING TEXT BEGIN ...>>>` plus a note saying the text is untrusted cost injection
-// separation (AUC 0.78 against 0.88), and the demo's clean listings were then denied. The thresholds in F36 were
-// read off states shaped like this one (a mandate and a listing object), so this shape also keeps them valid.
+// Why a nested object and not text markers: in a first live run on the SIMULATED corpus (data/results/judge-fit-*),
+// text markers such as `<<<LISTING TEXT BEGIN ...>>>` plus a note saying the text is untrusted lowered injection
+// separation, and the demo's clean listings were then denied (see the commit that introduced this shape). The
+// thresholds in F36 were read off states shaped like this one (a mandate and a listing object), so this shape also
+// keeps them meaningful. Re-run judge:fit after any change here.
 import type { JudgeInput } from "@laisee/core/ports";
 import { MAX_INLINE_TEXT_CHARS, MAX_INTENT_CHARS, MAX_SUMMARY_ITEMS } from "./config";
 

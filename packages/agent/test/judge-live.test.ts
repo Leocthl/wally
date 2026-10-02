@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 import { validateJudgeRecord } from "@laisee/core/schema";
 import { DEFAULT_LAYA_BASE_URL, DEFAULT_LAYA_MODEL } from "../src/judge/config";
 import { JUDGE_QUESTIONS, QUESTION_OPTIONS } from "../src/judge/questions";
+import { loadCorpus } from "../src/judge/fit/corpus";
 import { SystemOneJudge } from "../src/judge/system-one-judge";
+import { DEFAULT_WINDOWING } from "../src/judge/windows";
 import { DEMO_LISTINGS, demoInput, inputWithText } from "./support/inputs";
 
 const BASE_URL = process.env["LAYA_BASE_URL"] ?? DEFAULT_LAYA_BASE_URL;
@@ -55,6 +57,16 @@ describe.skipIf(!up)("SystemOneJudge against the live Laya server", () => {
     expect(record.status).toBe("ERROR");
     expect(record.input_truncated).toBe(true);
     expect(record.answers).toBeUndefined();
+  });
+
+  it("judges the padding attack in windows instead of failing closed (stretch, shape only)", { timeout: LIVE_TIMEOUT_MS * 2 }, async () => {
+    const attack = loadCorpus().find((c) => c.id === "pad-inj-note-01");
+    expect(attack).toBeDefined();
+    const windowed = new SystemOneJudge({ provider: "laya", baseUrl: BASE_URL, model: MODEL, windowing: DEFAULT_WINDOWING });
+    const record = await windowed.assess(inputWithText(attack?.listing.text ?? ""), { timeoutMs: LIVE_TIMEOUT_MS });
+    expect(record.status).toBe("OK");
+    expect(record.input_truncated).toBeUndefined();
+    expect(Object.keys(record.answers ?? {})).toEqual([...JUDGE_QUESTIONS]);
   });
 
   it("reports TIMEOUT instead of waiting when the deadline is shorter than inference", { timeout: LIVE_TIMEOUT_MS }, async () => {

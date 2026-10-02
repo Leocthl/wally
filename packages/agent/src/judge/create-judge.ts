@@ -11,6 +11,7 @@ import { ReplayJudge } from "./replay-judge";
 import { loadReplayRecordings, type ReplayRecording } from "./replay-recordings";
 import { ShadowJudge } from "./shadow-judge";
 import { SystemOneJudge } from "./system-one-judge";
+import { DEFAULT_WINDOWING } from "./windows";
 
 export type JudgeMode = "shadow" | "enforce";
 export type JudgeEnv = Readonly<Record<string, string | undefined>>;
@@ -91,6 +92,8 @@ export interface CreateJudgeDeps {
   readonly onDiagnostic?: DiagnosticSink | undefined;
   /** Replay only: recordings to serve. Default: data/fixtures/judge. */
   readonly recordings?: readonly ReplayRecording[] | undefined;
+  /** Stretch, default off: judge long listings in overlapping windows instead of failing closed (windows.ts). */
+  readonly windowing?: boolean | undefined;
 }
 
 export function createJudge(settings: JudgeSettings, deps: CreateJudgeDeps = {}): JudgePort {
@@ -102,6 +105,7 @@ export function createJudge(settings: JudgeSettings, deps: CreateJudgeDeps = {})
           baseUrl: settings.baseUrl,
           model: settings.model,
           apiKey: settings.apiKey,
+          windowing: deps.windowing === true ? DEFAULT_WINDOWING : false,
           fetchImpl: deps.fetchImpl,
           onDiagnostic: deps.onDiagnostic,
         });

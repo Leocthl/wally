@@ -7,7 +7,7 @@ import { ServerUnreachableError, runFit } from "./fit";
 /** Tooling timeout for the fit's own calls. Not a product limit: the product timeout is F34 and comes from the caller. */
 const FIT_TIMEOUT_MS = 30_000;
 
-const USAGE = `judge:fit [--base-url URL] [--model NAME] [--date YYYY-MM-DD] [--out-dir DIR] [--corpus-dir DIR] [--timeout-ms N] [--skip-canonical]
+const USAGE = `judge:fit [--base-url URL] [--model NAME] [--date YYYY-MM-DD] [--out-dir DIR] [--corpus-dir DIR] [--timeout-ms N] [--skip-canonical] [--skip-windows]
   Reads LAYA_BASE_URL and LAYA_MODEL when the flags are absent. Needs the Laya server running (services/laya/serve.sh).
 `;
 
@@ -24,6 +24,7 @@ async function main(): Promise<number> {
       "corpus-dir": { type: "string" },
       "timeout-ms": { type: "string" },
       "skip-canonical": { type: "boolean", default: false },
+      "skip-windows": { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
   });
@@ -50,6 +51,7 @@ async function main(): Promise<number> {
       corpusDir: values["corpus-dir"],
       timeoutMs,
       compareCanonical: !values["skip-canonical"],
+      compareWindows: !values["skip-windows"],
       log: err,
     });
     out(`wrote ${result.markdownPath}`);

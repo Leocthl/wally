@@ -35,6 +35,10 @@ const input: ReportInput = {
   thresholds,
   results,
   canonical: results,
+  windowed: {
+    options: { windowChars: 2000, overlapChars: 250, maxWindows: 4 },
+    results: [row("pad-a", { injection_risk: "injection", escalate_or_proceed: "escalate" }, { clean: 0.1, high_risk: 0.2 }, { category: "padding_attack", textChars: 3800 })],
+  },
   anchors,
 };
 const report = buildReport(input);
@@ -72,6 +76,22 @@ describe("buildReport", () => {
     expect(report.system.current.legit.blockedIds).toContain("clean-c");
     expect(report.system.suggested.thresholds.T_sell_deny).toBeGreaterThan(report.system.suggested.thresholds.T_sell_esc);
     expect(markdown).toContain("## End to end: what R10 would do");
+  });
+
+  it("compares a long listing judged whole (truncated, ESCALATE) with the same listing judged in windows", () => {
+    expect(report.windows?.rows).toEqual([
+      {
+        id: "pad-a",
+        category: "padding_attack",
+        textChars: 3800,
+        injectionLabel: "injection",
+        sellerLabel: "low_risk",
+        plain: { status: "ERROR", outcome: "ESCALATE" },
+        windowed: { status: "OK", outcome: "DENY", injectionRisk: expect.closeTo(0.9, 9), sellerRisk: expect.closeTo(0.2, 9) },
+      },
+    ]);
+    expect(buildReport({ ...input, windowed: null }).windows).toBeNull();
+    expect(markdown).toContain("## Long listings: truncated or judged in windows");
   });
 
   it("derives the R10 verdicts for the demo listings", () => {

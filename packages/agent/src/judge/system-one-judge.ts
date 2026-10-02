@@ -20,6 +20,8 @@ import { planRows } from "./plan";
 import { failureRecord, okRecord, type RecordBase } from "./record";
 import { buildJudgeState } from "./state";
 import { callFailure, callSystemOne, type CallFailure, type CallOutcome } from "./system-one-call";
+import type { ParsedResponse } from "./parse";
+import { combineWindowAnswers, splitListing, type WindowPlan, type WindowingOptions } from "./windows";
 
 export interface SystemOneJudgeOptions {
   readonly provider: "laya" | "jev";
@@ -30,6 +32,11 @@ export interface SystemOneJudgeOptions {
   readonly apiKey?: string | undefined;
   /** Default true: send k option-order rotations per question and average them (Laya README recipe). */
   readonly rotations?: boolean | undefined;
+  /**
+   * Stretch, off by default: split a listing longer than one row into overlapping windows, judge each and merge
+   * conservatively (windows.ts). Without it a listing that overflows the row is an ERROR with input_truncated.
+   */
+  readonly windowing?: WindowingOptions | false | undefined;
   readonly fetchImpl?: FetchLike | undefined;
   readonly onDiagnostic?: DiagnosticSink | undefined;
   /** Monotonic milliseconds; tests may inject. Default performance.now. */
@@ -71,25 +78,36 @@ export class SystemOneJudge implements JudgePort {
   }
 
   async #run(input: JudgeInput, deadline: Deadline): Promise<{ call: CallOutcome; version: string | null }> {
-    const part = { text: input.listingText, index: 0, total: 1 };
-    const state = buildJudgeState(input, part);
-    if (JSON.stringify(state).length > MAX_STATE_CHARS) {
-      return { call: callFailure("ERROR", "input_too_large", "state is larger than the server accepts", { inputTruncated: true }), version: null };
-    }
+    const windowing = this.#options.windowing;
+    const plan: WindowPlan =
+      windowing === undefined || windowing === false
+        ? { ok: true, parts: [{ text: input.listingText, index: 0, total: 1 }] }
+        : splitListing(input.listingText, windowing);
+    if (!plan.ok) return { call: callFailure("ERROR", "input_too_large", "the listing needs more windows than allowed", { inputTruncated: true }), version: null };
     const checkpointLookup = this.#lookupCheckpoint(deadline);
-    const call = await callSystemOne(
-      {
-        fetchImpl: this.#fetch,
-        baseUrl: this.#options.baseUrl,
-        model: this.#options.model,
-        headers: this.#headers(),
-        rows: planRows(this.#options.rotations ?? true),
-        requireUsage: this.provider === "laya",
-        deadline,
-      },
-      state,
-    );
-    return { call, version: await checkpointLookup };
+    const ctx = {
+      fetchImpl: this.#fetch,
+      baseUrl: this.#options.baseUrl,
+      model: this.#options.model,
+      headers: this.#headers(),
+      rows: planRows(this.#options.rotations ?? true),
+      requireUsage: this.provider === "laya",
+      deadline,
+    };
+    const parsed: ParsedResponse[] = [];
+    for (const part of plan.parts) {
+      const state = buildJudgeState(input, part);
+      if (JSON.stringify(state).length > MAX_STATE_CHARS) {
+        return { call: callFailure("ERROR", "input_too_large", "state is larger than the server accepts", { inputTruncated: true }), version: null };
+      }
+      const call = await callSystemOne(ctx, state);
+      if (!call.ok) return { call, version: null };
+      parsed.push(call.parsed);
+    }
+    const [first] = parsed;
+    if (first === undefined) return { call: callFailure("ERROR", "internal", "no window was judged"), version: null };
+    const answers = parsed.length === 1 ? first.answers : combineWindowAnswers(parsed.map((p) => p.answers));
+    return { call: { ok: true, parsed: { ...first, answers } }, version: await checkpointLookup };
   }
 
   #headers(): Readonly<Record<string, string>> {

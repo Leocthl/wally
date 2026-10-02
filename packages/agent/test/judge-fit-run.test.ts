@@ -43,7 +43,7 @@ describe("runCorpus", () => {
 });
 
 describe("runFit against the mock server", () => {
-  const base = { model: "typed-decisions", date: "2026-10-02", timeoutMs: 5_000, compareCanonical: true } as const;
+  const base = { model: "typed-decisions", date: "2026-10-02", timeoutMs: 5_000, compareCanonical: true, compareWindows: true } as const;
 
   it("writes a JSON and a markdown report that pass the doc-style checks", async () => {
     const lines: string[] = [];
@@ -66,8 +66,17 @@ describe("runFit against the mock server", () => {
     expect(report.rotation).toBeNull();
   });
 
+  it("judges the listings longer than one window in windows, and skips that pass on request", async () => {
+    const { report } = await runFit({ ...base, baseUrl: mock.baseUrl, outDir });
+    const long = loadCorpus().filter((c) => c.listing.text.length > 2_000).map((c) => c.id);
+    expect(report.windows?.rows.map((w) => w.id)).toEqual(long);
+    expect(long.length).toBeGreaterThanOrEqual(3);
+    const skipped = await runFit({ ...base, baseUrl: mock.baseUrl, outDir, compareWindows: false });
+    expect(skipped.report.windows).toBeNull();
+  });
+
   it("warms up first and sends only requests the judge adapter would send", async () => {
-    await runFit({ ...base, baseUrl: mock.baseUrl, outDir, compareCanonical: false });
+    await runFit({ ...base, baseUrl: mock.baseUrl, outDir, compareCanonical: false, compareWindows: false });
     const posts = mock.judgeRequests();
     expect(posts.length).toBe(1 + loadCorpus().length + 6);
     for (const p of posts) expect((p.body as { model: string }).model).toBe("typed-decisions");

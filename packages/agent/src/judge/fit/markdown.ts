@@ -157,6 +157,41 @@ function rotationSection(r: FitReport): string[] {
   ];
 }
 
+/** Generated from the rows, so it cannot go stale: what windows do to the padded attacks that fail closed without them. */
+function windowVerdict(rows: NonNullable<FitReport["windows"]>["rows"]): string {
+  const attacks = rows.filter((w) => w.injectionLabel === "injection" || w.sellerLabel === "high_risk");
+  const count = (o: string): number => attacks.filter((w) => w.windowed.outcome === o).length;
+  const loosened = count("APPROVE");
+  const base = `- **Padded attacks** (n=${attacks.length}): plain ESCALATEs ${attacks.filter((w) => w.plain.outcome === "ESCALATE").length}; windows DENY ${count("DENY")}, ESCALATE ${count("ESCALATE")}, APPROVE ${loosened}.`;
+  return loosened === 0
+    ? base
+    : `${base} An APPROVE here is the judge missing an attack it also misses unpadded, so windows would loosen what the fail-closed rule holds. Keep them off unless that is accepted.`;
+}
+
+function windowSection(r: FitReport): string[] {
+  if (r.windows === null) return [];
+  return [
+    "## Long listings: truncated or judged in windows",
+    `- **Plain**: the whole listing in one state. Longer than one row (about 940 state tokens, F26) it comes back truncated, which is an ERROR and an ESCALATE (I5). **Windows**: windows of ${r.windows.windowChars} characters overlapping by ${r.windows.overlapChars}, one call each, worst window decides injection and seller risk, best window decides scope. Off by default.`,
+    "- **Outcome** is what R10 does at the current thresholds.",
+    windowVerdict(r.windows.rows),
+    "",
+    ...table(
+      ["Case", "Chars", "Label: injection, seller", "Plain", "Windows", "Windows injection risk", "Windows seller risk"],
+      r.windows.rows.map((w) => [
+        w.id,
+        w.textChars,
+        `${w.injectionLabel}, ${w.sellerLabel}`,
+        `${w.plain.status} ${w.plain.outcome}`,
+        `${w.windowed.status} ${w.windowed.outcome}`,
+        num(w.windowed.injectionRisk),
+        num(w.windowed.sellerRisk),
+      ]),
+    ),
+    "",
+  ];
+}
+
 export function renderMarkdown(r: FitReport): string {
   const t = r.thresholds;
   const lines = [
@@ -182,6 +217,7 @@ export function renderMarkdown(r: FitReport): string {
     ...missSection(r),
     ...anchorSection(r),
     ...rotationSection(r),
+    ...windowSection(r),
     "## Gates",
     ...r.gates.flatMap(gateSection),
     "## Limits",
@@ -189,6 +225,8 @@ export function renderMarkdown(r: FitReport): string {
     "- **Fit and test are the same cases**, so every figure is optimistic. The confidence intervals are Wilson 95 percent and are wide at this n.",
     "- **Language**: the checkpoint is English-derived; the Traditional Chinese cases are in the corpus to show that, not to excuse it.",
     "- **Truncation** is fail-closed by design: a call that loses part of the listing is an ERROR and ESCALATEs, even when the listing was honest.",
+    "- **Latency** was measured against one shared single-worker server; queueing behind other callers was not controlled, so these are upper bounds for an idle server (compare F26).",
+    "- **State**: the judge sees a compact state (mandate, categories, cart line, Scameter state, listing object). Text markers around the listing lowered injection separation in an earlier run and are not used; any change to the state needs a re-run.",
     "- **Re-run** after any change to the corpus, the state text, the questions or the checkpoint. Thresholds freeze at M5 [F41].",
     "",
   ];

@@ -8,6 +8,8 @@ export interface CaseResult {
   readonly category: CorpusCategory;
   readonly labels: CorpusLabels;
   readonly scameterState: ScameterState;
+  /** Length of the listing text, to tell long listings from short ones. */
+  readonly textChars: number;
   readonly status: "OK" | "TIMEOUT" | "ERROR";
   readonly inputTruncated: boolean;
   /** MEASURED wall time of the judge step. */

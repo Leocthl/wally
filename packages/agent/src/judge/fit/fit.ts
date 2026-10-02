@@ -8,6 +8,7 @@ import type { Mandate } from "@laisee/core/generated";
 import { formatIssues, validateMandate } from "@laisee/core/schema";
 import { DEFAULT_FIXTURES_DIR } from "../replay-recordings";
 import { SystemOneJudge } from "../system-one-judge";
+import { DEFAULT_WINDOWING } from "../windows";
 import { loadAnchors } from "./anchors";
 import { DEFAULT_CORPUS_DIR, loadCorpus } from "./corpus";
 import { renderMarkdown } from "./markdown";
@@ -28,6 +29,8 @@ export interface FitOptions {
   /** Per-call timeout for this tool. Not the product limit (F34): a fit measures, it does not gate. */
   readonly timeoutMs: number;
   readonly compareCanonical: boolean;
+  /** Also judge the listings longer than one window in windows and report the difference. */
+  readonly compareWindows: boolean;
   readonly log?: ((line: string) => void) | undefined;
 }
 
@@ -56,7 +59,8 @@ async function readHealth(baseUrl: string, model: string): Promise<Health | null
 function gitInfo(): FitMeta["commit"] {
   try {
     const run = (...args: string[]): string => execFileSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    return { hash: run("rev-parse", "HEAD"), dirty: run("status", "--porcelain").length > 0 };
+    // Untracked files (the report being written) do not make the code dirty.
+    return { hash: run("rev-parse", "HEAD"), dirty: run("status", "--porcelain", "--untracked-files=no").length > 0 };
   } catch {
     return null;
   }
@@ -83,7 +87,8 @@ export async function runFit(options: FitOptions): Promise<FitOutput> {
   const corpus = loadCorpus(options.corpusDir ?? DEFAULT_CORPUS_DIR);
   const mandate = loadMandate();
   const thresholds = loadThresholds();
-  const make = (rotations: boolean) => new SystemOneJudge({ provider: "laya", baseUrl: options.baseUrl, model: options.model, rotations });
+  const make = (rotations: boolean, windowing = false) =>
+    new SystemOneJudge({ provider: "laya", baseUrl: options.baseUrl, model: options.model, rotations, windowing: windowing ? DEFAULT_WINDOWING : false });
   const common = { timeoutMs: options.timeoutMs, mandate };
 
   log(`warming up the server (first call after a restart is slow)`);
@@ -92,6 +97,10 @@ export async function runFit(options: FitOptions): Promise<FitOutput> {
   const results = await runCorpus(corpus, { ...common, judge: make(true), onProgress: (d, t, id) => log(`  ${d}/${t} ${id}`) });
   log(options.compareCanonical ? "running the same cases in canonical order" : "skipping the canonical pass");
   const canonical = options.compareCanonical ? await runCorpus(corpus, { ...common, judge: make(false) }) : null;
+
+  const long = corpus.filter((c) => c.listing.text.length > DEFAULT_WINDOWING.windowChars);
+  log(options.compareWindows ? `running ${long.length} long cases in windows` : "skipping the window pass");
+  const windowed = options.compareWindows && long.length > 0 ? { options: DEFAULT_WINDOWING, results: await runCorpus(long, { ...common, judge: make(true, true) }) } : null;
 
   log("running the demo listings");
   const anchorJudge = make(true);
@@ -108,7 +117,7 @@ export async function runFit(options: FitOptions): Promise<FitOutput> {
     rotations: true,
     timeoutMs: options.timeoutMs,
   };
-  const report = buildReport({ meta, thresholds, results, canonical, anchors });
+  const report = buildReport({ meta, thresholds, results, canonical, windowed, anchors });
   const outDir = options.outDir ?? DEFAULT_RESULTS_DIR;
   mkdirSync(outDir, { recursive: true });
   const jsonPath = join(outDir, `judge-fit-${options.date}.json`);
