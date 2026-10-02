@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/packet-state.schema.json",
+  "title": "PacketState",
+  "description": "Sealed decrementing budget (U1). Derived, never stored as truth: a pure fold of one log, seq 0..folded_through_seq, evaluated at computed_at. Accounting: commit the card limit on CARD_MINTED; release it on CARD_EVENT VOIDED or EXPIRED; on AUTHORISED move the actual amount to spent and release the difference. Invariant: budget_minor == committed_minor + spent_minor + remaining_minor, all >= 0. Status precedence: REVOKED > EXPIRED > EXHAUSTED (remaining_minor == 0) > ACTIVE.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mandate_id", "log_id", "budget_minor", "committed_minor", "spent_minor", "remaining_minor", "currency",
+    "active_cards", "mint_times", "open_escalations", "status", "expires_at", "folded_through_seq", "computed_at"
+  ],
+  "properties": {
+    "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
+    "log_id": { "$ref": "mandate.schema.json#/$defs/LogId" },
+    "budget_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "mandate.rules.budget.amount_minor" },
+    "committed_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "Sum of limits of ACTIVE cards." },
+    "spent_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "Sum of AUTHORISED amounts." },
+    "remaining_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "(R3) What a new cart is checked against." },
+    "currency": { "$ref": "mandate.schema.json#/$defs/Currency" },
+    "active_cards": {
+      "type": "array",
+      "description": "(R8) Cards in state ACTIVE.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "limit_minor", "expires_at"],
+        "properties": {
+          "id": { "$ref": "mandate.schema.json#/$defs/CardId" },
+          "limit_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor" },
+          "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+        }
+      }
+    },
+    "mint_times": {
+      "type": "array",
+      "description": "(R7) minted_at of every CARD_MINTED, oldest first.",
+      "items": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+    },
+    "open_escalations": {
+      "type": "array",
+      "description": "(R11) ESCALATE decisions not yet resolved.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision_id", "expires_at"],
+        "properties": {
+          "decision_id": { "$ref": "mandate.schema.json#/$defs/DecisionId" },
+          "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+        }
+      }
+    },
+    "status": { "enum": ["ACTIVE", "EXHAUSTED", "EXPIRED", "REVOKED"] },
+    "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "mandate.rules.expires_at" },
+    "folded_through_seq": { "type": "integer", "minimum": 0, "description": "Last log seq folded in. Decisions record it so a verifier can replay the same state." },
+    "computed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "`now` used for EXPIRED status." }
+  },
+  "$comment": "examples[0] is SIMULATED: packet after attempt 1 settled, HK$800 [F20] minus HK$259 [F21] = HK$541 left. Ids and times are placeholders [F59].",
+  "examples": [
+    {
+      "mandate_id": "mnd_demoM0",
+      "log_id": "log_demoM0",
+      "budget_minor": 80000,
+      "committed_minor": 0,
+      "spent_minor": 25900,
+      "remaining_minor": 54100,
+      "currency": "HKD",
+      "active_cards": [],
+      "mint_times": ["2026-10-03T02:05:02Z"],
+      "open_escalations": [],
+      "status": "ACTIVE",
+      "expires_at": "2026-10-31T15:59:59Z",
+      "folded_through_seq": 3,
+      "computed_at": "2026-10-03T02:06:00Z"
+    }
+  ]
+}

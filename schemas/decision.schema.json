@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/decision.schema.json",
+  "title": "Decision",
+  "description": "Policy engine output for one cart; the engine is the only producer (D3). AP2-shaped payment-mandate evidence [F12]. Logged as the payload of one DECISION entry before any side effect (I7). Outcome = DENY if any FAIL has verdict DENY, else ESCALATE if any FAIL has verdict ESCALATE, else APPROVE. Judge results can only move APPROVE to DENY or ESCALATE (I3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "mandate_id", "cart", "decided_at", "outcome", "packet", "rules", "judge", "engine"],
+  "properties": {
+    "id": { "$ref": "mandate.schema.json#/$defs/DecisionId" },
+    "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
+    "cart": { "$ref": "cart.schema.json", "description": "The exact cart decided on." },
+    "decided_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "`now` passed to engine.decide." },
+    "outcome": { "enum": ["APPROVE", "DENY", "ESCALATE"] },
+    "approved_limit_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "APPROVE only. Equals cart.total_minor (I2)." },
+    "packet": { "$ref": "packet-state.schema.json", "description": "Packet snapshot the engine decided on." },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/RuleResult" },
+      "description": "R1..R12 in order. R10 emits one result per judge question. Rules not evaluated in this phase are SKIPPED (R11 outside escalation, R12 before checkout)."
+    },
+    "judge": { "$ref": "#/$defs/JudgeRecord" },
+    "explanation": { "$ref": "#/$defs/Explanation" },
+    "resolves": { "$ref": "mandate.schema.json#/$defs/DecisionId", "description": "Earlier decision this one closes: an ESCALATE answered or expired (S5), or an APPROVE voided at checkout (R12)." },
+    "escalation": { "$ref": "#/$defs/Escalation" },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "config_sha256"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1, "description": "Package version + git commit." },
+        "config_sha256": { "$ref": "mandate.schema.json#/$defs/Sha256Hex", "description": "SHA-256 of JCS of the thresholds and defaults in force (F30-F36, F50-F52)." }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "APPROVE" } }, "required": ["outcome"] },
+      "then": { "required": ["approved_limit_minor"], "properties": { "approved_limit_minor": true } },
+      "else": { "required": ["explanation"], "properties": { "explanation": true }, "not": { "required": ["approved_limit_minor"], "properties": { "approved_limit_minor": true } } }
+    },
+    {
+      "if": { "properties": { "outcome": { "const": "ESCALATE" } }, "required": ["outcome"] },
+      "then": { "required": ["escalation"], "properties": { "escalation": true } }
+    }
+  ],
+  "$defs": {
+    "TemplateId": {
+      "enum": [
+        "R1.invalid_signature",
+        "R2.revoked",
+        "R2.expired",
+        "R3.over_remaining",
+        "R4.over_cap",
+        "R4.ask_above",
+        "R5.over_ceiling",
+        "R6.off_mandate",
+        "R7.velocity",
+        "R8.max_active",
+        "R9.flagged",
+        "R9.unverified",
+        "R10.injection",
+        "R10.seller_risk",
+        "R10.scope",
+        "R10.escalate",
+        "R10.unavailable",
+        "R11.expired",
+        "R12.price_drift"
+      ],
+      "description": "Canonical IDs from 00-context plus six added by A1 pending lead approval: R1.invalid_signature, R5.over_ceiling, R6.off_mandate, R8.max_active, R10.escalate, R10.unavailable."
+    },
+    "RuleResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "result", "inputs"],
+      "description": "One check. inputs = recorded values the template and a verifier reuse; comparator relates them; threshold_ref names the source of the threshold. In shadow mode R10 results are SKIPPED with inputs.shadow_verdict.",
+      "properties": {
+        "id": { "$ref": "mandate.schema.json#/$defs/RuleId" },
+        "check": { "type": "string", "pattern": "^[a-z_]+$", "description": "Sub-check name; for R10 the judge question." },
+        "result": { "enum": ["PASS", "FAIL", "SKIPPED"] },
+        "verdict": { "enum": ["DENY", "ESCALATE"], "description": "FAIL only." },
+        "inputs": { "type": "object" },
+        "comparator": { "enum": ["<=", "<", ">=", ">", "==", "!=", "in", "not_in", "verify"] },
+        "threshold_ref": {
+          "type": "string",
+          "pattern": "^(F[0-9]{1,3}[a-z]?(\\.[A-Za-z_]+)?|mandate\\.[a-z_.]+|packet\\.[a-z_]+)$",
+          "description": "e.g. packet.remaining_minor, F1.ceiling, F36.T_inj, mandate.rules.per_purchase.hard_cap_minor"
+        },
+        "template_id": { "$ref": "#/$defs/TemplateId" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "result": { "const": "FAIL" } }, "required": ["result"] },
+          "then": { "required": ["verdict", "comparator", "template_id"], "properties": { "verdict": true, "comparator": true, "template_id": true } }
+        },
+        {
+          "if": { "properties": { "result": { "const": "PASS" } }, "required": ["result"] },
+          "then": { "required": ["comparator"], "properties": { "comparator": true } }
+        }
+      ]
+    },
+    "JudgeRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "version", "status", "latency_ms", "shadow"],
+      "description": "Judge call as recorded. jev probabilities are the vendor model's outputs [F11]; llm probabilities are verbalised and uncalibrated, so R10 uses the stricter llm profile [F51]. Escalation answers and R11/R12 decisions copy the record of the decision they resolve.",
+      "properties": {
+        "provider": { "enum": ["jev", "llm"] },
+        "model": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["OK", "TIMEOUT", "ERROR"], "description": "Not OK => R10 FAIL, verdict ESCALATE, template R10.unavailable (I5)." },
+        "fallback_from": { "const": "jev", "description": "Set when llm answered after jev failed or timed out [F34]." },
+        "latency_ms": { "type": "integer", "minimum": 0, "description": "Wall time of the judge step, MEASURED." },
+        "shadow": { "type": "boolean", "description": "true = recorded, not enforced (JUDGE_MODE=shadow)." },
+        "answers": { "$ref": "#/$defs/JudgeAnswers" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "OK" } }, "required": ["status"] },
+          "then": { "required": ["answers"], "properties": { "answers": true } }
+        }
+      ]
+    },
+    "Probability": { "type": "number", "minimum": 0, "maximum": 1 },
+    "JudgeAnswers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_fit", "injection_risk", "seller_risk", "escalate_or_proceed"],
+      "description": "Probability per typed option; each question's options sum to 1 (adapter normalises, tolerance in code).",
+      "properties": {
+        "scope_fit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["in_scope", "out_of_scope"],
+          "properties": { "in_scope": { "$ref": "#/$defs/Probability" }, "out_of_scope": { "$ref": "#/$defs/Probability" } }
+        },
+        "injection_risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["clean", "suspicious", "injection"],
+          "properties": { "clean": { "$ref": "#/$defs/Probability" }, "suspicious": { "$ref": "#/$defs/Probability" }, "injection": { "$ref": "#/$defs/Probability" } }
+        },
+        "seller_risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["low_risk", "high_risk"],
+          "properties": { "low_risk": { "$ref": "#/$defs/Probability" }, "high_risk": { "$ref": "#/$defs/Probability" } }
+        },
+        "escalate_or_proceed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["proceed", "escalate"],
+          "properties": { "proceed": { "$ref": "#/$defs/Probability" }, "escalate": { "$ref": "#/$defs/Probability" } }
+        }
+      }
+    },
+    "Explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template_id", "inputs", "rendered"],
+      "description": "Why, rendered by a pure function from template_id + inputs (D4), never LLM prose. Primary reason = first FAIL in rule order whose verdict equals the outcome. A verifier can re-render and compare.",
+      "properties": {
+        "template_id": { "$ref": "#/$defs/TemplateId" },
+        "inputs": { "type": "object" },
+        "rendered": { "type": "string", "minLength": 1, "description": "English line." },
+        "rendered_zh_hk": { "type": "string", "minLength": 1, "description": "zh-HK line from the same inputs." }
+      }
+    },
+    "Escalation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "expires_at"],
+      "description": "On an ESCALATE decision: state OPEN, expires_at = decided_at + window [F31]. On the decision that resolves it: the final state, with answer when APPROVED or DENIED.",
+      "properties": {
+        "state": { "enum": ["OPEN", "APPROVED", "DENIED", "EXPIRED"] },
+        "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+        "answer": { "$ref": "#/$defs/EscalationAnswer" }
+      }
+    },
+    "EscalationAnswer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "choice", "answered_at", "signer", "signature"],
+      "description": "Delegator-signed answer to an ESCALATE. Signature over UTF-8 of 'laisee.resolve.v1:' + hex SHA-256(JCS(this object without signature)). Can clear R4 ask_above, R9 unverified and R10 ESCALATE only; never R1-R8 hard fails or R12.",
+      "properties": {
+        "decision_id": { "$ref": "mandate.schema.json#/$defs/DecisionId" },
+        "choice": { "enum": ["APPROVE", "DENY"] },
+        "answered_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+        "signer": { "$ref": "mandate.schema.json#/$defs/DidKey" },
+        "signature": { "$ref": "mandate.schema.json#/$defs/SignatureB64u" }
+      }
+    }
+  },
+  "$comment": "examples[0] is SIMULATED: attempt 3 (DM4, S1). Subtotal HK$520 + shipping HK$30 = HK$550 over HK$541 left [F22]. Judge probabilities, latency, ids, hashes and times are placeholders [F59]; thresholds from F1, F32, F36, F50, F52.",
+  "examples": [
+    {
+      "id": "dec_demoA3",
+      "mandate_id": "mnd_demoM0",
+      "cart": {
+        "id": "crt_demoA3",
+        "mandate_id": "mnd_demoM0",
+        "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "proposed_at": "2026-10-03T02:11:50Z",
+        "merchant": { "name": "Demo Streetwear (SIMULATED)", "domain": "demo-streetwear.example" },
+        "items": [
+          { "title": "Denim jacket (SIMULATED)", "category": "apparel", "qty": 1, "unit_price_minor": 52000 }
+        ],
+        "subtotal_minor": 52000,
+        "shipping_minor": 3000,
+        "fees_minor": 0,
+        "fx": null,
+        "total_minor": 55000,
+        "currency": "HKD",
+        "listing": {
+          "url": "https://demo-streetwear.example/p/jacket",
+          "text_sha256": "643820c38a88c8fa0a93d4ddfce7ec034661cd410473d7a6fc53bc4caa964f8c",
+          "observed_at": "2026-10-03T02:11:40Z"
+        },
+        "price_observed_at": "2026-10-03T02:11:40Z",
+        "scameter": {
+          "state": "NO_RECORD",
+          "capture_ref": "SIM-scameter-demo-streetwear",
+          "captured_at": "2026-10-03T01:35:00Z",
+          "searched": ["url"]
+        },
+        "provenance": "SIMULATED"
+      },
+      "decided_at": "2026-10-03T02:12:00Z",
+      "outcome": "DENY",
+      "packet": {
+        "mandate_id": "mnd_demoM0",
+        "log_id": "log_demoM0",
+        "budget_minor": 80000,
+        "committed_minor": 0,
+        "spent_minor": 25900,
+        "remaining_minor": 54100,
+        "currency": "HKD",
+        "active_cards": [],
+        "mint_times": ["2026-10-03T02:05:02Z"],
+        "open_escalations": [],
+        "status": "ACTIVE",
+        "expires_at": "2026-10-31T15:59:59Z",
+        "folded_through_seq": 4,
+        "computed_at": "2026-10-03T02:12:00Z"
+      },
+      "rules": [
+        { "id": "R1", "result": "PASS", "inputs": { "signer": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }, "comparator": "verify" },
+        { "id": "R2", "result": "PASS", "inputs": { "revoked": false, "now": "2026-10-03T02:12:00Z", "expires_at": "2026-10-31T15:59:59Z" }, "comparator": "<", "threshold_ref": "mandate.rules.expires_at" },
+        { "id": "R3", "result": "FAIL", "verdict": "DENY", "inputs": { "total_minor": 55000, "remaining_minor": 54100 }, "comparator": "<=", "threshold_ref": "packet.remaining_minor", "template_id": "R3.over_remaining" },
+        { "id": "R4", "result": "SKIPPED", "inputs": { "per_purchase": null } },
+        { "id": "R5", "result": "PASS", "inputs": { "total_minor": 55000, "ceiling_minor": 200000 }, "comparator": "<=", "threshold_ref": "F1.ceiling" },
+        { "id": "R6", "result": "PASS", "inputs": { "domain": "demo-streetwear.example", "allow": null, "categories": ["apparel"], "item_categories": ["apparel"] }, "comparator": "in", "threshold_ref": "mandate.rules.categories" },
+        { "id": "R7", "result": "PASS", "inputs": { "mints_in_window": 1, "max_mints": 3, "window_s": 600 }, "comparator": "<", "threshold_ref": "F32" },
+        { "id": "R8", "result": "PASS", "inputs": { "active_cards": 0, "max_active": 2 }, "comparator": "<", "threshold_ref": "F1.active" },
+        { "id": "R9", "result": "PASS", "inputs": { "state": "NO_RECORD", "capture_age_s": 2220, "max_capture_age_s": 86400 }, "comparator": "<=", "threshold_ref": "F52" },
+        { "id": "R10", "check": "scope_fit", "result": "PASS", "inputs": { "p_in_scope": 0.95, "threshold": 0.6 }, "comparator": ">=", "threshold_ref": "F36.T_scope" },
+        { "id": "R10", "check": "injection_risk", "result": "PASS", "inputs": { "p_suspicious_or_injection": 0.03, "threshold": 0.2 }, "comparator": "<", "threshold_ref": "F36.T_inj" },
+        { "id": "R10", "check": "seller_risk", "result": "PASS", "inputs": { "p_high_risk": 0.05, "threshold": 0.25 }, "comparator": "<", "threshold_ref": "F36.T_sell_esc" },
+        { "id": "R10", "check": "escalate_or_proceed", "result": "PASS", "inputs": { "p_escalate": 0.1, "threshold": 0.5 }, "comparator": "<", "threshold_ref": "F50.T_esc" },
+        { "id": "R11", "result": "SKIPPED", "inputs": {} },
+        { "id": "R12", "result": "SKIPPED", "inputs": {} }
+      ],
+      "judge": {
+        "provider": "jev",
+        "model": "jev-VERIFY",
+        "version": "VERIFY",
+        "status": "OK",
+        "latency_ms": 240,
+        "shadow": false,
+        "answers": {
+          "scope_fit": { "in_scope": 0.95, "out_of_scope": 0.05 },
+          "injection_risk": { "clean": 0.97, "suspicious": 0.02, "injection": 0.01 },
+          "seller_risk": { "low_risk": 0.95, "high_risk": 0.05 },
+          "escalate_or_proceed": { "proceed": 0.9, "escalate": 0.1 }
+        }
+      },
+      "explanation": {
+        "template_id": "R3.over_remaining",
+        "inputs": { "total_minor": 55000, "remaining_minor": 54100 },
+        "rendered": "Stopped by R3. Total HK$550 is over the HK$541 left."
+      },
+      "engine": {
+        "version": "core@0.1.0+demo",
+        "config_sha256": "d4540759f6ba5ea1a6a33167a7e544abfb84111b765bc96dd2536627f8d127a8"
+      }
+    }
+  ]
+}

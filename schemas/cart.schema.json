@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/cart.schema.json",
+  "title": "Cart",
+  "description": "Agent-proposed purchase, AP2-shaped Cart mandate [F12]. The planner only picks a listing and items through propose_cart; the cart builder (deterministic, in core) prices it from the listing record and fills listing, price_observed_at and scameter. Planner text never sets a money field. Boundary check before engine.decide: subtotal_minor == sum(qty * unit_price_minor) and total_minor == subtotal_minor + shipping_minor + fees_minor + (fx.fee_minor or 0); otherwise the cart is rejected as invalid_cart and no Decision is made.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "mandate_id", "agent", "proposed_at", "merchant", "items",
+    "subtotal_minor", "shipping_minor", "fees_minor", "fx", "total_minor", "currency",
+    "listing", "price_observed_at", "scameter", "provenance"
+  ],
+  "properties": {
+    "id": { "$ref": "mandate.schema.json#/$defs/CartId" },
+    "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
+    "agent": { "$ref": "mandate.schema.json#/$defs/DidKey", "description": "Must equal mandate.agent. Asserted by the orchestrator, not signed by the planner (I4)." },
+    "proposed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+    "merchant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "domain"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "domain": { "$ref": "mandate.schema.json#/$defs/Domain", "description": "(R6) Checked against mandate.rules.merchants." }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "category", "qty", "unit_price_minor"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "category": { "$ref": "mandate.schema.json#/$defs/CategorySlug", "description": "(R6) Set by the cart builder from the listing record." },
+          "qty": { "type": "integer", "minimum": 1 },
+          "unit_price_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor" }
+        }
+      }
+    },
+    "subtotal_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor" },
+    "shipping_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor" },
+    "fees_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "Merchant and payment fees in HKD. HK has no sales tax [F3]." },
+    "fx": {
+      "description": "null when the listing is priced in HKD.",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/Fx" }
+      ]
+    },
+    "total_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "(R3, R4, R5) Includes shipping, fees and FX fee. A minted card limit equals this (I2)." },
+    "currency": { "$ref": "mandate.schema.json#/$defs/Currency" },
+    "listing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "text_sha256", "observed_at"],
+      "description": "Listing the judge reads. Text stays in the fixture or capture; only its hash is recorded.",
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "text_sha256": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
+        "observed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+      }
+    },
+    "price_observed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "(R12) Prices as of this time. Checkout re-quotes; any change voids the approval." },
+    "scameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "capture_ref", "captured_at", "searched"],
+      "description": "(R9) Manual Scameter capture state [F6]. Identifier values are never stored here, only which types were searched. Flagged-seller fixtures are SIMULATED.",
+      "properties": {
+        "state": { "enum": ["FLAGGED", "NO_RECORD", "NOT_CHECKED"], "description": "NO_RECORD is not 'safe' [F6]." },
+        "capture_ref": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9_.:-]{1,64}$", "description": "Row in data/capture-sheet.md or a fixture id. null when NOT_CHECKED." },
+        "captured_at": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+          ]
+        },
+        "searched": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["phone", "fps_id", "page_name", "payment_account", "url"] }
+        }
+      }
+    },
+    "provenance": { "enum": ["OBSERVED", "SIMULATED"], "description": "OBSERVED = priced from a captured real listing; SIMULATED = fixture." }
+  },
+  "$defs": {
+    "Fx": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["listed_currency", "listed_amount_minor", "rate", "rate_observed_at", "rate_source_ref", "fee_minor", "fee_ref"],
+      "description": "Foreign-currency listing converted to HKD by the cart builder. Fee per [F3] (fx_fee waived until its end date; fx_settled_hkd for a foreign merchant settling in HK$).",
+      "properties": {
+        "listed_currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "listed_amount_minor": { "type": "integer", "minimum": 0 },
+        "rate": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$", "description": "HKD per unit of listed_currency, decimal string (no floats)." },
+        "rate_observed_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+        "rate_source_ref": { "type": "string", "minLength": 1, "description": "Capture row for the rate (E5)." },
+        "fee_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor" },
+        "fee_ref": { "type": "string", "pattern": "^F[0-9]{1,3}[a-z]?(\\.[a-z_]+)?$", "description": "Register field that set the fee, e.g. F3.fx_settled_hkd." }
+      }
+    }
+  },
+  "$comment": "examples[0] is SIMULATED: attempt 1 (DM2), total HK$259 [F21]. Merchant, URL, hashes and times are placeholders [F59].",
+  "examples": [
+    {
+      "id": "crt_demoA1",
+      "mandate_id": "mnd_demoM0",
+      "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "proposed_at": "2026-10-03T02:05:00Z",
+      "merchant": { "name": "Demo Apparel (SIMULATED)", "domain": "demo-apparel.example" },
+      "items": [
+        { "title": "Cotton tee (SIMULATED)", "category": "apparel", "qty": 1, "unit_price_minor": 25900 }
+      ],
+      "subtotal_minor": 25900,
+      "shipping_minor": 0,
+      "fees_minor": 0,
+      "fx": null,
+      "total_minor": 25900,
+      "currency": "HKD",
+      "listing": {
+        "url": "https://demo-apparel.example/p/tee",
+        "text_sha256": "7006a5f0e2f339d1d3c7747b7ebc63eb8174552007e43acae1cc9bf022ae21bb",
+        "observed_at": "2026-10-03T02:04:00Z"
+      },
+      "price_observed_at": "2026-10-03T02:04:00Z",
+      "scameter": {
+        "state": "NO_RECORD",
+        "capture_ref": "SIM-scameter-demo-apparel",
+        "captured_at": "2026-10-03T01:30:00Z",
+        "searched": ["url"]
+      },
+      "provenance": "SIMULATED"
+    }
+  ]
+}

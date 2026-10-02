@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/log-entry.schema.json",
+  "title": "LogEntry",
+  "description": "One line of the append-only JSONL log at LOG_DIR/<log_id>.jsonl. One log per packet; seq 0 is MANDATE_SEALED; seq increases by 1. Bytes hashed and signed (JCS = RFC 8785 canonical JSON, UTF-8): (1) payload_hash = hex SHA-256(JCS(payload)). (2) entry_hash = hex SHA-256(JCS({v, log_id, seq, kind, ts, prev_hash, payload_hash, signer})). (3) prev_hash = entry_hash of seq - 1; for seq 0 it is 64 '0' characters. (4) signature = base64url(Ed25519.sign(engine key, UTF-8('laisee.log.v1:' + entry_hash))). The payload is covered through payload_hash; the signature covers entry_hash only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "log_id", "seq", "kind", "ts", "prev_hash", "payload", "payload_hash", "entry_hash", "signer", "signature"],
+  "properties": {
+    "v": { "const": 1 },
+    "log_id": { "$ref": "mandate.schema.json#/$defs/LogId" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "kind": { "enum": ["MANDATE_SEALED", "DECISION", "CARD_MINTED", "CARD_EVENT", "MANDATE_REVOKED", "PACKET_EXPIRED"] },
+    "ts": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "Append time." },
+    "prev_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
+    "payload": { "type": "object", "description": "Shape fixed by kind (oneOf below)." },
+    "payload_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
+    "entry_hash": { "$ref": "mandate.schema.json#/$defs/Sha256Hex" },
+    "signer": { "$ref": "mandate.schema.json#/$defs/DidKey", "description": "Engine (operator) key. Delegator signatures live inside payloads (mandate, revocation, escalation answer)." },
+    "signature": { "$ref": "mandate.schema.json#/$defs/SignatureB64u" }
+  },
+  "oneOf": [
+    { "properties": { "kind": { "const": "MANDATE_SEALED" }, "payload": { "$ref": "mandate.schema.json" } } },
+    { "properties": { "kind": { "const": "DECISION" }, "payload": { "$ref": "decision.schema.json" } } },
+    { "properties": { "kind": { "const": "CARD_MINTED" }, "payload": { "$ref": "card-record.schema.json" } } },
+    { "properties": { "kind": { "const": "CARD_EVENT" }, "payload": { "$ref": "#/$defs/CardEvent" } } },
+    { "properties": { "kind": { "const": "MANDATE_REVOKED" }, "payload": { "$ref": "mandate.schema.json#/$defs/Revocation" } } },
+    { "properties": { "kind": { "const": "PACKET_EXPIRED" }, "payload": { "$ref": "#/$defs/PacketExpired" } } }
+  ],
+  "$defs": {
+    "CardEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["card_id", "event", "at", "simulated"],
+      "description": "Rail event for one card. Accounting: AUTHORISED settles amount_minor and releases the rest of the limit; VOIDED and EXPIRED release the limit; DECLINED changes nothing (limit held).",
+      "properties": {
+        "card_id": { "$ref": "mandate.schema.json#/$defs/CardId" },
+        "event": { "enum": ["AUTHORISED", "DECLINED", "VOIDED", "EXPIRED"] },
+        "at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+        "amount_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "Charged (AUTHORISED) or attempted (DECLINED)." },
+        "merchant_domain": { "$ref": "mandate.schema.json#/$defs/Domain" },
+        "decline_code": {
+          "enum": ["OVER_LIMIT", "CARD_USED", "CARD_VOIDED", "CARD_EXPIRED", "UNKNOWN_HANDLE"],
+          "description": "rail-sim codes. OVER_LIMIT is calibrated against the one real decline (T-R1, data/real-card-test.md)."
+        },
+        "simulated": { "const": true }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "event": { "enum": ["AUTHORISED", "DECLINED"] } }, "required": ["event"] },
+          "then": { "required": ["amount_minor", "merchant_domain"], "properties": { "amount_minor": true, "merchant_domain": true } }
+        },
+        {
+          "if": { "properties": { "event": { "const": "DECLINED" } }, "required": ["event"] },
+          "then": { "required": ["decline_code"], "properties": { "decline_code": true } }
+        }
+      ]
+    },
+    "PacketExpired": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mandate_id", "expired_at"],
+      "description": "Written once when now passes mandate.rules.expires_at (S6). Unused cards then get CARD_EVENT EXPIRED.",
+      "properties": {
+        "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
+        "expired_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" }
+      }
+    }
+  },
+  "$comment": "examples[0] is SIMULATED: seq 2, CARD_MINTED for attempt 1 (HK$259 [F21]). Hashes and signature are placeholders and do not verify [F59]; golden vectors are Lane A's job (T-V1).",
+  "examples": [
+    {
+      "v": 1,
+      "log_id": "log_demoM0",
+      "seq": 2,
+      "kind": "CARD_MINTED",
+      "ts": "2026-10-03T02:05:02Z",
+      "prev_hash": "ed2838b69707d92548821b1e44ece5a2ea5b9fec45f8529bceeacbc5e1b36f72",
+      "payload": {
+        "id": "crd_demoA1",
+        "decision_id": "dec_demoA1",
+        "mandate_id": "mnd_demoM0",
+        "handle": "hdl_SIMULATEDdemoA1handle",
+        "last4": "0000",
+        "limit_minor": 25900,
+        "currency": "HKD",
+        "minted_at": "2026-10-03T02:05:02Z",
+        "expires_at": "2026-10-03T02:35:02Z",
+        "state": "ACTIVE",
+        "simulated": true
+      },
+      "payload_hash": "042dbdf22682451d37b18c24a92dee4276a2cf92209fc17702caacb83aa32e80",
+      "entry_hash": "7a6e4d20d2f48747ce2537787bf3e0794c469b9f4c073ad8f88377ad6ba10ae6",
+      "signer": "did:key:z6MkDemoEngineKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "signature": "SIMULATEDsignatureNotVerifiableAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laisee.local/schemas/card-record.schema.json",
+  "title": "CardRecord",
+  "description": "One-off card minted for one APPROVE (U2), payload of CARD_MINTED. AP2-shaped payment-mandate evidence [F12]. SIMULATED rail only (RAIL_MODE=sim): no real card exists. There are no PAN, CVV or printed card expiry fields, by design (I8). The executor presents `handle` to the merchant stub; the planner sees status only. State changes after mint arrive as CARD_EVENT entries; the fold gives the current state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "decision_id", "mandate_id", "handle", "last4", "limit_minor", "currency", "minted_at", "expires_at", "state", "simulated"],
+  "properties": {
+    "id": { "$ref": "mandate.schema.json#/$defs/CardId" },
+    "decision_id": { "$ref": "mandate.schema.json#/$defs/DecisionId", "description": "The APPROVE that allowed this mint (I1)." },
+    "mandate_id": { "$ref": "mandate.schema.json#/$defs/MandateId" },
+    "handle": { "type": "string", "pattern": "^hdl_[A-Za-z0-9_-]{16,64}$", "description": "Opaque rail reference, not a card number. rail-sim accepts it only from the executor." },
+    "last4": { "type": "string", "pattern": "^[0-9]{4}$", "description": "Display only. Random in rail-sim." },
+    "limit_minor": { "$ref": "mandate.schema.json#/$defs/MoneyMinor", "description": "== decision.approved_limit_minor == cart.total_minor (I2); <= rail ceiling [F1]." },
+    "currency": { "$ref": "mandate.schema.json#/$defs/Currency" },
+    "minted_at": { "$ref": "mandate.schema.json#/$defs/Timestamp" },
+    "expires_at": { "$ref": "mandate.schema.json#/$defs/Timestamp", "description": "Card TTL in the engine, not a printed expiry: min(minted_at + TTL [F30], mandate.rules.expires_at, minted_at + rail validity [F1])." },
+    "state": { "enum": ["ACTIVE", "USED", "VOIDED", "EXPIRED"], "description": "ACTIVE at mint." },
+    "simulated": { "const": true, "description": "rail-sim only. A real rail would need a new schema version." }
+  },
+  "$comment": "examples[0] is SIMULATED: the card for attempt 1 (DM2), limit HK$259 [F21], TTL 30 min [F30]. Handle, last4, ids and times are placeholders [F59].",
+  "examples": [
+    {
+      "id": "crd_demoA1",
+      "decision_id": "dec_demoA1",
+      "mandate_id": "mnd_demoM0",
+      "handle": "hdl_SIMULATEDdemoA1handle",
+      "last4": "0000",
+      "limit_minor": 25900,
+      "currency": "HKD",
+      "minted_at": "2026-10-03T02:05:02Z",
+      "expires_at": "2026-10-03T02:35:02Z",
+      "state": "ACTIVE",
+      "simulated": true
+    }
+  ]
+}
