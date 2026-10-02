@@ -1,0 +1,26 @@
+{
+  "$comment": "Boundary validators compiled ahead of time by scripts/gen-types.mjs (ajv standalone, no eval at run time) into compiled/validators.ts. Each name maps to a schema ref under https://laisee.local/schemas/. A test compiles the same refs with ajv at run time, with these options, and checks both agree.",
+  "options": {
+    "strict": true,
+    "strictRequired": true,
+    "allowUnionTypes": true,
+    "allErrors": true
+  },
+  "validators": {
+    "validateMandate": "mandate.schema.json",
+    "validateMandateCredential": "mandate-credential.schema.json",
+    "validateCart": "cart.schema.json",
+    "validateDecision": "decision.schema.json",
+    "validateLogEntry": "log-entry.schema.json",
+    "validateCardRecord": "card-record.schema.json",
+    "validatePacketState": "packet-state.schema.json",
+    "validateListingRecord": "listing-record.schema.json",
+    "validateScameterCapture": "scameter-capture.schema.json",
+    "validateProposeCartInput": "propose-cart.schema.json",
+    "validatePlannerReplayRecord": "planner-replay.schema.json",
+    "validateJudgeRecord": "decision.schema.json#/$defs/JudgeRecord",
+    "validateEscalationAnswer": "decision.schema.json#/$defs/EscalationAnswer",
+    "validateCardEvent": "log-entry.schema.json#/$defs/CardEvent",
+    "validateRevocation": "mandate.schema.json#/$defs/Revocation"
+  }
+}
