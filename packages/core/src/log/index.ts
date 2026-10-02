@@ -13,7 +13,8 @@ export {
   type EntryHashInput,
 } from "./hashing";
 export { toJsonl, toJsonlLine } from "./jsonl";
-export { findCardData, luhnValid } from "./i8";
+export { findCardData, luhnValid, normaliseForI8 } from "./i8";
+export { decisionInputsProblem, LOG_LIMITS } from "./limits";
 export { checkpointOf, headCheckpoint, parseCheckpoint } from "./checkpoint";
 export { cartSha256 } from "./cart-sha256";
 export {

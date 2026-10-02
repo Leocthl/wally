@@ -2,6 +2,7 @@
 // pnpm verify-log: offline check of an exported log with the same verifyChain the verifier page uses.
 // Usage: node scripts/verify-log.mjs <log.jsonl> <public-keys.json> [checkpoint.json]
 // Prints PASS and the head, or FAIL with the first failing seq and reason. Exit 0 on PASS, 1 otherwise.
+// Files are decoded as strict UTF-8: invalid bytes exit 1 instead of being replaced.
 // Runs the TypeScript sources of @laisee/core through Node type stripping (Node 22.18+ or 23.6+).
 import { readFile } from "node:fs/promises";
 import * as nodeModule from "node:module";
@@ -33,9 +34,20 @@ function registerTsResolver() {
   });
 }
 
-async function readJson(path, label) {
+/** Strict UTF-8: invalid bytes are an error, never U+FFFD, and a BOM stays in the text (the log is byte-exact). */
+async function readText(path, label) {
+  const bytes = await readFile(path);
   try {
-    return JSON.parse(await readFile(path, "utf8"));
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch (err) {
+    throw new Error(`${label}: not valid UTF-8`, { cause: err });
+  }
+}
+
+async function readJson(path, label) {
+  const text = await readText(path, label);
+  try {
+    return JSON.parse(text);
   } catch (err) {
     throw new Error(`${label}: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
   }
@@ -53,7 +65,7 @@ async function main() {
   const verify = await import(pathToFileURL(join(ROOT, "packages/core/src/verify/index.ts")).href);
   const keys = parsed(verify.parsePublicKeys(await readJson(keysPath, "public keys")), "public keys");
   const checkpoint = checkpointPath ? parsed(verify.parseCheckpoint(await readJson(checkpointPath, "checkpoint")), "checkpoint") : undefined;
-  const text = await readFile(logPath, "utf8");
+  const text = await readText(logPath, "log");
   const report = verify.verifyLogText(text, keys, checkpoint);
   if (report.ok) {
     const scope = checkpoint ? `, checkpoint seq ${checkpoint.seq} matches` : ", no checkpoint given (truncation after the last entry is not detectable)";

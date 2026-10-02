@@ -1,7 +1,9 @@
 // JSONL text -> entries for verifyChain. Every line must be the exact JCS spelling of its JSON, so a
 // changed byte can never parse to the same entry (CRLF, spaces, escapes, 1.0 for 1). Bad lines keep their
-// index and fail SCHEMA there; only one final '\n' is optional.
+// index and fail SCHEMA there; only one final '\n' is optional. A line longer than the log's line limit is
+// refused before it is parsed, so one huge line cannot stall the verifier.
 import { jcs } from "../crypto/jcs";
+import { lineProblem as tooLong } from "../log/limits";
 import type { Checkpoint } from "../ports";
 import { verifyChain } from "./chain";
 import type { PublicKeys, VerifyReport } from "./report";
@@ -15,6 +17,8 @@ export interface ParsedLog {
 
 function lineProblem(line: string): { readonly value: unknown; readonly problem: string | null } {
   if (line === "") return { value: line, problem: "empty line" };
+  const long = tooLong(line);
+  if (long !== null) return { value: "", problem: long };
   let value: unknown;
   try {
     value = JSON.parse(line);
