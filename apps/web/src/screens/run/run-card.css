@@ -20,4 +20,5 @@
 .run-bubble__text { max-width: 88%; margin: 0; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-lg) var(--r-lg) var(--r-xs) var(--r-lg); background: var(--c-primary); color: var(--c-on-primary); line-height: var(--lh-snug); overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: no-preference) {
   .run-bubble { animation: run-rise var(--dur-base) var(--ease-out) both; }
+  .run-bubble[data-still] { animation: none; }
 }

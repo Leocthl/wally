@@ -10,6 +10,7 @@ import { useReveal } from "../src/evidence/useReveal";
 import { TEMPLATES } from "../src/explain/templates";
 import { OneOffCard } from "../src/screens/console/OneOffCard";
 import { claimAsk, noteAsk } from "../src/screens/run/askEcho";
+import { Calm } from "../src/screens/run/components/Calm";
 import { CardStory } from "../src/screens/run/components/CardStory";
 import { Stopped } from "../src/screens/run/components/Stopped";
 import { selectScreen } from "../src/screens/run/model/screen";
@@ -132,6 +133,27 @@ describe("the ask echo", () => {
   it("words older than the window are never shown", () => {
     noteAsk("old question", 1_000);
     expect(claimAsk("run_c", 1_000 + 21_000)).toBeUndefined();
+  });
+});
+
+describe("no clear pick keeps what was asked in view", () => {
+  const view = (kind: "noPick" | "idle", runId: string) =>
+    render(<LocaleProvider locale="en"><Calm kind={kind} runId={runId} onAsk={noop} /></LocaleProvider>);
+
+  it("shows the words that started the run above Wally's answer, with no entrance of their own", () => {
+    noteAsk("A plain white tee under HK$150");
+    const { container } = view("noPick", "run_calm_1");
+    expect(within(container).getByText("A plain white tee under HK$150")).toBeInTheDocument();
+    expect(container.querySelector(".run-bubble")).toHaveAttribute("data-still", "true");
+    expect(within(container).getByRole("heading", { name: "Wally couldn't pick a clear item" })).toBeInTheDocument();
+  });
+
+  it("shows no bubble when nothing was asked, and none on the idle screen", () => {
+    noteAsk("");
+    expect(view("noPick", "run_calm_2").container.querySelector(".run-bubble")).toBeNull();
+    noteAsk("a cotton tee");
+    expect(view("idle", "run_calm_3").container.querySelector(".run-bubble")).toBeNull();
+    noteAsk("");
   });
 });
 

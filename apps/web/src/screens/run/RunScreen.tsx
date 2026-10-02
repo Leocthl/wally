@@ -216,6 +216,6 @@ function ResultView(p: ResultViewProps): ReactElement {
     case "noPick":
     case "error":
     case "info":
-      return <Calm kind={result.kind} code={result.code} onAsk={p.onAsk} headingRef={p.heading} />;
+      return <Calm kind={result.kind} code={result.code} runId={result.run?.runId} onAsk={p.onAsk} headingRef={p.heading} />;
   }
 }

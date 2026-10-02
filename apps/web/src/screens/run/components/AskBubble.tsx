@@ -4,10 +4,11 @@ import type { ReactElement } from "react";
 import { RUNX } from "../../../i18n/runMore";
 import { useLocale } from "../../../ui/locale";
 
-export function AskBubble({ text }: { readonly text: string }): ReactElement {
+/** `still`: no entrance, for the result that replaces the working screen (the words were already there a moment ago). */
+export function AskBubble({ text, still = false }: { readonly text: string; readonly still?: boolean }): ReactElement {
   const { t } = useLocale();
   return (
-    <figure className="run-bubble">
+    <figure className="run-bubble" {...(still ? { "data-still": "true" } : {})}>
       <figcaption className="run-bubble__who">{t(RUNX.youAsked)}</figcaption>
       <blockquote className="run-bubble__text" data-ident data-selectable>{text}</blockquote>
     </figure>
