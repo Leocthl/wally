@@ -49,6 +49,9 @@ export interface BackendDeps {
 
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
 
+/** Orchestrator codes that mean "this escalation is not open any more" (answered, expired by R11, or unknown). */
+const CLOSED_ESCALATION_CODES: readonly string[] = ["UNKNOWN_ESCALATION", "INVALID_ANSWER", "ESCALATION_CLOSED"];
+
 /** Before the first successful seal: nothing sealed, so the UI seals the preset itself. */
 const EMPTY_SNAPSHOT: BoothSnapshot = { mandate: null, intentText: null, packet: null, cards: [], log: { entries: [], head: null, tampered: null }, escalations: [] };
 
@@ -212,7 +215,8 @@ export class OrchestratorBackend implements BoothBackend {
       try {
         const result = await session.orchestrator.answerEscalation(answer, { runId, checkout: "auto" });
         if (!result.ok) {
-          const closed = result.code === "UNKNOWN_ESCALATION" || result.code === "INVALID_ANSWER";
+          const code: string = result.code;
+          const closed = CLOSED_ESCALATION_CODES.includes(code);
           throw new BoothError(closed ? 409 : 500, closed ? "ESCALATION_CLOSED" : result.code, closed ? "This escalation is no longer open (answered, or stopped by R11)." : result.message);
         }
         this.#emit({ type: "run.finished", runId, outcome: result.outcome, at: iso(this.#deps.clock.now()) });

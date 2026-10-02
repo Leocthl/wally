@@ -1,10 +1,14 @@
-// Scans serialized payloads for card data (I8): the rail handle and PAN-like digit runs. Hex hashes (64 chars) and
-// did:key strings are removed first: they are long by design and hold no card data.
-const HEX_HASH = /\b[0-9a-f]{64}\b/g;
-const DID_KEY = /did:key:z[1-9A-HJ-NP-Za-km-z]+/g;
-const PAN_LIKE = /(?:\d[ -]?){13,19}/;
+// Scans serialized payloads for card data (I8) the way the core log guard does: a 13-19 digit run that stands alone
+// (not inside a hex, base64 or did:key token, not the fraction of a decimal) and passes the Luhn check, or a CVV word.
+import { luhnValid } from "@laisee/core/log";
+
+const PAN_RUN = /(?<![A-Za-z0-9.])\d(?:[ -]?\d){12,18}(?![A-Za-z0-9])/g;
+const CVV_WORD = /\b(cvv2?|cvc2?)\b/i;
 
 export function panLikeIn(text: string): string | null {
-  const cleaned = text.replace(HEX_HASH, "").replace(DID_KEY, "");
-  return PAN_LIKE.exec(cleaned)?.[0] ?? null;
+  for (const match of text.matchAll(PAN_RUN)) {
+    const digits = match[0].replace(/[ -]/g, "");
+    if (luhnValid(digits)) return match[0];
+  }
+  return CVV_WORD.exec(text)?.[0] ?? null;
 }
