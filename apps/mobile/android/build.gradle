@@ -1,0 +1,43 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+// JDK 17 compatibility. Capacitor 8 sets source and target level 21 in every module. When Gradle runs on a JDK older than
+// 21 (only 17 is installed), compile the Java sources at level 17 instead; on JDK 21 or newer nothing changes.
+if (JavaVersion.current() < JavaVersion.VERSION_21) {
+    subprojects {
+        afterEvaluate { project ->
+            def android = project.extensions.findByName('android')
+            if (android != null) {
+                android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+                android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
