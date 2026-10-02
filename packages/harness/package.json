@@ -15,5 +15,8 @@
   "dependencies": {
     "@laisee/core": "workspace:*",
     "@laisee/rail-sim": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }
