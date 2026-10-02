@@ -1,5 +1,7 @@
-// Recorded answers. A live run can record every model call it makes; a recorded run replays them by request hash.
-// An input the recording has never seen returns ERROR (fail closed) and is counted, so an incomplete recording shows.
+// Recorded answers. A live run can record every model call it makes; a recorded run replays them by request hash and by
+// how many times that request was already made, so identical requests that got different answers live (a TIMEOUT under load,
+// say) replay in the same order and the replay reproduces the run. An input the recording has never seen returns ERROR
+// (fail closed) and is counted, so an incomplete recording shows.
 import { sha256Hex, stableStringify } from "../canonical";
 import type { AskOptions, ChoiceAnswer, ChoiceClient, ChoiceMeta, ChoiceRequest, ChoiceResult } from "./choice-client";
 
@@ -40,6 +42,17 @@ export function requestKey(req: ChoiceRequest): string {
   return sha256Hex(stableStringify({ state: req.state, questions: req.questions }));
 }
 
+/** Key of the nth time (from 0) the same request was made in one run. */
+export const callKey = (requestHash: string, nth: number): string => `${requestHash}.${nth}`;
+
+const CALL_KEY = /^[0-9a-f]{64}\.\d+$/;
+
+/** Counts calls per request without mutating shared state: each call returns the next count and the updated table. */
+function nextCall(counts: Readonly<Record<string, number>>, hash: string): { readonly key: string; readonly counts: Readonly<Record<string, number>> } {
+  const nth = counts[hash] ?? 0;
+  return { key: callKey(hash, nth), counts: { ...counts, [hash]: nth + 1 } };
+}
+
 export interface RecordingClient extends ChoiceClient {
   snapshot(source: RecordingSource): Recording;
 }
@@ -48,11 +61,14 @@ export interface RecordingClient extends ChoiceClient {
 export function createRecordingClient(inner: ChoiceClient): RecordingClient {
   let answers: Readonly<Record<string, RecordedAnswer>> = {};
   let failures: Readonly<Record<string, RecordedFailure>> = {};
+  let counts: Readonly<Record<string, number>> = {};
   return {
     kind: inner.kind,
     async ask(req: ChoiceRequest, opts: AskOptions): Promise<ChoiceResult> {
+      const next = nextCall(counts, requestKey(req));
+      counts = next.counts;
+      const key = next.key;
       const result = await inner.ask(req, opts);
-      const key = requestKey(req);
       if (result.ok) answers = { ...answers, [key]: { answers: result.answers, truncated: result.truncated, latencyMs: result.latencyMs } };
       else failures = { ...failures, [key]: { status: result.status, reason: result.reason } };
       return result;
@@ -78,11 +94,14 @@ export function createRecordedClient(recording: Recording): RecordedClient {
   let hits = 0;
   let recordedFailures = 0;
   let misses = 0;
+  let counts: Readonly<Record<string, number>> = {};
   const meta: ChoiceMeta = { model: recording.source.model, revision: recording.source.revision };
   return {
     kind: "recorded",
     async ask(req: ChoiceRequest): Promise<ChoiceResult> {
-      const key = requestKey(req);
+      const next = nextCall(counts, requestKey(req));
+      counts = next.counts;
+      const key = next.key;
       const hit = recording.answers[key];
       if (hit !== undefined) {
         hits += 1;
@@ -109,7 +128,7 @@ export function parseRecording(raw: unknown): Recording {
   if (!isRecordLike(source) || typeof source["model"] !== "string" || typeof source["commit"] !== "string") throw new Error("recording has no source block");
   if (!isRecordLike(raw["answers"]) || !isRecordLike(raw["failures"])) throw new Error("recording has no answers or failures table");
   for (const [key, entry] of Object.entries(raw["answers"])) {
-    if (!/^[0-9a-f]{64}$/.test(key) || !isRecordLike(entry) || !isRecordLike(entry["answers"]) || typeof entry["truncated"] !== "boolean" || typeof entry["latencyMs"] !== "number") {
+    if (!CALL_KEY.test(key) || !isRecordLike(entry) || !isRecordLike(entry["answers"]) || typeof entry["truncated"] !== "boolean" || typeof entry["latencyMs"] !== "number") {
       throw new Error(`recording entry ${key.slice(0, 12)} is malformed`);
     }
   }

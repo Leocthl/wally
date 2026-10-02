@@ -4,7 +4,7 @@ import { createChoiceJudge } from "../src/judge/choice-judge";
 import { createRecordedClient, createRecordingClient, parseRecording, requestKey, RECORDING_SCHEMA, type RecordingSource } from "../src/judge/recording";
 import { createUnavailableClient } from "../src/judge/unavailable";
 import { BUDGET_FIT_QUESTION, JUDGE_QUESTIONS } from "../src/judge/questions";
-import type { ChoiceClient, ChoiceRequest } from "../src/judge/choice-client";
+import type { ChoiceClient, ChoiceRequest, ChoiceResult } from "../src/judge/choice-client";
 import { generateScenarios } from "../src/scenario/generate";
 import { judgeInputOf } from "../src/systems/b2";
 import { biasedResponder, startMockLaya, type MockLaya, type Responder } from "./support/mock-laya";
@@ -183,6 +183,29 @@ describe("recording and replay", () => {
     expect(replay.stats()).toEqual({ hits: 0, recordedFailures: 1, misses: 0 });
   });
 
+  it("identical requests that got different answers live replay in the same order, so a replay reproduces the run", async () => {
+    let call = 0;
+    const flaky: ChoiceClient = {
+      kind: "live",
+      ask: async (): Promise<ChoiceResult> => {
+        call += 1;
+        return call === 2 ? { ok: false, status: "TIMEOUT", reason: "slow", latencyMs: 1_500 } : { ok: true, answers: { q: { choice: "a", probabilities: { a: call / 10, b: 1 - call / 10 } } }, truncated: false, latencyMs: call, meta: { model: "m", revision: null } };
+      },
+    };
+    const recording = createRecordingClient(flaky);
+    const live = [await recording.ask(REQUEST, OPTS), await recording.ask(REQUEST, OPTS), await recording.ask(REQUEST, OPTS)];
+    const replay = createRecordedClient(JSON.parse(JSON.stringify(recording.snapshot(source))));
+    const again = [await replay.ask(REQUEST, OPTS), await replay.ask(REQUEST, OPTS), await replay.ask(REQUEST, OPTS)];
+    expect(again.map((r) => (r.ok ? "ok" : r.status))).toEqual(live.map((r) => (r.ok ? "ok" : r.status)));
+    const [firstAgain, firstLive] = [again[0], live[0]];
+    if (!firstAgain?.ok || !firstLive?.ok) throw new Error("the first call succeeded live, so it must replay as a success");
+    expect(firstAgain.answers).toEqual(firstLive.answers);
+    expect(replay.stats()).toEqual({ hits: 2, recordedFailures: 1, misses: 0 });
+    // a fourth identical request was never made live: it is a gap, not a copy of the third
+    expect(await replay.ask(REQUEST, OPTS)).toMatchObject({ ok: false, reason: "no recording for this input" });
+    expect(replay.stats().misses).toBe(1);
+  });
+
   it("the key depends on the state and the questions, not on object key order", () => {
     const a = requestKey({ state: { a: 1, b: 2 }, questions: REQUEST.questions });
     expect(requestKey({ state: { b: 2, a: 1 }, questions: REQUEST.questions })).toBe(a);
@@ -193,5 +216,7 @@ describe("recording and replay", () => {
     expect(() => parseRecording({ schema: "other" })).toThrow();
     expect(() => parseRecording(null)).toThrow();
     expect(() => parseRecording({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: { nothex: {} }, failures: {} })).toThrow(/malformed/);
+    const hash = "0".repeat(64);
+    expect(() => parseRecording({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: { [hash]: { answers: {}, truncated: false, latencyMs: 1 } }, failures: {} })).toThrow(/malformed/); // no call number
   });
 });
