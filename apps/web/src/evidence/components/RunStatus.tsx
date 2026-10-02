@@ -33,13 +33,13 @@ export function WiringBanner({ status, run }: { readonly status: WiringStatus; r
       <h3 id="ev-wiring-title" className="ev-wiring__title"><Bi text={E.wiringTitle} /></h3>
       <Bi as="p" text={E.wiringBody} />
       {status.componentsConfirmed ? null : <Bi as="p" text={E.wiringUnconfirmed} />}
-      {status.reasons.length > 0 ? (
-        <ul className="ev-wiring__reasons">
-          {status.reasons.map((r) => <li key={r} data-ident>{r}</li>)}
-        </ul>
-      ) : null}
       <details className="disclosure ev-wiring__components">
         <summary><Bi text={E.componentsTitle} /></summary>
+        {status.reasons.length > 0 ? (
+          <ul className="ev-wiring__reasons">
+            {status.reasons.map((r) => <li key={r} data-ident>{r}</li>)}
+          </ul>
+        ) : null}
         <ComponentList components={run.components} />
       </details>
     </section>

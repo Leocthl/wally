@@ -6,6 +6,10 @@
 .ev-note { font-size: var(--fs-s); margin-top: var(--sp-2); }
 .ev-harness { display: grid; gap: var(--sp-5); }
 
+/* Grid cards never grow past the phone width; long chips (run, seed, commit) wrap inside them. */
+.ev-big__card, .ev-chart, .ev-panel, .ev-acc__row, .ev-dm9__col, .ev-wiring, .ev-picker, .ev-route, .ev-bar, .ev-big__row { grid-template-columns: minmax(0, 1fr); }
+.ev .chip { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+
 /* RECORDED: replayed model answers. Grey on its tint with a dotted edge; the text always says RECORDED. */
 .chip--rec { color: var(--pending); background: var(--pending-bg); border: 1px dotted var(--pending); }
 
@@ -19,7 +23,7 @@
 .ev-wiring { display: grid; gap: var(--sp-2); padding: var(--sp-4); background: var(--sim-bg); color: var(--sim); outline: 3px dashed var(--sim-bg); outline-offset: 2px; border-radius: var(--r-ledger); }
 .ev-wiring .bi__zh, .ev-wiring .soft { color: inherit; }
 .ev-wiring__title { font-size: var(--fs-1); }
-.ev-wiring__reasons { margin: 0; padding-left: var(--sp-5); font-size: var(--fs-s); overflow-wrap: anywhere; }
+.ev-wiring__reasons { margin: 0 0 var(--sp-2); padding-left: var(--sp-5); font-size: var(--fs-s); overflow-wrap: anywhere; }
 .ev-wiring__components { background: var(--surface); color: var(--fg); padding: 0 var(--sp-3) var(--sp-2); border-radius: var(--r-ledger); }
 .ev-stamp { display: inline-block; margin-bottom: var(--sp-2); padding: 1px var(--sp-2); background: var(--sim-bg); color: var(--sim); font-size: var(--fs-s); font-weight: 700; letter-spacing: 0.06em; border-radius: var(--r-chip); }
 .ev-stamp .bi__zh { color: inherit; }
@@ -124,6 +128,24 @@
 .ev-big--stage .ev-big__kn { font-size: var(--fs-6); }
 .ev-big--stage .ev-big__pct { font-size: var(--fs-3); }
 .ev-big--stage .ev-big__title { font-size: var(--fs-2); }
+/* Stage: one full-width row per metric, B0 and B2 side by side, so all six numerals sit above the presenter bar. */
+.ev-big.ev-big--stage { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+.ev-big--stage .ev-big__card { padding: var(--sp-3) var(--sp-4); gap: var(--sp-1); }
+.ev-big--stage .ev-big__card > .chip-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-1) var(--sp-4); }
+.ev-big--stage .ev-big__card > .chip-scope > .chip-scope__chips { grid-column: 1 / -1; margin-bottom: 0; }
+/* The banner above already says wiring check; on stage the cards keep the dashed edge and lighter numerals only. */
+.ev-big--stage .ev-stamp { display: none; }
+.ev-big--stage .ev-big__title .bi { flex-direction: row; flex-wrap: wrap; gap: var(--sp-3); align-items: baseline; }
+.ev-big--stage .ev-verdict { border-width: 1px; padding: var(--sp-1) var(--sp-3); }
+.ev--stage { gap: var(--sp-3); }
+.ev--stage > .ev__title { font-size: var(--fs-1); }
+.ev--stage > .ev__title .bi { flex-direction: row; flex-wrap: wrap; gap: var(--sp-3); align-items: baseline; }
+.ev--stage .ev-wiring { padding: var(--sp-2) var(--sp-4); gap: var(--sp-1); }
+.ev--stage .ev-wiring__title .bi { flex-direction: row; flex-wrap: wrap; gap: var(--sp-3); align-items: baseline; }
+@media (min-width: 60rem) {
+  .ev-big--stage .ev-big__card { position: relative; }
+  .ev-big--stage .ev-big__card > .chip-scope > .chip-scope__chips { position: absolute; top: var(--sp-3); right: var(--sp-4); }
+}
 
 /* Presenter beats DM8 and DM9 */
 .ev--stage { gap: var(--sp-4); }

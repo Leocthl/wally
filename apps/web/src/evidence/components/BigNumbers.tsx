@@ -11,7 +11,8 @@ import { Verdict } from "./Bars";
 import { EvNum, EvScope } from "./EvNum";
 import { chipsOf, WiringStamp } from "./RateChart";
 
-export const HEADLINE_KEYS = ["overspend_rate", "over_limit_mint_rate", "false_block_rate"] as const;
+/** The cost side (false blocks) sits second, so it is on screen with the first win, never below the fold. */
+export const HEADLINE_KEYS = ["overspend_rate", "false_block_rate", "over_limit_mint_rate"] as const;
 
 function Figure({ b, rate }: { readonly b: BaselineId; readonly rate: Rate | null }): ReactElement {
   const pct = rate ? formatPct(rate.k, rate.n) : null;
