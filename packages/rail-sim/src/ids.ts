@@ -58,13 +58,21 @@ const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const DIGITS = "0123456789";
 const ALPHANUMERIC = `${LETTERS}${DIGITS}`;
 
-/** Random alphanumeric token whose longest digit run is MAX_DIGIT_RUN. */
+/** Fragments no generated id may contain, so a grep for card-detail words (T-I8) never hits a random id. */
+const FORBIDDEN_FRAGMENTS: readonly string[] = ["cvv", "cvc"];
+
+function spellsForbidden(soFar: string, next: string): boolean {
+  return FORBIDDEN_FRAGMENTS.includes(`${soFar}${next}`.slice(-3).toLowerCase());
+}
+
+/** Random alphanumeric token: longest digit run MAX_DIGIT_RUN, no forbidden fragment. */
 function token(random: RandomSource, length: number): string {
   let out = "";
   let run = 0;
   for (let i = 0; i < length; i += 1) {
     const pool = run >= MAX_DIGIT_RUN ? LETTERS : ALPHANUMERIC;
-    const ch = pool.charAt(random.nextInt(pool.length));
+    const picked = pool.charAt(random.nextInt(pool.length));
+    const ch = spellsForbidden(out, picked) ? "x" : picked;
     run = DIGITS.includes(ch) ? run + 1 : 0;
     out += ch;
   }

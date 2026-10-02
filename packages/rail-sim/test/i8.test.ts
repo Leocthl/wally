@@ -73,6 +73,41 @@ describe("T-I8: nothing the rail emits looks like a card", () => {
   });
 });
 
+describe("T-I8: even a worst-case random source cannot make a PAN-like handle", () => {
+  it("a source that always picks the last character of the pool never produces a long digit run", () => {
+    const worst = { nextInt: (max: number) => max - 1 };
+    const ids = createIdSource(worst);
+    expect(longestDigitRun(ids.handle())).toBeLessThanOrEqual(4);
+    expect(longestDigitRun(ids.cardId())).toBeLessThanOrEqual(4);
+    expect(ids.handle()).toMatch(/^hdl_[A-Za-z0-9_-]{16,64}$/);
+    const digitsFirst = { nextInt: () => 0 };
+    expect(longestDigitRun(createIdSource(digitsFirst).handle())).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("T-I8: generated ids never spell a card-detail word", () => {
+  it("a source scripted to spell cvv or CVC gets a safe letter instead", () => {
+    const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const script = (word: string) => {
+      const picks = [...word].map((ch) => pool.indexOf(ch));
+      let i = 0;
+      return { nextInt: () => picks[i++ % picks.length] ?? 0 };
+    };
+    for (const word of ["cvv", "CVV", "cVc", "xcvv"]) {
+      const ids = createIdSource(script(word));
+      expect(ids.handle().toLowerCase()).not.toMatch(/cv[vc]/);
+      expect(ids.cardId().toLowerCase()).not.toMatch(/cv[vc]/);
+    }
+  });
+
+  it("random ids across many seeds never contain cvv or cvc", () => {
+    for (let seed = 0; seed < 3_000; seed += 1) {
+      const ids = createIdSource(seededRandom(seed));
+      expect(`${ids.cardId()} ${ids.handle()}`.toLowerCase()).not.toMatch(/cv[vc]/);
+    }
+  });
+});
+
 describe("id and random sources", () => {
   it("create ids that satisfy the schema patterns", () => {
     const ids = createIdSource(seededRandom(1));
