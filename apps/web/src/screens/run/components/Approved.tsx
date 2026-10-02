@@ -46,14 +46,14 @@ export function Approved({ result, packet, fresh, headingRef, paying, canPay, on
   const unpaid = result.card?.state === "ACTIVE" && !paid;
   return (
     <div className="run-stack" data-run-state="approved">
-      <header className={cx("run-head", fresh && "run-head--enter")} role="status">
+      <div className={cx("run-head", fresh && "run-head--enter")} role="status">
         <Wally state="approved" size={64} decorative />
         <div className="run-head__text">
           <h2 className="run-head__title" tabIndex={-1} ref={headingRef}>{t(paid ? R.paidTitle : R.approvedTitle)}</h2>
           {result.answer === "yes" ? <p className="run-head__note"><SignedMark /> {t(R.youSaidYes)}</p> : null}
           <span className="sr-only">{formatHkd(total)}</span>
         </div>
-      </header>
+      </div>
       <OneOffCard card={result.card} shop={shopName(cart)} enter={fresh} declines={declinesOf(result)} />
       {unpaid && canPay && (!result.busy || paying) ? (
         <Button size="lg" block icon={<Icon name="lock" size={20} />} loading={paying} onClick={onPay}>{t(R.payNow)}</Button>
