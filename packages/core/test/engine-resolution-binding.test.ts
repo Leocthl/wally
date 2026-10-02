@@ -119,6 +119,15 @@ describe("resolution binding failures are DENY R11 with answer_problem naming th
     const broken = { ...decision, cart: { ...decision.cart, total_minor: Number.NaN } };
     const d = decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: answer(decision.id), escalated: broken });
     expect(problemOf(d)).toBe("cart_mismatch");
+    const missing = { ...decision, cart: null } as unknown as Decision;
+    expect(problemOf(decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: answer(decision.id), escalated: missing }))).toBe("cart_mismatch");
+  });
+
+  it("escalation_not_open when the escalated decision has no escalation block at all", () => {
+    const { decision, packet } = escalated();
+    const { escalation: _escalation, ...bare } = decision;
+    const d = decideResolution(packet, UNVERIFIED, { resolves: decision.id, answer: answer(decision.id), escalated: bare as Decision });
+    expect(problemOf(d)).toBe("escalation_not_open");
   });
 
   it("signature_invalid: an answer needs ctx.answerSignatureValid === true", () => {
