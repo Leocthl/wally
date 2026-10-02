@@ -46,7 +46,7 @@ const r2Revoked: Fragment = (i, l) => {
   const status = field(i, "status");
   if (typeof status === "string" && status !== "REVOKED") {
     const s = formatText(status);
-    return zhOr(l, `The packet is not active (status ${s}).`, `利是未生效（狀態 ${s}）。`); // NEEDS-REVIEW zh-HK
+    return zhOr(l, `The budget is not active (status ${s}).`, `預算未生效（狀態 ${s}）。`); // NEEDS-REVIEW zh-HK
   }
   return zhOr(l, "The mandate was revoked.", "授權已被撤銷。"); // NEEDS-REVIEW zh-HK
 };
@@ -64,7 +64,7 @@ const r3: Fragment = (i, l) => {
   const total = formatHkd(field(i, "total_minor"));
   if (field(i, "currency_mismatch") === true) {
     const c = formatText(field(i, "currency"));
-    return zhOr(l, `Cart currency ${c} does not match the packet (HKD).`, `購物車貨幣 ${c} 與利是（HKD）不符。`); // NEEDS-REVIEW zh-HK
+    return zhOr(l, `Cart currency ${c} does not match the budget (HKD).`, `購物車貨幣 ${c} 與預算（HKD）不符。`); // NEEDS-REVIEW zh-HK
   }
   if (field(i, "total_mismatch") === true) {
     const parts = formatHkd(field(i, "computed_total_minor"));
