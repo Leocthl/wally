@@ -60,6 +60,11 @@ function overflowSpec(ctx: Ctx, frame: ReturnType<typeof moneyFrame>, limit: num
 
 const delta = (ctx: Ctx, [lo, hi]: readonly [number, number]): number => ctx.rng.int(lo, hi);
 
+/** A packet whose remaining money equals the per-card ceiling, with no per-purchase rule. SIMULATED large budget. */
+function ceilingFrame(): ReturnType<typeof moneyFrame> {
+  return { budgetMinor: 300_000, remainingMinor: RAIL.ceilingMinor, perPurchase: undefined, allowedMinor: RAIL.ceilingMinor, freeMinor: RAIL.ceilingMinor };
+}
+
 export const SHIPPING_OVERFLOW: readonly VariantDef[] = [
   {
     name: "over_remaining_boundary",
@@ -87,19 +92,26 @@ export const SHIPPING_OVERFLOW: readonly VariantDef[] = [
   {
     name: "over_hard_cap",
     build: (ctx) => {
-      const frame = moneyFrame(ctx, "hard");
+      // Half of the cases also set ask_above below the cap, so the total is over both: DENY outranks ESCALATE, and the
+      // reason is the cap (R4 checks over_cap before ask_above).
+      const both = ctx.rng.chance(1, 2);
+      const frame = moneyFrame(ctx, both ? "hard_ask" : "hard");
       const cap = frame.perPurchase?.hardCapMinor ?? frame.allowedMinor;
-      return overflowSpec(ctx, frame, cap, delta(ctx, BOUNDARY_DELTA), stoppedLabel({ decision: "DENY", rule: "R4", templateId: "R4.over_cap", stop: "S1", note: "shipping pushes the total past the per-purchase hard cap" }));
+      const note = both ? "shipping pushes the total past the hard cap and past ask_above: the cap is the reason, not the question" : "shipping pushes the total past the per-purchase hard cap";
+      return overflowSpec(ctx, frame, cap, delta(ctx, BOUNDARY_DELTA), stoppedLabel({ decision: "DENY", rule: "R4", templateId: "R4.over_cap", stop: "S1", note }));
     },
   },
   {
     name: "exact_remaining",
     build: (ctx) => {
-      const frame = moneyFrame(ctx, "none");
+      // One in three uses a packet whose remaining equals the per-card ceiling [F1.ceiling]: R3 and R5 both sit on their limit.
+      const atCeiling = ctx.rng.chance(1, 3);
+      const frame = atCeiling ? ceilingFrame() : moneyFrame(ctx, "none");
       const shippingMinor = ctx.rng.pick([1_500, 2_500, 3_000] as const);
       const template = pickClean(ctx);
+      const note = atCeiling ? "shipping included, total equals what the packet has left and the per-card ceiling [F1.ceiling]" : "shipping included, total equals what the packet has left";
       return {
-        ...cleanSpec(ctx, frame, frame.remainingMinor, approvedLabel({ note: "shipping included, total equals what the packet has left" })),
+        ...cleanSpec(ctx, frame, frame.remainingMinor, approvedLabel({ note })),
         template,
         unitPriceMinor: frame.remainingMinor - shippingMinor,
         shippingMinor,

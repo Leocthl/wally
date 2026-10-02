@@ -68,11 +68,14 @@ const DAY_S = 86_400;
 export const EXPIRED: readonly VariantDef[] = [
   {
     name: "mandate_expired",
-    build: (ctx) =>
-      onPacket(ctx, {}, stoppedLabel({ decision: "DENY", rule: "R2", templateId: "R2.expired", stop: "S6", note: "the mandate ended before this cart" }), {
-        validUntilOffsetS: -ctx.rng.int(600, 3 * DAY_S),
-        packetStatus: "EXPIRED",
-      }),
+    build: (ctx) => {
+      // The clock decides, not the packet flag: the packet still reads ACTIVE. Half of the cases sit exactly on validUntil,
+      // where the credential ceases to be valid (VC 2.0) and the rail leaves no card window (RailSim requires expiry > now).
+      const onEdge = ctx.rng.chance(1, 2);
+      const behindS = onEdge ? 0 : ctx.rng.int(1, 600);
+      const note = onEdge ? "the cart arrives exactly at validUntil: the mandate has ended" : "the mandate ended seconds before this cart";
+      return onPacket(ctx, {}, stoppedLabel({ decision: "DENY", rule: "R2", templateId: "R2.expired", stop: "S6", note }), { validUntilOffsetS: -behindS });
+    },
   },
   {
     name: "valid_far",
