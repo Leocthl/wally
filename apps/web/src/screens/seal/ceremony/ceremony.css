@@ -1,0 +1,21 @@
+/* Seal ceremony variants (Hold, Signature). Tokens only; motion from --dur tokens. */
+.cer-hold { justify-items: center; }
+.cer-hold__control { position: relative; display: grid; place-items: center; width: 9.25rem; height: 9.25rem; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; touch-action: none; -webkit-touch-callout: none; }
+.cer-hold__control:disabled { cursor: default; }
+.cer-hold__ring { position: absolute; inset: 0; }
+.cer-hold__track { stroke: var(--c-surface-sunken); }
+.cer-hold__fill { stroke: var(--c-primary); }
+.cer-hold[data-sealed] .cer-hold__fill { stroke: var(--c-ok); }
+.cer-hold__lock { position: relative; }
+.cer-hold__label { font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.cer-hold .seal-summary { width: 100%; }
+
+.cer-sign__sheet { position: relative; display: grid; gap: var(--sp-3); }
+.cer-sign__line { display: flex; align-items: flex-end; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4) 0; border-bottom: 2px dashed var(--c-line-strong); color: var(--c-ink-muted); }
+.cer-sign__x { flex: none; margin-bottom: var(--sp-2); }
+.cer-sign__ink { overflow: visible; }
+.cer-sign__path { stroke: var(--c-primary-ink); stroke-dasharray: 1; stroke-dashoffset: 1; }
+.cer-sign[data-sealed] .cer-sign__path { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-ceremony) var(--ease-in-out); }
+.cer-sign__done { position: absolute; right: var(--sp-2); bottom: var(--sp-3); color: var(--c-ok-ink); }
+@media (prefers-reduced-motion: no-preference) { .cer-sign__done { animation: cer-pop var(--dur-base) var(--ease-pop) var(--dur-ceremony) both; } }
+@keyframes cer-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }

@@ -158,7 +158,7 @@
   --dur-sheet: 340ms; --dur-blink: 4200ms; --dur-idle: 2600ms; --dur-shimmer: 1400ms;
   --dur-seal: 420ms; --dur-mint: 320ms; --dur-stop: 200ms; --dur-expire: 800ms;
   /* Leaving is quicker than arriving; a dragged sheet returns; digits roll; siblings enter one step apart. */
-  --dur-exit: 220ms; --dur-settle: 380ms; --dur-roll: 560ms; --dur-stagger: 40ms;
+  --dur-exit: 220ms; --dur-settle: 380ms; --dur-roll: 560ms; --dur-stagger: 40ms; --dur-ceremony: 900ms;
   --dur-hold: 1200ms;                             /* functional, kept under reduced motion */
 }
 @supports (transition-timing-function: linear(0, 1)) {
@@ -168,7 +168,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-sheet: 0ms; --dur-blink: 0ms; --dur-idle: 0ms; --dur-shimmer: 0ms; --dur-exit: 0ms; --dur-settle: 0ms; --dur-roll: 0ms; --dur-stagger: 0ms; }
+  :root { --dur-seal: 0ms; --dur-mint: 0ms; --dur-stop: 0ms; --dur-expire: 0ms; --dur-press: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-sheet: 0ms; --dur-blink: 0ms; --dur-idle: 0ms; --dur-shimmer: 0ms; --dur-exit: 0ms; --dur-settle: 0ms; --dur-roll: 0ms; --dur-stagger: 0ms; --dur-ceremony: 0ms; }
 }
 
 /* LEGACY aliases (phase A): old names resolve to the cool palette so existing screens stay readable. Phase B deletes them. */
