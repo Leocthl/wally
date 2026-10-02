@@ -1,6 +1,9 @@
 // Service worker registration, imported once by main.tsx. Registers only in production builds, in secure contexts
 // (https or localhost) where the browser supports it. A plain-http LAN address is not secure, so the phone-on-LAN booth
 // runs as a normal web page there. Also keeps Chrome's install prompt for "Install Wally" and raises "New version ready".
+// Inside the iOS or Android shell (apps/mobile, Capacitor) none of that applies: no service worker, no install prompt, no
+// update toast (the shell ships the files), and the Android back button is wired instead.
+import { installBackButton, isNative } from "./native";
 import { getPwa, setPwa, type InstallPromptEvent } from "./store";
 
 export interface RegisterEnv {
@@ -9,10 +12,12 @@ export interface RegisterEnv {
   readonly supported: boolean;
   /** Opt-out for debugging: localStorage "wally:sw" = "off". */
   readonly optOut: boolean;
+  /** Running inside the Capacitor shell: the app files ship with the app, so no worker. */
+  readonly native?: boolean;
 }
 
 export function shouldRegister(env: RegisterEnv): boolean {
-  return env.prod && env.secure && env.supported && !env.optOut;
+  return env.prod && env.secure && env.supported && !env.optOut && env.native !== true;
 }
 
 function readOptOut(): boolean {
@@ -29,6 +34,7 @@ export function currentEnv(): RegisterEnv {
     secure: typeof window !== "undefined" && window.isSecureContext,
     supported: typeof navigator !== "undefined" && "serviceWorker" in navigator,
     optOut: typeof window !== "undefined" && readOptOut(),
+    native: isNative(),
   };
 }
 
@@ -42,6 +48,7 @@ export function captureInstallPrompt(target: Window = window): void {
 }
 
 async function showUpdatePrompt(): Promise<void> {
+  if (isNative()) return;
   const { mountUpdatePrompt } = await import("./UpdatePrompt");
   mountUpdatePrompt();
 }
@@ -82,6 +89,12 @@ export async function registerServiceWorker(container: ServiceWorkerContainer = 
 
 function boot(): void {
   if (typeof window === "undefined") return;
+  if (isNative()) {
+    // Already installed as an app: the install row reads "installed", nothing registers, back works on Android.
+    setPwa({ installed: true });
+    installBackButton();
+    return;
+  }
   captureInstallPrompt();
   if (!shouldRegister(currentEnv())) return;
   window.addEventListener("load", () => {
