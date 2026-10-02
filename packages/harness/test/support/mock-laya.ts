@@ -24,6 +24,9 @@ export interface MockResponse {
 
 export type Responder = (req: WireRequest, seen: readonly WireRequest[]) => MockResponse;
 
+/** What GET /health answers, as the real server does. */
+export const MOCK_HEALTH = { status: "ok", loaded: ["typed-decisions"], revisions: { "typed-decisions": "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851" }, device: "mps" } as const;
+
 export interface MockLaya {
   readonly url: string;
   readonly requests: () => readonly WireRequest[];
@@ -55,6 +58,11 @@ export function biasedResponder(probFor: (labels: readonly string[], order: read
 export async function startMockLaya(responder: Responder): Promise<MockLaya> {
   let seen: readonly WireRequest[] = [];
   const server: Server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    if (req.method === "GET" && req.url === "/health") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(MOCK_HEALTH));
+      return;
+    }
     const wire = JSON.parse(await readBody(req)) as WireRequest;
     const out = responder(wire, seen);
     seen = [...seen, wire];

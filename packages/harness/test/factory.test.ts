@@ -10,26 +10,56 @@ const sources = (readdirSync(srcDir, { recursive: true, encoding: "utf8" }) as s
   .filter((f) => f.endsWith(".ts"))
   .map((f) => ({ file: f, text: readFileSync(join(srcDir, f), "utf8") }));
 
+/** Value imports (not `import type`) of `names` from `module`, found by reading the import statements. */
+function valueImports(text: string, module: string): readonly string[] {
+  const statements = [...text.matchAll(/^import\s+(?!type\b)\{([^}]*)\}\s+from\s+"([^"]+)"/gm)];
+  return statements
+    .filter((m) => m[2] === module)
+    .flatMap((m) => (m[1] ?? "").split(",").map((n) => n.trim().replace(/^type\s+.*/, "").split(/\s+as\s+/)[0] ?? ""))
+    .filter((n) => n.length > 0);
+}
+
+// The implementations a swap replaces: only factory.ts may import them as values.
+const SWAPPABLE: readonly (readonly [module: string, names: readonly string[]])[] = [
+  ["@laisee/core/engine", ["engine", "createEngine"]],
+  ["@laisee/core/executor", ["createExecutor"]],
+  ["@laisee/rail-sim", ["RailSim", "MerchantStub"]],
+  ["@laisee/agent/judge", ["SystemOneJudge", "ReplayJudge", "createJudgeFromEnv"]],
+];
+
 describe("factory.ts is the one swap point", () => {
-  it("only the factory names the engine, the fake rail or the fake merchant", () => {
-    const offenders = sources.filter((s) => s.file !== "factory.ts" && /@laisee\/core\/engine|FakeRail|FakeMerchant|FakeJudge|FakePlanner/.test(s.text)).map((s) => s.file);
+  it("only the factory imports the engine, the executor, the rail, the merchant or the judge implementation", () => {
+    const offenders = sources
+      .filter((s) => s.file !== "factory.ts")
+      .flatMap((s) => SWAPPABLE.flatMap(([module, names]) => valueImports(s.text, module).filter((n) => names.includes(n)).map((n) => `${s.file}: ${n}`)));
     expect(offenders).toEqual([]);
   });
 
-  it("rail-sim is imported for types only, anywhere but the factory", () => {
-    const offenders = sources
-      .filter((s) => s.file !== "factory.ts")
-      .filter((s) => /^import\s+(?!type\b)[^;]*from\s+"@laisee\/rail-sim"/m.test(s.text))
-      .map((s) => s.file);
-    expect(offenders).toEqual([]);
+  it("the factory does import all of them, so the check above reads something", () => {
+    const factory = sources.find((s) => s.file === "factory.ts")?.text ?? "";
+    for (const [module, names] of SWAPPABLE.slice(0, 3)) expect(valueImports(factory, module).some((n) => names.includes(n)), module).toBe(true);
+    expect(valueImports(factory, "@laisee/agent/judge")).toContain("SystemOneJudge");
+  });
+
+  it("no fake is imported into src: from core's testing module only the in-memory log store, fixtures and the clean answers", () => {
+    const fakes = sources.filter((s) => /\bFake[A-Z]\w*/.test(s.text.replace(/^\s*\/\/.*$/gm, ""))).map((s) => s.file);
+    expect(fakes).toEqual([]);
+    const allowed = new Set(["MemoryLogStore", "CLEAN_ANSWERS"]);
+    const stray = sources.flatMap((s) => valueImports(s.text, "@laisee/core/testing").filter((n) => !allowed.has(n)).map((n) => `${s.file}: ${n}`));
+    expect(stray).toEqual([]);
   });
 
   it("every dependency can be replaced through createComponents without touching anything else", () => {
-    const rail = () => { throw new Error("replaced"); };
-    const swapped = createComponents({ engine: referenceEngine, createRail: rail as never });
-    expect(swapped.engine).toBe(referenceEngine);
-    expect(swapped.createRail).toBe(rail);
-    expect(Object.keys(createComponents()).sort()).toEqual(["createMerchant", "createRail", "engine", "executor"]);
+    const governed = async () => { throw new Error("replaced"); };
+    const swapped = createComponents({ governed });
+    expect(swapped.governed).toBe(governed);
+    expect(swapped.engine).toBe(createComponents().engine);
+    expect(Object.keys(createComponents()).sort()).toEqual(["engine", "governed", "ungoverned"]);
+  });
+
+  it("the reference engine stays a test file: nothing under src names it", () => {
+    expect(sources.filter((s) => /reference-engine|referenceEngine|referenceDecide/.test(s.text)).map((s) => s.file)).toEqual([]);
+    expect(referenceEngine.decide).toBeTypeOf("function");
   });
 });
 
@@ -43,8 +73,10 @@ describe("describeComponents reads the engine version, it does not trust a decla
     expect(describeComponents("core@0.3.1+9be9705").engine.real).toBe(true);
   });
 
-  it("still lists the stand-ins as not real, so a half-swapped factory cannot claim product evidence", () => {
+  it("lists the cart builder as the one stand-in left, so a result cannot claim product evidence yet", () => {
     const c = describeComponents("core@0.3.1+9be9705");
-    expect([c.rail.real, c.merchant.real, c.executor.real, c.cartBuilder.real, c.judge.real]).toEqual([false, false, false, false, false]);
+    expect([c.engine.real, c.rail.real, c.merchant.real, c.executor.real, c.judge.real]).toEqual([true, true, true, true, true]);
+    expect(c.cartBuilder.real).toBe(false);
+    expect(c.cartBuilder.note).toMatch(/@laisee\/core\/cart/);
   });
 });

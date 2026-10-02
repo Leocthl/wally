@@ -1,14 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createLayaClient, rotationOrder } from "../src/judge/laya-client";
-import { createChoiceJudge } from "../src/judge/choice-judge";
-import { createRecordedClient, createRecordingClient, parseRecording, requestKey, RECORDING_SCHEMA, type RecordingSource } from "../src/judge/recording";
-import { createUnavailableClient } from "../src/judge/unavailable";
+import { callKey, createRecorder, createReplayer, judgeKey, parseRecording, requestKey, RECORDING_SCHEMA, type Recording, type RecordingSource } from "../src/judge/recording";
 import { BUDGET_FIT_QUESTION, JUDGE_QUESTIONS } from "../src/judge/questions";
 import type { ChoiceClient, ChoiceRequest, ChoiceResult } from "../src/judge/choice-client";
 import { generateScenarios } from "../src/scenario/generate";
 import { judgeInputOf } from "../src/systems/b2";
 import { biasedResponder, startMockLaya, type MockLaya, type Responder } from "./support/mock-laya";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import type { JudgePort, JudgeRecord } from "@laisee/core/ports";
 
 let tick = 0;
 const timer = (): number => (tick += 5);
@@ -115,72 +113,38 @@ describe("Laya wire client", () => {
   });
 });
 
-describe("ChoiceJudge (JudgePort over a ChoiceClient)", () => {
-  const scenario = generateScenarios({ seed: 7, n: 1 })[0]!;
-  const input = judgeInputOf(scenario);
-  const ask = { timeoutMs: 1_500 };
-
-  it("maps four answers to a schema-valid OK record", async () => {
-    const mock = await serve(flat);
-    const judge = createChoiceJudge({ client: createLayaClient({ baseUrl: mock.url, timer }), timer, provider: "laya", version: "test" });
-    const record = await judge.assess(input, ask);
-    expect(record.status).toBe("OK");
-    expect(validateJudgeRecord(record).ok).toBe(true);
-    expect(record.answers?.injection_risk.clean).toBeCloseTo(1 / 3, 6);
-  });
-
-  it("turns usage.truncated into ERROR with input_truncated, never an OK record (padding attack, F26)", async () => {
-    const mock = await serve(biasedResponder((l) => l.map(() => 1 / l.length), true));
-    const judge = createChoiceJudge({ client: createLayaClient({ baseUrl: mock.url, timer }), timer, provider: "laya", version: "test" });
-    const record = await judge.assess(input, ask);
-    expect(record).toMatchObject({ status: "ERROR", input_truncated: true });
-    expect(record.answers).toBeUndefined();
-    expect(validateJudgeRecord(record).ok).toBe(true);
-  });
-
-  it("never throws, even if the client does", async () => {
-    const broken: ChoiceClient = { kind: "fake", ask: async () => { throw new Error("boom"); } };
-    const record = await createChoiceJudge({ client: broken, timer, provider: "laya", version: "test" }).assess(input, ask);
-    expect(record.status).toBe("ERROR");
-  });
-
-  it("an unavailable client is an ERROR record, the judge_down path", async () => {
-    const record = await createChoiceJudge({ client: createUnavailableClient(), timer, provider: "laya", version: "test" }).assess(input, ask);
-    expect(record.status).toBe("ERROR");
-  });
-});
-
-describe("recording and replay", () => {
+describe("recording and replay of B0's model calls", () => {
   const source: RecordingSource = { model: "typed-decisions", revision: "55cf4c4e", device: "test", recordedAt: "2026-10-03T02:00:00Z", commit: "abc1234", seed: 7, n: 1 };
+  const emptyRecording: Recording = { schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: {}, failures: {}, judge: {} };
 
   it("replays exactly what a live client answered, keyed by what the model was shown", async () => {
     const mock = await serve(firstBiased);
-    const recording = createRecordingClient(createLayaClient({ baseUrl: mock.url, timer }));
-    const live = await recording.ask(REQUEST, OPTS);
-    const replay = createRecordedClient(JSON.parse(JSON.stringify(recording.snapshot(source))));
-    const again = await replay.ask(REQUEST, OPTS);
+    const recorder = createRecorder();
+    const live = await recorder.client(createLayaClient({ baseUrl: mock.url, timer })).ask(REQUEST, OPTS);
+    const replayer = createReplayer(parseRecording(JSON.parse(JSON.stringify(recorder.snapshot(source)))));
+    const again = await replayer.client().ask(REQUEST, OPTS);
     expect(again.ok).toBe(true);
     if (live.ok && again.ok) {
       expect(again.answers).toEqual(live.answers);
       expect(again.truncated).toBe(live.truncated);
     }
-    expect(replay.stats()).toEqual({ hits: 1, recordedFailures: 0, misses: 0 });
+    expect(replayer.stats()).toEqual({ hits: 1, recordedFailures: 0, misses: 0 });
   });
 
   it("an input it never saw is ERROR (fail closed) and is counted", async () => {
-    const replay = createRecordedClient({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: {}, failures: {} });
-    const result = await replay.ask(REQUEST, OPTS);
+    const replayer = createReplayer(emptyRecording);
+    const result = await replayer.client().ask(REQUEST, OPTS);
     expect(result).toMatchObject({ ok: false, status: "ERROR" });
-    expect(replay.stats()).toEqual({ hits: 0, recordedFailures: 0, misses: 1 });
+    expect(replayer.stats()).toEqual({ hits: 0, recordedFailures: 0, misses: 1 });
   });
 
   it("replays a recorded failure as the same failure", async () => {
-    const recording = createRecordingClient({ kind: "live", ask: async () => ({ ok: false, status: "TIMEOUT", reason: "slow", latencyMs: 1_500 }) });
-    await recording.ask(REQUEST, OPTS);
-    const replay = createRecordedClient(recording.snapshot(source));
-    expect(await replay.ask(REQUEST, OPTS)).toMatchObject({ ok: false, status: "TIMEOUT" });
+    const recorder = createRecorder();
+    await recorder.client({ kind: "live", ask: async () => ({ ok: false, status: "TIMEOUT", reason: "slow", latencyMs: 1_500 }) }).ask(REQUEST, OPTS);
+    const replayer = createReplayer(recorder.snapshot(source));
+    expect(await replayer.client().ask(REQUEST, OPTS)).toMatchObject({ ok: false, status: "TIMEOUT" });
     // A recorded failure is a recording, not a gap: it is counted apart from inputs the recording never saw.
-    expect(replay.stats()).toEqual({ hits: 0, recordedFailures: 1, misses: 0 });
+    expect(replayer.stats()).toEqual({ hits: 0, recordedFailures: 1, misses: 0 });
   });
 
   it("identical requests that got different answers live replay in the same order, so a replay reproduces the run", async () => {
@@ -192,18 +156,20 @@ describe("recording and replay", () => {
         return call === 2 ? { ok: false, status: "TIMEOUT", reason: "slow", latencyMs: 1_500 } : { ok: true, answers: { q: { choice: "a", probabilities: { a: call / 10, b: 1 - call / 10 } } }, truncated: false, latencyMs: call, meta: { model: "m", revision: null } };
       },
     };
-    const recording = createRecordingClient(flaky);
+    const recorder = createRecorder();
+    const recording = recorder.client(flaky);
     const live = [await recording.ask(REQUEST, OPTS), await recording.ask(REQUEST, OPTS), await recording.ask(REQUEST, OPTS)];
-    const replay = createRecordedClient(JSON.parse(JSON.stringify(recording.snapshot(source))));
+    const replayer = createReplayer(parseRecording(JSON.parse(JSON.stringify(recorder.snapshot(source)))));
+    const replay = replayer.client();
     const again = [await replay.ask(REQUEST, OPTS), await replay.ask(REQUEST, OPTS), await replay.ask(REQUEST, OPTS)];
     expect(again.map((r) => (r.ok ? "ok" : r.status))).toEqual(live.map((r) => (r.ok ? "ok" : r.status)));
     const [firstAgain, firstLive] = [again[0], live[0]];
     if (!firstAgain?.ok || !firstLive?.ok) throw new Error("the first call succeeded live, so it must replay as a success");
     expect(firstAgain.answers).toEqual(firstLive.answers);
-    expect(replay.stats()).toEqual({ hits: 2, recordedFailures: 1, misses: 0 });
+    expect(replayer.stats()).toEqual({ hits: 2, recordedFailures: 1, misses: 0 });
     // a fourth identical request was never made live: it is a gap, not a copy of the third
     expect(await replay.ask(REQUEST, OPTS)).toMatchObject({ ok: false, reason: "no recording for this input" });
-    expect(replay.stats().misses).toBe(1);
+    expect(replayer.stats().misses).toBe(1);
   });
 
   it("the key depends on the state and the questions, not on object key order", () => {
@@ -215,8 +181,77 @@ describe("recording and replay", () => {
   it("rejects a file that is not a recording", () => {
     expect(() => parseRecording({ schema: "other" })).toThrow();
     expect(() => parseRecording(null)).toThrow();
-    expect(() => parseRecording({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: { nothex: {} }, failures: {} })).toThrow(/malformed/);
+    expect(() => parseRecording({ ...emptyRecording, answers: { nothex: {} } })).toThrow(/malformed/);
     const hash = "0".repeat(64);
-    expect(() => parseRecording({ schema: RECORDING_SCHEMA, provenance: "RECORDED", source, answers: { [hash]: { answers: {}, truncated: false, latencyMs: 1 } }, failures: {} })).toThrow(/malformed/); // no call number
+    expect(() => parseRecording({ ...emptyRecording, answers: { [hash]: { answers: {}, truncated: false, latencyMs: 1 } } })).toThrow(/malformed/); // no call number
+    expect(() => parseRecording({ ...emptyRecording, judge: { [callKey(hash, 0)]: { status: 7 } } })).toThrow(/malformed/);
+    expect(() => parseRecording({ schema: "laisee.harness.recording/v1", provenance: "RECORDED", source, answers: {}, failures: {} })).toThrow(/schema/);
+  });
+});
+
+describe("recording and replay of the judge's calls (B2)", () => {
+  const source: RecordingSource = { model: "typed-decisions", revision: "55cf4c4e", device: "test", recordedAt: "2026-10-03T02:00:00Z", commit: "abc1234", seed: 7, n: 1 };
+  const input = judgeInputOf(generateScenarios({ seed: 7, n: 1 })[0]!);
+  const ok = (latency: number): JudgeRecord => ({
+    provider: "laya",
+    model: "typed-decisions",
+    version: "test",
+    status: "OK",
+    latency_ms: latency,
+    shadow: false,
+    answers: { scope_fit: { in_scope: 0.9, out_of_scope: 0.1 }, injection_risk: { clean: 0.9, suspicious: 0.05, injection: 0.05 }, seller_risk: { low_risk: 0.9, high_risk: 0.1 }, escalate_or_proceed: { proceed: 0.9, escalate: 0.1 } },
+  });
+  const failing = (): JudgeRecord => ({ provider: "laya", model: "typed-decisions", version: "test", status: "TIMEOUT", latency_ms: 1_500, shadow: false });
+  const scripted = (records: readonly JudgeRecord[]): JudgePort => {
+    let call = 0;
+    return { provider: "laya", assess: async () => records[Math.min(call++, records.length - 1)] as JudgeRecord };
+  };
+
+  it("replays the record the adapter returned, as provider replay, and counts it as a hit", async () => {
+    const recorder = createRecorder();
+    const live = await recorder.judge(scripted([ok(412)])).assess(input, OPTS);
+    const replayer = createReplayer(parseRecording(JSON.parse(JSON.stringify(recorder.snapshot(source)))));
+    const again = await replayer.judge().assess(input, OPTS);
+    expect(again).toEqual({ ...live, provider: "replay" });
+    expect(replayer.stats()).toEqual({ hits: 1, recordedFailures: 0, misses: 0 });
+  });
+
+  it("replays a recorded TIMEOUT as a TIMEOUT, apart from a gap", async () => {
+    const recorder = createRecorder();
+    await recorder.judge(scripted([failing()])).assess(input, OPTS);
+    const replayer = createReplayer(recorder.snapshot(source));
+    expect((await replayer.judge().assess(input, OPTS)).status).toBe("TIMEOUT");
+    expect(replayer.stats()).toEqual({ hits: 0, recordedFailures: 1, misses: 0 });
+  });
+
+  it("a judge input the recording never saw is ERROR and counted as a miss (fail closed)", async () => {
+    const replayer = createReplayer(createRecorder().snapshot(source));
+    expect((await replayer.judge().assess(input, OPTS)).status).toBe("ERROR");
+    expect(replayer.stats().misses).toBe(1);
+  });
+
+  it("identical judge inputs replay in the order they were made, including a failure in the middle", async () => {
+    const recorder = createRecorder();
+    const judge = recorder.judge(scripted([ok(10), failing(), ok(30)]));
+    const live = [await judge.assess(input, OPTS), await judge.assess(input, OPTS), await judge.assess(input, OPTS)];
+    const replay = createReplayer(recorder.snapshot(source)).judge();
+    const again = [await replay.assess(input, OPTS), await replay.assess(input, OPTS), await replay.assess(input, OPTS)];
+    expect(again.map((r) => r.status)).toEqual(live.map((r) => r.status));
+    expect(again.map((r) => r.latency_ms)).toEqual(live.map((r) => r.latency_ms));
+  });
+
+  it("the key follows the judge's input, not the order of its fields", () => {
+    expect(judgeKey({ ...input })).toBe(judgeKey(JSON.parse(JSON.stringify(input))));
+    expect(judgeKey({ ...input, listingText: `${input.listingText} x` })).not.toBe(judgeKey(input));
+  });
+
+  it("a replayed record is a copy: changing it does not change the next replay", async () => {
+    const recorder = createRecorder();
+    await recorder.judge(scripted([ok(10)])).assess(input, OPTS);
+    const recording = recorder.snapshot(source);
+    const first = await createReplayer(recording).judge().assess(input, OPTS);
+    (first.answers as { scope_fit: Record<string, number> }).scope_fit["in_scope"] = 0;
+    const second = await createReplayer(recording).judge().assess(input, OPTS);
+    expect(second.answers?.scope_fit.in_scope).toBeCloseTo(0.9, 9);
   });
 });
