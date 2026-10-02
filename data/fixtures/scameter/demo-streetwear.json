@@ -1,0 +1,17 @@
+{
+  "fixture": "scameter/demo-streetwear",
+  "provenance": "SIMULATED",
+  "schema": "scameter-capture",
+  "note": "SIMULATED Scameter capture (NO_RECORD). Time is a placeholder [F59].",
+  "data": {
+    "capture_ref": "SIM-scameter-demo-streetwear",
+    "subject_domain": "demo-streetwear.example",
+    "state": "NO_RECORD",
+    "captured_at": "2026-10-03T01:35:00Z",
+    "searched": [
+      "url"
+    ],
+    "provenance": "SIMULATED",
+    "note": "No record found. No record is not safe [F6]."
+  }
+}

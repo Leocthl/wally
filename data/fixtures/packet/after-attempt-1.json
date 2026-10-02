@@ -1,0 +1,24 @@
+{
+  "fixture": "packet/after-attempt-1",
+  "provenance": "SIMULATED",
+  "schema": "packet-state",
+  "note": "SIMULATED packet after attempt 1 settled: HK$800 [F20] minus HK$259 [F21] = HK$541 left. Placeholders [F59].",
+  "data": {
+    "mandate_id": "mnd_demoM0",
+    "log_id": "log_demoM0",
+    "budget_minor": 80000,
+    "committed_minor": 0,
+    "spent_minor": 25900,
+    "remaining_minor": 54100,
+    "currency": "HKD",
+    "active_cards": [],
+    "mint_times": [
+      "2026-10-03T02:05:02Z"
+    ],
+    "open_escalations": [],
+    "status": "ACTIVE",
+    "expires_at": "2026-10-31T15:59:59Z",
+    "folded_through_seq": 3,
+    "computed_at": "2026-10-03T02:06:00Z"
+  }
+}

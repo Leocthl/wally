@@ -1,0 +1,45 @@
+{
+  "fixture": "carts/attempt-4",
+  "provenance": "SIMULATED",
+  "schema": "cart",
+  "note": "SIMULATED. Attempt 4 (DM6): total HK$120 [F23]; mint, HK$421 left. Ids and times are placeholders [F59].",
+  "data": {
+    "id": "crt_demoA4",
+    "mandate_id": "mnd_demoM0",
+    "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "proposed_at": "2026-10-03T02:20:00Z",
+    "merchant": {
+      "name": "Demo Apparel (SIMULATED)",
+      "domain": "demo-apparel.example"
+    },
+    "items": [
+      {
+        "title": "Ankle socks, 3 pairs (SIMULATED)",
+        "category": "apparel",
+        "qty": 1,
+        "unit_price_minor": 12000
+      }
+    ],
+    "subtotal_minor": 12000,
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "fx": null,
+    "total_minor": 12000,
+    "currency": "HKD",
+    "listing": {
+      "url": "https://demo-apparel.example/p/socks",
+      "text_sha256": "afdd48e5723c96f959e48036a326d55313959a8af5c091e41c7bd27d9475d699",
+      "observed_at": "2026-10-03T02:19:40Z"
+    },
+    "price_observed_at": "2026-10-03T02:19:40Z",
+    "scameter": {
+      "state": "NO_RECORD",
+      "capture_ref": "SIM-scameter-demo-apparel",
+      "captured_at": "2026-10-03T01:30:00Z",
+      "searched": [
+        "url"
+      ]
+    },
+    "provenance": "SIMULATED"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "fixture": "listings/off-category-earbuds",
+  "provenance": "SIMULATED",
+  "schema": "listing-record",
+  "note": "SIMULATED listing for off-category: amount is a SIMULATED placeholder with no register row yet; off-category for M0 (R6). No real shop or person; times are placeholders [F59].",
+  "data": {
+    "id": "lst_offCatEarbuds",
+    "url": "https://demo-gadgets.example/p/earbuds",
+    "merchant": {
+      "name": "Demo Gadgets (SIMULATED)",
+      "domain": "demo-gadgets.example"
+    },
+    "items": [
+      {
+        "title": "Wireless earbuds (SIMULATED)",
+        "category": "electronics",
+        "unit_price_minor": 39900
+      }
+    ],
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "currency": "HKD",
+    "seller": "Demo Gadgets (SIMULATED), shop since 2018",
+    "text": "Wireless earbuds (SIMULATED). Bluetooth, charging case, 24 h battery. Free shipping.",
+    "observed_at": "2026-10-03T02:22:00Z",
+    "scameter_ref": "SIM-scameter-demo-gadgets",
+    "provenance": "SIMULATED"
+  }
+}

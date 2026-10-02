@@ -1,0 +1,22 @@
+{
+  "fixture": "planner/attempt-3",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for attempt-3 (replay backend). Trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "attempt-3",
+    "listing_ids": [
+      "lst_demoJacket"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-streetwear.example/p/jacket",
+      "items": [
+        {
+          "title": "Denim jacket (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Denim jacket; shipping applies."
+    }
+  }
+}

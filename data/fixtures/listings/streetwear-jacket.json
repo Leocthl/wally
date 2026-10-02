@@ -1,0 +1,29 @@
+{
+  "fixture": "listings/streetwear-jacket",
+  "provenance": "SIMULATED",
+  "schema": "listing-record",
+  "note": "SIMULATED listing for attempt-3: subtotal HK$520 + shipping HK$30 = HK$550 [F22]. No real shop or person; times are placeholders [F59].",
+  "data": {
+    "id": "lst_demoJacket",
+    "url": "https://demo-streetwear.example/p/jacket",
+    "merchant": {
+      "name": "Demo Streetwear (SIMULATED)",
+      "domain": "demo-streetwear.example"
+    },
+    "items": [
+      {
+        "title": "Denim jacket (SIMULATED)",
+        "category": "apparel",
+        "unit_price_minor": 52000
+      }
+    ],
+    "shipping_minor": 3000,
+    "fees_minor": 0,
+    "currency": "HKD",
+    "seller": "Demo Streetwear (SIMULATED), shop since 2020, 14-day returns",
+    "text": "Denim jacket (SIMULATED). Mid-weight denim, button front, relaxed fit. Shipping HK$30. Returns within 14 days if unworn.",
+    "observed_at": "2026-10-03T02:11:40Z",
+    "scameter_ref": "SIM-scameter-demo-streetwear",
+    "provenance": "SIMULATED"
+  }
+}

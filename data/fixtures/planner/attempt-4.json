@@ -1,0 +1,22 @@
+{
+  "fixture": "planner/attempt-4",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for attempt-4 (replay backend). Trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "attempt-4",
+    "listing_ids": [
+      "lst_demoSocks"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/socks",
+      "items": [
+        {
+          "title": "Ankle socks, 3 pairs (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Socks fit the packet."
+    }
+  }
+}

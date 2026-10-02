@@ -1,0 +1,45 @@
+{
+  "fixture": "carts/attempt-1",
+  "provenance": "SIMULATED",
+  "schema": "cart",
+  "note": "SIMULATED. Attempt 1 (DM2): total HK$259 [F21]; all rules pass, mint. Ids and times are placeholders [F59].",
+  "data": {
+    "id": "crt_demoA1",
+    "mandate_id": "mnd_demoM0",
+    "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "proposed_at": "2026-10-03T02:05:00Z",
+    "merchant": {
+      "name": "Demo Apparel (SIMULATED)",
+      "domain": "demo-apparel.example"
+    },
+    "items": [
+      {
+        "title": "Cotton tee (SIMULATED)",
+        "category": "apparel",
+        "qty": 1,
+        "unit_price_minor": 25900
+      }
+    ],
+    "subtotal_minor": 25900,
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "fx": null,
+    "total_minor": 25900,
+    "currency": "HKD",
+    "listing": {
+      "url": "https://demo-apparel.example/p/tee",
+      "text_sha256": "04afd796692e2dcce0e5b2c02e4f917939a894409bc6196745fe1c4ef4f1e4d0",
+      "observed_at": "2026-10-03T02:04:00Z"
+    },
+    "price_observed_at": "2026-10-03T02:04:00Z",
+    "scameter": {
+      "state": "NO_RECORD",
+      "capture_ref": "SIM-scameter-demo-apparel",
+      "captured_at": "2026-10-03T01:30:00Z",
+      "searched": [
+        "url"
+      ]
+    },
+    "provenance": "SIMULATED"
+  }
+}

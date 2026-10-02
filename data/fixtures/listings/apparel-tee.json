@@ -1,0 +1,29 @@
+{
+  "fixture": "listings/apparel-tee",
+  "provenance": "SIMULATED",
+  "schema": "listing-record",
+  "note": "SIMULATED listing for attempt-1: HK$259 [F21]. No real shop or person; times are placeholders [F59].",
+  "data": {
+    "id": "lst_demoTee",
+    "url": "https://demo-apparel.example/p/tee",
+    "merchant": {
+      "name": "Demo Apparel (SIMULATED)",
+      "domain": "demo-apparel.example"
+    },
+    "items": [
+      {
+        "title": "Cotton tee (SIMULATED)",
+        "category": "apparel",
+        "unit_price_minor": 25900
+      }
+    ],
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "currency": "HKD",
+    "seller": "Demo Apparel (SIMULATED), shop since 2019, 30-day returns",
+    "text": "Cotton tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns.",
+    "observed_at": "2026-10-03T02:04:00Z",
+    "scameter_ref": "SIM-scameter-demo-apparel",
+    "provenance": "SIMULATED"
+  }
+}

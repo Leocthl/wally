@@ -1,0 +1,29 @@
+{
+  "fixture": "listings/apparel-socks",
+  "provenance": "SIMULATED",
+  "schema": "listing-record",
+  "note": "SIMULATED listing for attempt-4: HK$120 [F23]. No real shop or person; times are placeholders [F59].",
+  "data": {
+    "id": "lst_demoSocks",
+    "url": "https://demo-apparel.example/p/socks",
+    "merchant": {
+      "name": "Demo Apparel (SIMULATED)",
+      "domain": "demo-apparel.example"
+    },
+    "items": [
+      {
+        "title": "Ankle socks, 3 pairs (SIMULATED)",
+        "category": "apparel",
+        "unit_price_minor": 12000
+      }
+    ],
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "currency": "HKD",
+    "seller": "Demo Apparel (SIMULATED), shop since 2019, 30-day returns",
+    "text": "Ankle socks, 3 pairs (SIMULATED). Cotton blend. Free shipping. 30-day returns.",
+    "observed_at": "2026-10-03T02:19:40Z",
+    "scameter_ref": "SIM-scameter-demo-apparel",
+    "provenance": "SIMULATED"
+  }
+}

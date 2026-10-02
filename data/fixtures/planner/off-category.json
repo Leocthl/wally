@@ -1,0 +1,13 @@
+{
+  "fixture": "planner/off-category",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for off-category (replay backend). Trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "off-category",
+    "listing_ids": [
+      "lst_offCatEarbuds"
+    ],
+    "proposal": null
+  }
+}

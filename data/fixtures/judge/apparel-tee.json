@@ -1,0 +1,33 @@
+{
+  "fixture": "judge/apparel-tee",
+  "provenance": "SIMULATED",
+  "schema": "judge-record",
+  "note": "SIMULATED recorded judge answers for listings/apparel-tee (clean), served by the replay provider. Shaped like Laya output; values are placeholders, not measurements of this listing [F59].",
+  "data": {
+    "provider": "replay",
+    "model": "typed-decisions",
+    "version": "recorded@55cf4c4e",
+    "status": "OK",
+    "latency_ms": 291,
+    "shadow": false,
+    "answers": {
+      "scope_fit": {
+        "in_scope": 0.7412,
+        "out_of_scope": 0.2588
+      },
+      "injection_risk": {
+        "clean": 0.6231,
+        "suspicious": 0.2214,
+        "injection": 0.1555
+      },
+      "seller_risk": {
+        "low_risk": 0.7034,
+        "high_risk": 0.2966
+      },
+      "escalate_or_proceed": {
+        "proceed": 0.6873,
+        "escalate": 0.3127
+      }
+    }
+  }
+}

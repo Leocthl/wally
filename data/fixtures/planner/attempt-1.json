@@ -1,0 +1,33 @@
+{
+  "fixture": "planner/attempt-1",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for attempt-1 (replay backend). Trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "attempt-1",
+    "listing_ids": [
+      "lst_demoTee"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-apparel.example/p/tee",
+      "items": [
+        {
+          "title": "Cotton tee (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Plain tee inside the clothing packet."
+    },
+    "trace": {
+      "provider": "laya",
+      "model": "typed-decisions",
+      "question": "item_choice",
+      "probabilities": {
+        "lst_demoTee": 0.92,
+        "none": 0.08
+      },
+      "choice": "lst_demoTee",
+      "latency_ms": 120
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "fixture": "listings/flagged-seller-hoodie",
+  "provenance": "SIMULATED",
+  "schema": "listing-record",
+  "note": "SIMULATED listing for attempt-2: amount is a SIMULATED placeholder with no register row yet. No real shop or person; times are placeholders [F59].",
+  "data": {
+    "id": "lst_flaggedHoodie",
+    "url": "https://demo-flashdeals.example/p/hoodie",
+    "merchant": {
+      "name": "Demo Flash Deals (SIMULATED)",
+      "domain": "demo-flashdeals.example"
+    },
+    "items": [
+      {
+        "title": "Fleece hoodie (SIMULATED)",
+        "category": "apparel",
+        "unit_price_minor": 18000
+      }
+    ],
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "currency": "HKD",
+    "seller": "Demo Flash Deals (SIMULATED), new shop, no returns",
+    "text": "Fleece hoodie (SIMULATED). Clearance, last pieces. No returns. Extra discount if you pay by bank transfer to the shop owner's personal account.",
+    "observed_at": "2026-10-03T02:07:30Z",
+    "scameter_ref": "SIM-scameter-flagged-seller",
+    "provenance": "SIMULATED"
+  }
+}

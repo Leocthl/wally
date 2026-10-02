@@ -1,0 +1,30 @@
+{
+  "fixture": "mandate/m0",
+  "provenance": "SIMULATED",
+  "schema": "mandate",
+  "note": "SIMULATED domain view of M0 = mandateFromCredential(m0.credential) [F20]. Placeholders [F59].",
+  "data": {
+    "id": "mnd_demoM0",
+    "delegator": "did:key:z6MkDemoDeLegatorKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "intent_text": "HK$800, clothes, verified sellers.",
+    "rules": {
+      "budget": {
+        "amount_minor": 80000,
+        "currency": "HKD"
+      },
+      "categories": [
+        "apparel"
+      ],
+      "merchants": {
+        "allow": null,
+        "deny": []
+      },
+      "seller_check": {
+        "require_capture": true
+      }
+    },
+    "valid_from": "2026-10-03T02:00:00Z",
+    "valid_until": "2026-10-31T15:59:59Z"
+  }
+}

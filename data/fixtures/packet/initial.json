@@ -1,0 +1,22 @@
+{
+  "fixture": "packet/initial",
+  "provenance": "SIMULATED",
+  "schema": "packet-state",
+  "note": "SIMULATED packet right after sealing M0: HK$800 left [F20]. Placeholders [F59].",
+  "data": {
+    "mandate_id": "mnd_demoM0",
+    "log_id": "log_demoM0",
+    "budget_minor": 80000,
+    "committed_minor": 0,
+    "spent_minor": 0,
+    "remaining_minor": 80000,
+    "currency": "HKD",
+    "active_cards": [],
+    "mint_times": [],
+    "open_escalations": [],
+    "status": "ACTIVE",
+    "expires_at": "2026-10-31T15:59:59Z",
+    "folded_through_seq": 0,
+    "computed_at": "2026-10-03T02:00:01Z"
+  }
+}

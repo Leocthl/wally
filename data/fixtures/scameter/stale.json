@@ -1,0 +1,17 @@
+{
+  "fixture": "scameter/stale",
+  "provenance": "SIMULATED",
+  "schema": "scameter-capture",
+  "note": "SIMULATED Scameter capture (NO_RECORD). Time is a placeholder [F59].",
+  "data": {
+    "capture_ref": "SIM-scameter-stale",
+    "subject_domain": "demo-vintage.example",
+    "state": "NO_RECORD",
+    "captured_at": "2026-10-01T09:00:00Z",
+    "searched": [
+      "url"
+    ],
+    "provenance": "SIMULATED",
+    "note": "Older than the R9 max capture age [F52], so R9 treats it as unverified."
+  }
+}

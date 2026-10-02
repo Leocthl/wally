@@ -1,0 +1,46 @@
+{
+  "fixture": "carts/attempt-2",
+  "provenance": "SIMULATED",
+  "schema": "cart",
+  "note": "SIMULATED. Attempt 2 (DM3): flagged seller, stop S2 by R9; amount is a SIMULATED placeholder with no register row yet. Ids and times are placeholders [F59].",
+  "data": {
+    "id": "crt_demoA2",
+    "mandate_id": "mnd_demoM0",
+    "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "proposed_at": "2026-10-03T02:08:00Z",
+    "merchant": {
+      "name": "Demo Flash Deals (SIMULATED)",
+      "domain": "demo-flashdeals.example"
+    },
+    "items": [
+      {
+        "title": "Fleece hoodie (SIMULATED)",
+        "category": "apparel",
+        "qty": 1,
+        "unit_price_minor": 18000
+      }
+    ],
+    "subtotal_minor": 18000,
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "fx": null,
+    "total_minor": 18000,
+    "currency": "HKD",
+    "listing": {
+      "url": "https://demo-flashdeals.example/p/hoodie",
+      "text_sha256": "7a4d08d61fdf98cea36d0b0a29c73c914f6e7e0a095e79e9ea0f68791016030f",
+      "observed_at": "2026-10-03T02:07:30Z"
+    },
+    "price_observed_at": "2026-10-03T02:07:30Z",
+    "scameter": {
+      "state": "FLAGGED",
+      "capture_ref": "SIM-scameter-flagged-seller",
+      "captured_at": "2026-10-03T01:40:00Z",
+      "searched": [
+        "url",
+        "payment_account"
+      ]
+    },
+    "provenance": "SIMULATED"
+  }
+}

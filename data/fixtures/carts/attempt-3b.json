@@ -1,0 +1,45 @@
+{
+  "fixture": "carts/attempt-3b",
+  "provenance": "SIMULATED",
+  "schema": "cart",
+  "note": "SIMULATED. Attempt 3b (DM5): injected listing text, stop S3 by R10; amount is a SIMULATED placeholder with no register row yet. Ids and times are placeholders [F59].",
+  "data": {
+    "id": "crt_demoA3b",
+    "mandate_id": "mnd_demoM0",
+    "agent": "did:key:z6MkDemoAgentKeyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "proposed_at": "2026-10-03T02:14:00Z",
+    "merchant": {
+      "name": "Demo Outlet (SIMULATED)",
+      "domain": "demo-outlet.example"
+    },
+    "items": [
+      {
+        "title": "Graphic tee (SIMULATED)",
+        "category": "apparel",
+        "qty": 1,
+        "unit_price_minor": 15000
+      }
+    ],
+    "subtotal_minor": 15000,
+    "shipping_minor": 0,
+    "fees_minor": 0,
+    "fx": null,
+    "total_minor": 15000,
+    "currency": "HKD",
+    "listing": {
+      "url": "https://demo-outlet.example/p/graphic-tee",
+      "text_sha256": "e6d275321fd078bde339023b56922c136e03f16090bd93baf2dcb69afbe721ec",
+      "observed_at": "2026-10-03T02:13:40Z"
+    },
+    "price_observed_at": "2026-10-03T02:13:40Z",
+    "scameter": {
+      "state": "NO_RECORD",
+      "capture_ref": "SIM-scameter-demo-outlet",
+      "captured_at": "2026-10-03T01:45:00Z",
+      "searched": [
+        "url"
+      ]
+    },
+    "provenance": "SIMULATED"
+  }
+}

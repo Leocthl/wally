@@ -1,0 +1,22 @@
+{
+  "fixture": "planner/attempt-2",
+  "provenance": "SIMULATED",
+  "schema": "planner-replay",
+  "note": "SIMULATED recorded planner output for attempt-2 (replay backend). Trace probabilities are placeholders [F59].",
+  "data": {
+    "scenario": "attempt-2",
+    "listing_ids": [
+      "lst_flaggedHoodie"
+    ],
+    "proposal": {
+      "listing_url": "https://demo-flashdeals.example/p/hoodie",
+      "items": [
+        {
+          "title": "Fleece hoodie (SIMULATED)",
+          "qty": 1
+        }
+      ],
+      "note": "Cheap hoodie on clearance."
+    }
+  }
+}

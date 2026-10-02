@@ -1,0 +1,18 @@
+{
+  "fixture": "scameter/flagged-seller",
+  "provenance": "SIMULATED",
+  "schema": "scameter-capture",
+  "note": "SIMULATED Scameter capture (FLAGGED). Time is a placeholder [F59].",
+  "data": {
+    "capture_ref": "SIM-scameter-flagged-seller",
+    "subject_domain": "demo-flashdeals.example",
+    "state": "FLAGGED",
+    "captured_at": "2026-10-03T01:40:00Z",
+    "searched": [
+      "url",
+      "payment_account"
+    ],
+    "provenance": "SIMULATED",
+    "note": "SIMULATED flag: no real seller, phone, FPS id or page name."
+  }
+}
