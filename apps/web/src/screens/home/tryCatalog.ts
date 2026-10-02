@@ -3,7 +3,7 @@
 import type { ScenarioId } from "../../api/types";
 import type { IconName } from "../../ui/icons";
 
-export type TryGroup = "buy" | "stops" | "card" | "budget";
+export type TryGroup = "buy" | "stops" | "card" | "budget" | "family";
 export type TryTone = "primary" | "stop" | "warn" | "accent" | "neutral";
 /** Every booth scenario except the presenter's single steps. */
 export type TryScenario = Exclude<ScenarioId, "mint" | "pay">;
@@ -16,6 +16,8 @@ export interface TryItem {
 }
 
 export const TRY_GROUPS: readonly TryGroup[] = ["buy", "stops", "card", "budget"];
+/** Mum's budget: shown only when the booth offers family budgets (info.features.family). */
+export const FAMILY_GROUP: TryGroup = "family";
 
 export const TRY_ITEMS: readonly TryItem[] = [
   { id: "normal", group: "buy", icon: "tag", tone: "primary" },
@@ -31,6 +33,8 @@ export const TRY_ITEMS: readonly TryItem[] = [
   { id: "drift", group: "card", icon: "tag", tone: "accent" },
   { id: "timeout", group: "card", icon: "clock", tone: "accent" },
   { id: "revoke", group: "budget", icon: "lock", tone: "neutral" },
+  { id: "family_ok", group: "family", icon: "shieldCheck", tone: "primary" },
+  { id: "family_over", group: "family", icon: "shieldAlert", tone: "stop" },
 ];
 
 /** Scenarios whose result is on the Budget screen (cards and Cancel this budget), not on Wally. */

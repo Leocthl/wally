@@ -6,7 +6,7 @@ import { UI } from "../../i18n/ui";
 import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
-import { TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
+import { FAMILY_GROUP, TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
 
 export interface TryAskingProps {
   readonly onRun: (id: ScenarioId) => void;
@@ -16,9 +16,11 @@ export interface TryAskingProps {
   readonly headingLevel?: 2 | 3;
   /** "cards" with a one-line description (Budget); "pills" with the title only (the Ask sheet's shortcuts). */
   readonly variant?: "cards" | "pills";
+  /** Add Mum's budget (two scenarios) when the booth offers family budgets. Default off. */
+  readonly family?: boolean;
 }
 
-function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<TryAskingProps>): ReactElement {
+function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<Omit<TryAskingProps, "family">>): ReactElement {
   const { t } = useLocale();
   const id = useId();
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -40,10 +42,10 @@ function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: 
   );
 }
 
-export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards" }: TryAskingProps): ReactElement {
+export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false }: TryAskingProps): ReactElement {
   return (
     <div className={cx("home-try", `home-try--${variant}`)}>
-      {TRY_GROUPS.map((g) => (
+      {(family ? [...TRY_GROUPS, FAMILY_GROUP] : TRY_GROUPS).map((g) => (
         <Group key={g} group={g} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
       ))}
     </div>

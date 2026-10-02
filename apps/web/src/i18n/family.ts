@@ -16,7 +16,9 @@ export const FAMILY = {
   loading: label("Looking up what Mum allows", "查緊媽媽容許的上限"), // NEEDS-REVIEW
   unavailable: label("Can't reach Mum's budget right now. Your own budget still works.", "暫時連唔到媽媽的預算。你自己的預算仍然用得。"), // NEEDS-REVIEW
   fromMum: label("From Mum's budget", "來自媽媽的預算"), // NEEDS-REVIEW
-  /** The server's refusal, worded here when the Seal screen cannot cap it up front. */
+  /** After a refused seal (the "Ask for more than Mum allows" card): the cap sentence, then this. */
+  refusedNote: label("Nothing was sealed. Your budget stays as it was.", "冇鎖定任何預算，你的預算保持不變。"), // NEEDS-REVIEW
+  /** The same, when Mum's ceiling could not be read. */
   refused: label("Mum's budget doesn't allow that. Nothing was sealed.", "媽媽的預算唔容許咁做，冇鎖定任何預算。"), // NEEDS-REVIEW
 } as const;
 

@@ -19,6 +19,8 @@ export interface RulesEditorProps {
   readonly today: string;
   readonly onChange: (next: RulesForm) => void;
   readonly onTouch: (field: FieldName) => void;
+  /** Words that show beside a field at once, ahead of its own error (a limit set by someone else). */
+  readonly notes?: Partial<Record<FieldName, string>>;
 }
 
 function errorText(errors: FormErrors, shown: ReadonlySet<FieldName>, field: FieldName, t: (p: LabelPair) => string): string | undefined {
@@ -83,9 +85,9 @@ function ExtraAmount({ field, label, value, error, onValue, onRemove, onTouch, p
   );
 }
 
-export function RulesEditor({ form, errors, shown, today, onChange, onTouch }: RulesEditorProps): ReactElement {
+export function RulesEditor({ form, errors, shown, today, onChange, onTouch, notes }: RulesEditorProps): ReactElement {
   const { t } = useLocale();
-  const err = (f: FieldName): string | undefined => errorText(errors, shown, f, t);
+  const err = (f: FieldName): string | undefined => notes?.[f] ?? errorText(errors, shown, f, t);
   return (
     <div className="seal-rules">
       <div className="seal-field" data-field="amount">

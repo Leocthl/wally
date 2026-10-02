@@ -14,6 +14,7 @@ import { useLocale, type Locale } from "../../ui/locale";
 import { attempt } from "../../shell/actions";
 import { DescribeStep } from "./DescribeStep";
 import { EXAMPLES } from "./examples";
+import { useFamilySeal } from "./FamilyChoice";
 import { SealLock } from "./SealLock";
 import { DoneStep, MeetStep, ReviewStep } from "./SealSteps";
 import { applySentence, EMPTY_FORM, formFromRules, hkDay, isValid, monthEndDay, toSealRequest, validate, type FieldName, type RulesForm, type SuggestRules } from "./sealModel";
@@ -75,6 +76,7 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
   const top = useRef<HTMLDivElement>(null);
   const errors = validate(form, new Date());
   const replacing = booth.state.mandate !== null;
+  const family = useFamilySeal(form.amount);
 
   useEffect(() => {
     document.documentElement.scrollTop = 0;
@@ -87,8 +89,8 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
 
   const next = (): void => {
     setSubmitted(true);
-    if (!isValid(errors)) {
-      const first = FIELD_ORDER.find((f) => errors[f] !== undefined);
+    if (!isValid(errors) || family.over) {
+      const first = FIELD_ORDER.find((f) => errors[f] !== undefined || family.notes[f] !== undefined);
       if (first) focusField(first);
       return;
     }
@@ -97,12 +99,12 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
 
   const seal = async (): Promise<void> => {
     const at = new Date();
-    if (!isValid(validate(form, at))) {
+    if (!isValid(validate(form, at)) || family.over) {
       setStep("describe");
       return;
     }
     setSealing(true);
-    const ok = await attempt(booth, () => booth.api.seal(toSealRequest(sentence, form, at)));
+    const ok = await attempt(booth, () => booth.api.seal(family.apply(toSealRequest(sentence, form, at))));
     setSealing(false);
     if (!ok) return;
     setSealedForm(form);
@@ -119,6 +121,7 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
         <>
           <Header title={title} step={step} onBack={() => (start.step === "meet" ? setStep("meet") : navigate("budget"))} />
           <p className="seal-lead seal-screen__lead">{t(UI["seal.describeLead"])}</p>
+          {family.choice}
           <DescribeStep
             sentence={sentence}
             form={form}
@@ -127,6 +130,7 @@ function SealFlow({ suggestRules }: { readonly suggestRules?: SuggestRules }): R
             now={now}
             today={hkDay(now.toISOString())}
             incomplete={incomplete}
+            notes={family.notes}
             {...(suggestRules ? { suggestRules } : {})}
             onSentence={(text, next, complete) => {
               setSentence(text);

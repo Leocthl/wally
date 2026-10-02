@@ -44,6 +44,7 @@ function ruleTags(mandate: Mandate, t: (p: { readonly en: string; readonly zh: s
   const { rules } = mandate;
   const per = rules.per_purchase;
   return [
+    ...(mandate.parent === undefined ? [] : [{ key: "mum", icon: <Icon name="shieldCheck" size={14} />, text: t(UI.family.fromMum) }]),
     { key: "what", icon: <Icon name="tag" size={14} />, text: categoriesText(rules.categories, t) },
     { key: "sellers", icon: <Icon name="store" size={14} />, text: t(UI[rules.seller_check.require_capture ? "home.ruleVerified" : "home.ruleAnySeller"]) },
     ...(per?.ask_above_minor === undefined ? [] : [{ key: "ask", icon: <Icon name="hand" size={14} />, text: <Fill text={t(UI["home.ruleAsk"])} slots={{ amount: <Money minor={per.ask_above_minor} prov={PROV} /> }} /> }]),
