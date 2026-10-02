@@ -27,6 +27,9 @@ export default defineConfig({
   },
   projects: [
     { name: "phone", use: { ...devices["Pixel 7"] } },
+    // The narrowest and the widest phone the screens are drawn for (the checks in e2e/a11y.spec.ts set their own widths too).
+    { name: "phone-small", use: { ...devices["Pixel 7"], viewport: { width: 360, height: 740 } } },
+    { name: "phone-large", use: { ...devices["Pixel 7"], viewport: { width: 430, height: 932 } } },
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } } },
   ],
 });

@@ -1,6 +1,7 @@
 /* Seal flow (lane b-shell). Tokens only. The seal moment is a padlock that closes and a shield with one soft pulse;
    every duration is a --dur token, so reduced motion shows the closed lock at once. */
-.seal-screen { display: grid; gap: var(--sp-4); }
+/* The arriving pane starts a few pixels to one side: clip (not scroll) so the page never gains a sideways scrollbar mid-slide. */
+.seal-screen { display: grid; gap: var(--sp-4); overflow-x: clip; }
 .seal-screen > * { min-width: 0; }
 /* A step's pane: the step that arrives slides a little in from the side it comes from (and a Back from the other side). */
 .seal-pane { --pane-from: 0.875rem; display: grid; gap: var(--sp-4); }

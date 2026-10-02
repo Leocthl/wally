@@ -80,6 +80,10 @@
 .shell-banners { display: grid; gap: var(--sp-2); padding: var(--sp-3) max(var(--gutter), var(--safe-right)) 0 max(var(--gutter), var(--safe-left)); }
 .shell-banner { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-2) var(--sp-1) var(--sp-2) var(--sp-3); border-radius: var(--r-md); color: var(--c-ink); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .shell-banner > svg { flex: none; margin-top: var(--sp-3); }
+@media (prefers-reduced-motion: no-preference) {
+  .shell-banner { animation: shell-banner-in var(--dur-base) var(--ease-out) both; }
+}
+@keyframes shell-banner-in { from { opacity: 0; transform: translateY(-0.5rem); } to { opacity: 1; transform: none; } }
 .shell-banner--warn { background: var(--c-warn-tint); }
 .shell-banner--warn > svg { color: var(--c-warn-ink); }
 .shell-banner--stop { background: var(--c-stop-tint); }
