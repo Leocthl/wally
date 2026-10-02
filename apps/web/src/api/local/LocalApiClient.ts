@@ -14,6 +14,7 @@ import type {
   CompileResult,
   CompileRulesRequest,
   EscalationAnswerRequest,
+  FamilySummary,
   LogView,
   ProposeRequest,
   RevokeResult,
@@ -124,6 +125,11 @@ export class LocalApiClient implements ApiClient {
   /** The fixed rules parser (source "rules"): no model runs on the device. */
   async compileRules(req: CompileRulesRequest): Promise<CompileResult> {
     return this.#backend.compileRules(parseCompileRequest(asBody(req)));
+  }
+
+  /** Mum's budget for a family seal; her (SIMULATED) credential is made in this page on the first call. */
+  family(): Promise<FamilySummary> {
+    return this.#backend.family();
   }
 
   verify(): Promise<VerifyOutcome> {

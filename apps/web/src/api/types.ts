@@ -2,6 +2,7 @@
 // HttpApiClient talks to the booth server (live mode); LocalApiClient runs the same real stack on the device with
 // recorded model answers (on-device mode); MockApiClient is a UI-test double.
 import type { CardRecord, Cart, CompiledRules, Decision, LogEntry, Mandate, PacketState } from "@laisee/core/generated";
+import type { ParentSummary } from "@laisee/core/family";
 import type { CardEvent, Checkpoint, JudgeRecord, TemplateId, VerifyFailure, VerifyResult } from "@laisee/core/ports";
 
 export type { CardEvent, CardRecord, Cart, CompiledRules, Decision, JudgeRecord, LogEntry, Mandate, PacketState, TemplateId };
@@ -23,6 +24,8 @@ export const SCENARIO_IDS = [
   "drift",
   "timeout",
   "off_category",
+  "family_ok",
+  "family_over",
 ] as const;
 export type ScenarioId = (typeof SCENARIO_IDS)[number];
 
@@ -71,11 +74,30 @@ export type TraceEvent =
 export type Unsubscribe = () => void;
 export type TraceListener = (event: TraceEvent) => void;
 
+/** Fund a budget from a parent's: the parent's ceiling caps it (caps compose). Only "mum" exists in the demo. */
+export interface FamilySeal {
+  readonly parent: "mum";
+}
+
 export interface SealRequest {
   readonly intentText: string;
   readonly rules: CompiledRules;
   /** RFC 3339 UTC. The credential's validUntil. */
   readonly validUntil: string;
+  /**
+   * Optional (check info().features.family). Present: the budget is Mei's share of Mum's, sealed only when it is inside
+   * Mum's rules, otherwise refused with EXCEEDS_PARENT and details { field, requested, allowed }; nothing is sealed.
+   */
+  readonly family?: FamilySeal;
+}
+
+/**
+ * Mum's budget as a family seal sees it. Money in integer minor units. ceilingMinor is the most one budget can take: a new
+ * seal replaces the family budget held now and gives its share back. allocatedMinor is that held share (0 when the budget
+ * held now is Mei's own); remainingMinor = ceilingMinor - allocatedMinor.
+ */
+export interface FamilySummary extends ParentSummary {
+  readonly parent: "mum";
 }
 
 export interface SealResult {
@@ -191,6 +213,8 @@ export interface ApiFeatures {
   readonly alternatives: boolean;
   /** compileRules(): "model" = the local model reads the sentence, "rules" = the fixed rules parser. */
   readonly compile: "model" | "rules";
+  /** Family budget: SealRequest.family and family() work, and the family_ok and family_over scenarios exist. Off hides the feature. */
+  readonly family: boolean;
 }
 
 export interface ApiInfo {
@@ -229,6 +253,8 @@ export interface ApiClient {
   suggestAlternatives?(req: AlternativesRequest): Promise<RunSummary>;
   /** Sentence to rule chips for the Seal screen; a suggestion only, never sealed here. */
   compileRules?(req: CompileRulesRequest): Promise<CompileResult>;
+  /** Mum's budget (the ceiling a family seal is checked against). Check info().features.family. */
+  family?(): Promise<FamilySummary>;
   getLog(): Promise<LogView>;
   verify(): Promise<VerifyOutcome>;
   tamper(): Promise<LogView>;

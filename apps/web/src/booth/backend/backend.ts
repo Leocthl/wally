@@ -17,6 +17,7 @@ import type {
   CompileResult,
   CompileRulesRequest,
   EscalationAnswerRequest,
+  FamilySummary,
   LogView,
   PlannerTraceInfo,
   ProposeRequest,
@@ -35,9 +36,11 @@ import type { Catalogue } from "./catalogue";
 import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
 import { mapEvent, RunTracker } from "./events";
+import { createFamilyKit, familySummary, FAMILY_PARENT, PARENT_EXPORT_NOTE, type FamilyKit } from "./family";
 import { ScenarioRunner } from "./runner";
-import type { ScenarioTable } from "./scenarioTable";
+import type { ScenarioEntry, ScenarioTable } from "./scenarioTable";
 import { openSession, type Session, type SessionDeps } from "./session";
+import type { Step } from "./step";
 import { tamperCopy, type TamperedCopy } from "./tamper";
 import type { BackendLogger, BoothBackend, ExportView } from "./types";
 
@@ -79,6 +82,8 @@ export class OrchestratorBackend implements BoothBackend {
   #session: Session | null = null;
   #deps: SessionDeps;
   #tamper: TamperedCopy | null = null;
+  /** Mum's ceiling for the demo keys in use; made on first use, dropped on reset (new keys, new Mum). */
+  #family: FamilyKit | null = null;
   #queue: Promise<unknown> = Promise.resolve();
   #busy = 0;
 
@@ -162,14 +167,45 @@ export class OrchestratorBackend implements BoothBackend {
     });
   }
 
+  #familyOn(): boolean {
+    return this.#d.info().features.family;
+  }
+
+  /** Mum's kit for the keys in use: made once, from the preset budget's end date. */
+  #kit(): FamilyKit {
+    if (!this.#familyOn()) throw new BoothError(404, "FAMILY_OFF", "Family budgets are off on this booth.");
+    this.#family ??= createFamilyKit(this.#deps, this.#d.presetSeal(this.#deps.clock.now()).validUntil);
+    return this.#family;
+  }
+
+  /**
+   * A new seal replaces the session held now. While it is checked, the family budget held now gives its share back, so
+   * Mei can seal a new amount under Mum's ceiling; a refused seal puts the share back and nothing else changes.
+   */
+  #holdOut(old: Session | null, kit: FamilyKit | null): () => void {
+    if (old === null || kit === null || old.familyKit !== kit) return () => undefined;
+    const held = kit.ledger.release(kit.parentId, old.mandateId);
+    return () => kit.ledger.reserve(kit.parentId, old.mandateId, held);
+  }
+
   async #open(req: SealRequest, reloadDeps: boolean): Promise<SealResult> {
     const deps = reloadDeps ? this.#d.sessionDeps() : this.#deps;
-    const session = await openSession(deps, req);
+    if (reloadDeps) this.#family = null;
+    const kit = req.family === undefined ? null : this.#kit();
     const old = this.#session;
+    const restore = this.#holdOut(old, kit);
+    let session: Session;
+    try {
+      session = await openSession(deps, req, kit);
+    } catch (err) {
+      restore();
+      throw err;
+    }
     this.#deps = deps;
     this.#session = session;
     this.#tamper = null;
     old?.close();
+    old?.familyKit?.ledger.release(old.familyKit.parentId, old.mandateId); // the replaced budget no longer holds Mum's money
     this.#tracker.clear();
     this.#emit({ type: "reset", at: iso(deps.clock.now()) });
     session.goLive(this.#onEvent);
@@ -205,7 +241,36 @@ export class OrchestratorBackend implements BoothBackend {
   }
 
   runScenario(id: ScenarioId): Promise<RunSummary> {
-    return this.#op((session) => this.#runner(session).scenario(this.#d.table.scenarios[id]));
+    const entry = this.#d.table.scenarios[id];
+    if (entry.family !== null) return this.#enqueue(() => this.#familyScenario(entry, entry.family?.sealMinor ?? 0));
+    return this.#op((session) => this.#runner(session).scenario(entry));
+  }
+
+  /**
+   * family_ok and family_over start from any state. Both open with Mei's seal under Mum's ceiling. family_ok first makes a
+   * fresh Mum (a new key and credential, nothing given out) and replaces the budget held now with the new one, then buys
+   * as the table says. family_over keeps the Mum in use and the budget held now: its seal is too big, so it is refused and
+   * nothing changes (nothing is logged or sealed, the share held stays held); the run ends with the refusal.
+   */
+  async #familyScenario(entry: ScenarioEntry, sealMinor: number): Promise<RunSummary> {
+    if (entry.run !== "seal") this.#family = null;
+    const preset = this.#d.presetSeal(this.#deps.clock.now());
+    const req: SealRequest = { ...preset, rules: { ...preset.rules, budget: { amount_minor: sealMinor, currency: "HKD" } }, family: { parent: FAMILY_PARENT } };
+    let refused: Step | undefined;
+    try {
+      await this.#open(req, false);
+    } catch (err) {
+      if (!(err instanceof BoothError)) throw err;
+      refused = { outcome: err.code === "EXCEEDS_PARENT" ? "DENY" : "ERROR", code: err.code, note: err.message };
+    }
+    const session = this.#require();
+    await this.#tickNow(session);
+    return this.#runner(session).scenario(entry, refused);
+  }
+
+  /** Mum's budget as a family seal sees it (her credential is made on the first call). */
+  family(): Promise<FamilySummary> {
+    return this.#enqueue(async () => familySummary(this.#kit()));
   }
 
   propose(req: ProposeRequest): Promise<RunSummary> {
@@ -337,6 +402,7 @@ export class OrchestratorBackend implements BoothBackend {
   exportLog(): Promise<ExportView> {
     return this.#op(async (session) => {
       const snap = await session.orchestrator.snapshot();
+      const kit = session.familyKit;
       return {
         log: toJsonl(snap.log),
         publicKeys: {
@@ -344,8 +410,10 @@ export class OrchestratorBackend implements BoothBackend {
           engine: [session.engineDid],
           delegator: session.delegatorDid,
           agent: session.agentDid,
+          ...(kit === null ? {} : { parent: kit.signer.did }),
         },
         checkpoint: snap.head,
+        ...(kit === null ? {} : { parentCredential: kit.credential, parentNote: PARENT_EXPORT_NOTE }),
       };
     });
   }

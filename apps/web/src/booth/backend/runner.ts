@@ -27,6 +27,8 @@ export interface RunnerDeps {
 }
 
 const NO_CARD_NOTE = "No card to use: the purchase was stopped first.";
+/** A seal-only family scenario whose seal was accepted: it was meant to be refused, so say what happened. */
+const SEALED_NOTE = "The budget was sealed under Mum's budget.";
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
 
 /** The step's own decision id, else the one behind the card. */
@@ -74,8 +76,17 @@ export class ScenarioRunner {
     return note !== undefined && this.#d.tracker.judgeFailed(runId) ? note : undefined;
   }
 
-  scenario(entry: ScenarioEntry): Promise<RunSummary> {
-    return this.run(entry.id, (runId) => (entry.run === "buy" ? this.#buyRun(entry, runId) : this.#cardRun(entry, runId)));
+  /**
+   * `refused`: a family scenario's seal was refused before the run started, so the run ends there with that step and
+   * nothing else happens. Without it a family scenario goes on from the budget it just sealed.
+   */
+  scenario(entry: ScenarioEntry, refused?: Step): Promise<RunSummary> {
+    return this.run(entry.id, (runId) => (refused === undefined ? this.#body(entry, runId) : Promise.resolve(refused)));
+  }
+
+  #body(entry: ScenarioEntry, runId: string): Promise<Step> {
+    if (entry.run === "seal") return Promise.resolve({ outcome: "INFO", note: SEALED_NOTE });
+    return entry.run === "buy" ? this.#buyRun(entry, runId) : this.#cardRun(entry, runId);
   }
 
   /** Try to trick the agent: the visitor's text becomes the description of a fixed SIMULATED listing. */

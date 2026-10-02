@@ -11,6 +11,7 @@ import type {
   CompileResult,
   CompileRulesRequest,
   EscalationAnswerRequest,
+  FamilySummary,
   LogView,
   ProposeRequest,
   RevokeResult,
@@ -107,6 +108,11 @@ export class HttpApiClient implements ApiClient {
   /** Not a run: nothing streams, so it neither waits for the event stream nor for events. */
   compileRules(req: CompileRulesRequest): Promise<CompileResult> {
     return this.#request<CompileResult>("/api/compile", { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, body: JSON.stringify(req) });
+  }
+
+  /** Mum's budget for a family seal (GET, so it neither waits for events nor causes any). */
+  family(): Promise<FamilySummary> {
+    return this.#get<FamilySummary>("/api/family");
   }
 
   verify(): Promise<VerifyOutcome> {

@@ -16,6 +16,7 @@ import { replayPlannerFactory } from "../../booth/backend/planner";
 import type { SessionDeps } from "../../booth/backend/session";
 import { SILENT_BACKEND_LOGGER, type BackendLogger } from "../../booth/backend/types";
 import { m0Request } from "../../booth/compile";
+import type { ApiFeatures } from "../types";
 import { loadBundle } from "./bundle";
 import { LOCAL_JUDGE_OFFLINE_NOTE, LOCAL_KEYS_NOTE, LOCAL_UNKNOWN_REQUEST_NOTE, localInfo } from "./info";
 import { LocalReplayJudge } from "./replayJudge";
@@ -27,6 +28,8 @@ export interface LocalComposeOptions {
   /** Demo keys; default: new ephemeral keys on every reset (nothing is kept between page loads). */
   readonly keys?: () => DemoKeys;
   readonly logger?: BackendLogger;
+  /** Overrides for ApiInfo.features (a flag turned off hides the feature and the backend refuses it). */
+  readonly features?: Partial<ApiFeatures>;
 }
 
 export function composeLocalBackend(opts: LocalComposeOptions = {}): OrchestratorBackend {
@@ -60,7 +63,10 @@ export function composeLocalBackend(opts: LocalComposeOptions = {}): Orchestrato
     plannerProvider: "replay",
     ask: { kind: "recorded", requests: recordedRequests(bundle.plannerTexts, bundle.catalogue, bundle.table), unknownNote: LOCAL_UNKNOWN_REQUEST_NOTE },
     compileModel: null, // no model runs on the device: sentences are read by the fixed rules parser
-    info: () => localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative"))),
+    info: () => {
+      const info = localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative")));
+      return opts.features === undefined ? info : { ...info, features: { ...info.features, ...opts.features } };
+    },
     presetSeal: (now) => m0Request(now),
     logger: opts.logger ?? SILENT_BACKEND_LOGGER,
     judgeOfflineNote: LOCAL_JUDGE_OFFLINE_NOTE,

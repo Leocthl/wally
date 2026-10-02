@@ -68,6 +68,7 @@ export const NOT_COMPOSED_BACKEND: BoothBackend = {
   restore: notComposed,
   reset: notComposed,
   exportLog: notComposed,
+  family: notComposed,
   subscribe: () => () => undefined,
 };
 

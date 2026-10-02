@@ -1,6 +1,7 @@
 // The booth backend: exactly the ApiClient operations (src/api/types.ts) plus the export for the offline verifier page.
 // Two hosts run the same implementation (backend.ts): the Node server behind HTTP + SSE (server/compose.ts) and the
 // on-device client in the browser (src/api/local). Nothing here may import node:*; the hosts inject what differs.
+import type { MandateCredential } from "@laisee/core/generated";
 import type { Checkpoint } from "@laisee/core/ports";
 import type {
   AlternativesRequest,
@@ -10,6 +11,7 @@ import type {
   CompileResult,
   CompileRulesRequest,
   EscalationAnswerRequest,
+  FamilySummary,
   LogView,
   ProposeRequest,
   RevokeResult,
@@ -28,6 +30,8 @@ export interface PublicKeysView {
   readonly engine: readonly string[];
   readonly delegator: string;
   readonly agent: string;
+  /** A family budget: Mum's did:key (the issuer of the parent credential). */
+  readonly parent?: string;
 }
 
 /** GET /api/export: everything the offline verifier page needs, pasted in as text. */
@@ -36,6 +40,9 @@ export interface ExportView {
   readonly log: string;
   readonly publicKeys: PublicKeysView;
   readonly checkpoint: Checkpoint | null;
+  /** A family budget: Mum's credential, for inspection as parent-credential.json. It is not in the log (see parentNote). */
+  readonly parentCredential?: MandateCredential;
+  readonly parentNote?: string;
 }
 
 export interface BoothBackend {
@@ -55,6 +62,8 @@ export interface BoothBackend {
   restore(): Promise<LogView>;
   reset(): Promise<void>;
   exportLog(): Promise<ExportView>;
+  /** Mum's budget for a family seal; makes her (SIMULATED) credential on first use. Refused when features.family is off. */
+  family(): Promise<FamilySummary>;
   subscribe(listener: TraceListener): Unsubscribe;
 }
 

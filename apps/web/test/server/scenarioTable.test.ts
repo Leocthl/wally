@@ -36,6 +36,25 @@ describe("booth scenario table", () => {
     expect(table.scenarios.overshoot.beats).toEqual(["overshoot", "exact", "replay"]);
   });
 
+  it("describes the two family scenarios: a seal under Mum's ceiling, then a purchase or a refusal", () => {
+    expect(table.scenarios.family_ok).toMatchObject({ run: "buy", family: { sealMinor: 80_000 }, listings: ["lst_demoTee"], expect: { outcome: "APPROVE", templateId: null, events: ["AUTHORISED"], code: null } });
+    expect(table.scenarios.family_over).toMatchObject({ run: "seal", family: { sealMinor: 150_000 }, beats: [], expect: { outcome: "DENY", templateId: null, events: [], code: "EXCEEDS_PARENT" } });
+    for (const s of Object.values(table.scenarios).filter((x) => !x.id.startsWith("family_"))) {
+      expect([s.id, s.family, s.expect.code]).toEqual([s.id, null, null]);
+    }
+  });
+
+  it("refuses a family scenario that is not well formed", () => {
+    const base = { provenance: "SIMULATED", derivedListings: [], custom: { request: "x", listings: ["a"], plannerReplay: "b" } };
+    const entry = (over: Record<string, unknown>) => ({ ...base, scenarios: Object.fromEntries(SCENARIO_IDS.map((id) => [id, { ...JSON.parse(JSON.stringify(table.scenarios[id])), ...(id === "family_over" ? over : {}) }])) });
+    expect(() => parseScenarioTable(entry({}))).not.toThrow();
+    expect(() => parseScenarioTable(entry({ family: null }))).toThrow(/needs a family/);
+    expect(() => parseScenarioTable(entry({ run: "card", card: "ACTIVE" }))).toThrow(/cannot go with a card run/);
+    for (const sealMinor of [0, -1, 1.5, "1500", null]) expect(() => parseScenarioTable(entry({ family: { sealMinor } })), String(sealMinor)).toThrow(/sealMinor/);
+    expect(() => parseScenarioTable(entry({ expect: { outcome: "DENY", templateId: null, events: [], code: 7 } }))).toThrow(/code/);
+    expect(() => parseScenarioTable(entry({ run: "swap" }))).toThrow(/buy, card or seal/);
+  });
+
   it("refuses a table with a missing or unknown scenario", () => {
     const raw = { provenance: "SIMULATED", derivedListings: [], custom: { request: "x", listings: ["a"], plannerReplay: "b" }, scenarios: {} };
     expect(() => parseScenarioTable(raw)).toThrow(ScenarioTableError);

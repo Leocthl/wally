@@ -14,9 +14,12 @@ export interface PlannerChoice {
   readonly detail: string;
 }
 
+/** The switch for the family budget: false hides it everywhere (the screens read features.family) and the backend refuses it. */
+export const FAMILY_ENABLED = true;
+
 /** What the booth can do for a planner: ask always works (recorded planners know their sample requests only). */
 export function featuresFor(provider: PlannerProviderName, hasAlternativeRecords: boolean): ApiFeatures {
-  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules" };
+  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules", family: FAMILY_ENABLED };
 }
 
 /** The settings the info reads (server/booth/settings.ts BoothSettings has more). */

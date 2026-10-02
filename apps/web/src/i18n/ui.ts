@@ -2,6 +2,7 @@
 // replaces strings.ts. Vocabulary: budget, rules, Seal, one-off card, "Stopped before paying", "Needs your OK",
 // Receipts, Proof; the person is "you", the assistant is Wally. No digits here: figures go through the formatter.
 // Every zh-HK line is a draft and marked NEEDS-REVIEW for the native read.
+import { FAMILY, FAMILY_HOME } from "./family";
 import { label, type LabelPair } from "./label";
 
 /** Lane b-run (the Wally screen). Figures arrive already formatted (HK$ with separators), so no digit lives here. */
@@ -379,6 +380,7 @@ const SHELL = {
 
 export const UI = {
   ...SHELL,
+  ...FAMILY_HOME,
   close: label("Close", "關閉"), // NEEDS-REVIEW
   back: label("Back", "返回"), // NEEDS-REVIEW
   loading: label("Loading", "載入中"), // NEEDS-REVIEW
@@ -688,6 +690,9 @@ export const UI = {
   // Lane b-run: the Wally screen (#/wally). Planner = "Wally picks", judge = "Wally reads the listing", engine = "Rules
   // check", rail = "One-off card". Rule ids, probabilities and comparators appear only under "Details for nerds".
   run: RUN,
+
+  // Family budget (Mum funds a ceiling, you give Wally a share): the Seal choice, the ceiling card, the Budget tag.
+  family: FAMILY,
 } as const;
 
 export type UiKey = keyof typeof UI;

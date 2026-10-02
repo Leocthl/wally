@@ -28,6 +28,14 @@ export interface ScenarioExpect {
   readonly templateId: string | null;
   /** Card events in order: "AUTHORISED", "VOIDED" or "DECLINED:<code>". */
   readonly events: readonly string[];
+  /** The run summary's stable code (a refused seal: EXCEEDS_PARENT), when the scenario ends in one. */
+  readonly code: string | null;
+}
+
+/** A family scenario seals Mei's budget under Mum's ceiling before it does anything else (see OrchestratorBackend). */
+export interface ScenarioFamily {
+  /** What Mei seals under Mum's ceiling, integer minor units. */
+  readonly sealMinor: number;
 }
 
 export interface ScenarioEntry {
@@ -37,8 +45,13 @@ export interface ScenarioEntry {
   readonly request: string;
   readonly listings: readonly string[];
   readonly plannerReplay: string;
-  /** buy: submit the listings, then the beats on the new card. card: use the newest card in `card` state (buy one first if none). */
-  readonly run: "buy" | "card";
+  /**
+   * buy: submit the listings, then the beats on the new card. card: use the newest card in `card` state (buy one first if
+   * none). seal: only the family seal, nothing is bought (it needs `family`).
+   */
+  readonly run: "buy" | "card" | "seal";
+  /** Set: the scenario opens by sealing this much under Mum's budget; a refused seal ends the run there. */
+  readonly family: ScenarioFamily | null;
   readonly card: "ACTIVE" | "USED" | null;
   readonly beats: readonly ScenarioBeat[];
   /** Price the listing so its total is just over what is left (F22 shape), when the stored one would fit. */
@@ -97,14 +110,26 @@ function parseExpect(raw: unknown, where: string): ScenarioExpect {
   const o = obj(raw, `${where}.expect`);
   const outcome = OUTCOMES.find((x) => x === o["outcome"]);
   if (outcome === undefined) throw new ScenarioTableError(`${where}.expect.outcome must be one of ${OUTCOMES.join(", ")}`);
-  return { outcome, templateId: optStr(o, "templateId", `${where}.expect`), events: strList(o, "events", `${where}.expect`, true) };
+  return { outcome, templateId: optStr(o, "templateId", `${where}.expect`), events: strList(o, "events", `${where}.expect`, true), code: optStr(o, "code", `${where}.expect`) };
+}
+
+function parseFamily(o: Obj, where: string): ScenarioFamily | null {
+  if (o["family"] === undefined || o["family"] === null) return null;
+  const sealMinor = obj(o["family"], `${where}.family`)["sealMinor"];
+  if (typeof sealMinor !== "number" || !Number.isSafeInteger(sealMinor) || sealMinor <= 0) {
+    throw new ScenarioTableError(`${where}.family.sealMinor must be a positive whole number of minor units`);
+  }
+  return { sealMinor };
 }
 
 function parseScenario(id: ScenarioId, raw: unknown): ScenarioEntry {
   const where = `scenarios.${id}`;
   const o = obj(raw, where);
   const run = o["run"];
-  if (run !== "buy" && run !== "card") throw new ScenarioTableError(`${where}.run must be buy or card`);
+  if (run !== "buy" && run !== "card" && run !== "seal") throw new ScenarioTableError(`${where}.run must be buy, card or seal`);
+  const family = parseFamily(o, where);
+  if (run === "seal" && family === null) throw new ScenarioTableError(`${where}.run seal needs a family`);
+  if (run === "card" && family !== null) throw new ScenarioTableError(`${where}.family cannot go with a card run`);
   const card = o["card"] ?? null;
   if (run === "card" ? card !== "ACTIVE" && card !== "USED" : card !== null) throw new ScenarioTableError(`${where}.card must be ACTIVE or USED for a card run, absent otherwise`);
   const beats = strList(o, "beats", where, true).map((b) => {
@@ -120,6 +145,7 @@ function parseScenario(id: ScenarioId, raw: unknown): ScenarioEntry {
     listings: strList(o, "listings", where, false),
     plannerReplay: str(o, "plannerReplay", where),
     run,
+    family,
     card: card as ScenarioEntry["card"],
     beats,
     overflow: o["overflow"] === true,

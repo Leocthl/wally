@@ -27,6 +27,7 @@ export function mockBackend(): { readonly backend: BoothBackend; readonly mock: 
       publicKeys: { note: "test double", engine: [], delegator: "", agent: "" },
       checkpoint: null,
     }),
+    family: () => Promise.reject(new Error("the mock has no family budget")),
     subscribe: (listener) => mock.subscribe(listener),
   };
   return { backend, mock };
