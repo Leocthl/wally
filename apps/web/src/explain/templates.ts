@@ -25,7 +25,8 @@ const prob = (inputs: Inputs, key: string): string => (Number.isFinite(num(input
 const seconds = (inputs: Inputs, key: string): string => {
   const s = num(inputs, key);
   if (!Number.isFinite(s)) return "?";
-  return s >= 60 && s % 60 === 0 ? `${s / 60} min` : `${s} s`;
+  // Whole minutes from two minutes up; the F31 window reads as "60 s", the F32 window as "10 min".
+  return s >= 120 && s % 60 === 0 ? `${s / 60} min` : `${s} s`;
 };
 const count = (inputs: Inputs, key: string): string => (Number.isFinite(num(inputs, key)) ? String(num(inputs, key)) : "?");
 

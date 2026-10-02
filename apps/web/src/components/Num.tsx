@@ -28,6 +28,24 @@ export function formatNum(kind: NumKind, value: number | string): string {
   }
 }
 
+/** A figure that arrives already formatted (rendered template text). Same contract as Num: chip inline or from a scope. */
+export function NumText({ text, prov, chip = "inline", kind = "count" }: { readonly text: string; readonly prov: Prov | undefined; readonly chip?: "inline" | "scope"; readonly kind?: NumKind }): ReactElement {
+  const covered = useScopeCovers(prov ?? { kind: "SIMULATED" });
+  if (!prov) {
+    return (
+      <span className="num num--unknown" data-num data-prov="UNKNOWN">
+        UNKNOWN
+      </span>
+    );
+  }
+  return (
+    <span className="num" data-num data-kind={kind} data-prov={prov.kind}>
+      <span className="num__v">{text}</span>
+      {chip === "inline" || !covered ? <> <ProvChip prov={prov} /></> : null}
+    </span>
+  );
+}
+
 export interface NumProps {
   readonly kind: NumKind;
   /** Minor units for money, a probability in 0..1, a count, milliseconds, seconds, or an ISO time. */
@@ -52,7 +70,7 @@ export function Num({ kind, value, prov, chip = "inline", className }: NumProps)
   return (
     <span className={`num ${className ?? ""}`.trim()} data-num data-kind={kind} data-prov={prov.kind}>
       <span className="num__v">{formatNum(kind, value)}</span>
-      {showChip ? <ProvChip prov={prov} /> : null}
+      {showChip ? <> <ProvChip prov={prov} /></> : null}
     </span>
   );
 }
