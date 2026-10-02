@@ -61,6 +61,9 @@ export interface Rig {
 }
 
 export interface RigOptions {
+  readonly engine?: OrchestratorDeps["engine"];
+  /** Replaces the scripted planners (rig.planners then stays unused). */
+  readonly planner?: PlannerFactory;
   readonly judge?: JudgePort;
   readonly rail?: RailPort;
   readonly merchant?: (rail: RailPort) => MerchantPort;
@@ -81,8 +84,8 @@ export function rig(options: RigOptions = {}): Rig {
   const cartIds = sequentialCartIds("orch");
   let runs = 0;
   const orchestrator = createOrchestrator({
-    engine: createEngine(),
-    planner: planners.factory,
+    engine: options.engine ?? createEngine(),
+    planner: options.planner ?? planners.factory,
     judge: options.judge ?? new FakeJudge(),
     rail,
     merchant: options.merchant?.(rail) ?? new FakeMerchant(rail),
