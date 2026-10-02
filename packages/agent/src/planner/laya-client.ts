@@ -2,6 +2,7 @@
 // One typed choice per call, option-order rotations averaged back into the caller's order. Loopback only
 // (the shopper request must not leave the machine). Every failure is a value, never a throw (I5).
 import { LAYA_MODEL, PlannerConfigError } from "./config";
+import { postJson } from "./http";
 
 export interface ChoiceSpec {
   /** Question id, lower case words with underscores; rotations are sent as `<id>__r<n>`. */
@@ -126,20 +127,18 @@ function parseResponse(text: string, spec: ChoiceSpec, labels: readonly string[]
 async function choose(endpoint: string, spec: ChoiceSpec, timeoutMs: number): Promise<LayaResult<ChoiceOutcome>> {
   const labels = Object.keys(spec.criteria);
   if (labels.length < 2) return fail("a choice needs at least two options");
-  const wholeMs = Math.floor(timeoutMs); // AbortSignal.timeout takes whole milliseconds
+  const wholeMs = Math.floor(timeoutMs); // the abort timer takes whole milliseconds
   if (!Number.isFinite(timeoutMs) || wholeMs < 1) return fail("timeout: no time left for a Laya call");
   const started = performance.now();
   try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: buildBody(spec, labels),
-      signal: AbortSignal.timeout(wholeMs),
-    });
-    const text = await res.text();
-    if (!res.ok) return fail(`Laya answered HTTP ${res.status}`);
-    return parseResponse(text, spec, labels, Math.round(performance.now() - started));
-  } catch (err) {
-    return fail(`Laya request failed: ${err instanceof Error ? `${err.name}: ${err.message}` : "unknown error"}`);
+    // No redirects and a capped body (postJson); failure reasons are fixed words, never fetch's own messages.
+    const out = await postJson(endpoint, buildBody(spec, labels), wholeMs);
+    if (out.kind === "timeout") return fail("timeout: Laya did not answer in time");
+    if (out.kind === "too_large") return fail("Laya answer is larger than the response cap");
+    if (out.kind === "network") return fail("Laya request failed (network error or redirect)");
+    if (out.status < 200 || out.status > 299) return fail(`Laya answered HTTP ${out.status}`);
+    return parseResponse(out.text, spec, labels, Math.round(performance.now() - started));
+  } catch {
+    return fail("Laya request failed (unexpected error)");
   }
 }

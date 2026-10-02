@@ -1,6 +1,7 @@
-// Audit (lane s-audit): the planner's Laya client follows HTTP redirects and reads response bodies without a
-// cap, unlike the judge's HTTP layer (judge/http.ts). A process squatting on the Laya port can bounce the
-// shopper's request to a host the URL guard itself rejects, and answer the planner from there.
+// Audit (lane s-audit), S-PLAN-1, fixed in lane m-qwen: the planner's Laya client used to follow HTTP redirects
+// and read response bodies without a cap, unlike the judge's HTTP layer (judge/http.ts). A process squatting on
+// the Laya port could bounce the shopper's request to a host the URL guard itself rejects. It now goes through
+// planner/http.ts: redirect "error" and a 1 MiB streaming cap.
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -66,13 +67,17 @@ describe("setup", () => {
   });
 });
 
-describe("KNOWN DEFECT S-PLAN-1: planner Laya client follows redirects and reads unbounded bodies", () => {
-  it.fails("a 307 from the Laya port is refused (the request never reaches another host)", () => {
-    expect(received).toHaveLength(0); // today: the sink got the POST with the shopper request
+describe("S-PLAN-1 (fixed): planner Laya client refuses redirects and caps the body it reads", () => {
+  it("a 307 from the Laya port is refused (the request never reaches another host)", () => {
+    expect(received).toHaveLength(0);
     expect(REDIRECTED.ok).toBe(false);
   });
 
-  it.fails("a response body is read only up to a cap (judge/http.ts uses 1 MiB)", () => {
+  it("the failure reason is a fixed phrase, not fetch's error message", () => {
+    expect(REDIRECTED.ok ? "" : REDIRECTED.reason).toBe("Laya request failed (network error or redirect)");
+  });
+
+  it("a response body is read only up to a cap (judge/http.ts uses 1 MiB)", () => {
     expect(bodySent).toBeLessThan(BODY_TOTAL);
   });
 });

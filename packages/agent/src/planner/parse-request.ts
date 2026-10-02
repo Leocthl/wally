@@ -40,13 +40,14 @@ interface SizeRule {
 }
 
 const SIZE_RULES: readonly SizeRule[] = [
-  { pattern: /\b(?:size|sz)\s*[:-]?\s*(xxxl|xxl|xl|xxs|xs|[sml]|\d{1,2}(?:\.5)?|small|medium|large)(?![a-z0-9])/gi, group: 1 },
+  // Linear on long whitespace runs (audit): one optional separator group instead of two adjacent \s* runs.
+  { pattern: /\b(?:size|sz)\s*(?:[:-]\s*)?(xxxl|xxl|xl|xxs|xs|[sml]|\d{1,2}(?:\.5)?|small|medium|large)(?![a-z0-9])/gi, group: 1 },
   { pattern: /\b(?:eu|uk|us)\s*(\d{2}(?:\.5)?)\b/gi, group: 1 },
   { pattern: /\b(?:extra|x)[\s-]+large\b/gi, group: 0, fixed: "xl" },
   { pattern: /\b(xxxl|3xl|xxl|2xl|xl|xxs|xs)\b/gi, group: 1 },
   { pattern: /(?:\bin\s+|,\s*)(small|medium|large)\b/gi, group: 1 },
   { pattern: /\b(small|medium|large)\s+size\b/gi, group: 1 },
-  { pattern: /\b(small|medium|large)\s*[.!?]*\s*$/gi, group: 1 },
+  { pattern: /\b(small|medium|large)[\s.!?]*$/gi, group: 1 },
   { pattern: /(?<![A-Za-z0-9'’])([SML])(?![A-Za-z0-9'’])/g, group: 1 },
 ];
 
