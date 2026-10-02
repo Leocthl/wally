@@ -1,15 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-register="ledger">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lai See Log Verifier</title>
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Lai See log verifier (offline)</title>
   </head>
-  <body>
-    <main>
-      <h1>Log verifier (offline)</h1>
-      <p id="status">No log loaded.</p>
-    </main>
+  <body data-register="ledger">
+    <div id="app" class="app">
+      <noscript>This offline verifier needs JavaScript. Nothing is sent anywhere: the page has no network access.</noscript>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
