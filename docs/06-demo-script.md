@@ -43,7 +43,7 @@
 
 ## Pre-demo checklist
 - [ ] `services/laya/serve.sh`, `services/qwen/serve.sh`, one warm-up each (slow first call [F26])
-- [ ] `pnpm demo` (`pnpm demo:lan` for phones); About names the planner. If Qwen gives the flagged seller no proposal, restart with `PLANNER_PROVIDER=rule`
+- [ ] `pnpm demo` (`pnpm demo:lan` for phones); About names the planner.
 - [ ] `pnpm demo:reset`: HK$800 [F20], no cards, SIMULATED note on every screen
 - [ ] Network off: the booth runs. Stop Laya once, see Needs your OK (`R10.unavailable`), restart, warm up
 - [ ] LAN: phones can reach the Mac (else a hotspot); firewall Allow once; scan from one phone
