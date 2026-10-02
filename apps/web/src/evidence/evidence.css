@@ -125,6 +125,16 @@
 .ev-big--stage .ev-big__pct { font-size: var(--fs-3); }
 .ev-big--stage .ev-big__title { font-size: var(--fs-2); }
 
+/* Presenter beats DM8 and DM9 */
+.ev--stage { gap: var(--sp-4); }
+.ev-link { display: inline-flex; align-items: center; padding: 0 var(--sp-3); border: 1px solid var(--line-strong); border-radius: var(--r-ledger); color: var(--fg); font-weight: 600; }
+.ev-dm9 { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+.ev-dm9__col { display: grid; gap: var(--sp-3); align-content: start; padding: var(--sp-4); background: var(--surface); border: 2px solid var(--fg); border-radius: var(--r-ledger); }
+.ev-dm9__title { font-size: var(--fs-2); }
+.ev-dm9__lines { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); }
+.ev-dm9__foot { font-size: var(--fs-s); font-weight: 600; }
+@media (min-width: 60rem) { .ev-dm9 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
 /* Narrow screens: every table becomes stacked cards, so nothing scrolls sideways at 360 px. */
 @media (max-width: 47.99rem) {
   .ev table, .ev thead, .ev tbody, .ev tr, .ev th, .ev td { display: block; }

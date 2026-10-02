@@ -30,6 +30,21 @@ describe("Evidence screen on the committed files", () => {
     expect(honestyProblems(document.querySelector("main")!)).toEqual(CLEAN);
   });
 
+  it("marks every Chinese run lang=zh-HK, keeps EN first in each pair, and hides every icon from assistive tech", async () => {
+    await bootApp("#/evidence");
+    for (const d of document.querySelectorAll("details")) d.open = true;
+    const cjk = new RegExp("[\\u3000-\\u303f\\u3400-\\u9fff\\uff00-\\uffef]");
+    const bad: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (cjk.test(node.textContent ?? "") && node.parentElement?.closest("[lang]")?.getAttribute("lang") !== "zh-HK") bad.push((node.textContent ?? "").slice(0, 30));
+    }
+    expect(bad).toEqual([]);
+    for (const pair of document.querySelectorAll(".ev .bi")) expect(pair.children[0]?.className).toBe("bi__en");
+    for (const svg of document.querySelectorAll(".ev svg")) expect(svg.getAttribute("aria-hidden")).toBe("true");
+    expect(document.querySelectorAll(".ev img, .ev canvas")).toHaveLength(0);
+  });
+
   it("shows the wiring banner whenever the chosen file says it is not product evidence", async () => {
     await bootApp("#/evidence");
     const wiring = document.querySelector(".ev-harness")?.getAttribute("data-wiring");

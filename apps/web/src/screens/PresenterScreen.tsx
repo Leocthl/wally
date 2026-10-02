@@ -11,6 +11,7 @@ import { PRESENTER_SCRIPT, type View } from "../booth/presenterScript";
 import { SIMULATED } from "../domain/provenance";
 import { useBoothContext } from "../hooks/useBooth";
 import { label } from "../i18n/label";
+import { Dm8View, Dm9Card } from "../evidence/components/PresenterBeats";
 import { LogPanel } from "./LogPanel";
 import { RunPanel } from "./RunPanel";
 
@@ -43,6 +44,8 @@ export function PresenterScreen(): ReactElement {
     if (view === "seal" && state.mandate) return <MandateSummary mandate={state.mandate} prov={SIMULATED} />;
     if (view === "log") return <LogPanel />;
     if (view === "deck") return <Bi as="p" text={DECK} className="presenter__big-note" />;
+    if (view === "evidence") return <Dm8View />;
+    if (view === "limits") return <Dm9Card />;
     return <RunPanel />;
   })();
 
