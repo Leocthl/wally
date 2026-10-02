@@ -325,7 +325,7 @@ describe("Export receipts", () => {
       log: '{"seq":0}',
       publicKeys: { note: "test", engine: ["did:key:z1"], delegator: "did:key:z2", agent: "did:key:z3" },
       checkpoint: { log_id: "l", seq: 0, entry_hash: "a" },
-      ...(parentCredential === undefined ? {} : { parentCredential }),
+      ...(parentCredential === undefined ? {} : { parentCredential: parentCredential as NonNullable<ExportView["parentCredential"]> }),
     });
     const { user } = await mountScreen(<ProofScreen />, delegate(api, { exportLog }), { hash: "#/proof" });
     await user.click(await screen.findByRole("button", { name: "Export receipts" }));
