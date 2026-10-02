@@ -5,6 +5,7 @@ import { lazy, Suspense, type ComponentType, type ReactElement } from "react";
 
 const ROUTES: Readonly<Record<string, ComponentType>> = {
   home: lazy(() => import("./HomeVariants")),
+  seal: lazy(() => import("./SealVariants")),
 };
 
 export default function Variants({ name }: { readonly name: string }): ReactElement {

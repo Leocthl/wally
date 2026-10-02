@@ -27,8 +27,8 @@ function chromeOff(): boolean {
   return /[?&]chrome=0\b/.test(window.location.hash);
 }
 
-function Controls({ extra }: { readonly extra?: readonly SceneButton[] }): ReactElement | null {
-  const { play, reset, busy } = useScene();
+/** The strip above a variant: scene buttons, language and theme. `?chrome=0` hides it for clean screenshots. */
+export function SceneBar({ buttons, busy = false }: { readonly buttons: readonly SceneButton[]; readonly busy?: boolean }): ReactElement | null {
   const { locale, setLocale } = useLocale();
   const [theme, setTheme] = useState<ThemeChoice>("auto");
   if (chromeOff()) return null;
@@ -36,16 +36,10 @@ function Controls({ extra }: { readonly extra?: readonly SceneButton[] }): React
     setTheme(next);
     applyTheme(next);
   };
-  const base: readonly SceneButton[] = [
-    { label: "Fresh", run: reset },
-    { label: "Buy tee", run: () => play("normal") },
-    { label: "Needs OK", run: () => play("unverified") },
-    { label: "Cancel", run: () => play("revoke") },
-  ];
   return (
     <div className="vr-scene">
       <div className="vr-scene__buttons" role="group" aria-label="Scene">
-        {[...base, ...(extra ?? [])].map((b) => (
+        {buttons.map((b) => (
           <button key={b.label} type="button" className="vr-scene__btn" disabled={busy} onClick={b.run}>{b.label}</button>
         ))}
       </div>
@@ -57,13 +51,36 @@ function Controls({ extra }: { readonly extra?: readonly SceneButton[] }): React
   );
 }
 
+function BoothControls({ extra }: { readonly extra?: readonly SceneButton[] }): ReactElement | null {
+  const { play, reset, busy } = useScene();
+  const base: readonly SceneButton[] = [
+    { label: "Fresh", run: reset },
+    { label: "Buy tee", run: () => play("normal") },
+    { label: "Needs OK", run: () => play("unverified") },
+    { label: "Cancel", run: () => play("revoke") },
+  ];
+  return <SceneBar buttons={[...base, ...(extra ?? [])]} busy={busy} />;
+}
+
+/** Language and toasts around a variant that needs no booth (the seal ceremony runs on a stand-in for the call). */
+export function PlainScene({ buttons, children }: { readonly buttons: readonly SceneButton[]; readonly children: ReactNode }): ReactElement {
+  return (
+    <LocaleProvider>
+      <ToastProvider>
+        <SceneBar buttons={buttons} />
+        {children}
+      </ToastProvider>
+    </LocaleProvider>
+  );
+}
+
 export function BoothScene({ children, extra }: { readonly children: ReactNode; readonly extra?: readonly SceneButton[] }): ReactElement {
   const api = useMemo(() => new LocalApiClient(), []);
   return (
     <LocaleProvider>
       <ToastProvider>
         <BoothProvider api={api}>
-          <Controls {...(extra ? { extra } : {})} />
+          <BoothControls {...(extra ? { extra } : {})} />
           {children}
         </BoothProvider>
       </ToastProvider>
