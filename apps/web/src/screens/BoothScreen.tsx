@@ -21,6 +21,15 @@ const TABS: readonly { readonly id: Tab; readonly title: LabelPair }[] = [
 ];
 const ASK = label("An escalation is waiting for you", "有一項待你確認的升級");
 
+const KEY_STEP: Readonly<Record<string, number>> = { ArrowRight: 1, ArrowLeft: -1 };
+
+/** Roving tabindex: arrows move one tab, Home and End jump to the ends. Returns the tab to select, or null for other keys. */
+function nextTab(key: string, current: Tab): Tab | null {
+  const i = TABS.findIndex((t) => t.id === current);
+  const target = key === "Home" ? 0 : key === "End" ? TABS.length - 1 : KEY_STEP[key] === undefined ? null : i + (KEY_STEP[key] ?? 0);
+  return target === null ? null : (TABS[(target + TABS.length) % TABS.length]?.id ?? null);
+}
+
 export function BoothScreen(): ReactElement {
   const booth = useBoothContext();
   const { state, busy, info } = booth;
@@ -33,15 +42,11 @@ export function BoothScreen(): ReactElement {
   };
 
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>): void => {
-    const i = TABS.findIndex((t) => t.id === tab);
-    const next = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : null;
+    const next = nextTab(e.key, tab);
     if (next === null) return;
     e.preventDefault();
-    const target = TABS[(next + TABS.length) % TABS.length];
-    if (target) {
-      setTab(target.id);
-      document.getElementById(`tab-${target.id}`)?.focus();
-    }
+    setTab(next);
+    document.getElementById(`tab-${next}`)?.focus();
   };
 
   return (

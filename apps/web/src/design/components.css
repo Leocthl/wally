@@ -196,3 +196,10 @@ p.bi, div.bi { display: flex; }
 .ticket--used, .ticket--expired { opacity: 1; }
 .packet-meter__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .disclosure > summary { cursor: pointer; min-height: var(--tap); display: flex; align-items: center; font-weight: 600; }
+
+/* Figures inside a sentence flow with the text, so a time or an amount never strands a bracket on the next line. */
+.stop-banner__text .num, .beat .num, .approved .num { display: inline; }
+.stop-banner__text .num__v { white-space: nowrap; }
+.stop-banner__text .chip, .beat .chip { margin-left: var(--sp-1); }
+.log__table td > div + div { margin-top: 2px; }
+.log__table td, .log__table th { padding: var(--sp-2) var(--sp-2); }

@@ -89,6 +89,21 @@ describe("DM2 normal purchase and the rail beats", () => {
   });
 });
 
+describe("runs that reuse a card", () => {
+  it("mark planner, judge and engine skipped instead of idle, and run only the rail", async () => {
+    const { client, events } = await booth();
+    await client.runScenario("mint");
+    events.length = 0;
+    await client.runScenario("overshoot");
+    const stages = events.flatMap((e) => (e.type === "stage" ? [`${e.stage}:${e.status}`] : []));
+    expect(stages).toContain("planner:skipped");
+    expect(stages).toContain("judge:skipped");
+    expect(stages).toContain("engine:skipped");
+    expect(stages).toContain("rail:running");
+    expect(events.some((e) => e.type === "decision")).toBe(false);
+  });
+});
+
 describe("stops DM3 to DM5", () => {
   it("S2 flagged seller: DENY by R9, the card never exists", async () => {
     const { client } = await booth();

@@ -14,6 +14,7 @@ import { Num } from "../components/Num";
 import { Disclosure } from "../components/Disclosure";
 import { label } from "../i18n/label";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useWide } from "../hooks/useWide";
 import { figureContext } from "../explain/figures";
 import { useBoothContext } from "../hooks/useBooth";
 import { S } from "../i18n/strings";
@@ -69,14 +70,15 @@ export function RunPanel(): ReactElement {
   const card = run?.mintedCard ? (state.cards.find((c) => c.id === run.mintedCard?.id) ?? run.mintedCard) : undefined;
   const top = useRef<HTMLElement | null>(null);
   const reduced = useReducedMotion();
+  const wide = useWide();
   const runId = run?.runId;
   useEffect(() => {
-    // Keep the result above the fold after a press, only when it is out of sight (docs/04 Phone: StopBanner above the fold).
+    // On a phone, keep the result above the fold after a press when it is out of sight (docs/04 Phone: StopBanner above
+    // the fold). Wide screens show every panel at once, so they never scroll by themselves.
     const el = top.current;
-    if (!runId || !el || typeof el.scrollIntoView !== "function") return;
-    const { top: y } = el.getBoundingClientRect();
-    if (y < 0 || y > window.innerHeight * 0.6) el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
-  }, [runId, reduced]);
+    if (wide || !runId || !el || typeof el.scrollIntoView !== "function") return;
+    if (el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+  }, [runId, reduced, wide]);
   return (
     <section ref={top} className="run" data-register="ledger" aria-label="Run" aria-live="off">
       {run ? <Banner run={run} /> : null}

@@ -24,9 +24,6 @@ export function RevokeButton({ onRevoke, disabled = false }: RevokeButtonProps):
     e.preventDefault(); // stops the native click that Space or Enter would fire
     if (!e.repeat && !blocked) hold.start();
   };
-  const onKeyUp = (e: KeyboardEvent<HTMLButtonElement>): void => {
-    if (HOLD_KEYS.has(e.key)) hold.cancel();
-  };
 
   return (
     <div className="revoke" data-register="packet">
@@ -46,7 +43,7 @@ export function RevokeButton({ onRevoke, disabled = false }: RevokeButtonProps):
         onPointerCancel={hold.cancel}
         onContextMenu={(e) => e.preventDefault()}
         onKeyDown={onKeyDown}
-        onKeyUp={onKeyUp}
+        onKeyUp={(e) => HOLD_KEYS.has(e.key) && hold.cancel()}
         onBlur={hold.cancel}
         onClick={(e) => e.preventDefault()}
       >

@@ -37,14 +37,13 @@
 
 @media (min-width: 60rem) {
   .booth__tabs, .booth__ask { display: none; }
-  .booth { grid-template-columns: minmax(15rem, 1fr) minmax(0, 2fr) minmax(0, 1.2fr); gap: var(--sp-5); align-items: start; }
-  .booth__meter { grid-column: 1 / -1; }
-  .booth__ask { grid-column: 1 / -1; }
+  .booth { grid-template-columns: minmax(15rem, 1fr) minmax(0, 2fr) minmax(0, 1.3fr); gap: var(--sp-5); align-items: start; }
   .booth__panel { display: block; }
   .booth__panel--run, .booth__panel--run[data-active] { display: contents; }
-  .booth__picker { grid-column: 1; grid-row: 3; }
-  .booth__result { grid-column: 2; grid-row: 3; }
-  .booth__col-side { grid-column: 3; grid-row: 3; display: grid; gap: var(--sp-5); }
+  .booth__picker { grid-column: 1; grid-row: 1 / span 2; }
+  .booth__result { grid-column: 2; grid-row: 1 / span 2; }
+  .booth__meter { grid-column: 3; grid-row: 1; }
+  .booth__col-side { grid-column: 3; grid-row: 2; display: grid; gap: var(--sp-5); }
 }
 
 /* Presenter */

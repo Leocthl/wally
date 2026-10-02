@@ -20,8 +20,9 @@ export async function bootApp(hash = "#/booth"): Promise<Harness> {
   const api = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
   const user = userEvent.setup();
   const { container } = render(<App api={api} /> as ReactElement);
-  // The preset mandate is sealed on load (docs/06): wait for the meter.
-  await waitFor(() => expect(screen.getByRole("meter")).toBeInTheDocument());
+  // The preset mandate is sealed on load (docs/06). Every route renders the rail badge, so wait for both.
+  await screen.findByRole("note");
+  await waitFor(async () => expect((await api.snapshot()).mandate).not.toBeNull());
   return { api, clock, user, container };
 }
 

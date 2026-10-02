@@ -55,8 +55,80 @@ function AmountControl({ chip, amount, onChange, build }: { readonly chip: RuleC
   );
 }
 
-function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
+type Edit = (next: RuleChip) => void;
+
+function ShareControl({ chip, bp, onChange }: { readonly chip: RuleChip; readonly bp: number; readonly onChange: Edit }): ReactElement {
   const id = useId();
+  return (
+    <>
+      <label htmlFor={id} className="chip-editor__label"><Bi text={chip.label} /></label>
+      <div className="chip-editor__control">
+        <input id={id} inputMode="numeric" defaultValue={String(bp / BP_PER_PERCENT)} aria-invalid={!chip.valid} onChange={(e) => {
+          const pct = Number.parseInt(e.target.value, 10);
+          const ok = Number.isInteger(pct) && pct > 0 && pct <= BP_PER_PERCENT;
+          onChange(withValue(chip, { kind: "share", bp: ok ? pct * BP_PER_PERCENT : 0 }, ok, ERR.percent));
+        }} />
+        <span aria-hidden="true">%</span>
+      </div>
+    </>
+  );
+}
+
+function ExpiryControl({ chip, value, onChange }: { readonly chip: RuleChip; readonly value: Extract<ChipValue, { kind: "expiry" }>; readonly onChange: Edit }): ReactElement {
+  const id = useId();
+  return (
+    <>
+      <label htmlFor={id} className="chip-editor__label"><Bi text={chip.label} /></label>
+      <div className="chip-editor__control">
+        <select id={id} value={value.mode} onChange={(e) => {
+          const mode = e.target.value === "days" ? "days" : "month_end";
+          onChange(withValue(chip, { kind: "expiry", mode, days: value.days || 1 }, true));
+        }}>
+          <option value="month_end">Month end</option>
+          <option value="days">Days from seal</option>
+        </select>
+        <span lang="zh-HK" className="soft">月底，或封好後的日數</span>
+        {value.mode === "days" ? (
+          <input aria-label="Days" inputMode="numeric" defaultValue={String(value.days)} aria-invalid={!chip.valid} onChange={(e) => {
+            const days = Number.parseInt(e.target.value, 10);
+            const ok = Number.isInteger(days) && days >= 1;
+            onChange(withValue(chip, { kind: "expiry", mode: "days", days: ok ? days : 0 }, ok, ERR.days));
+          }} />
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function CategoryControl({ chip, slugs, onChange }: { readonly chip: RuleChip; readonly slugs: readonly string[]; readonly onChange: Edit }): ReactElement {
+  return (
+    <fieldset className="chip-editor__set">
+      <legend className="chip-editor__label"><Bi text={chip.label} /></legend>
+      {CATEGORIES.map(([slug, en, zh]) => (
+        <label key={slug} className="chip-editor__check tap">
+          <input type="checkbox" checked={slugs.includes(slug)} onChange={(e) => {
+            const next = e.target.checked ? [...slugs, slug] : slugs.filter((x) => x !== slug);
+            onChange(withValue(chip, { kind: "category", slugs: next }, next.length > 0, ERR.category));
+          }} />
+          <span>{en} · <span lang="zh-HK">{zh}</span></span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function SellersControl({ chip, verifiedOnly, onChange }: { readonly chip: RuleChip; readonly verifiedOnly: boolean; readonly onChange: Edit }): ReactElement {
+  return (
+    <label className="chip-editor__check tap">
+      <input type="checkbox" checked={verifiedOnly} onChange={(e) => onChange(withValue(chip, { kind: "sellers", verifiedOnly: e.target.checked }, true))} />
+      <span>
+        <Bi text={chip.label} /> <span className="soft">Verified sellers only</span> <span lang="zh-HK" className="soft">只限已核實賣家</span>
+      </span>
+    </label>
+  );
+}
+
+function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
   const v = chip.value;
   switch (v.kind) {
     case "budget":
@@ -66,63 +138,13 @@ function ControlFor({ chip, onChange }: ChipEditorProps): ReactElement {
     case "askAbove":
       return <AmountControl chip={chip} amount={v.amountMinor} onChange={onChange} build={(m) => ({ kind: "askAbove", amountMinor: m ?? 0 })} />;
     case "share":
-      return (
-        <>
-          <label htmlFor={id} className="chip-editor__label"><Bi text={chip.label} /></label>
-          <div className="chip-editor__control">
-            <input id={id} inputMode="numeric" defaultValue={String(v.bp / BP_PER_PERCENT)} aria-invalid={!chip.valid} onChange={(e) => {
-              const pct = Number.parseInt(e.target.value, 10);
-              const ok = Number.isInteger(pct) && pct > 0 && pct <= BP_PER_PERCENT;
-              onChange(withValue(chip, { kind: "share", bp: ok ? pct * BP_PER_PERCENT : 0 }, ok, ERR.percent));
-            }} />
-            <span aria-hidden="true">%</span>
-          </div>
-        </>
-      );
+      return <ShareControl chip={chip} bp={v.bp} onChange={onChange} />;
     case "expiry":
-      return (
-        <>
-          <label htmlFor={id} className="chip-editor__label"><Bi text={chip.label} /></label>
-          <div className="chip-editor__control">
-            <select id={id} value={v.mode} onChange={(e) => {
-              const mode = e.target.value === "days" ? "days" : "month_end";
-              onChange(withValue(chip, { kind: "expiry", mode, days: v.days || 1 }, true));
-            }}>
-              <option value="month_end">Month end · 月底</option>
-              <option value="days">Days from seal · 封好後日數</option>
-            </select>
-            {v.mode === "days" ? (
-              <input aria-label="Days" inputMode="numeric" defaultValue={String(v.days)} aria-invalid={!chip.valid} onChange={(e) => {
-                const days = Number.parseInt(e.target.value, 10);
-                const ok = Number.isInteger(days) && days >= 1;
-                onChange(withValue(chip, { kind: "expiry", mode: "days", days: ok ? days : 0 }, ok, ERR.days));
-              }} />
-            ) : null}
-          </div>
-        </>
-      );
+      return <ExpiryControl chip={chip} value={v} onChange={onChange} />;
     case "category":
-      return (
-        <fieldset className="chip-editor__set">
-          <legend className="chip-editor__label"><Bi text={chip.label} /></legend>
-          {CATEGORIES.map(([slug, en, zh]) => (
-            <label key={slug} className="chip-editor__check tap">
-              <input type="checkbox" checked={v.slugs.includes(slug)} onChange={(e) => {
-                const slugs = e.target.checked ? [...v.slugs, slug] : v.slugs.filter((s) => s !== slug);
-                onChange(withValue(chip, { kind: "category", slugs }, slugs.length > 0, ERR.category));
-              }} />
-              <span>{en} · <span lang="zh-HK">{zh}</span></span>
-            </label>
-          ))}
-        </fieldset>
-      );
+      return <CategoryControl chip={chip} slugs={v.slugs} onChange={onChange} />;
     case "sellers":
-      return (
-        <label className="chip-editor__check tap">
-          <input type="checkbox" checked={v.verifiedOnly} onChange={(e) => onChange(withValue(chip, { kind: "sellers", verifiedOnly: e.target.checked }, true))} />
-          <span><Bi text={chip.label} /> <span className="soft">Verified sellers only · 只限已核實賣家</span></span>
-        </label>
-      );
+      return <SellersControl chip={chip} verifiedOnly={v.verifiedOnly} onChange={onChange} />;
   }
 }
 

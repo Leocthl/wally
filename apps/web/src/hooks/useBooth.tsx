@@ -39,16 +39,10 @@ function messageOf(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong";
 }
 
-export function BoothProvider({ api, children }: { readonly api: ApiClient; readonly children: ReactNode }): ReactElement {
-  const [state, dispatch] = useReducer(reduce, undefined, initialState);
-  const [info, setInfo] = useState<ApiInfo | null>(null);
+/** Counts calls in flight (busy) and turns a failure into a message instead of a frozen screen (I5: nothing is minted on error). */
+function useGuard(): { readonly busy: boolean; readonly error: string | null; readonly guard: (task: () => Promise<unknown>) => Promise<void>; readonly clearError: () => void } {
   const [pending, setPending] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [verifyOutcome, setVerifyOutcome] = useState<VerifyOutcome | null>(null);
-  const started = useRef(false);
-
-  useEffect(() => api.subscribe((e) => dispatch(e as BoothAction)), [api]);
-
   const guard = useCallback(async (task: () => Promise<unknown>): Promise<void> => {
     setPending((n) => n + 1);
     setError(null);
@@ -60,6 +54,17 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
       setPending((n) => n - 1);
     }
   }, []);
+  return { busy: pending > 0, error, guard, clearError: useCallback(() => setError(null), []) };
+}
+
+export function BoothProvider({ api, children }: { readonly api: ApiClient; readonly children: ReactNode }): ReactElement {
+  const [state, dispatch] = useReducer(reduce, undefined, initialState);
+  const [info, setInfo] = useState<ApiInfo | null>(null);
+  const [verifyOutcome, setVerifyOutcome] = useState<VerifyOutcome | null>(null);
+  const { busy, error, guard, clearError } = useGuard();
+  const started = useRef(false);
+
+  useEffect(() => api.subscribe((e) => dispatch(e as BoothAction)), [api]);
 
   useEffect(() => {
     if (started.current) return;
@@ -72,16 +77,11 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
     });
   }, [api, guard]);
 
-  const refreshLog = useCallback(async () => dispatch({ type: "log.view", view: await api.getLog() }), [api]);
+  const showLog = useCallback(async () => dispatch({ type: "log.view", view: await api.getLog() }), [api]);
 
   const booth = useMemo<Booth>(
     () => ({
-      api,
-      state,
-      info,
-      busy: pending > 0,
-      error,
-      verifyOutcome,
+      api, state, info, busy, error, verifyOutcome, clearError, exec: guard,
       runScenario: (id) => guard(() => api.runScenario(id)),
       propose: (req) => guard(() => api.propose(req)),
       seal: (req) => guard(() => api.seal(req)),
@@ -95,17 +95,15 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
       tamper: () => guard(async () => {
         setVerifyOutcome(null);
         await api.tamper();
-        await refreshLog();
+        await showLog();
       }),
       restore: () => guard(async () => {
         setVerifyOutcome(null);
         await api.restore();
-        await refreshLog();
+        await showLog();
       }),
-      exec: guard,
-      clearError: () => setError(null),
     }),
-    [api, state, info, pending, error, verifyOutcome, guard, refreshLog],
+    [api, state, info, busy, error, verifyOutcome, clearError, guard, showLog],
   );
 
   return <BoothContext.Provider value={booth}>{children}</BoothContext.Provider>;

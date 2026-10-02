@@ -50,7 +50,7 @@ export function LogTimeline({ entries, prov, changedSeq, failedSeq }: LogTimelin
           <div className="log__scroll" tabIndex={0} role="region" aria-label="Log rows, scrollable">
             <table className="log__table">
               <thead>
-                <tr><th scope="col">seq</th><th scope="col">kind</th><th scope="col">outcome</th><th scope="col">rules</th><th scope="col">time</th><th scope="col">hash</th></tr>
+                <tr><th scope="col">seq</th><th scope="col">kind, outcome</th><th scope="col">rules</th><th scope="col">time, hash</th></tr>
               </thead>
               <tbody>
                 {entries.map((e) => {
@@ -59,11 +59,15 @@ export function LogTimeline({ entries, prov, changedSeq, failedSeq }: LogTimelin
                   return (
                     <tr key={e.seq} className={`log__row ${flagged}`.trim()} {...(e.seq === failedSeq ? { "aria-current": "true" as const } : {})}>
                       <td data-ident>{e.seq}</td>
-                      <td data-ident>{e.kind}</td>
-                      <td data-ident>{d.outcome}{e.seq === changedSeq ? " CHANGED" : ""}</td>
+                      <td>
+                        <div data-ident>{e.kind}</div>
+                        <div data-ident>{d.outcome}{e.seq === changedSeq ? " CHANGED" : ""}</div>
+                      </td>
                       <td data-ident>{d.rules}</td>
-                      <td><Num kind="time" value={e.ts} prov={prov} chip="scope" /></td>
-                      <td className="mono" data-ident>{e.entry_hash.slice(0, HASH_PREFIX_CHARS)}</td>
+                      <td>
+                        <div><Num kind="time" value={e.ts} prov={prov} chip="scope" /></div>
+                        <div className="mono" data-ident>{e.entry_hash.slice(0, HASH_PREFIX_CHARS)}</div>
+                      </td>
                     </tr>
                   );
                 })}

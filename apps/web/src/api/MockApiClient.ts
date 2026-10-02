@@ -23,7 +23,7 @@ import type {
   Unsubscribe,
   VerifyOutcome,
 } from "./types";
-import { checkout, mintFor, proposeAndDecide, type CheckoutMode, type Purchase, type PurchaseSpec } from "./mock/flows";
+import { checkout, mintFor, proposeAndDecide, skipUpstream, type CheckoutMode, type Purchase, type PurchaseSpec } from "./mock/flows";
 import { answerOpenEscalation, expireDueEscalations } from "./mock/escalation";
 import { CHECKED, SKIPPED, tamperCopy, verifyMockChain } from "./mock/log";
 import { M0_CREDENTIAL } from "./mock/fixtures";
@@ -181,7 +181,10 @@ export class MockApiClient implements ApiClient {
       if (!e || e.kind !== "DECISION") throw new Error("approving decision not found");
       return e.payload;
     };
-    if (existing) return { card: existing, decision: approval(existing.decision_id), outcome: "APPROVE" as const };
+    if (existing) {
+      skipUpstream(s, runId, "uses the card minted earlier");
+      return { card: existing, decision: approval(existing.decision_id), outcome: "APPROVE" as const };
+    }
     const bought = await this.#buy(presetSpec(s, runId, "tee"), want === "USED" ? "exact" : null);
     const made = find();
     if (!made) return { card: undefined, decision: undefined, outcome: bought.outcome };

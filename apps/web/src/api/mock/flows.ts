@@ -36,6 +36,13 @@ async function stage(s: MockSession, runId: string, name: "planner" | "judge" | 
   s.emit({ type: "stage", runId, stage: name, status: "done", latencyMs: ms, ...(note ? { note } : {}), at: s.nowIso() });
 }
 
+/** A run that reuses a card minted earlier never asks the planner, judge or engine again: say so instead of showing them idle. */
+export function skipUpstream(s: MockSession, runId: string, note: string): void {
+  for (const name of ["planner", "judge", "engine"] as const) {
+    s.emit({ type: "stage", runId, stage: name, status: "skipped", note, at: s.nowIso() });
+  }
+}
+
 /** Planner (untrusted) proposes, the cart builder prices from the listing record, the judge assesses, the engine decides. */
 export async function proposeAndDecide(s: MockSession, spec: PurchaseSpec): Promise<Purchase> {
   const mandate = s.requireMandate();
