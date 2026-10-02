@@ -210,6 +210,44 @@ function breakdownBlock(c: Computed): Record<string, unknown> {
   };
 }
 
+function runBlock(input: ResultInput, n: number): Record<string, unknown> {
+  return {
+    seed: input.seed,
+    n,
+    meets_scenario_minimum: n >= SCENARIO_COUNT.minimum,
+    commit: input.meta.commit,
+    working_tree_dirty: input.meta.dirty,
+    checkpoint_revision: input.meta.checkpointRevision,
+    device: input.meta.device,
+    host_load_average_1m: hostLoadOf(input),
+    run_at_utc8: formatHkt(input.runAt),
+    judge: {
+      source: input.source.kind,
+      provider: input.source.provider,
+      model: input.source.model,
+      base_url: input.source.baseUrl,
+      warm_up_call_excluded: input.warmedUp,
+      recorded_from: input.source.recordedFrom,
+      replay: input.sourceOutcome.replay,
+    },
+    planner: "recorded: one planner output per scenario, shared by B0, B1 and B2",
+    rail: "SIMULATED",
+    scenarios: "SIMULATED",
+  };
+}
+
+function corpusBlock(input: ResultInput, chip: string): Record<string, unknown> {
+  return {
+    items: input.corpus.items,
+    scope: "the judge alone, on every hand-written injection item embedded in one benign listing; each record goes through the engine's own R10 (check injection_risk), so the threshold has one source [F36]; no cart has to be approved",
+    false_allow_rate: ratioBlock(input.corpus.falseAllow, chip),
+    tuning_split: ratioBlock(input.corpus.tuning, chip),
+    heldout_split: ratioBlock(input.corpus.heldout, chip),
+    benign_flagged_rate: ratioBlock(input.corpus.benign, chip),
+    unavailable: input.corpus.unavailable,
+  };
+}
+
 export function buildResult(input: ResultInput, c: Computed = computeReport(input)): Record<string, unknown> {
   const { chip, n } = c;
   return {
@@ -217,29 +255,7 @@ export function buildResult(input: ResultInput, c: Computed = computeReport(inpu
     mode: input.mode,
     label: chip,
     provenance: input.mode === "live" ? "MEASURED on SIMULATED scenarios and a SIMULATED rail" : "RECORDED answers replayed on SIMULATED scenarios and a SIMULATED rail",
-    run: {
-      seed: input.seed,
-      n,
-      meets_scenario_minimum: n >= SCENARIO_COUNT.minimum,
-      commit: input.meta.commit,
-      working_tree_dirty: input.meta.dirty,
-      checkpoint_revision: input.meta.checkpointRevision,
-      device: input.meta.device,
-      host_load_average_1m: hostLoadOf(input),
-      run_at_utc8: formatHkt(input.runAt),
-      judge: {
-        source: input.source.kind,
-        provider: input.source.provider,
-        model: input.source.model,
-        base_url: input.source.baseUrl,
-        warm_up_call_excluded: input.warmedUp,
-        recorded_from: input.source.recordedFrom,
-        replay: input.sourceOutcome.replay,
-      },
-      planner: "recorded: one planner output per scenario, shared by B0, B1 and B2",
-      rail: "SIMULATED",
-      scenarios: "SIMULATED",
-    },
+    run: runBlock(input, n),
     components: input.components,
     evidence: { valid_as_product_evidence: c.evidence.valid, reasons: c.evidence.reasons },
     scope: c.scope,
@@ -247,15 +263,7 @@ export function buildResult(input: ResultInput, c: Computed = computeReport(inpu
     definitions: { ...DEFINITIONS, system_descriptions: input.systemDescriptions },
     baselines: Object.fromEntries(BASELINES.map((b) => [b, baselineBlock(c.metrics[b], input.mode, chip)])),
     judge_false_allow: judgeBlock(c.judge, chip),
-    injection_corpus: {
-      items: input.corpus.items,
-      scope: "the judge alone, on every hand-written injection item embedded in one benign listing; each record goes through the engine's own R10 (check injection_risk), so the threshold has one source [F36]; no cart has to be approved",
-      false_allow_rate: ratioBlock(input.corpus.falseAllow, chip),
-      tuning_split: ratioBlock(input.corpus.tuning, chip),
-      heldout_split: ratioBlock(input.corpus.heldout, chip),
-      benign_flagged_rate: ratioBlock(input.corpus.benign, chip),
-      unavailable: input.corpus.unavailable,
-    },
+    injection_corpus: corpusBlock(input, chip),
     categories: categoryBlock(c.categories, chip),
     acceptance: c.acceptance.map((a) => ({ id: a.id, target: a.target, evaluated_on: a.evaluatedOn, result: ratioBlock(a.result, chip), pass: a.pass })),
     label_disagreements: c.disagreements,
