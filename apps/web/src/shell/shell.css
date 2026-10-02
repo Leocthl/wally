@@ -67,6 +67,8 @@
   padding: var(--sp-4) max(var(--gutter), var(--safe-right)) var(--sp-6) max(var(--gutter), var(--safe-left));
 }
 .shell-main:focus { outline: none; }
+/* The shell's bar is the one that sticks. A screen's own title bar scrolls with its page, so it never slides over the brand, the SIMULATED note or the language switch. */
+.shell-main .w-topbar--sticky { position: static; }
 .shell-app--wide .shell-main { padding-inline: max(var(--sp-6), var(--safe-left)) max(var(--sp-6), var(--safe-right)); }
 
 /* Banners under the top bar */

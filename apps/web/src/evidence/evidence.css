@@ -1,12 +1,6 @@
 /* Evidence, "Why trust Wally?" (and the presenter's DM8 and DM9 beats). Phone column first, tokens only, no motion:
    the page holds still under any setting. Cards on a calm background; tables turn into stacked cards on a phone. */
 .ev { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--sp-4); color: var(--c-ink); }
-.ev[data-screen="evidence"] {
-  width: 100%;
-  max-width: var(--column);
-  margin: 0 auto;
-  padding: 0 max(var(--gutter), var(--safe-right)) calc(var(--tabbar-h) + var(--sp-6) + var(--safe-bottom)) max(var(--gutter), var(--safe-left));
-}
 .ev > *, .ev-harness > *, .ev-charts > * { min-width: 0; }
 .ev-lead { margin-top: calc(-1 * var(--sp-3)); color: var(--c-ink-muted); line-height: var(--lh-snug); }
 .ev-part { margin-top: var(--sp-4); font-size: var(--text-xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); }
@@ -37,6 +31,7 @@
 .ev-panel__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 
 /* Bottom line in words */
+.ev-headline, .ev-headline > * { min-width: 0; }
 .ev-headline { display: grid; gap: var(--sp-3); box-shadow: var(--shadow-2); border-color: transparent; }
 .ev-headline__title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .ev-headline__lines, .ev-headline__targets { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
@@ -47,7 +42,7 @@
 .ev-headline__metric { font-weight: var(--weight-semibold); }
 .ev-headline__verdict { font-weight: var(--weight-bold); }
 .ev-headline__note { flex-basis: 100%; font-size: var(--text-sm); color: var(--c-ink-muted); }
-.ev-headline__targets { grid-auto-flow: column; justify-content: start; gap: var(--sp-2); }
+.ev-headline__targets { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .ev-headline__target { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-3); border-radius: var(--r-pill); background: var(--c-surface-sunken); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .ev-headline__target--missed { outline: 1.5px dashed var(--c-line-strong); outline-offset: -1.5px; }
 .ev-headline__foot { font-size: var(--text-sm); color: var(--c-ink-muted); }
