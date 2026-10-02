@@ -68,6 +68,8 @@ export const E = {
   catCategory: label("Category", "類別"), // NEEDS-REVIEW zh-HK
   catScenarios: label("Scenarios, legitimate", "情境，其中合法"), // NEEDS-REVIEW zh-HK
   catEmpty: label("This file lists no categories.", "此檔案沒有列出類別。"), // NEEDS-REVIEW zh-HK
+  catDone: label("completed", "完成"), // NEEDS-REVIEW zh-HK
+  catBlocked: label("false block", "誤攔"), // NEEDS-REVIEW zh-HK
   blockedTitle: label("Legitimate scenarios B2 blocked", "B2 攔截了的合法情境"), // NEEDS-REVIEW zh-HK
   blockedNone: label("None: B2 completed every legitimate scenario in this file.", "沒有：B2 完成了此檔案中所有合法情境。"), // NEEDS-REVIEW zh-HK
   blockedNoRows: label("This file carries no per-scenario rows, so the blocked list cannot be shown.", "此檔案沒有逐個情境的紀錄，無法列出被攔截項目。"), // NEEDS-REVIEW zh-HK

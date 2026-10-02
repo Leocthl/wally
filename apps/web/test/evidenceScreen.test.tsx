@@ -119,7 +119,7 @@ describe("Evidence screen, synthetic runs", () => {
   });
 
   it("an unreadable file gets a panel in words and no figure at all", () => {
-    const { container } = render(<EvidenceScreen harness={{ items: [], unreadable: [{ file: "harness-9-live.json", problems: ["the baselines block is missing"] }] }} />);
+    const { container } = render(<EvidenceScreen harness={{ items: [], unreadable: [{ file: "harness-9-live.json", problems: ["the baselines block is missing"] }] }} judge={{ items: [], unreadable: [] }} manual={null} captures={null} />);
     expect(screen.getByRole("region", { name: /This result file could not be read/ })).toHaveTextContent("the baselines block is missing");
     expect(screen.getByText("No harness result could be read, so no figure is shown.")).toBeInTheDocument();
     expect(container.querySelectorAll("[data-num]")).toHaveLength(0);
@@ -129,7 +129,7 @@ describe("Evidence screen, synthetic runs", () => {
     const raw = harnessFile();
     const b = raw["baselines"] as Record<string, Record<string, unknown>>;
     const c = show(run({ ...raw, baselines: { ...b, B2: { ...b["B2"], refund_rate: rate(1, 9) } } }));
-    const table = screen.getByRole("table");
+    const table = c.querySelector(".ev-table table") as HTMLElement;
     expect(c.querySelector('figure[data-metric="refund_rate"]')).toBeNull();
     expect(table.querySelector('tr[data-metric="refund_rate"]')).toHaveTextContent("1/9");
   });

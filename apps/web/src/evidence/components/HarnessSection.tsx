@@ -1,31 +1,29 @@
-// The harness part of the Evidence screen for one chosen run: wiring banner first, then acceptance, then the charts in
-// one fixed baseline order, then every metric in a table.
+// The harness part of the Evidence screen for one chosen run: headline numbers, acceptance, then the charts in one fixed
+// baseline order, then every metric in a table. The wiring banner sits above all of it (EvidenceScreen).
 import type { ReactElement } from "react";
 import { Bi } from "../../components/Bi";
 import { headlineKeys, specOf } from "../metrics";
-import { wiringStatus } from "../select";
 import { E } from "../strings";
 import type { HarnessRun } from "../types";
 import { AcceptanceStrip } from "./AcceptanceStrip";
+import { BigNumbers } from "./BigNumbers";
 import { JudgeChart } from "./JudgeChart";
 import { LatencyChart } from "./LatencyChart";
 import { MetricsTable } from "./MetricsTable";
 import { RateChart } from "./RateChart";
-import { WiringBanner } from "./RunStatus";
 
-export function HarnessSection({ run }: { readonly run: HarnessRun }): ReactElement {
-  const status = wiringStatus(run);
+export function HarnessSection({ run, wiring }: { readonly run: HarnessRun; readonly wiring: boolean }): ReactElement {
   return (
-    <div className="ev-harness" data-wiring={status.wiringOnly}>
-      <WiringBanner status={status} run={run} />
+    <div className="ev-harness" data-wiring={wiring}>
+      <BigNumbers run={run} wiring={wiring} />
       <AcceptanceStrip rows={run.acceptance} />
       <section aria-labelledby="ev-charts-title">
         <h3 id="ev-charts-title" className="ev-section-title"><Bi text={E.chartsTitle} /></h3>
         <Bi as="p" text={E.intro} className="soft ev-note" />
         <div className="ev-charts">
-          {headlineKeys(run).map((key) => <RateChart key={key} spec={specOf(key)} run={run} wiring={status.wiringOnly} />)}
-          <JudgeChart run={run} wiring={status.wiringOnly} />
-          <LatencyChart run={run} wiring={status.wiringOnly} />
+          {headlineKeys(run).map((key) => <RateChart key={key} spec={specOf(key)} run={run} wiring={wiring} />)}
+          <JudgeChart run={run} wiring={wiring} />
+          <LatencyChart run={run} wiring={wiring} />
         </div>
       </section>
       <MetricsTable run={run} />
