@@ -270,7 +270,7 @@ sequenceDiagram
 
 - **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet is revoked or expires; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`. A failed mint keeps its hold until revoke or expiry (accepted).
 - **Resolution**: an answer, R11 expiry or R12 drift makes a new Decision with `resolves`; an answer must bind to the escalated cart, the pinned delegator and a verified signature, else DENY R11.
-- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED) or an open ESCALATE; `allowRepeat` decides afresh (booth buttons, harness).
+- **Idempotency**: a decision id digests cart id, fingerprint (SHA-256(JCS(cart minus `id`, `proposed_at`))), time, outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED, unexpired) or an open ESCALATE; `allowRepeat` decides afresh (booth buttons, harness).
 
 ## 7. Rule catalogue
 
