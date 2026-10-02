@@ -18,6 +18,15 @@ function listFiles(dir: string, prefix = ""): string[] {
   });
 }
 
+/** Vite copies public/ into the output before this plugin runs, so a missing manifest means the build changed under us. */
+function readManifest(path: string): string {
+  try {
+    return readFileSync(path, "utf8");
+  } catch (cause) {
+    throw new Error(`pages: ${MANIFEST} is not in the build output (it comes from apps/web/public)`, { cause });
+  }
+}
+
 /** Every root-absolute URL left in the html, scripts, styles, svg and manifest under `dir`. */
 export function scanOutput(dir: string): readonly Finding[] {
   return listFiles(dir)
@@ -46,7 +55,7 @@ export function wallyPages(): Plugin {
     writeBundle(options) {
       if (options.dir === undefined) throw new Error("pages: the build has no output folder");
       const manifest = join(options.dir, MANIFEST);
-      writeFileSync(manifest, relativeManifest(readFileSync(manifest, "utf8")));
+      writeFileSync(manifest, relativeManifest(readManifest(manifest)));
       assertRelativeOutput(options.dir);
     },
   };
