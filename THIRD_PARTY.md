@@ -65,6 +65,7 @@
 | pnpm | 12.3 | MIT | package manager and workspace tool, not shipped | in use |
 | AndroidX (appcompat, core, core-splashscreen, webkit, activity, fragment, coordinatorlayout) and Android Gradle Plugin 8.13 | per Capacitor 8 | Apache-2.0 | Android shell, resolved by Gradle from Google and Maven Central | in use |
 | capacitor-swift-pm (Capacitor and Cordova xcframeworks for iOS) | 8.5 | MIT, Apache-2.0 (Cordova) | iOS shell, resolved by SwiftPM | in use |
+| Gradle wrapper (`gradlew` scripts and `gradle-wrapper.jar`, Gradle 8.14.3), committed under `apps/mobile/android/` | 8.14 | Apache-2.0 | builds the Android shell | in use |
 
 ## Fonts
 | Font | Author | Licence | Use |
