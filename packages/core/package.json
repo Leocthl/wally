@@ -15,6 +15,7 @@
     "./packet": "./src/packet/index.ts",
     "./crypto": "./src/crypto/index.ts",
     "./vc": "./src/vc/index.ts",
+    "./family": "./src/family/index.ts",
     "./log": "./src/log/index.ts",
     "./log/file": "./src/log/file.ts",
     "./verify": "./src/verify/index.ts",

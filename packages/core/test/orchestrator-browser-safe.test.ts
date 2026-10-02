@@ -17,7 +17,7 @@ const NODE_BUILTIN = /^(node:|(fs|path|crypto|os|url|util|stream|buffer|events|m
 /** npm packages the browser graph may reach; each is plain ESM that runs in a browser. */
 const BROWSER_PACKAGES = /^(@noble\/(curves|hashes)\/|@scure\/base$|ajv(\/|$)|ajv-formats$|canonicalize$)/;
 const NODE_ONLY_ENTRIES = new Set(["./log/file", "./testing/fixtures"]);
-const BROWSER_ENTRIES = ["orchestrator", "cart", "engine", "rules", "packet", "executor", "explain", "config", "log", "vc", "crypto", "verify"];
+const BROWSER_ENTRIES = ["orchestrator", "cart", "engine", "rules", "packet", "executor", "explain", "config", "log", "vc", "crypto", "verify", "family"];
 
 const FORBIDDEN_CODE: readonly [string, RegExp][] = [
   ["process", /\bprocess\s*\./],
