@@ -17,6 +17,7 @@
     "docs:check": "python3 scripts/docs-check.py",
     "keys:gen": "node scripts/keys-gen.mjs",
     "verify-log": "node scripts/verify-log.mjs",
+    "verifier": "pnpm --filter @laisee/verifier build",
     "demo:reset": "node -e \"console.log('demo:reset is TBD (lane X, after X-10)')\""
   },
   "devDependencies": {
