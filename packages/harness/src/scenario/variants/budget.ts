@@ -126,7 +126,7 @@ export const SHIPPING_OVERFLOW: readonly VariantDef[] = [
     name: "over_ceiling",
     build: (ctx) => {
       const budgetMinor = 300_000; // SIMULATED large packet so the rail ceiling [F1.ceiling] binds before R3 does
-      const frame = moneyFrame(ctx, "none", budgetMinor);
+      const frame = moneyFrame(ctx, "none", budgetMinor, 10); // spent stays small so the packet is still above the ceiling
       return overflowSpec(ctx, frame, RAIL.ceilingMinor, delta(ctx, BOUNDARY_DELTA), stoppedLabel({ decision: "DENY", rule: "R5", templateId: "R5.over_ceiling", stop: null, note: "shipping lifts the total past the per-card ceiling [F1.ceiling]" }));
     },
   },

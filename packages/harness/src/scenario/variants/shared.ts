@@ -132,9 +132,9 @@ export function perPurchaseOf(ctx: Ctx, kind: CapKind, remainingMinor: number): 
   }
 }
 
-export function moneyFrame(ctx: Ctx, kind: CapKind, budgetOverride?: number): MoneyFrame {
+export function moneyFrame(ctx: Ctx, kind: CapKind, budgetOverride?: number, maxSpentPct = 55): MoneyFrame {
   const budgetMinor = budgetOverride ?? pickBudget(ctx);
-  const spent = roundTo((budgetMinor * ctx.rng.int(0, 55)) / 100, 10);
+  const spent = roundTo((budgetMinor * ctx.rng.int(0, maxSpentPct)) / 100, 10);
   const remainingMinor = budgetMinor - spent;
   const perPurchase = perPurchaseOf(ctx, kind, remainingMinor);
   const allowedMinor = allowedLimit(perPurchase, remainingMinor);

@@ -1,18 +1,17 @@
 // Stable JSON text and SHA-256, for request hashes, cart fingerprints and the result file.
 import { createHash } from "node:crypto";
 
-type Json = null | boolean | number | string | readonly Json[] | { readonly [key: string]: Json | undefined };
-
-/** Sorted-key JSON. `undefined` members are dropped; non-finite numbers throw (they have no JSON form). */
-export function stableStringify(value: Json | undefined): string {
-  if (value === undefined) return "null";
-  if (value === null || typeof value === "boolean" || typeof value === "string") return JSON.stringify(value);
+/** Sorted-key JSON of plain data. `undefined` members are dropped; non-finite numbers and non-JSON values throw. */
+export function stableStringify(value: unknown): string {
+  if (value === undefined || value === null) return "null";
+  if (typeof value === "boolean" || typeof value === "string") return JSON.stringify(value);
   if (typeof value === "number") {
     if (!Number.isFinite(value)) throw new RangeError(`cannot serialise ${value}`);
     return JSON.stringify(value);
   }
-  if (Array.isArray(value)) return `[${value.map((v) => stableStringify(v as Json)).join(",")}]`;
-  const record = value as { readonly [key: string]: Json | undefined };
+  if (Array.isArray(value)) return `[${value.map((v) => stableStringify(v)).join(",")}]`;
+  if (typeof value !== "object") throw new TypeError(`cannot serialise a ${typeof value}`);
+  const record = value as Readonly<Record<string, unknown>>;
   const members = Object.keys(record)
     .filter((k) => record[k] !== undefined)
     .sort()
