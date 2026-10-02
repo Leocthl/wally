@@ -6,3 +6,13 @@ export {
   mandateFromCredential,
   mandateIdFromCredentialId,
 } from "./mandate";
+export {
+  CredentialSignError,
+  CRYPTOSUITE,
+  signMandateCredential,
+  verifyMandateCredential,
+  type CredentialCheck,
+  type CredentialFailure,
+  type SignCredentialOptions,
+  type UnsignedMandateCredential,
+} from "./proof";
