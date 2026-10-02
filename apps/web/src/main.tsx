@@ -8,7 +8,6 @@ import "./design/tokens-fallback.css";
 import "./design/base.css";
 import "./design/chips.css";
 import "./design/components.css";
-import "./design/shell.css";
 import "./pwa/register";
 
 /**
