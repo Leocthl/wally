@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 // Builds the iOS app for the Simulator (no signing), boots the device, installs and launches the app.
-// Run `pnpm --filter @laisee/mobile sync` first. Env: IOS_SIM_NAME (default "iPhone 17"). Flags: --no-boot-ui keeps
-// the Simulator window closed (the device still boots).
+// Run `pnpm --filter @laisee/mobile sync` first. Env: IOS_SIM_NAME (default "iPhone 17"), WALLY_IOS_BUILD (build folder,
+// default ~/Library/Caches/wally-ios, outside the repo so doc and lint scans never see SwiftPM checkouts). Flags:
+// --no-boot-ui keeps the Simulator window closed (the device still boots).
 import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const mobile = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const project = join(mobile, "ios/App/App.xcodeproj");
-const derived = join(mobile, "ios/App/build");
+const derived = process.env.WALLY_IOS_BUILD ?? join(homedir(), "Library/Caches/wally-ios");
 const APP_ID = "app.wally.demo";
 const device = process.env.IOS_SIM_NAME ?? "iPhone 17";
 const app = join(derived, "Build/Products/Debug-iphonesimulator/App.app");

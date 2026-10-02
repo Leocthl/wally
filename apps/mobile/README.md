@@ -6,12 +6,12 @@
 - **Web changes**: none to screens. `apps/web/src/pwa/native.ts`, `register.ts` and `ui/haptics.ts` check `window.Capacitor` and do nothing in a browser.
 
 ## Commands
-Run from the repo root (`pnpm install` first). Shortcut: `cd apps/mobile`, then `pnpm <script>`.
+- **From**: the repo root after `pnpm install`. Shortcut: `cd apps/mobile`, then `pnpm <script>`.
 
 | Command | Does |
 |---|---|
 | `pnpm --filter @laisee/mobile sync` | builds `apps/web` with `VITE_API=local` into `apps/mobile/www` (not `apps/web/dist`), adds the bridge script, copies it into both projects |
-| `pnpm --filter @laisee/mobile ios:sim` | unsigned Simulator build, boots iPhone 17 (`IOS_SIM_NAME` to change), installs, launches |
+| `pnpm --filter @laisee/mobile ios:sim` | unsigned Simulator build into `~/Library/Caches/wally-ios` (`WALLY_IOS_BUILD` to change), boots iPhone 17 (`IOS_SIM_NAME` to change), installs, launches |
 | `pnpm --filter @laisee/mobile android:apk` | `assembleDebug`; APK at `android/app/build/outputs/apk/debug/app-debug.apk` |
 | `pnpm --filter @laisee/mobile ios:open` / `android:open` | opens Xcode / Android Studio |
 | `pnpm --filter @laisee/mobile assets` | icon and splash sets from `apps/web/public/icons/icon.svg` (`assets/` masters, then `@capacitor/assets`) |
@@ -37,10 +37,10 @@ Run from the repo root (`pnpm install` first). Shortcut: `cd apps/mobile`, then 
 ```
 cd apps/mobile
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
-  -destination 'generic/platform=iOS' -derivedDataPath ios/App/build -allowProvisioningUpdates \
+  -destination 'generic/platform=iOS' -derivedDataPath ~/Library/Caches/wally-ios -allowProvisioningUpdates \
   DEVELOPMENT_TEAM=<team id> PRODUCT_BUNDLE_IDENTIFIER=app.wally.demo.<yourname> build
 xcrun devicectl list devices
-xcrun devicectl device install app --device <device id> ios/App/build/Build/Products/Debug-iphoneos/App.app
+xcrun devicectl device install app --device <device id> ~/Library/Caches/wally-ios/Build/Products/Debug-iphoneos/App.app
 ```
 
 - **Via Xcode instead**: set the Team under Signing and Capabilities, then run `git restore apps/mobile/ios/App/App.xcodeproj/project.pbxproj` before committing.
