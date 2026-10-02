@@ -9,6 +9,7 @@ import { BothLanguages, Tx } from "../evidence/components/Tx";
 import { useBoothContext } from "../hooks/useBooth";
 import { S } from "../i18n/strings";
 import { UI } from "../i18n/ui";
+import { PhoneQr } from "../shell/PhoneQr";
 import { Icon } from "../ui/icons";
 import { LocaleProvider, useLocale } from "../ui/locale";
 import { Wordmark } from "../wally/Wordmark";
@@ -101,6 +102,7 @@ function PresenterBody({ lang, onLang }: { readonly lang: PresenterLang; readonl
       <div className="pr-stage">
         <div className="pr-main">
           <Stage view={view} mode={mode} />
+          <PhoneQr variant="stage" />
         </div>
         {wide ? null : <BudgetSide packet={state.packet} cards={state.cards} />}
       </div>
