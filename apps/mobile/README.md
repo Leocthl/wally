@@ -1,9 +1,9 @@
 # apps/mobile
 
 - **What**: iOS and Android shells (Capacitor 8) around the `apps/web` build. App id `app.wally.demo`, name Wally.
-- **Mode**: on-device only. The real engine runs in the page with recorded model answers, no server, no network call. The rail is SIMULATED.
-- **Not built**: live Mac-backed mode over the LAN.
-- **Web changes**: none to screens. `apps/web/src/pwa/native.ts`, `register.ts` and `ui/haptics.ts` check `window.Capacitor` and do nothing in a browser.
+- **Mode**: on-device by default. The real engine runs in the page with recorded model answers, no server, no network call. The rail is SIMULATED.
+- **Live mode over the LAN (opt-in)**: About, "Connect to the booth Mac": paste the link the booth Mac shows (QR panel in About or Presenter, server started with `pnpm demo:lan`). The page then calls `http://<mac-ip>:8787` with the pairing token; see `apps/web/README.md`, "Phones on the booth Wi-Fi". "Disconnect" returns to on-device mode.
+- **Web changes**: `apps/web/src/pwa/native.ts`, `register.ts` and `ui/haptics.ts` check `window.Capacitor` and do nothing in a browser. The About sheet has one native-only row, "Connect to the booth Mac" (`src/shell/BoothConnect.tsx`).
 
 ## Commands
 - **From**: the repo root after `pnpm install`. Shortcut: `cd apps/mobile`, then `pnpm <script>`.
@@ -55,7 +55,8 @@ xcrun devicectl device install app --device <device id> ~/Library/Caches/wally-i
 - **Haptics**: the Capacitor Haptics plugin; `navigator.vibrate` in a browser. Off under reduced motion.
 
 ## Known limits
-- **Recorded answers only**: no Laya, no live judge, no LAN mode.
+- **Recorded answers unless connected**: on-device mode has no Laya and no live judge; connecting to the booth Mac (same Wi-Fi) gives both.
+- **LAN door**: Android allows cleartext and mixed content; iOS allows local networking and asks once for local network access. Nothing else loads over http. The LAN link itself has not been run in either shell.
 - **Debug builds**: no store signing, no push, no camera.
 - **Checked**: iPhone 17 Simulator (iOS 27.0, light and dark), Android emulator API 36 (light, dark, back button). Not run on a physical device.
 - **Tablets**: iPad runs the same layout; Android and iPhone are locked to portrait.

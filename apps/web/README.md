@@ -3,7 +3,7 @@
 - **What**: the booth UI (Vite + React 19), mobile first, EN with a zh-HK second line. The rail is SIMULATED on every screen.
 - **Two modes, one interface** (`ApiClient`, `src/api/types.ts`): `HttpApiClient` (`src/api/http/`, live mode) when the booth server answers `/api/info`, else `LocalApiClient` (`src/api/local/`, on-device mode: the real engine, log and SIMULATED rail in the page, recorded planner and judge answers, no network, a note on screen). `?api=local` or `VITE_API=local` forces on-device mode. `MockApiClient` is a UI-test double only. All pass `test/apiClientContract.ts`.
 - **Portable backend** (`src/booth/backend/`): the booth runner, session and `OrchestratorBackend`, no `node:` import; the server and `LocalApiClient` both run it. Key design for the phone: `src/api/local/KEYS.md`.
-- **Booth server** (`server/`, Hono, 127.0.0.1 only): `pnpm demo` from the repo root (preflight, build if needed, start), then open the printed URL. `pnpm demo:reset` resets keys, logs and the packet.
+- **Booth server** (`server/`, Hono, 127.0.0.1 only unless LAN mode): `pnpm demo` from the repo root (preflight, build if needed, start), then open the printed URL. `pnpm demo:reset` resets keys, logs and the packet. `pnpm demo:lan` is the same server for phones on the Wi-Fi (section below).
 - **Stop texts**: `src/explain/renderStop.ts` wraps a stub; lane A's `render` replaces it in one line.
 
 ## Run
@@ -29,8 +29,9 @@
 | `POST /api/seal`, `/api/scenario/:id`, `/api/propose`, `/api/revoke`, `/api/escalation/answer` | pipeline runs (`data/scenarios/booth.json`) |
 | `POST /api/verify`, `/api/tamper`, `/api/restore`, `/api/reset` | log demo and reset |
 | `GET /api/events` | SSE trace; ready comment, ids, keep-alive every 15 s, no replay |
+| `GET /api/lan` | LAN mode only, and only to a page on the Mac itself (loopback Host and peer; 404 for everyone else): `{ lan, token, urls[], qrSvg[] }` |
 
-- **Guards**: loopback Host; loopback Origin, no cross-site fetch and `application/json` on POST; body and listing-text caps; errors are JSON `{ error: { code, message } }`.
+- **Guards**: loopback Host; loopback Origin, no cross-site fetch and `application/json` on POST; body and listing-text caps; errors are JSON `{ error: { code, message } }`. LAN mode widens Host and Origin and adds the pairing token (below).
 - **DEMO SHORTCUT**: the server holds the delegator's throwaway key and signs seal, revoke and escalation answers for the shopper. A real deployment keeps that key on the shopper's device. `/api/info` says so.
 - **Laya down**: the server still starts; the judge answers ERROR and the engine escalates (R10.unavailable). `JUDGE_PROVIDER=replay` and `PLANNER_PROVIDER=replay` are labelled operator switches.
 
@@ -49,3 +50,15 @@
 | Updates | a new build waits; the "New version ready" toast reloads into it, so nothing swaps mid-demo |
 | LAN booth over http | not a secure context: no service worker, no install prompt; it runs as a normal page and iOS "Add to Home Screen" makes a home-screen icon without offline support |
 | Regenerate | `pnpm exec tsx scripts/gen-icons.ts` (icons, favicon, offline page; uses the cached Chromium) and `pnpm exec tsx scripts/gen-token-fallback.ts` |
+
+## Phones on the booth Wi-Fi
+- **Start**: `pnpm demo:lan` from the repo root: preflight with the LAN checklist (`node scripts/booth-check.mjs --lan` alone prints just that), build if needed, server on `0.0.0.0:8787`, LAN mode ON. `PORT` works; `HOST` names another bind and any non-loopback `HOST` also turns LAN mode on. Without `--lan` or `HOST` nothing changes: 127.0.0.1 only, no token.
+- **Show the code**: open `http://127.0.0.1:8787/#/booth` on the Mac. About (the info button) and Presenter show "Open Wally on your phone": a QR code, the links, Copy link and a "LAN mode is ON" chip. Nothing shows on any other page, or when LAN mode is off (`/api/lan` is a 404 there).
+- **Phone**: scan with the camera and tap the link. `/?t=<token>` sets a cookie (`wally_t`, HttpOnly, SameSite=Strict) and redirects to `/` without the token. The phone must be on the same Wi-Fi as the Mac. The `.local` link works on iPhones; some Android phones need the IP link.
+- **Token**: 128 random bits, new on every server start, so a restart means scanning again. Every `/api/*` call needs it (header `X-Wally-Token` or the cookie) except `/api/health`; the app files need none. The Mac's own pages need none (loopback Host and peer). Wrong or missing: 401 JSON. No other hardening: plain http, one shared token.
+- **Host and Origin**: Host must be loopback, one of the Mac's non-internal IPv4 addresses, its hostname or `<hostname>.local`, any port. A POST Origin must be the page's own address, a loopback page, or a native shell (`capacitor://localhost`, `http://localhost`, `https://localhost`). Those three get CORS: the origin is echoed (never `*`), headers `content-type, x-wally-token`, `X-Event-Seq` exposed.
+- **macOS firewall**: the first start may ask to let `node` accept incoming connections. Click Allow, once, on the Mac. If a phone times out, check System Settings, Network, Firewall.
+- **Wi-Fi client isolation**: venue and hotel Wi-Fi often stops phones from reaching other devices. The page never loads, or `/api/health` times out from the phone. Use the Mac's own network (System Settings, General, Sharing, Internet Sharing) or a phone hotspot that the Mac joins.
+- **Add to Home Screen** (iOS): works over http as a web clip with an icon and full-screen launch. Plain http is not a secure context: no service worker, no install prompt, no offline mode. The clip may start without the pairing cookie and then shows on-device mode: open the QR link in Safari instead.
+- **Native app**: About, "Connect to the booth Mac". Paste the link (Copy link on the Mac, then Universal Clipboard on an iPhone). Only a 192.168, 10, 172.16 address, loopback or a `.local` name is accepted. The Mac is asked for `/api/info` with the token first; only an answer saves the address (`wally:server`, `wally:token`) and reloads into live mode. The first call on an iPhone shows the local network permission prompt: Allow, then Connect again. "Disconnect" goes back to on-device mode. Native config: `apps/mobile/README.md`.
+- **Browser storage keys**: `wally:token` (session storage; local storage in the native app), `wally:server` (local storage, native app only). A page address with `?t=` (a dev server in front of the booth server) is read once and cleaned.
