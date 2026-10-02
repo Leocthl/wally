@@ -66,6 +66,21 @@ export interface InjectionInfo {
   readonly hardRulesAlsoStop: boolean;
 }
 
+/**
+ * The past that makes the packet what the scenario needs. B2 seeds it into a real signed log before the decision; the
+ * packet below is what folding that log gives (a test checks it against core's own foldPacket). `agoS` is seconds before
+ * the decision time. All of it is SIMULATED, and the cards in it are not known to the rail.
+ */
+export type HistoryEvent =
+  /** A card minted long ago and charged in full: this is what has been spent. */
+  | { readonly kind: "spent"; readonly cardId: string; readonly agoS: number; readonly amountMinor: number }
+  /** A card minted and then voided: it counts as a mint in the rolling window and holds no money. */
+  | { readonly kind: "released"; readonly cardId: string; readonly agoS: number; readonly limitMinor: number }
+  /** A card minted and still ACTIVE: its limit is committed and it counts against the active-card maximum. */
+  | { readonly kind: "active"; readonly cardId: string; readonly agoS: number; readonly limitMinor: number }
+  /** The delegator revoked the mandate. */
+  | { readonly kind: "revoked"; readonly agoS: number };
+
 export interface Scenario {
   readonly id: string;
   readonly index: number;
@@ -77,10 +92,13 @@ export interface Scenario {
   readonly now: string;
   readonly mandate: Mandate;
   readonly packet: PacketState;
+  readonly history: readonly HistoryEvent[];
   readonly listing: ListingRecord;
   readonly scameterCapture: ScameterCapture | null;
   /** The one recorded planner output that feeds B0, B1 and B2. */
   readonly planner: PlannerReplayRecord;
+  /** What the shopper typed. The recorded planner does not read it; the orchestrator needs one. */
+  readonly requestText: string;
   readonly cart: Cart;
   readonly events: ScenarioEvents;
   /** Ground truth for the overspend metric: min(remaining, effective per-purchase cap). */

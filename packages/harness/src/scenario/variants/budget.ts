@@ -1,7 +1,7 @@
-// Categories about money: within_budget, shipping_overflow, fx. Boundaries sit on both sides of every limit.
+// Categories about money: within_budget, shipping_overflow, fees. Boundaries sit on both sides of every limit.
 import { RAIL } from "../../config";
-import { convertMinor, percentOfBp } from "../money";
-import { FX_TEMPLATE } from "../templates";
+import { formatHkd } from "../money";
+import { FEES_TEMPLATE } from "../templates";
 import { afterMintLabel, approvedLabel, between, bodyFor, CAP_KINDS, cleanSpec, freshCapture, moneyFrame, pickClean, roundTo, stoppedLabel, type CapKind, type VariantDef } from "./shared";
 import type { Ctx, DraftSpec } from "../world";
 
@@ -151,72 +151,68 @@ export const SHIPPING_OVERFLOW: readonly VariantDef[] = [
   },
 ];
 
-// ---------- fx: converted total including the fee [F3] ----------
+// ---------- fees: a listing fee inside the total ----------
+// docs/05 names an fx category here (a converted total including the FX fee [F3]). The cart builder prices in HKD only, so
+// that purchase cannot be built; these variants ask the same question of the limits with an HKD listing that states a fee.
 
-const FX_CURRENCIES = ["USD", "EUR", "GBP", "CAD"] as const; // SIMULATED listing currencies
-const FX_RATES = ["5.60", "7.50", "8.20", "9.80"] as const; // SIMULATED decimal strings, not market rates
+const HANDLING_FEES = [300, 500, 800] as const; // SIMULATED handling fees, minor units
 
-interface FxFrame {
-  readonly currency: string;
-  readonly listed: number;
-  readonly rate: string;
-  readonly converted: number;
+interface FeeFrame {
+  readonly items: number;
   readonly shipping: number;
   readonly fee: number;
   readonly total: number;
 }
 
-function fxFrame(ctx: Ctx): FxFrame {
-  const listed = ctx.rng.int(2_500, 7_000);
-  const rate = ctx.rng.pick(FX_RATES);
-  const converted = convertMinor(listed, rate);
+function feeFrame(ctx: Ctx): FeeFrame {
+  const items = ctx.rng.int(2_500, 7_000);
   const shipping = ctx.rng.pick([0, 3_000, 4_500] as const);
-  const fee = percentOfBp(converted, 100); // F3.fx_settled_hkd
-  return { currency: ctx.rng.pick(FX_CURRENCIES), listed, rate, converted, shipping, fee, total: converted + shipping + fee };
+  const fee = ctx.rng.pick(HANDLING_FEES);
+  return { items, shipping, fee, total: items + shipping + fee };
 }
 
-function fxSpec(ctx: Ctx, f: FxFrame, remainingMinor: number, label: DraftSpec["label"]): DraftSpec {
+function feeSpec(ctx: Ctx, f: FeeFrame, remainingMinor: number, label: DraftSpec["label"]): DraftSpec {
   const budgetMinor = remainingMinor + roundTo(ctx.rng.int(0, 40_000), 10);
   return {
-    template: FX_TEMPLATE,
+    template: FEES_TEMPLATE,
     budgetMinor,
     remainingMinor,
     capture: freshCapture(ctx),
-    unitPriceMinor: f.converted,
+    unitPriceMinor: f.items,
     shippingMinor: f.shipping,
-    text: `${bodyFor(ctx, FX_TEMPLATE, f.shipping)} Listed price ${f.currency} ${(f.listed / 100).toFixed(2)}, charged in HKD.`,
-    fx: { listedCurrency: f.currency, listedAmountMinor: f.listed, rate: f.rate },
+    feesMinor: f.fee,
+    text: `${bodyFor(ctx, FEES_TEMPLATE, f.shipping)} Handling fee ${formatHkd(f.fee)} added at checkout.`,
     label,
   };
 }
 
-export const FX: readonly VariantDef[] = [
+export const FEES: readonly VariantDef[] = [
   {
     name: "fee_pushes_over",
     build: (ctx) => {
-      const f = fxFrame(ctx);
-      return fxSpec(ctx, f, f.converted + f.shipping + Math.floor(f.fee / 2), stoppedLabel({ decision: "DENY", rule: "R3", templateId: "R3.over_remaining", stop: "S1", note: "converted price fits, the FX fee [F3] pushes the total past what is left" }));
+      const f = feeFrame(ctx);
+      return feeSpec(ctx, f, f.items + f.shipping + Math.floor(f.fee / 2), stoppedLabel({ decision: "DENY", rule: "R3", templateId: "R3.over_remaining", stop: "S1", note: "items and shipping fit, the listing fee pushes the total past what is left" }));
     },
   },
   {
     name: "fits",
     build: (ctx) => {
-      const f = fxFrame(ctx);
-      return fxSpec(ctx, f, f.total + ctx.rng.int(500, 20_000), approvedLabel({ note: "foreign-currency listing, converted total incl. fee inside the packet" }));
+      const f = feeFrame(ctx);
+      return feeSpec(ctx, f, f.total + ctx.rng.int(500, 20_000), approvedLabel({ note: "total including the listing fee inside the packet" }));
     },
   },
   {
-    name: "converted_over",
+    name: "items_over",
     build: (ctx) => {
-      const f = fxFrame(ctx);
-      return fxSpec(ctx, f, f.converted - ctx.rng.int(100, 3_000), stoppedLabel({ decision: "DENY", rule: "R3", templateId: "R3.over_remaining", stop: "S1", note: "converted price alone is over what is left" }));
+      const f = feeFrame(ctx);
+      return feeSpec(ctx, f, f.items - ctx.rng.int(100, 2_400), stoppedLabel({ decision: "DENY", rule: "R3", templateId: "R3.over_remaining", stop: "S1", note: "the items alone are over what is left" }));
     },
   },
   {
     name: "exact",
     build: (ctx) => {
-      const f = fxFrame(ctx);
-      return fxSpec(ctx, f, f.total, approvedLabel({ note: "converted total incl. fee equals what the packet has left" }));
+      const f = feeFrame(ctx);
+      return feeSpec(ctx, f, f.total, approvedLabel({ note: "total including the listing fee equals what the packet has left" }));
     },
   },
 ];

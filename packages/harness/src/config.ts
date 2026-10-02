@@ -34,16 +34,18 @@ export const EXAMPLE_MANDATE = {
   expiryS: 7 * 24 * 60 * 60, // F90.m2_expiry
 } as const;
 
-/** F3.fx_settled_hkd: 1% foreign transaction settled in HK$, in basis points. */
-export const FX_FEE_BP = 100;
-
 /** Scenario clock origin. Inside the F13 event window and equal to the fixtures' start [F59]. */
 export const SCENARIO_EPOCH = "2026-10-03T02:00:00Z";
 
 /** Spacing between scenario decision times, so velocity and capture-age windows never overlap across scenarios. */
 export const SCENARIO_SPACING_MS = 7 * 60 * 1000;
 
-/** Fixed number of scenario categories; the order below is the plan order, not a ranking. */
+/**
+ * Fixed number of scenario categories; the order below is the plan order, not a ranking. docs/05 lists `fx` (a converted total
+ * including the FX fee [F3]) where this list has `fees`: the cart builder prices in HKD only (cart.fx is always null and a
+ * listing in another currency is refused), so a foreign-currency purchase cannot be built. `fees` keeps the slot and the
+ * question that matters for the limits, a total that includes a listing fee, with HKD listings.
+ */
 export const CATEGORIES = [
   "within_budget",
   "shipping_overflow",
@@ -55,7 +57,7 @@ export const CATEGORIES = [
   "padded_listing",
   "flagged_seller",
   "off_category",
-  "fx",
+  "fees",
   "duplicate",
   "replay",
   "wrong_merchant",
@@ -82,7 +84,7 @@ export const SLOTS: readonly Category[] = [
   "padded_listing",
   "flagged_seller",
   "off_category",
-  "fx",
+  "fees",
   "duplicate",
   "replay",
   "wrong_merchant",

@@ -2,9 +2,8 @@
 // shorter run is a prefix of a longer one. Category per slot comes from config.SLOTS; the variant cycles per category.
 import { SCENARIO_SPACING_MS, SLOTS, type Category } from "../config";
 import { createRng, deriveSeed, hashString } from "../prng";
-import type { CartBuilder } from "./cart";
 import type { Scenario } from "../types";
-import { FX, SHIPPING_OVERFLOW, WITHIN_BUDGET } from "./variants/budget";
+import { FEES, SHIPPING_OVERFLOW, WITHIN_BUDGET } from "./variants/budget";
 import { FLAGGED_SELLER, INJECTED_TEXT, OFF_CATEGORY, PADDED_LISTING } from "./variants/listing";
 import { DUPLICATE, JUDGE_DOWN, PRICE_DRIFT, RAIL_TIMEOUT, REPLAY, WRONG_MERCHANT } from "./variants/rail";
 import type { VariantDef } from "./variants/shared";
@@ -23,7 +22,7 @@ export const CATEGORY_VARIANTS: Readonly<Record<Category, readonly VariantDef[]>
   padded_listing: PADDED_LISTING,
   flagged_seller: FLAGGED_SELLER,
   off_category: OFF_CATEGORY,
-  fx: FX,
+  fees: FEES,
   duplicate: DUPLICATE,
   replay: REPLAY,
   wrong_merchant: WRONG_MERCHANT,
@@ -54,8 +53,6 @@ export function occurrenceOf(index: number): number {
 export interface GenerateOptions {
   readonly seed: number;
   readonly n: number;
-  /** Core's cart builder (TASKS A-31) when it exists; the stand-in otherwise. */
-  readonly buildCart?: CartBuilder;
 }
 
 function contextFor(seed: number, index: number): Ctx {
@@ -84,7 +81,7 @@ export function generateScenarios(opts: GenerateOptions): readonly Scenario[] {
     const ctx = contextFor(opts.seed, index);
     const variant = CYCLES[ctx.category].find((v) => v.name === ctx.variant);
     if (!variant) throw new Error(`no variant ${ctx.variant} in ${ctx.category}`);
-    const scenario = assemble(ctx, variant.build(ctx), opts.buildCart);
+    const scenario = assemble(ctx, variant.build(ctx));
     assertScenarioValid(scenario);
     return scenario;
   });
