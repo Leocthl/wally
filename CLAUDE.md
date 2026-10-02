@@ -1,4 +1,4 @@
-# Lai See Agent (利是 Agent)
+# Wally
 
 - Sealed-budget mandate engine for AI shopping agents: only a cart the policy engine approves gets a single-use token (rail SIMULATED).
 

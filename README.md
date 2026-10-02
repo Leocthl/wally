@@ -1,4 +1,4 @@
-# Lai See Agent (利是 Agent)
+# Wally
 
 - A sealed-budget mandate engine for AI shopping agents. The card rail is **SIMULATED**. Not affiliated with HKT, Tap & Go or Mastercard.
 - **Status**: built during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
