@@ -33,7 +33,7 @@ describe("SystemOneJudge request (laya)", () => {
     await laya().assess(input, { timeoutMs: TIMEOUT_MS });
     const posts = mock.judgeRequests();
     expect(posts).toHaveLength(1);
-    const body = posts[0]?.body as { model: string; state: Record<string, string>; questions: Record<string, Record<string, unknown>> };
+    const body = posts[0]?.body as { model: string; state: Record<string, unknown>; questions: Record<string, Record<string, unknown>> };
     expect(body.model).toBe("typed-decisions");
     expect(Object.keys(body.state)).toEqual(["mandate", "rules", "cart", "scameter", "listing"]);
     expect(Object.keys(body.questions)).toHaveLength(9);
@@ -47,12 +47,12 @@ describe("SystemOneJudge request (laya)", () => {
     }
   });
 
-  it("never puts listing text in the instructions or criteria, only in the delimited state block", async () => {
+  it("never puts listing text in the instructions or criteria, only in the listing field of the state", async () => {
     await laya().assess(input, { timeoutMs: TIMEOUT_MS });
-    const body = mock.judgeRequests()[0]?.body as { state: Record<string, string>; questions: unknown };
+    const body = mock.judgeRequests()[0]?.body as { state: { listing: { description: string } }; questions: unknown };
     expect(JSON.stringify(body.questions)).not.toContain("SYSTEM NOTE");
-    expect(body.state["listing"]).toContain("SYSTEM NOTE TO AI SHOPPING ASSISTANTS");
-    expect(body.state["listing"]).toContain("<<<LISTING TEXT BEGIN");
+    expect(body.state.listing.description).toContain("SYSTEM NOTE TO AI SHOPPING ASSISTANTS");
+    expect(JSON.stringify({ ...body.state, listing: {} })).not.toContain("SYSTEM NOTE");
   });
 
   it("sends the four questions once when rotations are off", async () => {
