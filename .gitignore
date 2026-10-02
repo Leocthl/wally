@@ -15,3 +15,6 @@ services/laya/*.pid
 services/laya/*.log
 .worktrees/
 .claude/
+apps/web/test-results/
+apps/*/test-results/
+playwright-report/
