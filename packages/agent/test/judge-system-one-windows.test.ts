@@ -54,14 +54,14 @@ describe("with windowing", () => {
     expect(validateJudgeRecord(record).ok).toBe(true);
   });
 
-  it("takes the best case for scope and the worst case for the rest from the windows", async () => {
+  it("takes the worst case for every question, scope included, from the windows", async () => {
     mock.setBehavior((req) =>
       descriptionOf(req).includes("TAILMARKER")
         ? { kind: "ok", dists: { scope_fit: { in_scope: 0.3, out_of_scope: 0.7 }, seller_risk: { low_risk: 0.2, high_risk: 0.8 } } }
         : { kind: "ok", dists: { scope_fit: { in_scope: 0.9, out_of_scope: 0.1 } } },
     );
     const record = await judge({ windowing }).assess(inputWithText(tailInjected), { timeoutMs: TIMEOUT_MS });
-    expect(record.answers?.scope_fit.in_scope).toBeCloseTo(0.9, 5);
+    expect(record.answers?.scope_fit.in_scope).toBeCloseTo(0.3, 5);
     expect(record.answers?.seller_risk.high_risk).toBeCloseTo(0.8, 5);
   });
 

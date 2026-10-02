@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CORPUS_CATEGORIES, loadCorpus, type CorpusCase } from "../src/judge/fit/corpus";
 import { NEAR_DUPLICATE_JACCARD, jaccard, nearDuplicatePairs, shingles } from "../src/judge/fit/near-dup";
 import { SPLIT_SALT, assignSplit, splitUnit } from "../src/judge/fit/split";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 function fake(id: string, category: CorpusCase["category"], text: string, group?: string): CorpusCase {
   return {

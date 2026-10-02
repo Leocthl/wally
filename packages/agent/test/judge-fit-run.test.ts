@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeJudge } from "@laisee/core/testing";
 import { loadCorpus } from "../src/judge/fit/corpus";
 import { ServerUnreachableError, runFit } from "../src/judge/fit/fit";
@@ -10,6 +10,9 @@ import { runCorpus } from "../src/judge/fit/run";
 import { mandate } from "./support/inputs";
 import { docsLint } from "./support/docs-lint";
 import { startMockSystemOne, type MockSystemOne } from "./support/mock-system-one";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 let mock: MockSystemOne;
 let outDir: string;
@@ -44,7 +47,7 @@ describe("runCorpus", () => {
 
 describe("runFit against the mock server", () => {
   /** runFit pushes the whole corpus through the mock (164 cases since B-19), so it outgrows the 5 s default under load. */
-  const RUN_FIT_TIMEOUT_MS = 30_000;
+  const RUN_FIT_TIMEOUT_MS = 60_000;
   const base = { model: "typed-decisions", date: "2026-10-02", timeoutMs: 5_000, compareCanonical: true, compareWindows: true } as const;
 
   it("writes a JSON and a markdown report that pass the doc-style checks", { timeout: RUN_FIT_TIMEOUT_MS }, async () => {

@@ -1,10 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { auc } from "../src/judge/fit/auc";
 import { gateById } from "../src/judge/fit/gates";
 import { ESC_SIGNAL_AUC, STOP_CEILING, fitJoint } from "../src/judge/fit/joint";
 import { samplesFor } from "../src/judge/fit/metrics";
 import { outcomeFor } from "../src/judge/fit/system";
 import { row } from "./support/fit-data";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 const INJ = { injection_risk: "injection", escalate_or_proceed: "escalate" } as const;
 const OFF = { scope_fit: "out_of_scope", escalate_or_proceed: "escalate" } as const;

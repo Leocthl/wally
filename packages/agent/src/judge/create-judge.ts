@@ -39,7 +39,12 @@ const PROVIDERS: readonly JudgeProvider[] = ["laya", "jev", "replay"];
 const MODES: readonly JudgeMode[] = ["shadow", "enforce"];
 /** Fail closed (I5): an unset JUDGE_MODE enforces. Shadow never blocks, so it is used only when set explicitly. */
 export const DEFAULT_JUDGE_MODE: JudgeMode = "enforce";
-const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
+/** Loopback means 127.0.0.0/8, ::1 or the literal host localhost; *.localhost names do not count (audit low). */
+const LOOPBACK_HOSTS = new Set(["localhost", "[::1]", "::1"]);
+const IPV4_LOOPBACK = /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+// C0 controls and DEL: a key with one could split the Authorization header (S-JUDGE-3).
+// eslint-disable-next-line no-control-regex -- the point of this pattern is to match control characters
+const CONTROL_CHARS = /[\u0000-\u001F\u007F]/;
 
 const fail = (error: string): SettingsResult => ({ ok: false, error });
 
@@ -48,15 +53,23 @@ function read(env: JudgeEnv, name: string): string | undefined {
   return value === undefined || value === "" ? undefined : value;
 }
 
-const isLoopback = (url: URL): boolean => LOOPBACK_HOSTS.has(url.hostname) || url.hostname.endsWith(".localhost");
+const isLoopback = (url: URL): boolean => LOOPBACK_HOSTS.has(url.hostname) || IPV4_LOOPBACK.test(url.hostname);
 
 function parseUrl(name: string, value: string): URL | string {
   try {
     const url = new URL(value);
+    if (url.username !== "" || url.password !== "") return `${name} must not contain a user name or password`;
     return url.protocol === "http:" || url.protocol === "https:" ? url : `${name} must be an http or https URL`;
   } catch {
     return `${name} is not a valid URL`;
   }
+}
+
+/** A key is sent as a Bearer header; control characters inside it are refused, never echoed. */
+function readKey(env: JudgeEnv, name: string): { readonly key?: string; readonly error?: string } {
+  const key = read(env, name);
+  if (key === undefined) return {};
+  return CONTROL_CHARS.test(key) ? { error: `${name} contains control characters` } : { key };
 }
 
 function layaSettings(env: JudgeEnv, mode: JudgeMode): SettingsResult {
@@ -66,12 +79,15 @@ function layaSettings(env: JudgeEnv, mode: JudgeMode): SettingsResult {
   if (!isLoopback(url) && read(env, "LAYA_ALLOW_REMOTE") !== "1") {
     return fail("LAYA_BASE_URL is not a loopback address: listing text would leave this machine. Set LAYA_ALLOW_REMOTE=1 to allow it");
   }
-  const apiKey = read(env, "LAYA_API_KEY");
+  const { key: apiKey, error } = readKey(env, "LAYA_API_KEY");
+  if (error !== undefined) return fail(error);
+  if (apiKey !== undefined && url.protocol !== "https:" && !isLoopback(url)) return fail("LAYA_BASE_URL must use https when LAYA_API_KEY is set for a remote host");
   return { ok: true, settings: { provider: "laya", mode, baseUrl, model: read(env, "LAYA_MODEL") ?? DEFAULT_LAYA_MODEL, ...(apiKey === undefined ? {} : { apiKey }) } };
 }
 
 function jevSettings(env: JudgeEnv, mode: JudgeMode): SettingsResult {
-  const apiKey = read(env, "TYPESAFE_API_KEY");
+  const { key: apiKey, error } = readKey(env, "TYPESAFE_API_KEY");
+  if (error !== undefined) return fail(error);
   if (apiKey === undefined) return fail("JUDGE_PROVIDER=jev needs TYPESAFE_API_KEY");
   const baseUrl = read(env, "JEV_BASE_URL") ?? DEFAULT_JEV_BASE_URL;
   const url = parseUrl("JEV_BASE_URL", baseUrl);

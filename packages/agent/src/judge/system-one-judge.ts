@@ -116,7 +116,8 @@ export class SystemOneJudge implements WarmableJudge {
       headers: this.#headers(),
       rows: planRows(this.#options.rotations ?? true),
       questions: this.#options.questions,
-      requireUsage: this.provider === "laya",
+      // Without a usage block nobody can tell whether the input was truncated: ERROR for every provider (I5).
+      requireUsage: true,
       deadline,
     };
   }

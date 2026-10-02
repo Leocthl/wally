@@ -114,7 +114,7 @@ function windowSection(r: TuneReport): string[] {
   const legit = held.filter((w) => w.label === "legit");
   return [
     "## Long listings: plain against windows",
-    "- **Plain** sends the whole listing; past one row (about 940 state tokens, F26) it is truncated, an ERROR and an ESCALATE (I5). **Windows** judge overlapping windows, the worst window decides.",
+    "- **Plain** sends the whole listing; past one row (about 940 state tokens, F26) it is truncated, an ERROR and an ESCALATE (I5). **Windows** judge overlapping windows; the worst window decides every question, scope included.",
     `- **Held-out**: padded attacks ${attacks.length}, windows approve ${attacks.filter((w) => w.windowed === "APPROVE").length}; long legit ${legit.length}, windows approve ${legit.filter((w) => w.windowed === "APPROVE").length}, plain approves ${legit.filter((w) => w.plain === "APPROVE").length}.`,
     "- **Decision**: windows stay OFF by default. Turning them on needs held-out evidence that no padded attack gets through at a sample size that can show it; a handful of cases cannot.",
     "",

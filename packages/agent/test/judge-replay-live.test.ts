@@ -15,6 +15,8 @@ import { DEMO_LISTINGS, demoInput, mandate, type DemoListing } from "./support/i
 const BASE_URL = process.env["LAYA_BASE_URL"] ?? DEFAULT_LAYA_BASE_URL;
 const MODEL = process.env["LAYA_MODEL"] ?? DEFAULT_LAYA_MODEL;
 const LIVE_TIMEOUT_MS = 20_000;
+/** Per test: generous, because a loaded machine queues calls on the one-worker server. */
+const TEST_TIMEOUT_MS = 60_000;
 
 const proposal = JSON.parse(readFileSync(new URL("../../../data/results/judge-thresholds-proposal.json", import.meta.url), "utf8")) as {
   thresholds: { t_inj: number; t_sell_deny: number; t_sell_esc: number; t_scope: number; t_esc: number | null };
@@ -58,7 +60,7 @@ async function layaIsUp(): Promise<boolean> {
 
 describe.skipIf(!(await layaIsUp()))("recorded and live demo answers agree on the R10 outcome (live Laya)", () => {
   const live = new SystemOneJudge({ provider: "laya", baseUrl: BASE_URL, model: MODEL });
-  it.each([...DEMO_LISTINGS])("%s", { timeout: LIVE_TIMEOUT_MS * 2 }, async (name) => {
+  it.each([...DEMO_LISTINGS])("%s", { timeout: TEST_TIMEOUT_MS }, async (name) => {
     const record = await live.assess(demoInput(name), { timeoutMs: LIVE_TIMEOUT_MS });
     expect(record.status).toBe("OK");
     expect(r10(record, PROPOSED)).toEqual(r10(await recorded(name), PROPOSED));

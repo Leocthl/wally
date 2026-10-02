@@ -172,7 +172,7 @@ function windowSection(r: FitReport): string[] {
   if (r.windows === null) return [];
   return [
     "## Long listings: truncated or judged in windows",
-    `- **Plain**: the whole listing in one state. Longer than one row (about 940 state tokens, F26) it comes back truncated, which is an ERROR and an ESCALATE (I5). **Windows**: windows of ${r.windows.windowChars} characters overlapping by ${r.windows.overlapChars}, one call each, worst window decides injection and seller risk, best window decides scope. Off by default.`,
+    `- **Plain**: the whole listing in one state. Longer than one row (about 940 state tokens, F26) it comes back truncated, which is an ERROR and an ESCALATE (I5). **Windows**: windows of ${r.windows.windowChars} characters overlapping by ${r.windows.overlapChars}, one call each, the worst window decides every question, scope included. Off by default.`,
     "- **Outcome** is what R10 does at the current thresholds.",
     windowVerdict(r.windows.rows),
     "",

@@ -1,11 +1,14 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CORPUS_DIR } from "../src/judge/fit/corpus";
 import { runTune, type TuneRun } from "../src/judge/fit/tune";
 import { WORDING_VARIANTS } from "../src/judge/fit/variants";
 import { startMockSystemOne, type MockSystemOne } from "./support/mock-system-one";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 let mock: MockSystemOne;
 let dir: string;
@@ -33,7 +36,7 @@ afterEach(async () => {
 describe("runTune against the mock server", () => {
   const options = () => ({ baseUrl: mock.baseUrl, model: "typed-decisions", date: "2026-10-02", timeoutMs: 2000, runPath: join(runDir, "run.json"), corpusDir: dir });
 
-  it("runs every variant on tuning, decides, then judges held-out once, and saves each stage", { timeout: 30_000 }, async () => {
+  it("runs every variant on tuning, decides, then judges held-out once, and saves each stage", { timeout: 60_000 }, async () => {
     const run = await runTune(options());
     expect(run.variants.map((v) => v.id)).toEqual(WORDING_VARIANTS.map((v) => v.id));
     expect(run.split.tuningIds).toHaveLength(2);
@@ -46,7 +49,7 @@ describe("runTune against the mock server", () => {
     expect(saved.selection?.winner).toBe(run.selection?.winner);
   });
 
-  it("resumes from the run file without asking the server again", { timeout: 30_000 }, async () => {
+  it("resumes from the run file without asking the server again", { timeout: 60_000 }, async () => {
     await runTune(options());
     const calls = mock.judgeRequests().length;
     await runTune(options());

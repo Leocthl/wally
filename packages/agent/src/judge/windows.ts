@@ -1,8 +1,7 @@
 // Stretch: judge a long listing in overlapping windows so nothing falls past the 1,024-token row (F26).
-// Each window gets its own call; the answers are merged conservatively: the worst window decides
-// injection_risk, seller_risk and escalate_or_proceed, and the best window decides scope_fit (a clothing
-// listing with a long unrelated tail is still a clothing listing). Whole distributions are taken from one
-// window, never mixed label by label, so each question still sums to 1.
+// Each window gets its own call; the answers are merged conservatively: the worst window decides every question,
+// scope_fit included (the least in-scope window, so an off-category tail cannot hide behind a clothing head; audit
+// low). Whole distributions are taken from one window, never mixed label by label.
 import type { JudgeAnswers } from "@laisee/core/generated";
 import { DEFAULT_MAX_WINDOWS, DEFAULT_WINDOW_CHARS, DEFAULT_WINDOW_OVERLAP_CHARS } from "./config";
 import type { ListingPart } from "./state";
@@ -53,7 +52,7 @@ function pickBy(list: readonly JudgeAnswers[], key: (a: JudgeAnswers) => number)
 export function combineWindowAnswers(list: readonly JudgeAnswers[]): JudgeAnswers {
   if (list.length === 0) throw new Error("combineWindowAnswers needs at least one window");
   return {
-    scope_fit: pickBy(list, (a) => a.scope_fit.in_scope).scope_fit,
+    scope_fit: pickBy(list, (a) => -a.scope_fit.in_scope).scope_fit,
     injection_risk: pickBy(list, (a) => a.injection_risk.suspicious + a.injection_risk.injection).injection_risk,
     seller_risk: pickBy(list, (a) => a.seller_risk.high_risk).seller_risk,
     escalate_or_proceed: pickBy(list, (a) => a.escalate_or_proceed.escalate).escalate_or_proceed,

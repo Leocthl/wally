@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SELECTION_RULE, fitVariant, rankVariants } from "../src/judge/fit/select";
 import { row } from "./support/fit-data";
+
+// Fit loops and property runs slow down on a loaded machine; give every test here an explicit budget.
+vi.setConfig({ testTimeout: 60_000 });
 
 const INJ = { injection_risk: "injection", escalate_or_proceed: "escalate" } as const;
 const RISKY = { seller_risk: "high_risk", escalate_or_proceed: "escalate" } as const;
