@@ -116,6 +116,21 @@ describe("baseline metrics carry k and n", () => {
     expect(baselineMetrics("B2", [{ scenario: legit, outcome: paid(legit, "B2") }]).latency).toBeNull();
   });
 
+  it("counts judge timeouts and errors out of the runs that called a judge", () => {
+    const status = (st: "OK" | "TIMEOUT" | "ERROR", over: Partial<RunOutcome> = {}): RunOutcome =>
+      outcome(legit, "B2", { judge: { provider: "laya", status: st, inputTruncated: false, latencyMs: 1, injectionCheck: "ABSENT" }, ...over });
+    const m = baselineMetrics("B2", [
+      { scenario: legit, outcome: status("OK") },
+      { scenario: legit, outcome: status("TIMEOUT") },
+      { scenario: legit, outcome: status("TIMEOUT") },
+      { scenario: legit, outcome: status("ERROR") },
+      { scenario: legit, outcome: outcome(legit, "B2") }, // no judge call recorded
+    ]);
+    expect(m.judgeTimeouts).toEqual({ k: 2, n: 4 });
+    expect(m.judgeErrors).toEqual({ k: 1, n: 4 });
+    expect(baselineMetrics("B1", [{ scenario: legit, outcome: outcome(legit, "B1") }]).judgeTimeouts).toEqual({ k: 0, n: 0 });
+  });
+
   it("an empty run yields n = 0 ratios, not NaN", () => {
     const m = baselineMetrics("B2", []);
     expect(m.overspend).toEqual({ k: 0, n: 0 });

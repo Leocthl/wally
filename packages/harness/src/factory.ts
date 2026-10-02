@@ -8,7 +8,9 @@
 //   cart      buildCart (stand-in)               -> core's cart builder (A-31)
 //   judge     createChoiceJudge over ChoiceClient-> SystemOneJudge from @laisee/agent/judge (B-14)
 //
-// Nothing outside this file names a concrete implementation. Tests inject their own through `overrides`.
+// Nothing outside this file names a concrete implementation (test/factory.test.ts checks it). Tests inject their own
+// through `overrides`. When you swap an implementation in createComponents, flip its `real` flag in describeComponents in
+// the same commit: that flag is what lets a result file call itself product evidence.
 import { engine as coreEngine } from "@laisee/core/engine";
 import { FakeRail } from "@laisee/core/testing";
 import type { RailPort } from "@laisee/core/ports";

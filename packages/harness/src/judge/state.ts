@@ -16,18 +16,23 @@ export interface JudgeState {
   readonly listing: ListingState;
 }
 
-export function listingState(cart: Cart, listingText: string, scameter: Cart["scameter"]): ListingState {
+/**
+ * The seller is the merchant's name only. The Scameter capture state is R9's input and R9 decides it deterministically; it is
+ * not sent to the model. A first version appended "seller check: NO_RECORD" here; probing the live server showed that wording
+ * alone pulled P(clean) down on legitimate listings (mean 0.35 against 0.42 over ten of them), so it was dropped.
+ */
+export function listingState(cart: Cart, listingText: string): ListingState {
   return {
     title: cart.items.map((i) => i.title).join("; "),
     description: listingText,
     price: formatHkd(cart.subtotal_minor),
-    seller: `${cart.merchant.name}; seller check: ${scameter.state}`,
+    seller: cart.merchant.name,
     shipping: cart.shipping_minor === 0 ? "free" : formatHkd(cart.shipping_minor),
   };
 }
 
 export function judgeState(input: JudgeInput): JudgeState {
-  return { mandate: input.intentText, listing: listingState(input.cart, input.listingText, input.scameter) };
+  return { mandate: input.intentText, listing: listingState(input.cart, input.listingText) };
 }
 
 export interface BudgetFacts {

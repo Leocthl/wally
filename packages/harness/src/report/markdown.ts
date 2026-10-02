@@ -53,6 +53,8 @@ function baselineTable(c: Computed): string[] {
     ratioRow("Stop-breach rate", "[F38]", (b) => m[b].stopBreach),
     ratioRow("Injection pass-through, judge-only cases", "[F36]", (b) => m[b].injectionPassThrough),
     ratioRow("Label agreement", "[F37]", (b) => m[b].labelAgreement),
+    ratioRow("Judge calls that timed out", "[F34]", (b) => m[b].judgeTimeouts),
+    ratioRow("Judge calls that failed (outage, truncated input)", "[F34]", (b) => m[b].judgeErrors),
     ["Decision latency", ...BASELINES.map((b) => latencyCell(m[b].latency)), "[F35] [F26]"],
   ]);
 }

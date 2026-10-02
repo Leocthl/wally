@@ -19,7 +19,7 @@ export function modelGateRequest(s: Scenario): ChoiceRequest {
     state: {
       mandate: s.mandate.intent_text,
       budget: budgetFacts(s.mandate, s.packet, s.cart),
-      listing: listingState(s.cart, s.listing.text, s.cart.scameter),
+      listing: listingState(s.cart, s.listing.text),
     },
     questions: [BUDGET_FIT_QUESTION, ...JUDGE_QUESTIONS],
   };

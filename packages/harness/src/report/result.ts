@@ -53,6 +53,8 @@ function baselineBlock(m: BaselineMetrics, mode: Mode, chip: string): Record<str
     stop_breach_rate: ratioBlock(m.stopBreach, chip),
     injection_pass_through_rate: ratioBlock(m.injectionPassThrough, chip),
     label_agreement_rate: ratioBlock(m.labelAgreement, chip),
+    judge_timeout_rate: ratioBlock(m.judgeTimeouts, chip),
+    judge_error_rate: ratioBlock(m.judgeErrors, chip),
     latency: latencyBlock(m.latency, mode, chip),
     cost_per_decision: { per_call_charge: "none (local compute)", wall_time: latencyBlock(m.latency, mode, chip) },
   };
