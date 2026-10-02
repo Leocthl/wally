@@ -143,7 +143,7 @@ describe("the sentence reader (api.compileRules, or suggestRules from <App>)", (
     expect(read).toHaveTextContent("No end date was given");
     expect(within(read).getByText("Left out of the suggestion")).toBeInTheDocument();
     expect(read).toHaveTextContent("A weekly limit is not a rule Wally can enforce.");
-    expect(read).toHaveTextContent("Read by Wally's on-device model.");
+    expect(read).toHaveTextContent("Read by the local model.");
     expect(read).toHaveTextContent("Nothing is sealed until you say so.");
     expect(seal).toHaveBeenCalledTimes(1); // only the preset seal on load, which failed
   });

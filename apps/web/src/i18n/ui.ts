@@ -195,7 +195,7 @@ const SHELL = {
   "shell.askLead": label("Pick one. Wally shops on a simulated store; fixed rules decide.", "揀一樣。Wally 喺模擬商店購物，由固定規則決定。"), // NEEDS-REVIEW
   "shell.askPlaceholder": (name: string): LabelPair => label(`Ask ${name} to buy...`, `叫 ${name} 幫你買...`), // NEEDS-REVIEW
   "shell.askSend": label("Send", "傳送"), // NEEDS-REVIEW
-  "shell.askExample": label("A plain white tee under HK$150", "我想買件白色T恤，預算一百五十蚊"), // NEEDS-REVIEW
+  "shell.askExample": label("A plain cotton tee under HK$300", "我想買件純棉T恤，預算三百蚊"), // NEEDS-REVIEW
   "shell.askFieldLabel": (name: string): LabelPair => label(`Tell ${name} what you need`, `話俾 ${name} 知你想買乜`), // NEEDS-REVIEW
   "shell.askLiveHint": label("Live asks need the booth server.", "即時提問需要展位伺服器。"), // NEEDS-REVIEW
   "shell.trickTitle": (name: string): LabelPair => label(`Try to trick ${name}`, `試吓呃 ${name}`), // NEEDS-REVIEW
@@ -349,7 +349,7 @@ const SHELL = {
   "seal.readSentence": label("Read my sentence", "幫我讀句子"), // NEEDS-REVIEW
   "seal.readFailed": label("Wally couldn't read that. Set the rules below.", "Wally 讀唔明，請喺下面設定規則。"), // NEEDS-REVIEW
   "seal.readTitle": label("What Wally understood", "Wally 讀到的內容"), // NEEDS-REVIEW
-  "seal.readModel": label("Read by Wally's on-device model.", "由 Wally 的本機模型讀取。"), // NEEDS-REVIEW
+  "seal.readModel": label("Read by the local model.", "由本機模型讀取。"), // NEEDS-REVIEW
   "seal.readRules": label("Read by fixed rules.", "由固定規則讀取。"), // NEEDS-REVIEW
   "seal.readCheck": label("Check each rule below and change what is wrong. Nothing is sealed until you say so.", "請檢查下面每項規則，有錯就改。你確認前唔會封存。"), // NEEDS-REVIEW
   "seal.readLeftOut": label("Left out of the suggestion", "未有放入建議"), // NEEDS-REVIEW

@@ -51,7 +51,7 @@ describe("Ask sheet: typed request", () => {
     const client = new AskClient("http", {});
     const { user, sheet } = await openSheet(client);
     const field = within(sheet).getByRole("textbox", { name: /Tell Wally what you need/ });
-    expect(field).toHaveAttribute("placeholder", "A plain white tee under HK$150");
+    expect(field).toHaveAttribute("placeholder", "A plain cotton tee under HK$300");
     expect(within(sheet).queryByText("Live asks need the booth server.")).toBeNull();
     const send = within(sheet).getByRole("button", { name: "Send" });
     expect(send).toBeDisabled();
@@ -67,7 +67,7 @@ describe("Ask sheet: typed request", () => {
     const client = new AskClient("http", {});
     const { user, sheet } = await openSheet(client, "zh-HK");
     const field = within(sheet).getByRole("textbox", { name: /話俾 Wally 知你想買乜/ });
-    expect(field).toHaveAttribute("placeholder", "我想買件白色T恤，預算一百五十蚊");
+    expect(field).toHaveAttribute("placeholder", "我想買件純棉T恤，預算三百蚊");
     await user.type(field, "我想買件白色T恤");
     await user.click(within(sheet).getByRole("button", { name: "傳送" }));
     await waitFor(() => expect(client.asked).toEqual([{ requestText: "我想買件白色T恤", locale: "zh-HK" }]));
