@@ -10,7 +10,7 @@ const TEXT = label(ON_DEVICE_NOTE, "裝置模式：使用預先錄製的答案�
 
 export function OnDeviceNote(): ReactElement {
   return (
-    <div className="on-device-note soft" data-api-mode="local" style={{ textAlign: "center", padding: "0.25rem 1rem", fontSize: "0.875rem" }}>
+    <div className="on-device-note soft" data-api-mode="local">
       <Bi as="p" text={TEXT} />
     </div>
   );

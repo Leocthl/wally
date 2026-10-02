@@ -24,6 +24,11 @@
   .shell-app .w-tabbar--fixed { left: 50%; right: auto; width: min(100%, var(--column)); transform: translateX(-50%); }
 }
 
+/* On-device mode: one calm strip above the app, the same note in EN and 繁, clear of the notch. */
+.on-device-note { padding: max(var(--sp-1), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-1) max(var(--gutter), var(--safe-left)); background: var(--c-info-tint); border-bottom: 1px solid var(--c-line); color: var(--c-ink-muted); font-size: var(--text-xs); line-height: var(--lh-snug); text-align: center; }
+.on-device-note .bi { align-items: center; gap: 0; }
+.on-device-note .bi__zh { font-size: inherit; }
+
 /* Top bar */
 .shell-bar {
   position: sticky;
