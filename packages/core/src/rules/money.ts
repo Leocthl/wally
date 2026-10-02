@@ -1,6 +1,6 @@
 // R3 total <= packet remaining, R4 per-purchase cap and ask_above, R5 rail ceiling [F1].
 // Money is integer HKD minor units; the adaptive cap uses BigInt so no float touches money.
-import type { EngineConfig } from "../config";
+import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Cart, Mandate, PacketState } from "../generated";
 import { failed, isMoney, judged, passed, skipped, type RuleResult } from "./result";
 
@@ -117,5 +117,5 @@ export function evaluateR5({ cart, config }: R5Input): RuleResult {
   const ceiling = config.rail.ceiling_minor;
   const inputs = { total_minor: cart.total_minor, ceiling_minor: ceiling };
   const ok = isMoney(cart.total_minor) && cart.total_minor <= ceiling;
-  return judged(ok, { id: "R5", inputs, comparator: "<=", thresholdRef: "F1.ceiling" }, "DENY", "R5.over_ceiling");
+  return judged(ok, { id: "R5", inputs, comparator: "<=", thresholdRef: THRESHOLD_REFS.ceiling }, "DENY", "R5.over_ceiling");
 }

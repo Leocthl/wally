@@ -2,6 +2,7 @@
 // (R4 ask_above, R9 unverified, R10); DENY verdicts, which include every hard rule R1-R8 and R12,
 // stay DENY whatever the answer. APPROVE clears an answerable FAIL to PASS (recorded as cleared by the
 // delegator); DENY turns it into a DENY that reuses the escalating rule's template (docs/02 section 8).
+import { THRESHOLD_REFS } from "../config";
 import type { Decision, Escalation, EscalationAnswer, RuleResult } from "../generated";
 import { failed, passed, type R11Outcome } from "../rules";
 
@@ -27,7 +28,7 @@ export function resolveRules(base: readonly RuleResult[], r11: R11Outcome): Rule
   const deniedSomething = base.some((r) => r.result === "FAIL" && r.verdict === "ESCALATE");
   if (answer.choice === "DENY" && !deniedSomething) {
     const inputs = { ...r11.result.inputs, choice: "DENY" };
-    return [...after, failed({ id: "R11", inputs, comparator: "<", thresholdRef: "F31" }, "DENY", "R11.expired")];
+    return [...after, failed({ id: "R11", inputs, comparator: "<", thresholdRef: THRESHOLD_REFS.escalation_window }, "DENY", "R11.expired")];
   }
   return [...after, r11.result];
 }

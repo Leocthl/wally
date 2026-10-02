@@ -2,7 +2,7 @@
 // only add DENY or ESCALATE (I3). Any record the engine cannot read (status not OK, input_truncated,
 // unknown provider, malformed probabilities) => ESCALATE R10.unavailable (I5); there is no fallback model.
 // Each metric takes the tighter of P(x) and 1 - P(not x), which agree when options sum to 1 (F36 "i.e.").
-import type { EngineConfig } from "../config";
+import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Mandate } from "../generated";
 import { failed, judged, skipped, type RuleResult } from "./result";
 
@@ -58,7 +58,7 @@ function scopeFit(a: Answers, t: EngineConfig["judge"], categories: readonly str
   const { in_scope, out_of_scope } = a.scope_fit;
   const p = Math.min(in_scope, 1 - out_of_scope);
   const inputs = { p_in_scope: p, threshold: t.t_scope, in_scope, out_of_scope, categories };
-  const spec = { id: "R10" as const, check: "scope_fit", inputs, comparator: ">=" as const, thresholdRef: "F36.T_scope" };
+  const spec = { id: "R10" as const, check: "scope_fit", inputs, comparator: ">=" as const, thresholdRef: THRESHOLD_REFS.t_scope };
   return judged(p >= t.t_scope, spec, "ESCALATE", "R10.scope");
 }
 
@@ -66,7 +66,7 @@ function injectionRisk(a: Answers, t: EngineConfig["judge"]): RuleResult {
   const { clean, suspicious, injection } = a.injection_risk;
   const p = Math.max(suspicious + injection, 1 - clean);
   const inputs = { p_injection_risk: p, threshold: t.t_inj, clean, suspicious, injection };
-  const spec = { id: "R10" as const, check: "injection_risk", inputs, comparator: "<" as const, thresholdRef: "F36.T_inj" };
+  const spec = { id: "R10" as const, check: "injection_risk", inputs, comparator: "<" as const, thresholdRef: THRESHOLD_REFS.t_inj };
   return judged(p < t.t_inj, spec, "DENY", "R10.injection");
 }
 
@@ -75,10 +75,10 @@ function sellerRisk(a: Answers, t: EngineConfig["judge"]): RuleResult {
   const p = Math.max(high_risk, 1 - low_risk);
   const base = { p_high_risk: p, low_risk, high_risk, threshold_deny: t.t_sell_deny, threshold_escalate: t.t_sell_esc };
   if (p >= t.t_sell_deny) {
-    const spec = { id: "R10" as const, check: "seller_risk", inputs: { ...base, threshold: t.t_sell_deny }, comparator: "<" as const, thresholdRef: "F36.T_sell_deny" };
+    const spec = { id: "R10" as const, check: "seller_risk", inputs: { ...base, threshold: t.t_sell_deny }, comparator: "<" as const, thresholdRef: THRESHOLD_REFS.t_sell_deny };
     return failed(spec, "DENY", "R10.seller_risk");
   }
-  const spec = { id: "R10" as const, check: "seller_risk", inputs: { ...base, threshold: t.t_sell_esc }, comparator: "<" as const, thresholdRef: "F36.T_sell_esc" };
+  const spec = { id: "R10" as const, check: "seller_risk", inputs: { ...base, threshold: t.t_sell_esc }, comparator: "<" as const, thresholdRef: THRESHOLD_REFS.t_sell_esc };
   return judged(p < t.t_sell_esc, spec, "ESCALATE", "R10.seller_risk");
 }
 
@@ -86,7 +86,7 @@ function escalateOrProceed(a: Answers, t: EngineConfig["judge"]): RuleResult {
   const { proceed, escalate } = a.escalate_or_proceed;
   const p = Math.max(escalate, 1 - proceed);
   const inputs = { p_escalate: p, threshold: t.t_esc, proceed, escalate };
-  const spec = { id: "R10" as const, check: "escalate_or_proceed", inputs, comparator: "<" as const, thresholdRef: "F50.T_esc" };
+  const spec = { id: "R10" as const, check: "escalate_or_proceed", inputs, comparator: "<" as const, thresholdRef: THRESHOLD_REFS.t_esc };
   return judged(p < t.t_esc, spec, "ESCALATE", "R10.escalate");
 }
 

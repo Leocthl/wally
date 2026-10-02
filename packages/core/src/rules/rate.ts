@@ -1,5 +1,5 @@
 // R7 velocity over a rolling window [F32] and R8 active cards below the rail maximum [F1.active].
-import type { EngineConfig } from "../config";
+import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Mandate, PacketState } from "../generated";
 import { MS_PER_S, judged, parseTime, timeOf, type RuleResult } from "./result";
 
@@ -25,7 +25,7 @@ export function evaluateR7({ mandate, packet, now, config }: R7Input): RuleResul
   const windowS = override?.window_s ?? config.velocity.window_s;
   const count = mintsInWindow(packet.mint_times, timeOf(now), windowS * MS_PER_S);
   const inputs = { mints_in_window: count, max_mints: maxMints, window_s: windowS };
-  const thresholdRef = override === undefined ? "F32" : "mandate.rules.velocity.max_mints";
+  const thresholdRef = override === undefined ? THRESHOLD_REFS.velocity : "mandate.rules.velocity.max_mints";
   return judged(count < maxMints, { id: "R7", inputs, comparator: "<", thresholdRef }, "DENY", "R7.velocity");
 }
 
@@ -39,5 +39,5 @@ export function evaluateR8({ packet, config }: R8Input): RuleResult {
   const active = packet.active_cards.length;
   const max = config.rail.max_active_cards;
   const inputs = { active_cards: active, max_active: max };
-  return judged(active < max, { id: "R8", inputs, comparator: "<", thresholdRef: "F1.active" }, "DENY", "R8.max_active");
+  return judged(active < max, { id: "R8", inputs, comparator: "<", thresholdRef: THRESHOLD_REFS.active }, "DENY", "R8.max_active");
 }

@@ -1,7 +1,7 @@
 // R11: an escalation must be answered inside its window [F31], by the delegator, for that decision.
 // No valid answer => DENY R11.expired, which resolves the earlier ESCALATE (S5). Signature checks on
 // the answer happen before decide (orchestrator); here the engine checks binding and timing only.
-import type { EngineConfig } from "../config";
+import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Mandate, PacketState } from "../generated";
 import type { EscalationAnswer, EscalationResolution } from "../ports";
 import { MS_PER_S, failed, parseTime, passed, skipped, timeOf, type RuleResult } from "./result";
@@ -44,7 +44,7 @@ export function evaluateR11({ mandate, packet, resolution, now, config }: R11Inp
   const { resolves, answer } = resolution;
   const nowMs = timeOf(now);
   const nowIso = nowMs === null ? null : new Date(nowMs).toISOString();
-  const spec = { id: "R11" as const, comparator: "<" as const, thresholdRef: "F31" };
+  const spec = { id: "R11" as const, comparator: "<" as const, thresholdRef: THRESHOLD_REFS.escalation_window };
   const deny = (inputs: Record<string, unknown>): RuleResult => failed({ ...spec, inputs }, "DENY", "R11.expired");
   const open = packet.open_escalations.find((e) => e.decision_id === resolves);
   if (open === undefined) {

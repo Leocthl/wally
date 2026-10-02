@@ -1,7 +1,7 @@
 // R9 seller check from the manual Scameter capture [F6] and its age [F52]. FLAGGED always DENY.
 // With require_capture, a missing, unknown, future-dated or stale capture is unverified => ESCALATE.
 // NO_RECORD with a fresh capture passes R9 but is not "safe": R10 seller_risk still applies.
-import type { EngineConfig } from "../config";
+import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Cart, Mandate } from "../generated";
 import { MS_PER_S, failed, parseTime, passed, timeOf, type RuleResult } from "./result";
 
@@ -24,7 +24,7 @@ export function evaluateR9({ mandate, cart, now, config }: R9Input): RuleResult 
   const check = mandate.rules.seller_check;
   const sc = cart.scameter;
   const maxAgeS = check.max_capture_age_s ?? config.seller.max_capture_age_s;
-  const thresholdRef = check.max_capture_age_s === undefined ? "F52" : "mandate.rules.seller_check.max_capture_age_s";
+  const thresholdRef = check.max_capture_age_s === undefined ? THRESHOLD_REFS.capture_age : "mandate.rules.seller_check.max_capture_age_s";
   const nowMs = timeOf(now);
   const capturedMs = parseTime(sc.captured_at);
   const ageS = capturedMs === null || nowMs === null ? null : Math.ceil((nowMs - capturedMs) / MS_PER_S);

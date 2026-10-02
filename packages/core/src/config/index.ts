@@ -37,21 +37,21 @@ function deepFreeze<T>(value: T): T {
 
 export const ENGINE_CONFIG: EngineConfig = deepFreeze({
   rail: {
-    ceiling_minor: 200_000, // HK$2,000 per card [F1.ceiling] (R5)
-    max_active_cards: 2, // at most 2 active cards at once [F1.active] (R8)
+    ceiling_minor: 200_000, // per-card limit ceiling [F1.ceiling] (R5)
+    max_active_cards: 2, // active cards at once [F1.active] (R8)
   },
   card: {
-    ttl_ms: 1_800_000, // 30 min after mint, also <= packet expiry and F1 validity [F30]
+    ttl_ms: 1_800_000, // card TTL after mint, also capped by packet expiry and F1 validity [F30]
   },
   escalation: {
-    window_ms: 60_000, // 60 s, then R11 DENY [F31]
+    window_ms: 60_000, // escalation window, then R11 DENY [F31]
   },
   velocity: {
-    max_mints: 3, // more than 3 approved mints in the window => DENY [F32] (R7)
-    window_s: 600, // rolling 10 min [F32]
+    max_mints: 3, // approved mints allowed in the window; one more => DENY [F32] (R7)
+    window_s: 600, // rolling window [F32]
   },
   seller: {
-    max_capture_age_s: 86_400, // Scameter capture older than 24 h => unverified [F52] (R9)
+    max_capture_age_s: 86_400, // older Scameter capture => unverified [F52] (R9)
   },
   judge: {
     t_inj: 0.63, // [F36.T_inj]
