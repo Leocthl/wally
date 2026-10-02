@@ -100,7 +100,7 @@ print("\n".join(out)); out.clear()
 
 print("\n== file links")
 for p in glob.glob(ROOT + "/**/*.md", recursive=True):
-    if "node_modules" in p or "/.worktrees/" in p:
+    if "node_modules" in p or ".worktrees" in os.path.relpath(p, ROOT).split(os.sep):
         continue
     text = read(os.path.relpath(p, ROOT))
     base = os.path.dirname(p)

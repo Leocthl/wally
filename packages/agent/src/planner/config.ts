@@ -1,5 +1,5 @@
 // Planner configuration. Every default cites its source. The planner has no keys: the only environment
-// names it reads are PLANNER_PROVIDER and LAYA_URL (I4, lint and tests enforce).
+// names it reads are PLANNER_PROVIDER and LAYA_BASE_URL (LAYA_URL still works) (I4, lint and tests enforce).
 
 export interface PlannerConfig {
   /**

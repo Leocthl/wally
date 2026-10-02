@@ -5,7 +5,7 @@
 //   const planner = createPlanner({
 //     provider: plannerProviderFromEnv(process.env),          // PLANNER_PROVIDER: rule (default) | replay
 //     catalogue: listingRecords,                              // the same records the cart builder prices from
-//     layaUrl: layaUrlFromEnv(process.env),                   // LAYA_URL, loopback only
+//     layaUrl: layaUrlFromEnv(process.env),                   // LAYA_BASE_URL (or LAYA_URL), loopback only
 //     records: loadReplayRecords(".../data/fixtures/planner"), // replay backend
 //     scenario: "attempt-1",                                  // replay: fixed scenario, else chosen by listing set
 //   });

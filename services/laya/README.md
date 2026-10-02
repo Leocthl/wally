@@ -1,6 +1,6 @@
 # Laya judge service
 
-- **What**: a local HTTP service that answers typed multiple-choice questions about a piece of text in one forward pass, no LLM tokens. The Lai See Agent uses it as a fast "System 1" judge for scope fit, injection risk, seller risk and escalate-or-proceed.
+- **What**: a local HTTP service that answers typed multiple-choice questions about a piece of text in one forward pass, no LLM tokens. Wally uses it as a fast "System 1" judge for scope fit, injection risk, seller risk and escalate-or-proceed.
 - **Credit**: Laya by Convai Innovations, Apache-2.0, https://github.com/NandhaKishorM/laya, weights https://huggingface.co/convaiinnovations/laya
 - **Version**: PyPI `laya[serve]==0.3.23`, wheels only, run through its own `laya-serve` (Jev-compatible `POST /v1/systemone`).
 - **Checkpoint**: `typed-decisions` only (subfolder of `convaiinnovations/laya`, about 421M parameters, 842.6 MB of weights). The `laya` and `multilingual` checkpoints are not downloaded and cannot be loaded offline.

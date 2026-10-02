@@ -68,7 +68,7 @@ def expand_refs(text):
 
 def main():
     files = [p for p in glob.glob(ROOT + "/**/*", recursive=True)
-             if os.path.isfile(p) and p.endswith((".md", ".json", ".example")) and "node_modules" not in p and "/.worktrees/" not in p
+             if os.path.isfile(p) and p.endswith((".md", ".json", ".example")) and "node_modules" not in p and ".worktrees" not in os.path.relpath(p, ROOT).split(os.sep)
              and "/_register-additions/" not in p]
     files += [os.path.join(ROOT, ".env.example")]
     files = sorted(set(f for f in files if os.path.exists(f)))
@@ -106,7 +106,7 @@ def main():
                     problems.append((rel, "F-ID", "unknown %s" % r))
         # id ranges
         for pat, mx, name in [(r"\bR(\d{1,3})\b", 12, "R"), (r"\bI(\d{1,3})\b", 8, "I"), (r"\bS(\d{1,3})\b", 6, "S"),
-                              (r"\bD(\d{1,3})\b", 13, "D"), (r"\bDM(\d{1,3})\b", 9, "DM"), (r"\bE(\d{1,3})\b", 5, "E"),
+                              (r"\bD(\d{1,3})\b", 16, "D"), (r"\bDM(\d{1,3})\b", 9, "DM"), (r"\bE(\d{1,3})\b", 5, "E"),
                               (r"\bSR(\d{1,3})\b", 4, "SR"), (r"\bDIR(\d{1,3})\b", 11, "DIR"), (r"\bU(\d{1,3})\b", 4, "U")]:
             for m in re.finditer(pat, strip_fences(text)):
                 if int(m.group(1)) > mx or int(m.group(1)) == 0:

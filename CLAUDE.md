@@ -1,10 +1,10 @@
-# Lai See Agent (利是 Agent)
+# Wally
 
 - Sealed-budget mandate engine for AI shopping agents: only a cart the policy engine approves gets a single-use token (rail SIMULATED).
 
 ## Status
 - **Event**: HacKU 2026, FinTech track "Give a Machine a Wallet", 2026-10-02 to 2026-10-04 [F13]; HKT problem statement declared [F13, F17]. Not affiliated with HKT, Tap & Go or Mastercard.
-- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D12, D13). Foundation scaffold in progress (X-01 to X-08, A-01).
+- **Phase**: build from H0 [F41] on contract V2: local-first, booth first (D12, D13). Engine, crypto, log, rail, judge, planner, harness and the mock-backed UI are merged; orchestrator, API server and booth wiring are in progress.
 - **Local-first, Laya only**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac [F11c] as the judge and drives the planner: a decision loop in a deterministic harness, with `replay` as fallback. Claude and hosted Jev are optional backends nothing depends on.
 - **Freeze**: no commits after Sun 2026-10-04 13:00 HKT [F16]. The repo is public by then and submitted with deck, video and declaration [F18]. Procedure: 03 §Freeze.
 - **Open**: assumptions in `docs/00-context.md`; unknowns and re-captures in the register's VERIFY queue.
@@ -47,7 +47,8 @@ packages/harness                            lane D
 - **Work today** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
 - **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm build`, `pnpm gen:types` (schemas to types; commit the output), `pnpm docs:check`. API: `pnpm --filter @laisee/web api` (127.0.0.1:8787).
 - **Laya judge** (local, loopback only): `services/laya/setup.sh` once, `services/laya/serve.sh`, `services/laya/stop.sh`, `node services/laya/smoke.mjs`; warm it up after every start (first call is slow).
-- **TBD until their lanes land**: `pnpm harness`, `pnpm verify-log`, `pnpm keys:gen`, `pnpm demo:reset`.
+- **Also working**: `pnpm coverage` (core line gate [F44]), `pnpm keys:gen` (throwaway demo keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm harness -- --seed 7 --n 150 --judge live|recorded`, `pnpm --filter @laisee/agent judge:fit`.
+- **TBD until their lanes land**: `pnpm demo:reset`, the API server and the one-command booth start.
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.
