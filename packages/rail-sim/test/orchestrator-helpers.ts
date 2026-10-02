@@ -5,12 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ScameterLookup } from "@laisee/core/cart";
 import { createSigner, sha256Bytes } from "@laisee/core/crypto";
+import { ENGINE_CONFIG } from "@laisee/core/config";
 import { createEngine } from "@laisee/core/engine";
 import type { ListingRecord, MandateCredential, ProposeCartInput, ScameterCapture } from "@laisee/core/generated";
 import { appendEntry, signEscalationAnswer, signRevocation } from "@laisee/core/log";
 import { FileLogStore } from "@laisee/core/log/file";
 import { createOrchestrator, type Orchestrator, type OrchestratorEvent } from "@laisee/core/orchestrator";
-import type { EscalationAnswer, JudgeRecord, Signer } from "@laisee/core/ports";
+import type { EscalationAnswer, JudgeRecord, MerchantPort, Signer } from "@laisee/core/ports";
 import { FakeClock, FakeJudge, FakePlanner } from "@laisee/core/testing";
 import { loadFixture } from "@laisee/core/testing/fixtures";
 import { signMandateCredential } from "@laisee/core/vc";
@@ -84,7 +85,10 @@ export interface Integration {
   close(): Promise<void>;
 }
 
-export async function integration(mode: MerchantMode = "honest"): Promise<Integration> {
+/** Optional merchant wrapper (for hostile merchants); the stub stays reachable for setMode. */
+export type MerchantWrap = (stub: MerchantStub, rail: RailSim) => MerchantPort;
+
+export async function integration(mode: MerchantMode = "honest", wrap?: MerchantWrap): Promise<Integration> {
   const dir = await mkdtemp(join(tmpdir(), "laisee-orch-"));
   const k = keys();
   const clock = new FakeClock(SEAL_AT);
@@ -96,7 +100,7 @@ export async function integration(mode: MerchantMode = "honest"): Promise<Integr
   let runs = 0;
   const judge = new FakeJudge({ respond: (input) => (input.listingText === INJECTED.text ? { answers: INJECTED_JUDGE.answers ?? {} } : {}) });
   const orchestrator = createOrchestrator({
-    engine: createEngine(),
+    engine: createEngine({ config: { ...ENGINE_CONFIG, judge_mode: "enforce" } }), // JUDGE_MODE=enforce
     planner: () => {
       const [next = null, ...rest] = queue;
       queue = rest;
@@ -104,13 +108,14 @@ export async function integration(mode: MerchantMode = "honest"): Promise<Integr
     },
     judge,
     rail,
-    merchant: stub,
+    merchant: wrap === undefined ? stub : wrap(stub, rail),
     store,
     signer: k.engine,
     clock,
     ids: { cartId: () => `crt_int${String((carts += 1)).padStart(6, "0")}`, runId: () => `run_${(runs += 1)}` },
     scameter,
     appendEntry,
+    delegatorDid: k.delegator.did,
   });
   const events: OrchestratorEvent[] = [];
   orchestrator.subscribe((e) => events.push(e));

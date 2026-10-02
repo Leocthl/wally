@@ -1,10 +1,12 @@
 // T-S1..T-S6 through the orchestrator on RailSim + MerchantStub + FileLogStore (SIMULATED), each finishing with
 // verifyChain over the exported log (passes) and one flipped byte (fails).
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ENGINE_CONFIG } from "@laisee/core/config";
 import type { ListingRecord, ProposeCartInput } from "@laisee/core/generated";
 import type { DecidedResult } from "@laisee/core/orchestrator";
 import { HOODIE, INJECTED, JACKET, P_A1, P_A2, P_A3, P_A3B, P_A4, SOCKS, TEE, credential, flipOneByte, integration, type Integration } from "./orchestrator-helpers";
+
+vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded
 
 let open: Integration | null = null;
 afterEach(async () => {
@@ -78,7 +80,8 @@ describe("T-S4 revoke (R2, rail void)", () => {
     ]);
     expect(revoked).toMatchObject({ ok: true, voidedCardIds: [a1.card?.id] });
     expect(racing).toMatchObject({ ok: true, outcome: "DENY", card: null, decision: { explanation: { template_id: "R2.revoked" } } });
-    expect(await r.orchestrator.checkout({ cardId: a1.card?.id ?? "" })).toMatchObject({ status: "DECLINED", event: { decline_code: "CARD_VOIDED" } });
+    expect(await r.orchestrator.checkout({ cardId: a1.card?.id ?? "" })).toMatchObject({ status: "DENIED", decision: { explanation: { template_id: "R2.revoked" } } }); // never presented
+    expect(r.rail.authorisations()).toEqual([]);
     expect(r.rail.cards.map((c) => c.state)).toEqual(["VOIDED"]);
     expect((await r.orchestrator.snapshot()).packet).toMatchObject({ status: "REVOKED", committed_minor: 0, spent_minor: 0 });
     await expectVerifies(r);

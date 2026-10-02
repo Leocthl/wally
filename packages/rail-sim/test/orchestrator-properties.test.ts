@@ -101,7 +101,7 @@ async function runSequence(ops: readonly Op[]): Promise<World> {
     expireDue: (at) => rail.expireDue(at),
   };
   const orchestrator = createOrchestrator({
-    engine: createEngine(),
+    engine: createEngine({ config: { ...ENGINE_CONFIG, judge_mode: "enforce" } }), // JUDGE_MODE=enforce
     planner: () => new FakePlanner([nextProposal]),
     judge: judgeFor(() => judgeMode),
     rail: flakyRail,
@@ -112,6 +112,7 @@ async function runSequence(ops: readonly Op[]): Promise<World> {
     ids: { cartId: () => `crt_prop${String((carts += 1)).padStart(6, "0")}`, runId: () => `run_${carts}` },
     scameter: (ref) => ["demo-apparel", "demo-outlet", "demo-streetwear", "flagged-seller"].map((n) => loadFixture(`scameter/${n}.json`, "scameter-capture")).find((c) => c.capture_ref === ref),
     appendEntry,
+    delegatorDid: k.delegator.did,
   });
   const world: World = { rail, store, events: [], decisions: [], injectedCards: [], snapshotJson: "{}" };
   orchestrator.subscribe((e) => world.events.push(e));

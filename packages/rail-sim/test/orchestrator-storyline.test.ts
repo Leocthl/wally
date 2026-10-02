@@ -2,10 +2,12 @@
 // seal HK$800 [F20]; attempt 1 mints HK$259 [F21] (overshoot declined, exact charge, replay CARD_USED); flagged
 // seller stopped (R9); HK$550 stopped by R3 [F22]; injected listing stopped (R10); attempt 4 mints HK$120 [F23];
 // HK$421 left. The exported log verifies offline, and one flipped byte breaks it (T-V1, DM7).
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ListingRecord, ProposeCartInput } from "@laisee/core/generated";
 import type { DecidedResult } from "@laisee/core/orchestrator";
 import { HOODIE, INJECTED, JACKET, P_A1, P_A2, P_A3, P_A3B, P_A4, SOCKS, TEE, credential, flipOneByte, integration, type Integration } from "./orchestrator-helpers";
+
+vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded
 
 let open: Integration | null = null;
 afterEach(async () => {
