@@ -1,31 +1,31 @@
 // Keyboard operation (docs/04 Accessibility): everything a visitor can press is a real control that works with Enter, Space
-// and arrow keys, with a visible focus ring and 44 px targets.
+// and arrow keys, with a visible focus ring and 44 px targets. Try asking and the bottom tabs replace the old picker and
+// booth tabs (lane b-shell).
 import { readFileSync } from "node:fs";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PresenterBar } from "../src/components/PresenterBar";
-import { ScenarioPicker } from "../src/components/ScenarioPicker";
+import { TryAsking } from "../src/screens/home/TryAsking";
 import { PRESENTER_SCRIPT } from "../src/booth/presenterScript";
 import { bootApp } from "./helpers/app";
 import { TOKENS_CSS } from "./helpers/contrast";
 
 vi.setConfig({ testTimeout: 20_000 });
 
-describe("ScenarioPicker by keyboard", () => {
-  it.each(["{Enter}", " "])("activates a preset with %j", async (key) => {
+describe("Try asking cards by keyboard", () => {
+  it.each(["{Enter}", " "])("runs a card with %j", async (key) => {
     const user = userEvent.setup();
-    const onScenario = vi.fn();
-    render(<ScenarioPicker onScenario={onScenario} onPropose={() => undefined} onReset={() => undefined} busy={false} standIn />);
-    const button = document.querySelector<HTMLButtonElement>('[data-scenario="flagged"]')!;
-    button.focus();
+    const onRun = vi.fn();
+    render(<TryAsking onRun={onRun} busy={false} />);
+    document.querySelector<HTMLButtonElement>('[data-scenario="flagged"]')!.focus();
     await user.keyboard(key);
-    expect(onScenario).toHaveBeenCalledWith("flagged");
+    expect(onRun).toHaveBeenCalledWith("flagged");
   });
 
-  it("reaches every control with Tab in reading order and ends on the textarea form", async () => {
+  it("reaches every card with Tab in reading order, Buy first", async () => {
     const user = userEvent.setup();
-    render(<ScenarioPicker onScenario={() => undefined} onPropose={() => undefined} onReset={() => undefined} busy={false} standIn={false} />);
+    render(<TryAsking onRun={() => undefined} busy={false} />);
     const stops: string[] = [];
     for (let i = 0; i < 40; i += 1) {
       await user.tab();
@@ -34,23 +34,13 @@ describe("ScenarioPicker by keyboard", () => {
       stops.push(el.dataset["scenario"] ?? el.tagName.toLowerCase());
     }
     expect(stops.slice(0, 3)).toEqual(["normal", "small", "flagged"]);
-    expect(stops).toContain("textarea");
-    expect(stops.at(-1)).toBe("button");
+    expect(stops).toHaveLength(13);
+    expect(stops.at(-1)).toBe("revoke");
   });
 
   it("disables presses while a run is in flight so nothing is double-sent", () => {
-    render(<ScenarioPicker onScenario={() => undefined} onPropose={() => undefined} onReset={() => undefined} busy standIn={false} />);
+    render(<TryAsking onRun={() => undefined} busy />);
     for (const b of document.querySelectorAll<HTMLButtonElement>("[data-scenario]")) expect(b).toBeDisabled();
-  });
-
-  it("submits the typed listing with the Send button and clears nothing it was not asked to", async () => {
-    const user = userEvent.setup();
-    const onPropose = vi.fn();
-    render(<ScenarioPicker onScenario={() => undefined} onPropose={onPropose} onReset={() => undefined} busy={false} standIn={false} />);
-    await user.click(screen.getByRole("textbox", { name: /Try to trick the agent/ }));
-    await user.paste("  plain tee  ");
-    await user.click(screen.getByRole("button", { name: /Send to the agent/ }));
-    expect(onPropose).toHaveBeenCalledWith("plain tee");
   });
 });
 
@@ -88,31 +78,28 @@ describe("PresenterBar by keyboard", () => {
   });
 });
 
-describe("booth tabs by keyboard", () => {
-  it("moves between Packet, Run and Log with the arrow keys, Home and End (roving tabindex)", async () => {
+describe("bottom tabs by keyboard", () => {
+  it("are links in reading order with the raised Ask button in the middle, and the current one marked", async () => {
     const h = await bootApp();
-    const tab = (name: string) => screen.getByRole("tab", { name: new RegExp(`^${name}`) });
-    expect(tab("Run")).toHaveAttribute("aria-selected", "true");
-    tab("Run").focus();
-    await h.user.keyboard("{ArrowRight}");
-    expect(tab("Log")).toHaveAttribute("aria-selected", "true");
-    expect(tab("Log")).toHaveFocus();
-    await h.user.keyboard("{ArrowRight}");
-    expect(tab("Packet")).toHaveAttribute("aria-selected", "true");
-    await h.user.keyboard("{End}");
-    expect(tab("Log")).toHaveAttribute("aria-selected", "true");
-    await h.user.keyboard("{Home}");
-    expect(tab("Packet")).toHaveAttribute("aria-selected", "true");
-    expect(tab("Run")).toHaveAttribute("tabindex", "-1");
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const names = [...nav.querySelectorAll("a, button")].map((el) => el.textContent?.trim());
+    expect(names).toEqual(["Budget", "Wally", "Ask", "Receipts", "Proof"]);
+    expect(screen.getByRole("link", { name: "Budget" })).toHaveAttribute("aria-current", "page");
+    screen.getByRole("link", { name: "Receipts" }).focus();
+    await h.user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.getByRole("link", { name: "Receipts" })).toHaveAttribute("aria-current", "page"));
   });
 
-  it("runs a scenario from the keyboard and moves to the Packet tab for Revoke", async () => {
+  it("opens Ask from the keyboard and runs a card from it", async () => {
     const h = await bootApp();
-    const revoke = document.querySelector<HTMLButtonElement>('[data-scenario="revoke"]')!;
-    revoke.focus();
+    screen.getByRole("button", { name: /^Ask$/ }).focus();
     await h.user.keyboard("{Enter}");
-    await waitFor(() => expect(screen.getByRole("tab", { name: /^Packet/ })).toHaveAttribute("aria-selected", "true"));
-    expect(screen.getByRole("button", { name: /Hold to revoke/ })).toBeInTheDocument();
+    const sheet = await screen.findByRole("dialog", { name: /What should Wally try/ });
+    const card = sheet.querySelector<HTMLButtonElement>('[data-scenario="flagged"]')!;
+    card.focus();
+    await h.user.keyboard(" ");
+    await waitFor(() => expect(window.location.hash).toBe("#/wally"));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: /What should Wally try/ })).toBeNull());
   });
 });
 

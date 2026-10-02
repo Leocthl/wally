@@ -14,21 +14,44 @@ export interface Harness {
   readonly container: HTMLElement;
 }
 
+/** Waits until the screen for the current route has loaded (screens other than Budget are lazy chunks). */
+export async function screenReady(): Promise<void> {
+  await waitFor(() => expect(document.querySelector("[data-route-loading]")).toBeNull());
+}
+
 export async function bootApp(hash = "#/booth"): Promise<Harness> {
+  // A fresh visitor: no remembered language or theme from an earlier test.
+  window.localStorage.clear();
   window.location.hash = hash;
   const clock = new FakeClock();
   const api = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
   const user = userEvent.setup();
   const { container } = render(<App api={api} /> as ReactElement);
-  // The preset mandate is sealed on load (docs/06). Every route renders the rail badge, so wait for both.
+  // The preset mandate is sealed on load (docs/06). Every route shows the SIMULATED note in the top bar.
   await screen.findByRole("note");
   await waitFor(async () => expect((await api.snapshot()).mandate).not.toBeNull());
+  await screenReady();
   return { api, clock, user, container };
 }
 
-/** Presses a scenario button by its data attribute (labels are bilingual, the id is stable). */
+/** Goes to a route the way a link would, and waits for its screen. */
+export async function go(hash: string): Promise<void> {
+  window.location.hash = hash;
+  await waitFor(() => expect(window.location.hash.startsWith(hash.replace(/\?.*$/, ""))).toBe(true));
+  await screenReady();
+}
+
+/** Presses a scenario card by its data attribute (labels change with the language, the id is stable). The cards live
+ *  on Budget ("Try asking"); after a press the app shows Wally, so the next press goes back to Budget first. */
 export async function press(h: Harness, id: string): Promise<void> {
-  const button = document.querySelector<HTMLButtonElement>(`[data-scenario="${id}"]`);
-  if (!button) throw new Error(`no scenario button ${id}`);
+  const find = (): HTMLButtonElement | null => document.querySelector<HTMLButtonElement>(`[data-scenario="${id}"]`);
+  if (!find()) await go("#/budget");
+  const button = await waitFor(() => {
+    const b = find();
+    if (!b) throw new Error(`no scenario button ${id}`);
+    expect(b).toBeEnabled();
+    return b;
+  });
   await h.user.click(button);
+  await screenReady();
 }

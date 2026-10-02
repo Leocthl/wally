@@ -70,7 +70,7 @@ describe("presenter walk", () => {
 
   it("shows the rail badge and the packet in the big layout with the PresenterBar at the bottom", async () => {
     await bootApp("#/presenter");
-    expect(screen.getByRole("note")).toHaveTextContent("SIMULATED rail");
+    expect(screen.getByRole("note")).toHaveTextContent("Simulated. No money moves.");
     expect(screen.getByRole("navigation", { name: "Presenter controls" })).toBeInTheDocument();
     expect(document.querySelector(".packet-meter--l")).not.toBeNull();
   });

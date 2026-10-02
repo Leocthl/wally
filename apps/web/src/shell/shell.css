@@ -1,0 +1,104 @@
+/* App shell (lane b-shell): top bar, main column, tab bar placement, banners, sheets' contents. Tokens only. A phone
+   column everywhere; on wide screens it is centred on a soft backdrop. The presenter screen takes the full width. */
+
+/* Toasts sit above the tab bar and the home indicator whenever the tab bar shows (the update toast too). */
+:root:has(.shell-app--tabs) { --toast-offset: calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-4)); }
+
+.shell-app {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: var(--column);
+  margin: 0 auto;
+  background: var(--c-bg);
+  color: var(--c-ink);
+}
+.shell-app--tabs { padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-5)); }
+.shell-app--wide { max-width: none; }
+
+@media (min-width: 40rem) {
+  body:has(.shell-app:not(.shell-app--wide)) {
+    background: radial-gradient(64rem 32rem at 50% -8%, var(--c-primary-tint), transparent 70%), var(--c-surface-sunken);
+  }
+  .shell-app:not(.shell-app--wide) { border-inline: 1px solid var(--c-line); box-shadow: var(--shadow-2); }
+  .shell-app .w-tabbar--fixed { left: 50%; right: auto; width: min(100%, var(--column)); transform: translateX(-50%); }
+}
+
+/* Top bar */
+.shell-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  padding: max(var(--sp-2), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left));
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-line);
+}
+.shell-bar__inner { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--tap-lg); }
+.shell-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  margin-right: auto;
+  padding-right: var(--sp-2);
+  border-radius: var(--r-pill);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-decoration: none;
+}
+.shell-sim { display: inline-flex; flex: none; }
+.shell-lang { flex: none; }
+.shell-bar__about { flex: none; margin-right: calc(-1 * var(--sp-2)); }
+/* Narrow phones: the character stands in for the name. */
+@media (max-width: 23rem) {
+  .shell-brand__name { display: none; }
+}
+
+/* Main column */
+.shell-main {
+  display: block;
+  padding: var(--sp-4) max(var(--gutter), var(--safe-right)) var(--sp-6) max(var(--gutter), var(--safe-left));
+}
+.shell-main:focus { outline: none; }
+.shell-app--wide .shell-main { padding-inline: max(var(--sp-6), var(--safe-left)) max(var(--sp-6), var(--safe-right)); }
+
+/* Banners under the top bar */
+.shell-banners { display: grid; gap: var(--sp-2); padding: var(--sp-3) max(var(--gutter), var(--safe-right)) 0 max(var(--gutter), var(--safe-left)); }
+.shell-banner { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-2) var(--sp-1) var(--sp-2) var(--sp-3); border-radius: var(--r-md); color: var(--c-ink); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.shell-banner > svg { flex: none; margin-top: var(--sp-3); }
+.shell-banner--warn { background: var(--c-warn-tint); }
+.shell-banner--warn > svg { color: var(--c-warn-ink); }
+.shell-banner--stop { background: var(--c-stop-tint); }
+.shell-banner--stop > svg { color: var(--c-stop-ink); }
+.shell-banner__text { flex: 1; min-width: 0; padding: var(--sp-3) 0; overflow-wrap: anywhere; }
+.shell-banner__detail { color: var(--c-ink-muted); }
+
+/* Loading and failure */
+.shell-loading { display: grid; gap: var(--sp-4); padding-top: var(--sp-2); }
+.shell-fallback { padding: var(--sp-6) 0; }
+.shell-fallback__actions { display: grid; justify-items: center; gap: var(--sp-2); }
+
+/* Figures: a figure never breaks across lines; the scope chip sits where its surface puts it. */
+.fig { font-variant-numeric: var(--num); white-space: nowrap; }
+.chip-scope__chips.fig-chip { display: inline-flex; margin: 0; }
+
+/* Ask sheet */
+.shell-ask { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
+.shell-trick { display: grid; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--c-surface-sunken); }
+.shell-trick__title { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
+.shell-trick__title svg { flex: none; color: var(--c-primary-ink); }
+.shell-askfield { display: block; }
+
+/* About sheet */
+.shell-about { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
+.shell-about__settings { display: grid; gap: var(--sp-3); }
+.shell-about__setting { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-3); }
+.shell-about__label { font-weight: var(--weight-semibold); }
+.shell-about__block { display: grid; gap: var(--sp-2); }
+.shell-about__heading { font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--c-ink-muted); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.shell-legal { display: grid; gap: var(--sp-1); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: center; }
+.shell-legal__replayed { font-weight: var(--weight-semibold); color: var(--c-ink); }
