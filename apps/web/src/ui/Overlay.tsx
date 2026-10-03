@@ -40,13 +40,24 @@ export function usePresence(open: boolean): Phase {
   return phase;
 }
 
+/** How many modal surfaces hold the page still, and what the page's overflow was before the first of them. */
+let locks = 0;
+let overflowBefore = "";
+
+/**
+ * The page does not scroll under an open sheet. Counted, not nested: when one sheet hands over to another (the Ask sheet
+ * closes while the photo sheet opens) the second may take its "before" while the first is still leaving, and a plain
+ * save-and-restore would then give back "hidden" for good.
+ */
 function useScrollLock(active: boolean): void {
   useEffect(() => {
     if (!active) return undefined;
-    const previous = document.body.style.overflow;
+    if (locks === 0) overflowBefore = document.body.style.overflow;
+    locks += 1;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previous;
+      locks -= 1;
+      if (locks === 0) document.body.style.overflow = overflowBefore;
     };
   }, [active]);
 }

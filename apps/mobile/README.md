@@ -57,6 +57,6 @@ xcrun devicectl device install app --device <device id> ~/Library/Caches/wally-i
 ## Known limits
 - **Recorded answers unless connected**: on-device mode has no Laya and no live judge; connecting to the booth Mac (same Wi-Fi) gives both.
 - **LAN door**: Android allows cleartext and mixed content; iOS allows local networking and asks once for local network access. Nothing else loads over http. The LAN link itself has not been run in either shell.
-- **Debug builds**: no store signing, no push, no camera.
+- **Debug builds**: no store signing, no push. The camera and photo library are asked for only when a shopper taps Show Wally a photo (the two usage strings in `ios/App/App/Info.plist`).
 - **Checked**: iPhone 17 Simulator (iOS 27.0, light and dark), Android emulator API 36 (light, dark, back button). Not run on a physical device.
 - **Tablets**: iPad runs the same layout; Android and iPhone are locked to portrait.
