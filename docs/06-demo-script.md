@@ -47,8 +47,7 @@
 - **Q&A**: DMR1 (Cancel), DMR2 (let an escalation expire [F31]) on request. Slides 4-9 are stills if the app fails. **Behind**: cut DM6, then DM8 to one chart.
 
 ## Pre-demo checklist
-- [ ] `services/laya/serve.sh`, `services/qwen/serve.sh`, one warm-up each (slow first call [F26])
-- [ ] `pnpm demo`, open `/?booth=1` (no first run; a fresh phone taps Skip, Skip tour). About names the planner.
+- [ ] `pnpm booth`: starts Laya and Qwen, one warm-up each (slow first call [F26]), then the booth. Open `/?booth=1` (no first run; a fresh phone taps Skip, Skip tour). About names the planner.
 - [ ] `pnpm demo:reset`: HK$800 [F20], no cards, SIMULATED note on every screen
 - [ ] Network off: the booth runs. Stop Laya once, see Needs your OK (`R10.unavailable`), restart, warm up
 - [ ] LAN: `WALLY_PUBLIC_URL=https://wally-dev.vercel.app pnpm demo:lan`. A judge who scans the Wi-Fi code gets their own HK$800 practice wallet; the second code (works anywhere) opens the practice copy. Reset and `pnpm demo:reset` touch only the Mac's wallet. Rehearse with `node scripts/sessions-crowd.mjs --port 8787`; `curl -s http://127.0.0.1:8787/api/lan` counts live wallets. Phones reach the Mac (else a hotspot); firewall Allow once

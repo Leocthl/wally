@@ -135,7 +135,10 @@ test("the Ask sheet opens on every tab and closes with Escape", async ({ page })
   for (const tab of ["Budget", "Wally", "Receipts", "Proof"]) {
     await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: tab }).click();
     await page.getByRole("button", { name: "Ask", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: /What should Wally try/ })).toBeVisible();
+    const sheet = page.getByRole("dialog", { name: /What should Wally try/ });
+    await expect(sheet).toBeVisible();
+    // Focus moves into the sheet in the effect that also arms Escape; pressing before that, on a loaded machine, misses the sheet.
+    await expect(sheet.getByRole("button", { name: "Close" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
   }

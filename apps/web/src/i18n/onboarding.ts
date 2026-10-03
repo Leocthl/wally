@@ -21,7 +21,7 @@ export const OB = {
     title: label("Hi, I'm Wally.", "你好，我係 Wally。"), // NEEDS-REVIEW
     lead: label("I shop for you, but only inside a budget you set. Fixed rules check every buy.", "我幫你買嘢，但只會喺你定的預算之內。每次購買都由固定規則檢查。"), // NEEDS-REVIEW
     nickname: label("What should Wally call you?", "Wally 應該點稱呼你？"), // NEEDS-REVIEW
-    nicknameHint: label("Optional. Saved on this device only.", "可選填，只儲存在這部裝置。"), // NEEDS-REVIEW
+    nicknameHint: label("Optional.", "可選填。"), // NEEDS-REVIEW
     nicknamePlaceholder: label("Your nickname", "你的暱稱"), // NEEDS-REVIEW
   },
 

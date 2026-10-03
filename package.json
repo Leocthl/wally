@@ -25,6 +25,8 @@
     "demo:reset": "node scripts/demo-reset.mjs",
     "demo": "node scripts/booth-check.mjs --build-if-needed && pnpm --filter @wally/web api",
     "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @wally/web api:lan",
+    "booth": "bash scripts/booth-up.sh",
+    "booth:lan": "bash scripts/booth-up.sh --lan",
     "invariants": "node scripts/invariants.mjs"
   },
   "devDependencies": {

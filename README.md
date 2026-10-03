@@ -42,6 +42,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 |---|---|
 | `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm coverage` | CI steps; `pnpm gen:types` after a schema change |
 | `pnpm invariants` | the eight invariant tests, one line each (about 30 s) |
+| `pnpm booth` | start Laya and Qwen, warm both up, then the booth (`pnpm booth:lan` for phones) |
 | `pnpm demo:reset` | new demo keys, empty logs, back to the sealed budget |
 | `pnpm harness -- --seed 7 --n 150 --judge live` | replay harness, B0 B1 B2 |
 | `pnpm verifier`, `pnpm verify-log <log> <keys>` | offline verifier page, log check |
