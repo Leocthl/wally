@@ -82,7 +82,7 @@ describe("selectPlanner", () => {
     const info = await booth.backend.info();
     expect(info.planner).toMatchObject({ provider: "local" });
     expect(info.planner.note).toContain("Chosen at start (PLANNER_PROVIDER=auto)");
-    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "model", family: true });
+    expect(info.features).toEqual({ ask: true, alternatives: true, compile: "model", family: true, see: "palette" });
     expect((await booth.backend.info()).planner.provider).toBe("local");
     await booth.close();
   });

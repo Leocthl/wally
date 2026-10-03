@@ -22,6 +22,8 @@ import type {
   ScenarioId,
   SealRequest,
   SealResult,
+  SeeRequest,
+  SeeResult,
   TraceListener,
   Unsubscribe,
   VerifyOutcome,
@@ -37,6 +39,7 @@ import {
   parseRevokeRequest,
   parseScenarioId,
   parseSealRequest,
+  parseSeeRequest,
   type JsonObject,
 } from "../../booth/backend/validate";
 import { LISTING_TEXT_HARD_CAP } from "../../booth/scenarios";
@@ -125,6 +128,11 @@ export class LocalApiClient implements ApiClient {
   /** The fixed rules parser (source "rules"): no model runs on the device. */
   async compileRules(req: CompileRulesRequest): Promise<CompileResult> {
     return this.#backend.compileRules(parseCompileRequest(asBody(req)));
+  }
+
+  /** Show Wally a photo: no model runs on the device, so the colour plates and the item-type chips do the work. */
+  async see(req: SeeRequest): Promise<SeeResult> {
+    return this.#backend.see(parseSeeRequest(asBody(req)));
   }
 
   /** Mum's budget for a family seal; her (SIMULATED) credential is made in this page on the first call. */

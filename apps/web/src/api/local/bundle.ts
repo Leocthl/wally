@@ -9,10 +9,13 @@ import boothTable from "../../../../../data/scenarios/booth.json";
 import type { FixtureText } from "../../booth/backend/ask";
 import { buildCatalogue, type Catalogue, type FixtureFile } from "../../booth/backend/catalogue";
 import { parseScenarioTable, type ScenarioTable } from "../../booth/backend/scenarioTable";
-import { judgeRecordingsFrom } from "./recordings";
+import { judgeRecordingsFrom, shopRecordingsFrom } from "./recordings";
 
 const LISTINGS = import.meta.glob<unknown>("@fixtures/listings/*.json", { eager: true, import: "default" });
 const CAPTURES = import.meta.glob<unknown>("@fixtures/scameter/*.json", { eager: true, import: "default" });
+const SHOP_ITEMS = import.meta.glob<unknown>("@fixtures/shop/items.json", { eager: true, import: "default" });
+const SHOP_CAPTURES = import.meta.glob<unknown>("@fixtures/shop/scameter/*.json", { eager: true, import: "default" });
+const SHOP_JUDGE = import.meta.glob<unknown>("@fixtures/shop/judge.json", { eager: true, import: "default" });
 const JUDGE = import.meta.glob<unknown>("@fixtures/judge/*.json", { eager: true, import: "default" });
 const PLANNER_FIXTURES = import.meta.glob<string>("@fixtures/planner/*.json", { eager: true, query: "?raw", import: "default" });
 const PLANNER_SCENARIOS = import.meta.glob<string>("../../../../../data/scenarios/planner/*.json", { eager: true, query: "?raw", import: "default" });
@@ -24,6 +27,8 @@ export interface LocalBundle {
   /** The planner files as text, for the sample requests written in their notes (ask.ts recordedRequests). */
   readonly plannerTexts: readonly FixtureText[];
   readonly judgeRecordings: readonly ReplayRecording[];
+  /** Recorded judge answers for the photo shelf (shop/judge.json), kept apart from `judgeRecordings` (the fixtures set). */
+  readonly shopRecordings: readonly ReplayRecording[];
 }
 
 const fileName = (path: string): string => path.slice(path.lastIndexOf("/") + 1);
@@ -52,14 +57,18 @@ function plannerRecords(): readonly PlannerReplayRecord[] {
 /** Validates and assembles the bundle. Throws on any bad file (fail closed: no half-loaded demo). */
 export function loadBundle(): LocalBundle {
   const table = parseScenarioTable(boothTable);
+  const shopItems = fixtureFiles("shop", SHOP_ITEMS)[0];
   const catalogue = buildCatalogue(
     {
       listings: fixtureFiles("listings", LISTINGS),
       referenceCart: { name: "carts/attempt-1.json", raw: referenceCart },
       captures: fixtureFiles("scameter", CAPTURES),
+      ...(shopItems === undefined ? {} : { shop: { items: shopItems, captures: fixtureFiles("shop/scameter", SHOP_CAPTURES) } }),
     },
     table,
   );
   const plannerTexts = [...sorted(PLANNER_FIXTURES), ...sorted(PLANNER_SCENARIOS)].map(([name, text]) => ({ name, text }));
-  return { table, catalogue, plannerRecords: plannerRecords(), plannerTexts, judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS) };
+  const shopJudge = Object.values(SHOP_JUDGE)[0];
+  const shopRecordings = catalogue.shop.size === 0 ? [] : shopRecordingsFrom(shopJudge, catalogue.shop);
+  return { table, catalogue, plannerRecords: plannerRecords(), plannerTexts, judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS), shopRecordings };
 }

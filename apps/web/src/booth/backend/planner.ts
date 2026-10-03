@@ -3,9 +3,11 @@
 // loadReplayRecords; browser: the bundled JSON via parseReplayFile); a table that names an unknown record is a
 // start-up error. The replay planner itself is @wally/agent's, unchanged.
 import { createReplayPlanner } from "@wally/agent/planner";
-import type { PlannerReplayRecord } from "@wally/core/generated";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
 import type { PlannerFactory } from "@wally/core/orchestrator";
+import type { PlannerPort, ProposeCartInput } from "@wally/core/ports";
 import type { ScenarioTable } from "./scenarioTable";
+import type { Shop } from "./shop";
 
 const keyOf = (ids: readonly string[]): string => [...ids].sort().join("|");
 
@@ -49,5 +51,28 @@ export function withRecordedFallback(live: PlannerFactory, records: readonly Pla
       propose: async (ctx, opts) => (await planner.propose(ctx, opts)) ?? recorded.propose(ctx, opts),
       ...(alternatives === undefined ? {} : { alternatives }),
     };
+  };
+}
+
+/**
+ * Show Wally a photo: the shopper picked one item of the photo shelf (shop.ts) from the matches, so for a listing set of
+ * exactly that one item the proposal is fixed by code. A photo item is never on the Ask shelf or in a scenario, so this
+ * never replaces a planner anywhere else. The cart builder, the judge, rules R1 to R12 and the one-off card run as for any cart.
+ */
+export function withPhotoPicks(inner: PlannerFactory, shop: Shop): PlannerFactory {
+  return (listings) => {
+    const only = listings.length === 1 ? listings[0] : undefined;
+    const entry = only === undefined ? undefined : shop.get(only.id);
+    return entry === undefined ? inner(listings) : pickedPlanner(entry.listing);
+  };
+}
+
+/** The proposal for the one item the shopper picked: that listing, that item, one of them. No model, no key, no card (I4). */
+function pickedPlanner(listing: ListingRecord): PlannerPort {
+  const title = listing.items[0]?.title;
+  const proposal: ProposeCartInput | null = title === undefined ? null : { listing_url: listing.url, items: [{ title, qty: 1 }], note: "You picked this item." };
+  return {
+    propose: async () => proposal,
+    alternatives: async () => null,
   };
 }

@@ -117,6 +117,17 @@ export class ScenarioRunner {
     });
   }
 
+  /**
+   * Show Wally a photo: the shopper picked this one photo-shelf item. It is the only listing submitted, so the planner's
+   * proposal is fixed by code (withPhotoPicks); the judge, the rules and the one-off card then work as for any ask.
+   */
+  pick(requestText: string, listing: ListingRecord): Promise<RunSummary> {
+    return this.run("custom", async (runId) => {
+      this.#d.merchant.setMode("honest");
+      return askStep(await this.#d.orchestrator.submit({ requestText, listings: [listing], checkout: "auto", runId }));
+    });
+  }
+
   /** "See cheaper options" after a budget stop: the planner replans over the same request and listings. */
   alternatives(decisionId: string): Promise<RunSummary> {
     return this.run("custom", async (runId) => {

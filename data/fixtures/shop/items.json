@@ -1,0 +1,535 @@
+{
+  "fixture": "shop/items",
+  "provenance": "SIMULATED",
+  "schema": "photo-shelf",
+  "note": "SIMULATED photo shelf: 30 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. No real shop, brand or person; times are placeholders [F59].",
+  "data": {
+    "observed_at": "2026-10-03T02:30:00Z",
+    "merchants": {
+      "apparel": {
+        "name": "Demo Apparel (SIMULATED)",
+        "domain": "demo-apparel.example",
+        "seller": "Demo Apparel (SIMULATED), shop since 2019, 30-day returns",
+        "scameter_ref": "SIM-scameter-demo-apparel",
+        "shipping_minor": 0,
+        "shipping_text": "Free shipping.",
+        "returns_text": "30-day returns."
+      },
+      "outlet": {
+        "name": "Demo Outlet (SIMULATED)",
+        "domain": "demo-outlet.example",
+        "seller": "Demo Outlet (SIMULATED), shop since 2021, 14-day returns",
+        "scameter_ref": "SIM-scameter-demo-outlet",
+        "shipping_minor": 3000,
+        "shipping_text": "Flat shipping HK$30.",
+        "returns_text": "14-day returns."
+      },
+      "vintage": {
+        "name": "Demo Vintage (SIMULATED)",
+        "domain": "demo-vintage.example",
+        "seller": "Demo Vintage (SIMULATED), no recent record",
+        "scameter_ref": "SIM-scameter-stale",
+        "shipping_minor": 3000,
+        "shipping_text": "Flat shipping HK$30.",
+        "returns_text": "7-day returns."
+      },
+      "shoes": {
+        "name": "Demo Shoes (SIMULATED)",
+        "domain": "demo-shoes.example",
+        "seller": "Demo Shoes (SIMULATED), shop since 2018, 30-day returns",
+        "scameter_ref": "SIM-scameter-demo-shoes",
+        "shipping_minor": 0,
+        "shipping_text": "Free shipping.",
+        "returns_text": "30-day returns."
+      }
+    },
+    "items": [
+      {
+        "id": "lst_photoTeeWhite",
+        "merchant": "outlet",
+        "kind": "tee",
+        "colors": [
+          "white"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 9900,
+        "title": "White tee (SIMULATED)",
+        "text": "White tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoTeeBlack",
+        "merchant": "apparel",
+        "kind": "tee",
+        "colors": [
+          "black"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "basics",
+          "streetwear"
+        ],
+        "price_minor": 14900,
+        "title": "Black relaxed tee (SIMULATED)",
+        "text": "Black relaxed tee (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoTeeNavy",
+        "merchant": "apparel",
+        "kind": "tee",
+        "colors": [
+          "navy"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 13900,
+        "title": "Navy tee (SIMULATED)",
+        "text": "Navy tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoTeeGrey",
+        "merchant": "outlet",
+        "kind": "tee",
+        "colors": [
+          "grey"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 11900,
+        "title": "Grey tee (SIMULATED)",
+        "text": "Grey tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoTeeOlive",
+        "merchant": "outlet",
+        "kind": "tee",
+        "colors": [
+          "olive"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 15900,
+        "title": "Olive relaxed tee (SIMULATED)",
+        "text": "Olive relaxed tee (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoTeeCreamPrint",
+        "merchant": "apparel",
+        "kind": "tee",
+        "colors": [
+          "cream"
+        ],
+        "pattern": "print",
+        "fit": "relaxed",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 18900,
+        "title": "Cream relaxed print tee (SIMULATED)",
+        "text": "Cream relaxed print tee (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoTeeOrange",
+        "merchant": "apparel",
+        "kind": "tee",
+        "colors": [
+          "orange"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 12900,
+        "title": "Orange tee (SIMULATED)",
+        "text": "Orange tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoShirtLightBlue",
+        "merchant": "apparel",
+        "kind": "shirt",
+        "colors": [
+          "light_blue"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 29900,
+        "title": "Light blue shirt (SIMULATED)",
+        "text": "Light blue shirt (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoShirtBlueCheck",
+        "merchant": "vintage",
+        "kind": "shirt",
+        "colors": [
+          "blue"
+        ],
+        "pattern": "check",
+        "fit": "regular",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 25900,
+        "title": "Blue check shirt (SIMULATED)",
+        "text": "Blue check shirt (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 7-day returns."
+      },
+      {
+        "id": "lst_photoPoloNavy",
+        "merchant": "apparel",
+        "kind": "polo",
+        "colors": [
+          "navy"
+        ],
+        "pattern": "plain",
+        "fit": "slim",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 24900,
+        "title": "Navy slim polo shirt (SIMULATED)",
+        "text": "Navy slim polo shirt (SIMULATED). Soft cotton, slim fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSweaterBlack",
+        "merchant": "apparel",
+        "kind": "sweater",
+        "colors": [
+          "black"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "cozy",
+          "smart_casual"
+        ],
+        "price_minor": 32900,
+        "title": "Black sweater (SIMULATED)",
+        "text": "Black sweater (SIMULATED). Soft cotton knit, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSweaterBeige",
+        "merchant": "vintage",
+        "kind": "sweater",
+        "colors": [
+          "beige"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "cozy"
+        ],
+        "price_minor": 27900,
+        "title": "Beige relaxed sweater (SIMULATED)",
+        "text": "Beige relaxed sweater (SIMULATED). Soft cotton knit, relaxed fit, sizes S to XL. Flat shipping HK$30. 7-day returns."
+      },
+      {
+        "id": "lst_photoHoodieNavy",
+        "merchant": "outlet",
+        "kind": "hoodie",
+        "colors": [
+          "navy"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "streetwear",
+          "cozy"
+        ],
+        "price_minor": 34900,
+        "title": "Navy relaxed hoodie (SIMULATED)",
+        "text": "Navy relaxed hoodie (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoHoodieGrey",
+        "merchant": "apparel",
+        "kind": "hoodie",
+        "colors": [
+          "grey"
+        ],
+        "pattern": "plain",
+        "fit": "oversized",
+        "style": [
+          "cozy",
+          "streetwear"
+        ],
+        "price_minor": 37900,
+        "title": "Grey oversized hoodie (SIMULATED)",
+        "text": "Grey oversized hoodie (SIMULATED). Soft cotton, oversized fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoHoodieBlackLogo",
+        "merchant": "outlet",
+        "kind": "hoodie",
+        "colors": [
+          "black"
+        ],
+        "pattern": "logo",
+        "fit": "oversized",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 39900,
+        "title": "Black oversized logo hoodie (SIMULATED)",
+        "text": "Black oversized logo hoodie (SIMULATED). Soft cotton, oversized fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoHoodieYellow",
+        "merchant": "outlet",
+        "kind": "hoodie",
+        "colors": [
+          "yellow"
+        ],
+        "pattern": "plain",
+        "fit": "oversized",
+        "style": [
+          "streetwear",
+          "cozy"
+        ],
+        "price_minor": 36900,
+        "title": "Yellow oversized hoodie (SIMULATED)",
+        "text": "Yellow oversized hoodie (SIMULATED). Soft cotton, oversized fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoJacketDenim",
+        "merchant": "outlet",
+        "kind": "jacket",
+        "colors": [
+          "denim"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 47900,
+        "title": "Denim jacket (SIMULATED)",
+        "text": "Denim jacket (SIMULATED). Mid-weight cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoJacketNavy",
+        "merchant": "apparel",
+        "kind": "jacket",
+        "colors": [
+          "navy"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "sporty",
+          "basics"
+        ],
+        "price_minor": 44900,
+        "title": "Navy jacket (SIMULATED)",
+        "text": "Navy jacket (SIMULATED). Mid-weight cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoJacketGreenCheck",
+        "merchant": "vintage",
+        "kind": "jacket",
+        "colors": [
+          "green"
+        ],
+        "pattern": "check",
+        "fit": "relaxed",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 59900,
+        "title": "Green relaxed check jacket (SIMULATED)",
+        "text": "Green relaxed check jacket (SIMULATED). Mid-weight cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 7-day returns."
+      },
+      {
+        "id": "lst_photoJeansDenim",
+        "merchant": "apparel",
+        "kind": "jeans",
+        "colors": [
+          "denim"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 34900,
+        "title": "Denim jeans (SIMULATED)",
+        "text": "Denim jeans (SIMULATED). Stretch denim, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoJeansBlack",
+        "merchant": "outlet",
+        "kind": "jeans",
+        "colors": [
+          "black"
+        ],
+        "pattern": "plain",
+        "fit": "slim",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 32900,
+        "title": "Black slim jeans (SIMULATED)",
+        "text": "Black slim jeans (SIMULATED). Stretch denim, slim fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoTrousersBeige",
+        "merchant": "apparel",
+        "kind": "trousers",
+        "colors": [
+          "beige"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 29900,
+        "title": "Beige trousers (SIMULATED)",
+        "text": "Beige trousers (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoTrousersOlive",
+        "merchant": "outlet",
+        "kind": "trousers",
+        "colors": [
+          "olive"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 34900,
+        "title": "Olive relaxed trousers (SIMULATED)",
+        "text": "Olive relaxed trousers (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoShortsNavy",
+        "merchant": "outlet",
+        "kind": "shorts",
+        "colors": [
+          "navy"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "sporty"
+        ],
+        "price_minor": 16900,
+        "title": "Navy shorts (SIMULATED)",
+        "text": "Navy shorts (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoDressBlack",
+        "merchant": "apparel",
+        "kind": "dress",
+        "colors": [
+          "black"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 39900,
+        "title": "Black dress (SIMULATED)",
+        "text": "Black dress (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoDressCream",
+        "merchant": "vintage",
+        "kind": "dress",
+        "colors": [
+          "cream"
+        ],
+        "pattern": "plain",
+        "fit": "relaxed",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 44900,
+        "title": "Cream relaxed dress (SIMULATED)",
+        "text": "Cream relaxed dress (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 7-day returns."
+      },
+      {
+        "id": "lst_photoSkirtDenim",
+        "merchant": "apparel",
+        "kind": "skirt",
+        "colors": [
+          "denim"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 25900,
+        "title": "Denim skirt (SIMULATED)",
+        "text": "Denim skirt (SIMULATED). Soft cotton, regular fit, sizes S to XL. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSneakersWhite",
+        "merchant": "shoes",
+        "kind": "sneakers",
+        "colors": [
+          "white"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 49900,
+        "title": "White sneakers (SIMULATED)",
+        "text": "White sneakers (SIMULATED). Canvas upper, regular fit, sizes EU 38 to 45. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSneakersGreen",
+        "merchant": "shoes",
+        "kind": "sneakers",
+        "colors": [
+          "green"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "streetwear"
+        ],
+        "price_minor": 39900,
+        "title": "Green sneakers (SIMULATED)",
+        "text": "Green sneakers (SIMULATED). Canvas upper, regular fit, sizes EU 38 to 45. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoBootsBrown",
+        "merchant": "shoes",
+        "kind": "boots",
+        "colors": [
+          "brown"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "smart_casual"
+        ],
+        "price_minor": 69900,
+        "title": "Brown boots (SIMULATED)",
+        "text": "Brown boots (SIMULATED). Leather upper, regular fit, sizes EU 38 to 45. Free shipping. 30-day returns."
+      }
+    ]
+  }
+}

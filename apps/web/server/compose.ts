@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { compileMandateText } from "@wally/agent/compiler";
 import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@wally/agent/judge";
 import { createChatClient, createPlanner, loadReplayRecords } from "@wally/agent/planner";
+import { describeImage } from "@wally/agent/vision";
 import { engine as defaultEngine } from "@wally/core/engine";
 import type { PlannerReplayRecord } from "@wally/core/generated";
 import { appendEntry } from "@wally/core/log";
@@ -22,6 +23,7 @@ import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
 import { buildInfo, featuresFor, type JudgeHealth, type PlannerChoice } from "../src/booth/backend/info";
 import { replayPlannerFactory, withRecordedFallback } from "../src/booth/backend/planner";
 import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
+import type { PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
@@ -31,6 +33,7 @@ import { loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
 import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
+import type { SeeMode } from "./booth/visionProbe";
 import type { LanOptions } from "./http/lan";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
@@ -66,6 +69,8 @@ export interface ComposeOptions {
   readonly planner?: PlannerChoice;
   /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
   readonly lan?: LanOptions;
+  /** Show Wally a photo: "model" when the local model reads pictures (server/booth/visionProbe.ts, asked once at start). Default "palette". */
+  readonly see?: SeeMode;
 }
 
 export interface Booth {
@@ -113,6 +118,13 @@ function compileModel(settings: BoothSettings, choice: PlannerChoice): ModelComp
   return ({ text, locale, now }) => compileMandateText({ text, locale, now, client, model: settings.plannerModel });
 }
 
+/** Reads one picture into typed words on the local Qwen server (describeImage); only when the start-up probe found vision. */
+function pictureReader(settings: BoothSettings, see: SeeMode): PictureReader | null {
+  if (see !== "model") return null;
+  const client = createChatClient({ baseUrl: settings.plannerUrl, allowRemote: settings.plannerAllowRemote });
+  return (bytes) => describeImage(bytes, { client, model: settings.plannerModel });
+}
+
 function makeJudge(opts: ComposeOptions, settings: BoothSettings): JudgePort {
   if (opts.judge !== undefined) return opts.judge;
   try {
@@ -134,7 +146,8 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const recorded = replayRecords(settings); // the live planners fall back to these for the fixed booth buttons
   const records = choice.provider === "replay" ? recorded : [];
   const planner = plannerFactory(settings, choice, table, recorded);
-  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")));
+  const see = opts.see ?? "palette";
+  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")), see);
   const store = opts.store ?? new FileLogStore(settings.logDir);
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
   let keys = loadKeys();
@@ -167,6 +180,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     plannerProvider: choice.provider,
     ask: askSource(settings, choice, catalogue, table),
     compileModel: compileModel(settings, choice),
+    pictureReader: pictureReader(settings, see),
     info: () => buildInfo({ settings, judgeProvider: judge.provider, health, keySource: keys.source, planner: choice, features }),
     presetSeal: (now) => m0Request(now),
     logger,

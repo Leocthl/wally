@@ -21,11 +21,17 @@ import type {
   ScenarioId,
   SealRequest,
   SealResult,
+  SeeRequest,
+  SeeResult,
   TraceListener,
   Unsubscribe,
   VerifyOutcome,
 } from "./types";
 import { compileRules } from "../booth/backend/compileRules";
+import { see } from "../booth/backend/see";
+import { SILENT_BACKEND_LOGGER } from "../booth/backend/types";
+import { parseSeeRequest, type JsonObject } from "../booth/backend/validate";
+import { loadBundle } from "./local/bundle";
 import { checkout, mintFor, proposeAndDecide, skipUpstream, type CheckoutMode, type Purchase, type PurchaseSpec } from "./mock/flows";
 import { answerOpenEscalation, expireDueEscalations } from "./mock/escalation";
 import { CHECKED, SKIPPED, tamperCopy, verifyMockChain } from "./mock/log";
@@ -81,12 +87,17 @@ export class MockApiClient implements ApiClient {
     return compileRules(req, { now: this.#clock.now(), model: null });
   }
 
+  /** Show Wally a photo: the colour plates and the chips over the bundled shop, as on the device. The mock cannot buy a pick (features.ask is off). */
+  async see(req: SeeRequest): Promise<SeeResult> {
+    return see(parseSeeRequest(req as JsonObject), { shop: loadBundle().catalogue.shop, reader: null, logger: SILENT_BACKEND_LOGGER });
+  }
+
   async info(): Promise<ApiInfo> {
     return {
       kind: "mock",
       judge: { provider: "replay", note: "Recorded answers (SIMULATED). Typed text goes to a keyword stand-in, not to Laya." },
       planner: { provider: "replay", note: "Recorded proposals (SIMULATED). Typed text uses the rule planner." },
-      features: { ask: false, alternatives: false, compile: "rules", family: false },
+      features: { ask: false, alternatives: false, compile: "rules", family: false, see: "palette" },
       replayed: true,
       realCapture: null,
     };

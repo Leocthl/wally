@@ -6,6 +6,7 @@ import type { ReplayRecording } from "@wally/agent/judge";
 import { sha256Hex } from "@wally/core/crypto";
 import type { JudgeRecord } from "@wally/core/ports";
 import { formatIssues, validateJudgeRecord, validateListingRecord } from "@wally/core/schema";
+import type { Shop } from "../../booth/backend/shop";
 
 export class RecordingLoadError extends Error {
   constructor(message: string) {
@@ -48,4 +49,33 @@ export function judgeRecordingsFrom(judgeFiles: BundledFiles, listingFiles: Bund
   if (judge.length === 0) throw new RecordingLoadError("no judge recordings in the bundle");
   const listings = new Map(Object.entries(listingFiles).map(([path, raw]) => [fileName(path), raw] as const));
   return judge.map(([file, raw]) => recordingOf(file, raw, listings));
+}
+
+/**
+ * Judge answers for the photo shelf (data/fixtures/shop/judge.json), recorded from live Laya by scripts/record-shop-judge.ts.
+ * One record per shelf item, keyed by the SHA-256 of that item's listing text; a record made for other text is a load error
+ * (re-record), so an edited listing can never be judged by a stale answer. A shelf item with no record is a load error too.
+ */
+export function shopRecordingsFrom(file: unknown, shop: Shop): readonly ReplayRecording[] {
+  const source = "shop/judge.json";
+  if (file === null || typeof file !== "object" || (file as { provenance?: unknown }).provenance !== "SIMULATED" || (file as { schema?: unknown }).schema !== "photo-shelf-judge") {
+    throw new RecordingLoadError(`${source}: not a SIMULATED photo-shelf-judge fixture`);
+  }
+  const rows = (envelopeData(file, source) as { records?: unknown }).records;
+  if (!Array.isArray(rows)) throw new RecordingLoadError(`${source}: records must be a list`);
+  const recordings = rows.map((row, index): ReplayRecording => {
+    const where = `${source} record ${index}`;
+    const entry = row as { listing?: unknown; text_sha256?: unknown; record?: unknown };
+    const item = typeof entry.listing === "string" ? shop.get(entry.listing) : undefined;
+    if (item === undefined) throw new RecordingLoadError(`${where}: no such photo-shelf item`);
+    const fingerprint = sha256Hex(item.listing.text);
+    if (entry.text_sha256 !== fingerprint) throw new RecordingLoadError(`${where}: recorded for other text than ${item.item.id} has now; run scripts/record-shop-judge.ts`);
+    const record = validateJudgeRecord(entry.record);
+    if (!record.ok) throw new RecordingLoadError(`${where}: ${formatIssues(record.errors)}`);
+    if (record.value.status !== "OK" || record.value.answers === undefined) throw new RecordingLoadError(`${where}: a recording must be an OK record with answers`);
+    return { fingerprint, record: { ...record.value, provider: "replay", version: labelled(record.value.version) }, source: `${source}#${item.item.id}` };
+  });
+  const missing = [...shop.keys()].filter((id) => !recordings.some((r) => r.source.endsWith(`#${id}`)));
+  if (missing.length > 0) throw new RecordingLoadError(`${source}: no judge answer for ${missing.join(", ")}`);
+  return recordings;
 }
