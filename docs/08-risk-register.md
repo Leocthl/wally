@@ -49,6 +49,7 @@
 | Sleep and scope creep | H/H | A person works past their slot; work outside TASKS.md; a gate is missed | Rota, one person off 4 h at a time [F41]; scope locked (X-09); cut order D9 | [TEAM] |
 | Typed Ask buys over the price the shopper said | L/M | The planner picks by words; the limit in the sentence was shown but not applied [F105] | Code prices the pick with shipping; a pick above the limit is no proposal and the reader sheet shows the limit; it only tightens, and R3 and R9 still decide | [TEAM] |
 | A judge names an agent-card startup | M/M | Allowance and AgentCard already issue one-time cards with limits and approvals [F114] | We do not sell a card: we are the signed budget, the listing check and receipts anyone can check offline, above any card; say so in one sentence and show the stop | [TEAM] |
+| A judge asks if Wally buys groceries or anything else | H/M | The rules are category-agnostic, but the listing check's scope question and the photo reader are fitted on clothing, and the demo shop is clothes and one gadget [F36, F105] | Say it plainly: a budget names the categories its owner chooses and the rules keep to them; other goods ask the shopper until the listing check is re-fitted on a new corpus; we claim nothing we did not measure | [TEAM] |
 
 ## Contingency (D8)
 - If the end-to-end stop still fails at H10 [F41], after the H6 cut, switch to Track 4, "overnight desk that escalates" (Jev-native), the second-ranked option [F43]. All lane owners decide together at H10; there is no half-switch. Not planned further here.
