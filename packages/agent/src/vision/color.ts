@@ -40,7 +40,7 @@ export const COLOR_ANCHORS: Readonly<Record<Color, readonly string[]>> = {
   white: ["#f5f5f2", "#ffffff", "#ebebe8"],
   grey: ["#9a9aa0", "#6f6f76", "#c5c5ca", "#4a4a50"],
   navy: ["#1f2f55", "#18233f", "#2a3a63", "#3a4a73"],
-  blue: ["#2f66c0", "#4b78b0", "#1f4ea0", "#6a8fcf", "#4e7c9c"],
+  blue: ["#4a72b0", "#2f66c0", "#1f4ea0", "#6a8fcf", "#4e7c9c"],
   light_blue: ["#aacdee", "#c6dcf2", "#8fb6dd", "#9fbcc8"],
   green: ["#2f8f5b", "#1f6b43", "#59a86f", "#a9d3a5", "#1d4a34", "#254d3a"],
   olive: ["#7a7a35", "#5f5f2a", "#8a8450", "#6b6a49"],

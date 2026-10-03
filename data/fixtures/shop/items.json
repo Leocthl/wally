@@ -2,7 +2,7 @@
   "fixture": "shop/items",
   "provenance": "SIMULATED",
   "schema": "photo-shelf",
-  "note": "SIMULATED photo shelf: 30 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. No real shop, brand or person; times are placeholders [F59].",
+  "note": "SIMULATED photo shelf: 30 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. Prices, weights and limits: [F96]. No real shop, brand or person; times are placeholders [F59].",
   "data": {
     "observed_at": "2026-10-03T02:30:00Z",
     "merchants": {
@@ -110,20 +110,20 @@
         "text": "Grey tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
       },
       {
-        "id": "lst_photoTeeOlive",
+        "id": "lst_photoTeeBlue",
         "merchant": "outlet",
         "kind": "tee",
         "colors": [
-          "olive"
+          "blue"
         ],
         "pattern": "plain",
-        "fit": "relaxed",
+        "fit": "regular",
         "style": [
-          "streetwear"
+          "basics"
         ],
         "price_minor": 15900,
-        "title": "Olive relaxed tee (SIMULATED)",
-        "text": "Olive relaxed tee (SIMULATED). Soft cotton, relaxed fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
+        "title": "Blue tee (SIMULATED)",
+        "text": "Blue tee (SIMULATED). Soft cotton, regular fit, sizes S to XL. Flat shipping HK$30. 14-day returns."
       },
       {
         "id": "lst_photoTeeCreamPrint",
