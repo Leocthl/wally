@@ -55,11 +55,13 @@ describe("the app on a restored session", () => {
     expect(log.filter((e) => e.kind === "MANDATE_REVOKED")).toHaveLength(0);
   });
 
-  it("Receipts lists the purchase and one \"Budget sealed\", the same four receipts as before the reload", async () => {
+  it("Receipts lists the purchase as one row and one \"Budget sealed\", the same receipts as before the reload", async () => {
     await reloadedApp("#/receipts");
     await waitFor(() => expect(screen.getAllByText("Budget sealed")).toHaveLength(1));
-    expect(screen.getAllByText("Paid at Demo Apparel")).toHaveLength(1);
-    expect(screen.getByRole("radio", { name: /^All4/ })).toBeInTheDocument();
+    // One purchase is one row (its decision, its card and its charge are the "3 steps"); the seal is the other row.
+    expect(screen.getAllByText(/Ankle socks, 3 pairs/)).toHaveLength(1);
+    expect(document.querySelector("[data-steps-toggle]")?.textContent).toBe("3 steps");
+    expect(screen.getByRole("radio", { name: /^All2/ })).toBeInTheDocument();
   });
 
   it("Proof checks the restored receipts on its own and says they hold", async () => {
@@ -107,7 +109,7 @@ describe("About says the demo remembers, only while it does", () => {
 describe("OnDeviceNote", () => {
   it("says the answers are recorded and nothing else by default", () => {
     render(<OnDeviceNote />);
-    expect(screen.getByText("On-device mode: recorded answers, nothing leaves your phone")).toBeInTheDocument();
+    expect(screen.getByText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.")).toBeInTheDocument();
     expect(screen.queryByText(/session ended/)).toBeNull();
   });
 
