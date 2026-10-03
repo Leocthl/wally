@@ -13,7 +13,7 @@ export function ReadResult({ result }: { readonly result: CompileResult }): Reac
   const titleId = useId();
   return (
     <section className="seal-read" role="status" aria-labelledby={titleId} data-source={result.source}>
-      <h3 id={titleId} className="seal-read__title"><Icon name="sparkle" size={18} /> {t(UI["seal.readTitle"])}</h3>
+      <h3 id={titleId} className="seal-read__title"><Icon name="settings" size={18} /> {t(UI["seal.readTitle"])}</h3>
       {/* The labels echo the shopper's own sentence and the rows below; they are not figures the app asserts. */}
       <ul className="seal-read__labels" data-ident>
         {result.labels.map((l) => (

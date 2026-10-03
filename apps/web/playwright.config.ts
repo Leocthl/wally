@@ -12,6 +12,8 @@ const URL = `http://127.0.0.1:${PORT}`;
 /** Ignored by git and eslint like every dist/ (root .gitignore, eslint.config.js). */
 const OUT_DIR = "dist/e2e";
 /** The first run (src/screens/onboarding) is off for every spec but its own: the flag is in storage when the page opens. */
+/** The specs that need the laptop layout; every other project skips them, and the laptop project runs nothing else. */
+const LAPTOP = /laptop.*\.spec\.ts$/;
 const ONBOARDED = { cookies: [], origins: [{ origin: URL, localStorage: [{ name: "wally:onboarded", value: "1" }] }] };
 
 export default defineConfig({
@@ -31,10 +33,13 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "phone", use: { ...devices["Pixel 7"] }, testIgnore: LAPTOP },
     // The narrowest and the widest phone the screens are drawn for (the checks in e2e/a11y.spec.ts set their own widths too).
-    { name: "phone-small", use: { ...devices["Pixel 7"], viewport: { width: 360, height: 740 } } },
-    { name: "phone-large", use: { ...devices["Pixel 7"], viewport: { width: 430, height: 932 } } },
-    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } } },
+    { name: "phone-small", use: { ...devices["Pixel 7"], viewport: { width: 360, height: 740 } }, testIgnore: LAPTOP },
+    { name: "phone-large", use: { ...devices["Pixel 7"], viewport: { width: 430, height: 932 } }, testIgnore: LAPTOP },
+    // A wide window that is still below the laptop layout (64rem): the phone column centred on its backdrop.
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1000, height: 900 } }, testIgnore: LAPTOP },
+    // A laptop (1440 x 900): top navigation, the Budget screen in columns, sheets as drawers. Only e2e/laptop*.spec.ts runs here.
+    { name: "laptop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testMatch: LAPTOP },
   ],
 });

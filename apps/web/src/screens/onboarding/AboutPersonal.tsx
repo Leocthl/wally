@@ -42,7 +42,7 @@ export function AboutPersonal({ onClose }: AboutPersonalProps): ReactElement {
       <h3 id="about-personal" className="shell-about__heading">{t(OB.about.heading)}</h3>
       <div ref={rows}>
         <List inset label={t(OB.about.heading)}>
-          {profile ? <ListRow leading={<Icon name="sparkle" />} title={t(OB.about.profile)} subtitle={summary === "" ? t(OB.about.stays) : summary} /> : null}
+          {profile ? <ListRow leading={<Icon name="tag" />} title={t(OB.about.profile)} subtitle={summary === "" ? t(OB.about.stays) : summary} /> : null}
           <ListRow
             leading={<Icon name="refresh" />}
             title={t(OB.about.tourAgain)}

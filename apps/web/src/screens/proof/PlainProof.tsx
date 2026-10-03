@@ -55,7 +55,7 @@ export function PlainProof(): ReactElement {
         <ListRow leading={<Icon name="info" />} title={t(P.how)} chevron onClick={() => setHow(true)} />
         {checker === undefined ? null : <ListRow leading={<Icon name="shieldCheck" />} title={t(PLAIN.openChecker)} chevron href={checker} />}
         {exporter ? <ListRow leading={<Icon name="download" />} title={t(PLAIN.saveCopy)} chevron onClick={() => setExportOpen(true)} /> : null}
-        <ListRow leading={<Icon name="sparkle" />} title={t(P.whyTrust)} chevron href="#/evidence" />
+        <ListRow leading={<Icon name="shieldCheck" />} title={t(P.whyTrust)} chevron href="#/evidence" />
       </List>
       <ProofFooter plain showDemoKey={demoShortcut(info)} onDevice={api.kind !== "http"} />
       <PlainHowSheet open={how} onClose={() => setHow(false)} />

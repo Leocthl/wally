@@ -38,11 +38,11 @@ function Phone({ withTry, children }: { readonly withTry: boolean; readonly chil
         current="budget"
         items={[
           { id: "budget", label: t(UI.tabBudget), icon: <Icon name="wallet" />, href: "#" },
-          { id: "wally", label: t(UI.tabWally), icon: <Icon name="sparkle" />, href: "#" },
+          { id: "wally", label: t(UI.tabWally), icon: <Icon name="chat" />, href: "#" },
           { id: "receipts", label: t(UI.tabReceipts), icon: <Icon name="receipt" />, href: "#" },
           { id: "proof", label: t(UI.tabProof), icon: <Icon name="shieldCheck" />, href: "#" },
         ]}
-        center={{ label: t(UI["shell.ask"](BRAND.name)), icon: <Icon name="sparkle" size={26} />, onPress: () => undefined }}
+        center={{ label: t(UI["shell.ask"](BRAND.name)), icon: <Icon name="chat" size={26} />, onPress: () => undefined }}
       />
     </div>
   );

@@ -99,7 +99,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
           ))}
         </div>
         {suggestRules ? (
-          <Button variant="secondary" size="sm" icon={<Icon name="sparkle" size={18} />} loading={reading} disabled={sentence.trim().length === 0} onClick={() => void readWithModel()}>
+          <Button variant="secondary" size="sm" icon={<Icon name="settings" size={18} />} loading={reading} disabled={sentence.trim().length === 0} onClick={() => void readWithModel()}>
             {t(UI["seal.readSentence"])}
           </Button>
         ) : null}

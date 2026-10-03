@@ -18,7 +18,7 @@ function Svg({ size = 24, className, strokeWidth = 2, children }: IconProps & { 
 
 const PATHS = {
   wallet: <><rect x="3" y="6" width="18" height="14" rx="3.5" /><path d="M3 10h18M16.5 14.5h1.5" /><path d="M6.5 6l8.5-2.6a1.6 1.6 0 0 1 2 1.1L17.5 6" /></>,
-  sparkle: <path d="M12 3.5l1.6 4.6a3 3 0 0 0 1.8 1.8l4.6 1.6-4.6 1.6a3 3 0 0 0-1.8 1.8L12 19.5l-1.6-4.6a3 3 0 0 0-1.8-1.8L4 11.5l4.6-1.6a3 3 0 0 0 1.8-1.8z" />,
+  chat: <path d="M6 5h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-6.5L7 20.5V17H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z" />,
   receipt: <><path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.3z" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
   shield: <path d="M12 3l7.5 3v5.6c0 4.4-3.1 8.2-7.5 9.4-4.4-1.2-7.5-5-7.5-9.4V6z" />,
   shieldCheck: <><path d="M12 3l7.5 3v5.6c0 4.4-3.1 8.2-7.5 9.4-4.4-1.2-7.5-5-7.5-9.4V6z" /><path d="M8.8 12.2l2.2 2.2 4.3-4.6" /></>,

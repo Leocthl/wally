@@ -43,7 +43,7 @@ export function Shopping(): ReactElement {
           <p className="sg-note"><ProvenanceChip prov={SIMULATED} /> {t(C.timesSimulated)}</p>
         </Card>
       </div>
-      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="wally" center={{ label: t(C.ask), icon: <Icon name="sparkle" size={26} />, onPress: () => undefined }} />
+      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="wally" center={{ label: t(C.ask), icon: <Icon name="chat" size={26} />, onPress: () => undefined }} />
     </Phone>
   );
 }

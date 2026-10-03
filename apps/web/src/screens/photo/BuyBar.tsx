@@ -34,7 +34,7 @@ export function BuyBar({ match, busy, onBuy }: BuyBarProps): ReactElement {
             {t(PHOTO.cardFor)} <Num kind="money" value={match.totalMinor} prov={SIMULATED} /> {t(PHOTO.buyNote)}
           </p>
         </div>
-        <Button size="lg" block icon={<Icon name="sparkle" size={20} />} disabled={busy} data-slot="photo-buy-button" onClick={onBuy}>
+        <Button size="lg" block icon={<Icon name="chat" size={20} />} disabled={busy} data-slot="photo-buy-button" onClick={onBuy}>
           {t(PHOTO.buy)}
         </Button>
       </div>

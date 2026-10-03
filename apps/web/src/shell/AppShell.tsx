@@ -9,6 +9,7 @@ import { UI } from "../i18n/ui";
 import { cx } from "../ui/cx";
 import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
+import { Button } from "../ui/Button";
 import { BottomTabBar, type TabItem } from "../ui/Nav";
 import { Skeleton } from "../ui/Surface";
 import { useToast } from "../ui/Toast";
@@ -19,10 +20,12 @@ import { ASK_EVENT } from "./askEvent";
 import { AskSheet, type AskWally } from "./AskSheet";
 import { CantReach, ConnectionBanners } from "./Connection";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useDesktop } from "./layout";
 import { prefetchRoutes, RouteView, tabFor } from "./routes";
 import { ShellBar } from "./ShellBar";
 import { ShellProvider } from "./ShellContext";
 import { SheetBoundary } from "./SheetBoundary";
+import { TopNav } from "./TopNav";
 import { useTheme } from "./theme";
 import "./shell.css";
 
@@ -46,7 +49,7 @@ function useTabs(): readonly TabItem[] {
   const { t } = useLocale();
   return [
     { id: "budget", label: t(UI.tabBudget), icon: <Icon name="wallet" />, href: routeHref("budget") },
-    { id: "wally", label: t(UI.tabWally), icon: <Icon name="sparkle" />, href: routeHref("wally") },
+    { id: "wally", label: t(UI.tabWally), icon: <Icon name="chat" />, href: routeHref("wally") },
     { id: "receipts", label: t(UI.tabReceipts), icon: <Icon name="receipt" />, href: routeHref("receipts") },
     { id: "proof", label: t(UI.tabProof), icon: <Icon name="shieldCheck" />, href: routeHref("proof") },
   ];
@@ -158,14 +161,19 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
   };
 
   const wide = route.name === "presenter";
+  const desktop = useDesktop();
   const tabbar = !NO_TABS.has(route.name);
   const failedToLoad = info === null && error !== null;
 
   return (
     <ShellProvider openAsk={openAsk} openAbout={openAbout} showPhoto={showPhoto} showShopSearch={showShopSearch}>
-      <div className={cx("shell-app", wide && "shell-app--wide", tabbar && "shell-app--tabs")} data-route={route.name} lang={locale} data-chip-scope>
+      <div className={cx("shell-app", wide && "shell-app--wide", tabbar && !desktop && "shell-app--tabs", desktop && "shell-app--desktop")} data-route={route.name} data-layout={desktop ? "desktop" : "phone"} lang={locale} data-chip-scope>
         <a className="sr-only" href="#main" onClick={skip}>{t(UI["shell.skip"])}</a>
-        <ShellBar onAbout={openAbout} />
+        <ShellBar
+          onAbout={openAbout}
+          {...(desktop && tabbar ? { nav: <TopNav label={t(UI.mainNav)} items={tabs} current={tabFor(route.name)} /> } : {})}
+          {...(desktop && tabbar ? { action: <Button size="sm" className="shell-ask" onClick={openAsk}>{t(UI.run.ask)}</Button> } : {})}
+        />
         <ConnectionBanners />
         <main id="main" tabIndex={-1} className="shell-main">
           {failedToLoad ? (
@@ -178,8 +186,8 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
             </ErrorBoundary>
           )}
         </main>
-        {tabbar ? (
-          <BottomTabBar label={t(UI.mainNav)} items={tabs} current={tabFor(route.name)} center={{ label: t(UI["shell.ask"](BRAND.name)), icon: <Icon name="sparkle" size={26} />, onPress: openAsk }} />
+        {tabbar && !desktop ? (
+          <BottomTabBar label={t(UI.mainNav)} items={tabs} current={tabFor(route.name)} center={{ label: t(UI["shell.ask"](BRAND.name)), icon: <Icon name="chat" size={26} />, onPress: openAsk }} />
         ) : null}
         <AskSheet open={asking} onClose={() => setAsking(false)} {...(onAsk ? { onAsk } : {})} />
         <AboutSheet open={about} onClose={() => setAbout(false)} theme={theme} onTheme={setTheme} />

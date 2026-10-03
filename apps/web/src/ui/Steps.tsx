@@ -27,7 +27,7 @@ const SPOKEN = {
 function Disc({ status }: { readonly status: StepStatus }): ReactElement {
   if (status === "done") return <Icon name="check" size={18} strokeWidth={2.6} />;
   if (status === "stop") return <Icon name="hand" size={18} />;
-  if (status === "now") return <Icon name="sparkle" size={16} />;
+  if (status === "now") return <Icon name="clock" size={16} />;
   return <span aria-hidden="true" className="w-step__dot" />;
 }
 

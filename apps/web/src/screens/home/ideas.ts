@@ -31,7 +31,7 @@ export const IDEAS: readonly Idea[] = [
   { id: "jacket", scenario: "overflow", ask: "a denim jacket", icon: "tag", title: OB.ideas.item.jacket, kind: OB.ideas.kind.jacket },
   { id: "hoodie", scenario: "flagged", ask: "a fleece hoodie", icon: "tag", title: OB.ideas.item.hoodie, kind: OB.ideas.kind.hoodie },
   { id: "graphic", scenario: "injected", ask: "a graphic tee", icon: "tag", title: OB.ideas.item.graphic, kind: OB.ideas.kind.graphic },
-  { id: "earbuds", scenario: "off_category", ask: "wireless earbuds", icon: "sparkle", title: OB.ideas.item.earbuds, kind: OB.ideas.kind.earbuds },
+  { id: "earbuds", scenario: "off_category", ask: "wireless earbuds", icon: "tag", title: OB.ideas.item.earbuds, kind: OB.ideas.kind.earbuds },
 ];
 
 export const IDEAS_SHOWN = 4;

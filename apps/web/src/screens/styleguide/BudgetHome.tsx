@@ -20,7 +20,7 @@ export function useTabs(): readonly { readonly id: string; readonly label: strin
   const { t } = useLocale();
   return [
     { id: "budget", label: t(UI.tabBudget), icon: <Icon name="wallet" /> },
-    { id: "wally", label: t(UI.tabWally), icon: <Icon name="sparkle" /> },
+    { id: "wally", label: t(UI.tabWally), icon: <Icon name="chat" /> },
     { id: "receipts", label: t(UI.tabReceipts), icon: <Icon name="receipt" /> },
     { id: "proof", label: t(UI.tabProof), icon: <Icon name="shieldCheck" /> },
   ];
@@ -85,7 +85,7 @@ export function BudgetHome(): ReactElement {
           ))}
         </div>
       </div>
-      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="budget" center={{ label: t(C.ask), icon: <Icon name="sparkle" size={26} />, onPress: () => setAsking(true) }} />
+      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="budget" center={{ label: t(C.ask), icon: <Icon name="chat" size={26} />, onPress: () => setAsking(true) }} />
       <AskSheet open={asking} onClose={() => setAsking(false)} />
     </Phone>
   );

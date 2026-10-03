@@ -25,19 +25,10 @@
   isolation: isolate;
   border: 0;
   border-radius: var(--r-xl);
-  background: linear-gradient(140deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
+  background: radial-gradient(120% 90% at 0% 0%, var(--c-hero-shine), transparent 55%), linear-gradient(140deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
   color: var(--c-on-hero);
   box-shadow: var(--shadow-2);
 }
-.w-card--hero::before, .w-card--hero::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.w-card--hero::before { width: 13rem; height: 13rem; right: -4.5rem; top: -6rem; background: var(--c-hero-to); opacity: 0.6; }
-.w-card--hero::after { width: 7rem; height: 7rem; right: 3.5rem; bottom: -4.25rem; background: var(--c-hero-glow); }
 
 /* Ticket: the one-off card, dark in both themes like a real card. */
 .w-card--ticket {

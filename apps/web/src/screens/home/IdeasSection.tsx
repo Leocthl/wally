@@ -7,10 +7,10 @@ import { SIMULATED } from "../../domain/provenance";
 import { OB } from "../../i18n/onboarding";
 import { useProfile } from "../../state/useProfile";
 import { SHOP_IDS, type ShopId } from "../../state/taste";
-import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { Money } from "../../shell/figures";
 import { categoryName } from "./BudgetHero";
+import { IdeaArt } from "./IdeaArt";
 import { IdeaPreviewSheet } from "./IdeaPreviewSheet";
 import { ideaListing } from "./ideaListings";
 import { ideasFor, type Idea, type IdeaReason } from "./ideas";
@@ -43,7 +43,7 @@ export function Ideas({ onAsk, busy }: IdeasProps): ReactElement {
           return (
             <li key={idea.id}>
               <button type="button" className="home-try__card home-idea" data-idea={idea.id} data-idea-reason={reason ?? undefined} aria-haspopup="dialog" disabled={busy} onClick={() => setPreview(idea)}>
-                <span className="home-try__icon home-try__icon--primary"><Icon name={idea.icon} size={20} /></span>
+                <IdeaArt id={idea.id} size={64} className="home-idea__art" />
                 <span className="home-try__title">{t(idea.title)}</span>
                 <span className="home-try__desc home-idea__why">{reason === null ? t(idea.kind) : isShop(reason) ? categoryName(reason, t) : t(OB.taste.style[reason])}</span>
                 {listing === null ? null : <Money minor={listing.totalMinor} prov={SIMULATED} className="home-idea__price" />}

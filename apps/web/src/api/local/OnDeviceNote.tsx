@@ -8,7 +8,7 @@ import { label } from "../../i18n/label";
 import { ON_DEVICE_NOTE } from "./info";
 
 // NEEDS-REVIEW zh-HK (C-12).
-const TEXT = label(ON_DEVICE_NOTE, "示範模式：Wally 在你的手機上運作，使用示範商店資料。任何內容都不會離開你的手機。");
+const TEXT = label(ON_DEVICE_NOTE, "示範模式：Wally 在這部裝置上運作，使用示範商店資料。任何內容都不會離開這部裝置。");
 // NEEDS-REVIEW zh-HK (C-12).
 const ENDED = label("Your last demo session ended, so Wally started a new one", "你上一次的示範已經結束，Wally 已開始新的一次");
 

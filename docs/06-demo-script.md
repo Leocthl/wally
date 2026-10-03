@@ -19,7 +19,7 @@
 
 ## Hands-on station
 - **After 3:00** [F45] the judge drives; the Talker answers.
-- **Demo scenarios** (Budget, for judges): every scenario is one tap and buys what it needs first.
+- **Demo scenarios** (Budget, tabs Buy, Stops, Card, Budget): one tap each, and each buys what it needs first.
 - **Ask Wally**: type or speak a request (English, Chinese, Cantonese); the rules decide; a repeat buys nothing.
 - **Show Wally a photo**: Home or Ask, the camera button. A plain garment photo gives words and four SIMULATED items; one tap asks Wally to buy, and the rules decide as for any ask. It names the kind of garment, not the photo [F68a]; on the on-device page the shopper taps the kind.
 - **Try to trick Wally**: text reaches the judge only; expect Stopped before paying (`R10.injection`); padded or Chinese text escalates [F26, F104].

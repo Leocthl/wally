@@ -29,7 +29,7 @@ export function Composer(): ReactElement {
   const { t } = useLocale();
   return (
     <button type="button" className="home-composer" aria-haspopup="dialog" data-composer onClick={() => askWally("text")}>
-      <span className="home-composer__lead" aria-hidden="true"><Icon name="sparkle" size={20} /></span>
+      <span className="home-composer__lead" aria-hidden="true"><Icon name="chat" size={20} /></span>
       <span className="home-composer__text">{t(OB.home.composer)}</span>
       <span className="home-composer__tools" aria-hidden="true" data-tools>
         <span className="home-composer__tool" data-tool="photo"><CameraGlyph /></span>

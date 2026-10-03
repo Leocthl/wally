@@ -1,9 +1,11 @@
 // "Demo scenarios (for judges)" (just "Demo scenarios" off the booth): the booth's scenario cards, which are a test console and not part of shopping, in a disclosure
 // at the bottom of Home. Closed for a shopper; open on the booth Mac, with ?booth=1 and in presenter mode (demoMode.ts), so the
-// stage needs no extra tap. The choice is remembered for this browser. Every scenario stays reachable inside.
-import type { ReactElement, ReactNode } from "react";
+// stage needs no extra tap. The choice is remembered for this browser. Every scenario stays reachable inside. On a laptop it is not
+// a disclosure at all but a panel of its own (a section with a heading), so there is nothing to open and no dead control.
+import { useId, type ReactElement, type ReactNode } from "react";
 import { OB } from "../../i18n/onboarding";
 import { Icon } from "../../ui/icons";
+import { useDesktop } from "../../shell/layout";
 import { useLocale } from "../../ui/locale";
 import { useDemoOpen, useIsBoothPage } from "./demoMode";
 
@@ -19,8 +21,22 @@ export function DemoScenarios({ lead, children, booth }: DemoScenariosProps): Re
   const { t } = useLocale();
   const [open, choose] = useDemoOpen();
   const onBooth = useIsBoothPage();
+  const heading = useId();
+  // On a laptop the scenarios are a panel that is always there: a section with a heading, not a disclosure with nothing to open.
+  const panel = useDesktop();
   // "for judges" only on the booth's pages; on a friend's phone the cards are just a demo.
   const title = t((booth ?? onBooth) ? OB.home.demo : OB.home.demoPlain);
+  if (panel) {
+    return (
+      <section className="home-demo" aria-labelledby={heading} data-demo-disclosure data-static>
+        <h2 id={heading} className="home-demo__summary">{title}</h2>
+        <div className="home-demo__body">
+          <p className="home-block__lead">{lead}</p>
+          {children}
+        </div>
+      </section>
+    );
+  }
   // The browser also fires toggle when the open attribute is first set: only a change the person made is a choice to remember.
   const toggled = (el: HTMLDetailsElement): void => {
     if (el.open !== open) choose(el.open);

@@ -1,5 +1,5 @@
 // The top bar on every screen: the name (from BRAND) with Wally, a quiet SIMULATED note, EN | 繁, and About.
-import { useEffect, useId, useState, type ReactElement } from "react";
+import { useEffect, useId, useState, type ReactElement, type ReactNode } from "react";
 import { BRAND } from "../brand";
 import { SIMULATED } from "../domain/provenance";
 import { routeHref } from "../hooks/useRoute";
@@ -69,7 +69,14 @@ export function SimulatedNote(): ReactElement {
   );
 }
 
-export function ShellBar({ onAbout }: { readonly onAbout: () => void }): ReactElement {
+export interface ShellBarProps {
+  readonly onAbout: () => void;
+  /** Laptop layout only: the navigation beside the name, and the one primary action (Ask Wally) before the controls. */
+  readonly nav?: ReactNode;
+  readonly action?: ReactNode;
+}
+
+export function ShellBar({ onAbout, nav, action }: ShellBarProps): ReactElement {
   const { t } = useLocale();
   return (
     // The bar is the app-wide chip row (chip-scope__chips): its SIMULATED note covers every SIMULATED figure on every
@@ -80,6 +87,8 @@ export function ShellBar({ onAbout }: { readonly onAbout: () => void }): ReactEl
           <Wally state="idle" size={30} decorative />
           <span className="shell-brand__name" aria-hidden="true">{BRAND.name}</span>
         </a>
+        {nav}
+        {action}
         <SimulatedNote />
         <LanguageSwitch />
         <IconButton label={t(UI["shell.about"])} icon={<Icon name="info" />} onClick={onAbout} className="shell-bar__about" />

@@ -189,7 +189,7 @@ export default function CoachTour(): ReactElement | null {
       {box !== null ? <div className={cx("tour__spot", `tour__spot--${mark.shape}`)} style={{ top: box.top, left: box.left, width: box.width, height: box.height }} aria-hidden="true" /> : null}
       <div ref={card} className="tour__card" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} tabIndex={-1}>
         <div className="tour__top">
-          <span className="tour__label"><Icon name="sparkle" size={16} /> {t(OB.tour.label)}</span>
+          <span className="tour__label"><Icon name="info" size={16} /> {t(OB.tour.label)}</span>
           <span className="tour__dots" aria-hidden="true">
             {shown.map((i) => <span key={i} className="tour__dot" data-on={i === at || undefined} />)}
           </span>

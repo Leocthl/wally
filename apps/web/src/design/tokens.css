@@ -77,6 +77,7 @@
   --c-hero-from:     light-dark(#1A5CFF, #2453DB);
   --c-hero-to:       light-dark(#0A7396, #0B5470);
   --c-hero-glow:     light-dark(rgb(25 195 166 / 0.34), rgb(47 211 182 / 0.24));
+  --c-hero-shine:    light-dark(rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.11));  /* one soft highlight from the top-left corner of the budget card */
   --c-on-hero:       light-dark(#FFFFFF, #FFFFFF);
   --c-on-hero-muted: light-dark(#EEF2FF, #D3DEFF);
   --c-hero-track:    light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.22));

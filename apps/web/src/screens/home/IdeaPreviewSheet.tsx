@@ -40,7 +40,7 @@ export function IdeaPreviewSheet({ idea, busy, onClose, onBuy }: IdeaPreviewShee
       title={t(shown.title)}
       footer={
         <>
-          <Button size="lg" block disabled={busy} icon={<Icon name="sparkle" size={20} />} onClick={() => onBuy(shown)} data-idea-buy>{t(OB.ideas.buy)}</Button>
+          <Button size="lg" block disabled={busy} icon={<Icon name="chat" size={20} />} onClick={() => onBuy(shown)} data-idea-buy>{t(OB.ideas.buy)}</Button>
           <Button variant="ghost" block onClick={onClose} data-idea-later>{t(UI["shell.notNow"])}</Button>
         </>
       }

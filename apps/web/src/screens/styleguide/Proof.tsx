@@ -46,7 +46,7 @@ export function Proof(): ReactElement {
           <Button variant={broken ? "secondary" : "danger"} block icon={<Icon name={broken ? "refresh" : "alert"} size={20} />} onClick={toggle}>{broken ? t(C.restore) : t(C.tamper)}</Button>
         </div>
       </div>
-      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="proof" center={{ label: t(C.ask), icon: <Icon name="sparkle" size={26} />, onPress: () => undefined }} />
+      <BottomTabBar position="static" label={t(UI.mainNav)} items={tabs} current="proof" center={{ label: t(C.ask), icon: <Icon name="chat" size={26} />, onPress: () => undefined }} />
     </Phone>
   );
 }

@@ -147,9 +147,100 @@
 .console-hold__hint { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 .console-dialog__icon { display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--c-stop-tint); color: var(--c-stop-ink); }
 
+/* Ideas: the drawing leads, then the name, what the item is and the price. */
+.home-idea { gap: 2px; }
+.home-idea__art { width: 100%; height: 5.5rem; margin-bottom: var(--sp-2); padding: var(--sp-1); border-radius: var(--r-md); background: var(--c-primary-tint); }
+
+/* The three groups of the Budget screen. On a phone they dissolve (one column, the order of the page); with room they are columns:
+   what is happening now, the shelf and the history, then the test console. Nothing here needs a scroll to be found. */
+.home-col { display: contents; }
+
+@media (min-width: 64rem) {
+  .home { grid-template-columns: minmax(0, 24rem) minmax(0, 1fr); align-items: start; gap: var(--sp-6) var(--sp-7); }
+  .home-col { display: grid; align-content: start; gap: var(--sp-5); min-width: 0; }
+  /* The budget stays in view beside the rest when the page does scroll. */
+  .home-col--now { grid-row: span 2; position: sticky; top: calc(3.5rem + var(--sp-5)); }
+  .home-col--test { grid-column: 2; }
+
+  .home-block__title, .home-section__title { font-size: var(--text-lg); letter-spacing: -0.012em; }
+  .home-ideas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+}
+
+@media (min-width: 78rem) {
+  .home { grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr) minmax(19rem, 24rem); gap: var(--sp-6); }
+  .home-col--now { grid-row: auto; }
+  .home-col--test { grid-column: auto; }
+}
+
+/* The scenarios as an always-open panel on a laptop: a sunken tray with one row of tabs and the cards of the chosen group, so all of
+   it is in reach and none of it is a scroll away. */
+.home-demo[data-static] .home-demo__summary { padding: var(--sp-4) var(--sp-4) 0; font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: -0.012em; }
+.home-demo[data-static] .home-demo__body { gap: var(--sp-3); padding: var(--sp-2) var(--sp-4) var(--sp-4); }
+.home-try--tabs { gap: var(--sp-3); }
+.home-try__tabs { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-pill); background: var(--c-bg); }
+.home-try__tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.home-try__tab[aria-selected="true"] { background: var(--c-surface-raised); color: var(--c-ink); box-shadow: var(--shadow-1); }
+.home-try__panel .home-try__grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+/* A new group is a short fade-up, once: the tabs are used now and then, so the motion is brief and never in the way. */
+@media (prefers-reduced-motion: no-preference) {
+  .home-try__panel { animation: home-panel-in var(--dur-fast) var(--ease-out) both; }
+}
+@keyframes home-panel-in { from { opacity: 0; transform: translateY(0.25rem); } to { opacity: 1; transform: none; } }
+.home-try__panel .home-try__card {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "icon title" "icon desc" "icon tag";
+  align-content: center;
+  column-gap: var(--sp-3);
+  row-gap: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+}
+.home-try__panel .home-try__icon { grid-area: icon; align-self: center; width: 2rem; height: 2rem; margin: 0; border-radius: var(--r-sm); }
+.home-try__panel .home-try__title { grid-area: title; font-size: var(--text-sm); }
+.home-try__panel .home-try__desc { grid-area: desc; font-size: var(--text-xs); }
+.home-try__panel .home-try__for-you { grid-area: tag; margin-top: var(--sp-1); }
+
 @media (hover: hover) and (pointer: fine) {
   .home-composer:hover { border-color: var(--c-primary); }
   .home-idea[data-idea-reason]:hover { border-color: var(--c-primary); }
   .home-section__action:hover { background: var(--c-primary-tint); }
   .home-try__card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
+}
+
+/* Manage this budget, small: it sits under the budget card on a laptop, two quiet actions side by side and the hold to cancel below. */
+@media (min-width: 64rem) {
+  .console { gap: var(--sp-2); }
+  .console .home-block__title { font-size: var(--text-md); letter-spacing: -0.005em; color: var(--c-ink-muted); }
+  .console .w-list--inset { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); border: 0; border-radius: 0; background: none; overflow: visible; }
+  .console .w-list--inset .w-row { margin: 0; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); overflow: hidden; }
+  .console .w-row__hit, .console .w-list--inset .w-row + .w-row .w-row__hit { min-height: var(--tap); padding: var(--sp-2) var(--sp-3); gap: var(--sp-2); }
+  .console .w-row__leading { width: 1.75rem; height: 1.75rem; border-radius: var(--r-sm); }
+  .console .w-row__title { font-size: var(--text-sm); }
+  .console .w-row__subtitle, .console .w-row__chevron { display: none; }
+  .console-hold__button.w-btn { --btn-h: var(--tap); font-size: var(--text-sm); }
+  .console-hold__hint { font-size: var(--text-xs); }
+  /* Nothing in Recent yet: a quiet placeholder where the list will be, so the column does not end in thin air. */
+  .home-section__hint { margin: 0; padding: var(--sp-5) var(--sp-4); border: 1px dashed var(--c-line-strong); border-radius: var(--r-lg); }
+  /* The left column is the tallest: tighter greeting, a one-line photo row, a 48 px ask row. */
+  .home-hero__wally { width: 4rem; height: 4rem; }
+  .home-hero__bubble { padding: var(--sp-2) var(--sp-4); }
+  .home-ask { gap: var(--sp-2); }
+  .home-composer { min-height: var(--tap-lg); font-size: var(--text-md); }
+  .home-ask .home-photo { min-height: var(--tap-lg); margin-top: 0; padding-block: var(--sp-1); }
+  .home-ask .home-photo__desc { display: none; }
+  .home-ask .home-photo__icon { width: 2.25rem; height: 2.25rem; }
 }

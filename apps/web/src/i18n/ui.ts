@@ -313,6 +313,7 @@ const SHELL = {
   "home.escReview": label("Review", "查看"), // NEEDS-REVIEW
   "home.tryAsking": label("Try asking", "試吓問"), // NEEDS-REVIEW
   "home.tryLead": label("Each one runs the real rules on a simulated shop.", "每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
+  "home.groups": label("Scenario groups", "情境分類"), // NEEDS-REVIEW
   "home.group.buy": label("Buy", "購買"), // NEEDS-REVIEW
   "home.group.stops": label("Stops", "攔截"), // NEEDS-REVIEW
   "home.group.card": label("Card", "一次性卡"), // NEEDS-REVIEW

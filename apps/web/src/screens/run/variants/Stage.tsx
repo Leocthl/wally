@@ -14,7 +14,7 @@ export function Stage({ children, tab = "wally" }: { readonly children: ReactNod
   const { t } = useLocale();
   const tabs = [
     { id: "budget", label: t(UI.tabBudget), icon: <Icon name="wallet" />, href: "#/budget" },
-    { id: "wally", label: t(UI.tabWally), icon: <Icon name="sparkle" />, href: "#/wally" },
+    { id: "wally", label: t(UI.tabWally), icon: <Icon name="chat" />, href: "#/wally" },
     { id: "receipts", label: t(UI.tabReceipts), icon: <Icon name="receipt" />, href: "#/receipts" },
     { id: "proof", label: t(UI.tabProof), icon: <Icon name="shieldCheck" />, href: "#/proof" },
   ];
@@ -22,7 +22,7 @@ export function Stage({ children, tab = "wally" }: { readonly children: ReactNod
     <div className="shell-app shell-app--tabs" data-chip-scope>
       <ShellBar onAbout={NOOP} />
       <main id="main" className="shell-main">{children}</main>
-      <BottomTabBar label={t(UI.mainNav)} items={tabs} current={tab} center={{ label: t(UI["shell.ask"]("Wally")), icon: <Icon name="sparkle" size={26} />, onPress: NOOP }} />
+      <BottomTabBar label={t(UI.mainNav)} items={tabs} current={tab} center={{ label: t(UI["shell.ask"]("Wally")), icon: <Icon name="chat" size={26} />, onPress: NOOP }} />
     </div>
   );
 }

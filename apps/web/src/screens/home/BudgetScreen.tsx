@@ -29,6 +29,7 @@ import type { Idea } from "./ideas";
 import { RecentSection } from "./RecentSection";
 import { cardGroups, decisionTitle, hasCompletedPurchase, openEscalations, recentPurchases } from "./selectors";
 import { PhotoCardSlot } from "./slots";
+import { useDesktop } from "../../shell/layout";
 import { TRY_ITEMS } from "./tryCatalog";
 import { rankTryItems } from "./tryRank";
 import { TryAsking } from "./TryAsking";
@@ -92,6 +93,7 @@ export function BudgetScreen(): ReactElement {
   const focus = useRouteParam(PARAM.focus);
   const { profile } = useProfile();
   const [visits] = useState(countThisVisit);
+  const desktop = useDesktop();
   const loaded = state.packet !== null && state.mandate !== null;
   // A person who told Wally their taste sees their picks first among the scenario cards; the lead says so.
   const personal = rankTryItems(TRY_ITEMS, profile).forYou.size > 0;
@@ -129,32 +131,43 @@ export function BudgetScreen(): ReactElement {
     if (await attempt(booth, () => booth.api.revoke())) toast.show({ message: t(UI["console.cancelled"]), tone: "info" });
   };
 
+  const manage = <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />;
+  // Three groups, in the phone's order: what is happening now, the shelf and the history, then the test console. On a phone the groups
+  // dissolve (display: contents) and the page is one column; on a wide screen they are the three columns (home.css).
   return (
     <div className="home">
-      {/* The way in sits right under Wally's hello, above the figures: a question that is waiting comes first, then "What do you need?"
-          (or, once the budget is over, the one card that starts a new one). */}
-      <BudgetHero packet={packet} mandate={mandate}>
-        {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
-        {closed ? (
-          <Closed why={closed} />
-        ) : (
-          <div className="home-ask">
-            <Composer />
-            <PhotoCardSlot />
-          </div>
-        )}
-      </BudgetHero>
-      {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
-      <CardsSection active={cards.active} past={cards.past} />
-      <RecentSection rows={recentPurchases(state)} />
-      {/* Add to Home Screen waits for a first purchase or a second visit, and sits below the purchases, never above the greeting. */}
-      <IosInstallHint ready={installReady} />
-      {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
-      <DemoScenarios lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
-        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
-        <div className="home-block__foot"><ResetDemo /></div>
-      </DemoScenarios>
-      <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />
+      <div className="home-col home-col--now">
+        {/* The way in sits right under Wally's hello, above the figures: a question that is waiting comes first, then "What do you need?"
+            (or, once the budget is over, the one card that starts a new one). */}
+        <BudgetHero packet={packet} mandate={mandate}>
+          {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
+          {closed ? (
+            <Closed why={closed} />
+          ) : (
+            <div className="home-ask">
+              <Composer />
+              <PhotoCardSlot />
+            </div>
+          )}
+        </BudgetHero>
+        {/* Manage this budget is about the card above it: on a laptop it sits right under it. */}
+        {desktop ? manage : null}
+      </div>
+      <div className="home-col home-col--shelf">
+        {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
+        <CardsSection active={cards.active} past={cards.past} />
+        <RecentSection rows={recentPurchases(state)} />
+        {/* Add to Home Screen waits for a first purchase or a second visit, and sits below the purchases, never above the greeting. */}
+        <IosInstallHint ready={installReady} />
+      </div>
+      <div className="home-col home-col--test">
+        {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
+        <DemoScenarios lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
+          <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} variant={desktop ? "tabs" : "cards"} />
+          <div className="home-block__foot"><ResetDemo /></div>
+        </DemoScenarios>
+        {desktop ? null : manage}
+      </div>
     </div>
   );
 }

@@ -140,7 +140,7 @@ describe("TextField and TextArea", () => {
 describe("BottomTabBar and TopBar", () => {
   const items = [
     { id: "budget", label: "Budget", icon: <Icon name="wallet" /> },
-    { id: "wally", label: "Wally", icon: <Icon name="sparkle" /> },
+    { id: "wally", label: "Wally", icon: <Icon name="chat" /> },
     { id: "receipts", label: "Receipts", icon: <Icon name="receipt" /> },
     { id: "proof", label: "Proof", icon: <Icon name="shieldCheck" /> },
   ];
@@ -148,7 +148,7 @@ describe("BottomTabBar and TopBar", () => {
   it("is a named navigation landmark that marks the current tab and puts Ask in the middle", async () => {
     const onPress = vi.fn();
     const onSelect = vi.fn();
-    render(<BottomTabBar label="Main" items={items} current="wally" onSelect={onSelect} center={{ label: "Ask", icon: <Icon name="sparkle" />, onPress }} />);
+    render(<BottomTabBar label="Main" items={items} current="wally" onSelect={onSelect} center={{ label: "Ask", icon: <Icon name="chat" />, onPress }} />);
     const nav = screen.getByRole("navigation", { name: "Main" });
     const buttons = [...nav.querySelectorAll("button")].map((b) => b.textContent);
     expect(buttons).toEqual(["Budget", "Wally", "Ask", "Receipts", "Proof"]);

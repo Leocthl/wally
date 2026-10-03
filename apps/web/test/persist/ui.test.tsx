@@ -109,7 +109,7 @@ describe("About says the demo remembers, only while it does", () => {
 describe("OnDeviceNote", () => {
   it("says the answers are recorded and nothing else by default", () => {
     render(<OnDeviceNote />);
-    expect(screen.getByText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.")).toBeInTheDocument();
+    expect(screen.getByText("Demo mode: Wally runs here on this device with sample shop data. Nothing leaves this device.")).toBeInTheDocument();
     expect(screen.queryByText(/session ended/)).toBeNull();
   });
 

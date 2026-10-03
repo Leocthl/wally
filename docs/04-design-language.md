@@ -40,14 +40,15 @@
 - **Rules**: every duration is 0 under reduced motion except the hold, which fills in steps. Tests scan every sheet: no raw colours or durations, loops only in `no-preference`, inputs at 16 px, no glass. Hover styles only on hover pointers. Leaving is quicker than arriving. Nothing animates on the first paint of a list. Haptics where the device has them, off under reduced motion; no sound.
 
 ## Wally
-- **Character**: a rounded wallet with a darker flap, a clasp, a teal card peeking out and a face. States: idle, thinking, approved (sparks), stopped (brows, shield), offline. Sizes 24 (tab), 48 (row), 96 to 160 (result); below 40 px a mini drawing keeps the face legible. Each state has a spoken name. The same art draws the app icon.
+- **Character**: a rounded wallet with a darker flap, a clasp, a teal card peeking out and a face. States: idle, thinking, approved (sparks), stopped (brows, shield), offline. Sizes 24 (tab), 48 (row), 96 to 160 (result); below 40 px a mini drawing keeps the face legible. The same art draws the app icon.
 - **Hero** (Budget): Wally and a speech bubble above the budget card. The bubble is the mood: ready, shopping inside the rules, needs your OK, all used, cancelled, ended.
 
 ## Components
 - **Primitives** (`ui/`): Button, Tag, Card, List, ProgressBar, Ring, TextField, Switch, TopBar, BottomTabBar with a raised Ask button, Segmented, Sheet (follows the finger), Dialog, Steps, Toast, RollingMoney (NumberFlow, budget amount only).
 - **Figures** go through `Num` with a provenance chip; no bare numbers, tests count them.
 - **Ask sheet**: a typed field, "Try to trick Wally" (listing text, read as data), scenario shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
-- **Libraries**: NumberFlow rolls the budget amount only. motion, base-ui and Sonner were rejected: CSS covers every motion and the primitives already trap focus.
+- **Libraries**: NumberFlow rolls the budget amount; CSS does all other motion.
+- **Laptop** (64rem and up): top navigation with Ask Wally, three columns on Budget, scenarios as tabs, sheets as drawers. Phones keep one column.
 - **Screens**: Budget (hero with rule tags, What do you need?, Ideas for you, one-off cards, Recent, Demo scenarios (for judges), Manage this budget); First run (Hello, Your taste, Your first budget, a tour; once per browser, `?booth=1` skips it); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
 
 ## Vocabulary

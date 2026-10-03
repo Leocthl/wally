@@ -71,6 +71,28 @@
 .w-dialog__body { margin-top: var(--sp-2); color: var(--c-ink-muted); }
 .w-dialog__actions { display: grid; gap: var(--sp-2); margin-top: var(--sp-5); }
 
+/* Laptop (64rem and up; ui/hooks/useMediaQuery.ts): a sheet is a drawer from the right edge, the way the Ask button up there points. It enters and
+   leaves along the same path, full height, with no handle to grab. */
+@media (min-width: 64rem) {
+  .w-overlay--sheet { align-items: stretch; justify-content: flex-end; }
+  .w-sheet {
+    width: 100%;
+    max-width: 32rem;
+    height: 100%;
+    max-height: none;
+    padding-top: var(--sp-5);
+    border-radius: var(--r-xl) 0 0 var(--r-xl);
+    box-shadow: var(--shadow-2);
+    transform: translateX(0);
+  }
+  @starting-style { .w-sheet { transform: translateX(100%); } }
+  .w-overlay[data-phase="closing"] .w-sheet { transform: translateX(100%); }
+  .w-sheet::after { display: none; }
+  .w-sheet__grab { display: none; }
+  .w-sheet__top { cursor: default; touch-action: auto; }
+  .w-sheet__top:active { cursor: default; }
+}
+
 @keyframes w-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes w-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes w-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }

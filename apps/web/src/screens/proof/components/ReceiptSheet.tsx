@@ -120,7 +120,7 @@ export function ReceiptSheet({ open, receipt, entry, onClose, onOpenDecision, ap
         ) : null}
         {receipt.decisionId ? (
           <a className="w-btn w-btn--secondary w-btn--md w-btn--block rc-open" href={wallyHref(receipt.decisionId)} onClick={onClose}>
-            <span className="w-btn__icon"><Icon name="sparkle" size={20} /></span>
+            <span className="w-btn__icon"><Icon name="shieldCheck" size={20} /></span>
             <span className="w-btn__label">{t(R.openInWally)}</span>
           </a>
         ) : null}

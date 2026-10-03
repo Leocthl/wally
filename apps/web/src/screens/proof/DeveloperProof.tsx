@@ -93,7 +93,7 @@ export function DeveloperProof(): ReactElement {
         <ListRow leading={<Icon name="info" />} title={t(P.how)} chevron onClick={() => setHow(true)} />
         {checker === undefined ? null : <ListRow leading={<Icon name="shieldCheck" />} title={t(P.openVerifier)} chevron href={checker} />}
         {exporter ? <ListRow leading={<Icon name="download" />} title={t(P.exportReceipts)} chevron onClick={() => setExportOpen(true)} /> : null}
-        <ListRow leading={<Icon name="sparkle" />} title={t(P.whyTrust)} chevron href="#/evidence" />
+        <ListRow leading={<Icon name="shieldCheck" />} title={t(P.whyTrust)} chevron href="#/evidence" />
       </List>
       <ProofFooter showDemoKey={demoShortcut(info)} onDevice={onDevice} />
       <HowSheet open={how} onClose={() => setHow(false)} />

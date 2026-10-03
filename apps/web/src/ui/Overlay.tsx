@@ -10,6 +10,7 @@ import { UI } from "../i18n/ui";
 import { IconButton } from "./Button";
 import { cx } from "./cx";
 import { useFocusTrap } from "./hooks/useFocusTrap";
+import { useDesktop } from "./hooks/useMediaQuery";
 import { usePressGuard } from "./hooks/usePressGuard";
 import { clearDragStyles, useSheetDrag } from "./hooks/useSheetDrag";
 import { Icon } from "./icons";
@@ -93,6 +94,8 @@ export function Sheet({ open, onClose, title, description, children, footer, scr
   const panel = useRef<HTMLDivElement>(null);
   const phase = useModal({ open, onClose, panel });
   const drag = useSheetDrag(panel, onClose);
+  // On a laptop the sheet is a drawer from the right (the Ask button is up there): nothing to drag down, so no handle and no drag.
+  const desktop = useDesktop();
   const guard = usePressGuard(open);
   const id = useId();
   const { t } = useLocale();
@@ -108,7 +111,7 @@ export function Sheet({ open, onClose, title, description, children, footer, scr
       <div className="w-scrim" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className="w-sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-desc` : undefined} tabIndex={-1}>
         {/* The handle and the title row are one drag surface (the close button stays a button). */}
-        <div className="w-sheet__top" {...drag} title={t(UI.dragToClose)}>
+        <div className="w-sheet__top" {...(desktop ? {} : drag)} {...(desktop ? {} : { title: t(UI.dragToClose) })}>
           <div className="w-sheet__grab" aria-hidden="true">
             <span className="w-sheet__handle" />
           </div>

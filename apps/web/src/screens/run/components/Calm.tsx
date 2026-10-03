@@ -81,10 +81,10 @@ export function Calm({ kind, code, runId, onAsk, headingRef, closed = null, onNe
         ) : noCheaper && onChangeAmount ? (
           <>
             <Button size="lg" onClick={onChangeAmount} icon={<Icon name="plus" size={20} />} className="run-calm__action" data-change-amount>{t(R.changeAmount)}</Button>
-            <Button size="lg" variant="secondary" onClick={onAsk} icon={<Icon name="sparkle" size={20} />} className="run-calm__action">{t(R.pickElse)}</Button>
+            <Button size="lg" variant="secondary" onClick={onAsk} icon={<Icon name="chat" size={20} />} className="run-calm__action">{t(R.pickElse)}</Button>
           </>
         ) : (
-          <Button size="lg" onClick={onAsk} icon={<Icon name="sparkle" size={20} />} className="run-calm__action">{t(R.ask)}</Button>
+          <Button size="lg" onClick={onAsk} icon={<Icon name="chat" size={20} />} className="run-calm__action">{t(R.ask)}</Button>
         )}
       </section>
     </>

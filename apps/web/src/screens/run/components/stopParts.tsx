@@ -111,10 +111,10 @@ export function StopActions({ view, onWhy, onTopUp, onAsk, onCheaper, onEditRule
         <>
           <Button size="lg" block icon={<Icon name="list" size={20} />} onClick={onEditRules} data-edit-rules>{t(R.editRules)}</Button>
           <p className="run-actions__note">{t(UI["seal.newLog"])}</p>
-          <Button size="lg" variant="secondary" block icon={<Icon name="sparkle" size={20} />} onClick={onAsk}>{t(R.pickElse)}</Button>
+          <Button size="lg" variant="secondary" block icon={<Icon name="chat" size={20} />} onClick={onAsk}>{t(R.pickElse)}</Button>
         </>
       ) : (
-        <Button size="lg" variant="secondary" block icon={<Icon name="sparkle" size={20} />} onClick={onAsk}>{t(R.ask)}</Button>
+        <Button size="lg" variant="secondary" block icon={<Icon name="chat" size={20} />} onClick={onAsk}>{t(R.ask)}</Button>
       )}
       {why}
     </div>

@@ -45,7 +45,7 @@ function ModeInfo({ info, developer }: { readonly info: ApiInfo; readonly develo
     <>
       <List inset label={t(UI["shell.modeTitle"])}>
         <ListRow leading={<Icon name="settings" />} title={t(UI["shell.modeLabel"])} subtitle={modeText(info.kind, t)} trailing={<Tag size="sm" tone={info.replayed ? "neutral" : "ok"}>{t(UI[info.replayed ? "shell.replayedShort" : "shell.liveShort"])}</Tag>} />
-        <ListRow leading={<Icon name="sparkle" />} title={t(UI["shell.planner"])} subtitle={providerText(ABOUT.planner, info.planner.provider, t)} />
+        <ListRow leading={<Icon name="settings" />} title={t(UI["shell.planner"])} subtitle={providerText(ABOUT.planner, info.planner.provider, t)} />
         <ListRow leading={<Icon name="eye" />} title={t(UI["shell.judge"])} subtitle={providerText(ABOUT.judge, info.judge.provider, t)} />
       </List>
       {/* On-device mode keeps the session in this browser (src/api/local/persist); said only while it is true. */}
@@ -113,7 +113,7 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
             <ListRow href={routeHref("evidence")} leading={<Icon name="shieldCheck" />} title={t(UI["shell.whyTrust"](BRAND.name))} chevron />
             {/* The stage and the style guide are for the crew: Developer mode, the booth's own pages, or nothing. */}
             {crew ? <ListRow href={routeHref("presenter")} leading={<Icon name="list" />} title={t(UI["shell.presenter"])} chevron /> : null}
-            {crew ? <ListRow href={routeHref("styleguide")} leading={<Icon name="sparkle" />} title={t(UI["shell.styleguide"])} chevron /> : null}
+            {crew ? <ListRow href={routeHref("styleguide")} leading={<Icon name="list" />} title={t(UI["shell.styleguide"])} chevron /> : null}
           </List>
         </section>
         <ResetDemo variant="secondary" onStart={onClose} />

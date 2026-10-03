@@ -54,7 +54,7 @@ export function NeedsOk({ result, headingRef, answering, onAnswer, onWhy, now }:
         ) : clock.over ? (
           <p className="run-ask__signing" role="status">{t(R.timesUp)}</p>
         ) : (
-          <Button size="lg" block onClick={() => setOpen(true)} icon={<Icon name="sparkle" size={20} />}>{t(RUNX.reviewAnswer)}</Button>
+          <Button size="lg" block onClick={() => setOpen(true)} icon={<Icon name="chat" size={20} />}>{t(RUNX.reviewAnswer)}</Button>
         )}
       </Card>
       <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.whyAsk)}</Button>

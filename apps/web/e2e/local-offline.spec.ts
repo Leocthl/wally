@@ -43,7 +43,7 @@ test("offline, ?api=local: the storyline on the real stack, then Verify PASS and
   await page.addInitScript(() => window.localStorage.setItem("wally:mode", "developer")); // the codes and hashes this test reads
   const watch = await blockNetwork(page, new URL(baseURL ?? "http://127.0.0.1").origin);
   await page.goto("/?api=local#/budget");
-  await expect(page.locator('[data-api-mode="local"]')).toContainText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.");
+  await expect(page.locator('[data-api-mode="local"]')).toContainText("Demo mode: Wally runs here on this device with sample shop data. Nothing leaves this device.");
   await expect(meter(page)).toHaveAttribute("aria-valuetext", /HK\$800 left of HK\$800, SIMULATED/);
 
   await press(page, "normal");

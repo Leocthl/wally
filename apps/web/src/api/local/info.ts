@@ -6,7 +6,7 @@ import { BRAND } from "../../brand";
 import { featuresFor } from "../../booth/backend/info";
 
 /** The visible note when the page runs on its own (forced with ?api=local, or no booth server answered). */
-export const ON_DEVICE_NOTE = "Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.";
+export const ON_DEVICE_NOTE = "Demo mode: Wally runs here on this device with sample shop data. Nothing leaves this device.";
 
 /** Run note when typed text has no recording: no judge runs on the device, so R10 asks the shopper. */
 export const LOCAL_JUDGE_OFFLINE_NOTE =
