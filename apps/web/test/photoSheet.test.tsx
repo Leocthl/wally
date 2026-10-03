@@ -38,15 +38,19 @@ class PhotoClient extends MockApiClient {
   failWith: unknown = null;
   readonly #features: Partial<ApiFeatures>;
 
-  constructor(mode: "model" | "palette", features: Partial<ApiFeatures> = {}) {
+  /** `announces` false: the booth has see() on its client but says nothing about pictures in features (an older booth server). */
+  readonly #announces: boolean;
+
+  constructor(mode: "model" | "palette", features: Partial<ApiFeatures> = {}, announces = true) {
     super({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
     this.mode = mode;
     this.#features = features;
+    this.#announces = announces;
   }
 
   override async info(): Promise<ApiInfo> {
     const base = await super.info();
-    return { ...base, kind: "http", features: { ask: true, alternatives: false, compile: "rules", family: false, see: this.mode, ...this.#features } };
+    return { ...base, kind: "http", features: { ask: true, alternatives: false, compile: "rules", family: false, ...(this.#announces ? { see: this.mode } : {}), ...this.#features } };
   }
 
   async see(req: SeeRequest): Promise<SeeResult> {
@@ -112,6 +116,15 @@ describe("the entry points", () => {
 
   it("shows neither on a client with no see(), or one that cannot ask", async () => {
     const user = await boot(new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 }));
+    expect(document.querySelector('[data-slot="photo-card"]')).toBeNull();
+    await user.click(screen.getByRole("button", { name: /^Ask$/ }));
+    const ask = await screen.findByRole("dialog");
+    expect(ask.querySelector('[data-slot="photo-button"]')).toBeNull();
+    expect(ask.querySelector('[data-slot="photo-pill"]')).toBeNull();
+  });
+
+  it("shows nothing on a booth that has see() on the client but says nothing about pictures (an older booth server has no /api/see)", async () => {
+    const user = await boot(new PhotoClient("palette", {}, false));
     expect(document.querySelector('[data-slot="photo-card"]')).toBeNull();
     await user.click(screen.getByRole("button", { name: /^Ask$/ }));
     const ask = await screen.findByRole("dialog");
