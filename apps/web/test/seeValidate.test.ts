@@ -3,7 +3,7 @@
 import { MAX_IMAGE_BYTES } from "@wally/agent/vision";
 import { describe, expect, it } from "vitest";
 import { BoothError } from "../src/booth/backend/errors";
-import { MAX_PALETTE_ENTRIES, MAX_SEE_BODY_BYTES, parseAskRequest, parseSeeRequest } from "../src/booth/backend/validate";
+import { MAX_PALETTE_ENTRIES, MAX_REQUEST_CHARS, MAX_SEE_BODY_BYTES, parseAskRequest, parseSeeRequest } from "../src/booth/backend/validate";
 import { gifBytes, jpegBase64, jpegBytes, pngBytes, toBase64 } from "./helpers/pictures";
 
 const refused = (run: () => unknown): { status: number; code: string } => {
@@ -116,5 +116,43 @@ describe("parseAskRequest: a photo pick", () => {
 
   it.each(["tee", "lst_", "lst_a b c", 42, "lst_" + "x".repeat(41), "../etc/passwd"])("refuses %j as a listing id", (listingId) => {
     expect(refused(() => parseAskRequest({ requestText: "x", listingId } as never)).status).toBe(400);
+  });
+});
+
+describe("parseSeeRequest: typed words", () => {
+  it("takes the shopper's own words, normalised like an ask", () => {
+    const out = parseSeeRequest({ text: "  ｗhite tee under ＨＫ＄１５０  " });
+    expect(out.text).toBe("white tee under HK$150");
+    expect(out.image).toBeNull();
+    expect(out.attributes).toBeNull();
+    expect(out.maxPriceMinor).toBeNull();
+  });
+
+  it.each([
+    ["text together with a picture", { text: "tee", image: { mime: "image/jpeg", data: jpegBase64() } }],
+    ["text together with chips", { text: "tee", attributes: { kind: "tee" } }],
+    ["text together with colour plates", { text: "tee", palette: [{ color: "navy", share: 0.5 }] }],
+    ["text that is not a string", { text: 42 }],
+    ["empty text", { text: "   " }],
+    ["text over the planner's request limit", { text: "a".repeat(MAX_REQUEST_CHARS + 1) }],
+    ["a price limit with text (the words carry their own)", { text: "tee", maxPriceMinor: 9_900 }],
+    ["a price limit with nothing to apply it to", { maxPriceMinor: 9_900, palette: [{ color: "navy", share: 0.5 }] }],
+    ["a price limit that is not a whole number", { attributes: { kind: "tee" }, maxPriceMinor: 99.5 }],
+    ["a price limit of zero", { attributes: { kind: "tee" }, maxPriceMinor: 0 }],
+    ["a negative price limit", { attributes: { kind: "tee" }, maxPriceMinor: -100 }],
+    ["a price limit above HK$99,999", { attributes: { kind: "tee" }, maxPriceMinor: 10_000_000 }],
+    ["a price limit that is text", { attributes: { kind: "tee" }, maxPriceMinor: "9900" }],
+  ])("refuses %s", (_name, body) => {
+    expect(refused(() => parseSeeRequest(body as never)).status).toBe(400);
+  });
+
+  it("keeps the price limit the chips carry, so a chip tap does not lose it", () => {
+    const out = parseSeeRequest({ attributes: { kind: "tee", colors: ["white"] }, maxPriceMinor: 15_000 });
+    expect(out.maxPriceMinor).toBe(15_000);
+    expect(out.attributes?.kind).toBe("tee");
+  });
+
+  it("accepts socks as a kind on the chips", () => {
+    expect(parseSeeRequest({ attributes: { kind: "socks" } }).attributes?.kind).toBe("socks");
   });
 });

@@ -168,14 +168,19 @@ export interface SeeAttributes {
 }
 
 /**
- * Show Wally a picture. One of: `image` (the local model reads it when features.see is "model", then the colour plates are
- * used) or `attributes` (the shopper edited the chips: matches are rebuilt from them, nothing is read). `palette` is the
- * dominant colours the page worked out from the pixels; it is the colour source when no model reads the picture.
+ * Show Wally a picture, or tell Wally in words. One of: `image` (the local model reads it when features.see is "model",
+ * then the colour plates are used), `attributes` (the shopper edited the chips: matches are rebuilt from them, nothing is
+ * read) or `text` (the shopper's own words, read by fixed keyword tables in English or Traditional Chinese: no model, the
+ * same answer on every host). `palette` is the dominant colours the page worked out from the pixels; it is the colour
+ * source when no model reads the picture. `maxPriceMinor` rides with `attributes`: the price limit a typed request named,
+ * kept while the chips change.
  */
 export interface SeeRequest {
   readonly image?: SeeImage;
   readonly palette?: readonly PaletteEntry[];
   readonly attributes?: Partial<SeeAttributes>;
+  readonly text?: string;
+  readonly maxPriceMinor?: number;
 }
 
 /** One simulated shop item that looks like the picture. The screen words the name and the reasons in its own language. */
@@ -196,14 +201,19 @@ export interface ShopMatch {
 }
 
 export interface SeeResult {
-  /** Where `attributes` came from: the local model read the picture, only the colour plates were used, or the shopper's chips. */
-  readonly source: "model" | "palette" | "chips";
+  /** Where `attributes` came from: the local model read the picture, only the colour plates were used, the shopper's chips, or the shopper's words. */
+  readonly source: "model" | "palette" | "chips" | "text";
   readonly attributes: SeeAttributes;
   readonly palette: readonly PaletteEntry[];
-  /** The best four, best first. Empty when no kind is known yet (pick one on the chips) or the shop has nothing like it. */
+  /** The best four, best first. Empty when no kind is known yet (pick one on the chips), the shop has nothing like it, or nothing costs less than the limit. */
   readonly matches: readonly ShopMatch[];
-  /** not_clothing: the model saw nothing to wear. model_failed: it was asked and could not answer (the chips still work). */
-  readonly notice?: "not_clothing" | "model_failed";
+  /** The price limit the matches respect (from the words, or kept from the chips), integer minor units; absent: none. */
+  readonly maxPriceMinor?: number;
+  /**
+   * not_clothing: the model saw nothing to wear. model_failed: it was asked and could not answer (the chips still work).
+   * nothing_found: the words named no kind the shop sells. not_sold: they named a product the shop does not sell (earbuds, a gift card).
+   */
+  readonly notice?: "not_clothing" | "model_failed" | "nothing_found" | "not_sold";
 }
 
 /** "See cheaper options": the decision a budget stop (R3, R4) gave. */

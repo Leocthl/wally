@@ -3,7 +3,7 @@
 // colour plates the page worked out, the item-type chips, and the matcher (@wally/agent/vision). Nothing here buys,
 // seals or logs anything: the shopper picks a match and the normal ask pipeline decides. The picture is held in memory
 // for the one call and never stored; only its size, dimensions, time and a reason word are logged.
-import { matchShelf, type Attributes, type Color, type Described, type PaletteEntry, type Scored } from "@wally/agent/vision";
+import { matchShelf, readRequest, type Attributes, type Color, type Described, type PaletteEntry, type Scored } from "@wally/agent/vision";
 import type { SeeAttributes, SeeResult, ShopMatch } from "../../api/types";
 import type { SeeInput } from "./validate";
 import type { Shop } from "./shop";
@@ -74,12 +74,27 @@ function toMatch(scored: Scored, shop: Shop): ShopMatch | null {
   };
 }
 
-function matchesFor(attributes: SeeAttributes, shop: Shop): readonly ShopMatch[] {
+function matchesFor(attributes: SeeAttributes, shop: Shop, maxPriceMinor: number | null = null): readonly ShopMatch[] {
   const shelf = [...shop.values()].map((e) => e.item);
-  return matchShelf(attributes, shelf).flatMap((scored) => {
+  return matchShelf({ ...attributes, maxPriceMinor }, shelf).flatMap((scored) => {
     const match = toMatch(scored, shop);
     return match === null ? [] : [match];
   });
+}
+
+/** The price limit the result reports: present only when there is one. */
+const limited = (maxPriceMinor: number | null): { readonly maxPriceMinor?: number } => (maxPriceMinor === null ? {} : { maxPriceMinor });
+
+/**
+ * The shopper's own words, read by the fixed keyword tables (packages/agent text reader): no model on any host. The same
+ * chips and the same matcher as a picture, so the cards are the same; a limit in the words leaves dearer items out.
+ */
+function fromWords(text: string, shop: Shop): SeeResult {
+  const reading = readRequest(text);
+  const attributes: SeeAttributes = { kind: reading.kind, colors: reading.colors, pattern: reading.pattern, fit: reading.fit, style: reading.style };
+  const base = { source: "text", attributes, palette: [], ...limited(reading.maxPriceMinor) } as const;
+  if (reading.kind === null) return { ...base, matches: [], notice: reading.unsold ? "not_sold" : "nothing_found" };
+  return { ...base, matches: matchesFor(attributes, shop, reading.maxPriceMinor) };
 }
 
 /** A reader that throws (it should not) is a read that failed: the chips path, never an error to the shopper. */
@@ -90,8 +105,9 @@ const logLine = (read: Described): string =>
 
 export async function see(input: SeeInput, deps: SeeDeps): Promise<SeeResult> {
   const { shop } = deps;
+  if (input.text !== null) return fromWords(input.text, shop);
   if (input.attributes !== null) {
-    return { source: "chips", attributes: input.attributes, palette: input.palette, matches: matchesFor(input.attributes, shop) };
+    return { source: "chips", attributes: input.attributes, palette: input.palette, ...limited(input.maxPriceMinor), matches: matchesFor(input.attributes, shop, input.maxPriceMinor) };
   }
   const fallback: SeeAttributes = { ...EMPTY, colors: plateColors(input.palette) };
   if (input.image === null || deps.reader === null) {

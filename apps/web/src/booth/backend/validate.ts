@@ -3,7 +3,7 @@
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
 import { DEFAULT_PLANNER_CONFIG } from "@wally/agent/planner";
-import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_STYLES, type Color, type Fit, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
+import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_LIMIT_DOLLARS, MAX_STYLES, type Color, type Fit, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
 import type { CompiledRules } from "@wally/core/generated";
 import {
   SCENARIO_IDS,
@@ -124,7 +124,14 @@ export interface SeeInput {
   readonly image: { readonly bytes: Uint8Array; readonly mime: ImageMime } | null;
   readonly palette: readonly PaletteEntry[];
   readonly attributes: SeeAttributes | null;
+  /** The shopper's own words, NFKC-normalised; null when a picture or chips came. */
+  readonly text: string | null;
+  /** The price limit the chips carry (integer minor units); null: none. */
+  readonly maxPriceMinor: number | null;
 }
+
+/** The most a price limit may be, in minor units: HK$99,999 [F96], the same bound the words are read with. */
+const MAX_LIMIT_MINOR = MAX_LIMIT_DOLLARS * 100;
 
 const isObject = (value: unknown): value is JsonObject => value !== null && typeof value === "object" && !Array.isArray(value);
 
@@ -190,17 +197,31 @@ function parseSeeAttributes(value: unknown): SeeAttributes {
   };
 }
 
-/** Exactly one of a picture or chips, plus the colour plates when the page has them. Unknown keys and words are refused. */
+function parseLimit(value: unknown): number | null {
+  if (value === undefined) return null;
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1 || value > MAX_LIMIT_MINOR) throw badRequest("INVALID_FIELD", `maxPriceMinor must be a whole number of minor units from 1 to ${MAX_LIMIT_MINOR}`);
+  return value;
+}
+
+/**
+ * Exactly one of a picture, chips or the shopper's words, plus the colour plates when the page has them (with a picture or
+ * chips) and the price limit the chips carry. Unknown keys and words are refused.
+ */
 export function parseSeeRequest(body: JsonObject): SeeInput {
-  onlyKeys(body, ["image", "palette", "attributes"]);
+  onlyKeys(body, ["image", "palette", "attributes", "text", "maxPriceMinor"]);
   const hasImage = body["image"] !== undefined;
   const hasAttributes = body["attributes"] !== undefined;
-  if (hasImage && hasAttributes) throw badRequest("INVALID_FIELD", "send either image or attributes, not both");
-  if (!hasImage && !hasAttributes && body["palette"] === undefined) throw badRequest("INVALID_FIELD", "send an image, a palette or attributes");
+  const hasText = body["text"] !== undefined;
+  if (Number(hasImage) + Number(hasAttributes) + Number(hasText) > 1) throw badRequest("INVALID_FIELD", "send one of image, attributes or text");
+  if (!hasImage && !hasAttributes && !hasText && body["palette"] === undefined) throw badRequest("INVALID_FIELD", "send an image, a palette, attributes or text");
+  if (hasText && body["palette"] !== undefined) throw badRequest("INVALID_FIELD", "text does not come with a palette");
+  if (body["maxPriceMinor"] !== undefined && !hasAttributes) throw badRequest("INVALID_FIELD", "maxPriceMinor goes with attributes");
   // The small fields first: a bad word is refused before the picture is decoded.
   const palette = parsePalette(body["palette"]);
   const attributes = hasAttributes ? parseSeeAttributes(body["attributes"]) : null;
-  return { image: hasImage ? parseImage(body["image"]) : null, palette, attributes };
+  const maxPriceMinor = parseLimit(body["maxPriceMinor"]);
+  const text = hasText ? sentence(body, "text", MAX_REQUEST_CHARS) : null;
+  return { image: hasImage ? parseImage(body["image"]) : null, palette, attributes, text, maxPriceMinor };
 }
 
 export function parseAlternativesRequest(body: JsonObject): AlternativesRequest {
