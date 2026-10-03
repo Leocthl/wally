@@ -1,12 +1,15 @@
 // Puts the first run in front of the app, or steps aside. While a visitor is setting up, the four-step flow replaces the shell
 // (it is a lazy chunk, so a returning visitor never loads it); on the quick tour the real shell is there with the coach marks
-// over it. If either part throws, the visitor is let into the app: a first run is never a way to get stuck.
-import { lazy, Suspense, useEffect, type ReactElement, type ReactNode } from "react";
+// over it. If either part throws, the visitor is let into the app (and the first run is not counted as seen, so it comes
+// back next time): a first run is never a way to get stuck.
+import { lazy, Suspense, useEffect, useRef, type ReactElement, type ReactNode } from "react";
+import { useBoothContext } from "../../hooks/useBooth";
 import { parseHash, navigate } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
 import { ErrorBoundary } from "../../shell/ErrorBoundary";
 import { useLocale } from "../../ui/locale";
 import { Skeleton } from "../../ui/Surface";
+import { ensureBudget } from "./ensureBudget";
 import { useOnboarding } from "./OnboardingProvider";
 
 const OnboardingFlow = lazy(() => import("./OnboardingFlow"));
@@ -24,10 +27,32 @@ function Opening(): ReactElement {
   );
 }
 
-/** Rendered in place of a part that threw: it ends that part, so the app shows. */
+/** Rendered in place of the tour after it threw: it ends the tour, so the app shows. */
 function LetThrough({ end }: { readonly end: () => void }): null {
   useEffect(end, [end]);
   return null;
+}
+
+/**
+ * Rendered in place of setup after it threw (or its chunk never arrived). Setup is abandoned, not finished: the first run is not
+ * counted as seen. The booth's ready-made budget is sealed first, as Skip does, so the app opens on a Budget that has one.
+ */
+function LeaveSetup(): ReactElement {
+  const booth = useBoothContext();
+  const { abandonSetup } = useOnboarding();
+  const latest = useRef(booth);
+  latest.current = booth;
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void (async () => {
+      // A booth that never answered cannot be asked; the app says so and offers Try again.
+      if (latest.current.info !== null) await ensureBudget(latest.current);
+      abandonSetup();
+    })();
+  }, [abandonSetup]);
+  return <Opening />;
 }
 
 export interface OnboardingGateProps {
@@ -36,7 +61,7 @@ export interface OnboardingGateProps {
 }
 
 export function OnboardingGate({ children, onRetry }: OnboardingGateProps): ReactElement {
-  const { phase, finishSetup, finishTour } = useOnboarding();
+  const { phase, finishTour } = useOnboarding();
 
   // The tour points at the Budget screen: take the visitor there (a replay can start from any screen).
   useEffect(() => {
@@ -45,7 +70,7 @@ export function OnboardingGate({ children, onRetry }: OnboardingGateProps): Reac
 
   if (phase === "setup") {
     return (
-      <ErrorBoundary resetKey="setup" fallback={() => <LetThrough end={finishSetup} />}>
+      <ErrorBoundary resetKey="setup" fallback={() => <LeaveSetup />}>
         <Suspense fallback={<Opening />}>
           <OnboardingFlow onRetry={onRetry} />
         </Suspense>

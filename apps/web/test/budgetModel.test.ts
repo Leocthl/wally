@@ -7,6 +7,7 @@ import {
   draftFor,
   formOf,
   HOW_LONG,
+  isDay,
   maxDay,
   PRESETS_HKD,
   presetFor,
@@ -126,3 +127,14 @@ describe("sentenceFor", () => {
     expect(request.validUntil).toBe("2026-10-31T15:59:59Z");
   });
 });
+
+describe("isDay", () => {
+  it.each(["2026-10-03", "2026-12-31", "2027-02-28"])("%j is a day", (day) => {
+    expect(isDay(day)).toBe(true);
+  });
+
+  it.each(["", "2026-10", "2026-1-3", "10/03/2026", "not a day", "2026-13-40", "2026-10-03T00:00:00Z"])("%j is not (a cleared or half typed date field)", (day) => {
+    expect(isDay(day)).toBe(false);
+  });
+});
+

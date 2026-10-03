@@ -16,7 +16,7 @@ import { categoryName } from "../home/BudgetHero";
 import type { FamilySeal } from "../seal/FamilyChoice";
 import { CATEGORY_SLUGS, endOfHkDay, hkDay, type FormErrors } from "../seal/sealModel";
 import { ChipGroup } from "./controls";
-import { HOW_LONG, maxDay, type BudgetDraft, type HowLong } from "./budgetModel";
+import { HOW_LONG, isDay, maxDay, type BudgetDraft, type HowLong } from "./budgetModel";
 import { PresetPicker } from "./PresetPicker";
 
 export interface BudgetPickerProps {
@@ -91,9 +91,12 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
             onChange={(e) => set({ date: e.target.value })}
           />
         ) : null}
-        <p className={cx("onb-hint", "onb-ends")}>
-          <Fill text={t(OB.budget.ends)} slots={{ until: <Fig prov={SIMULATED} kind="time">{formatLongDay(endOfHkDay(until), locale)}</Fig> }} />
-        </p>
+        {/* A date that is cleared or half typed has no end to show yet; the field says what is missing when Review is pressed. */}
+        {isDay(until) ? (
+          <p className={cx("onb-hint", "onb-ends")}>
+            <Fill text={t(OB.budget.ends)} slots={{ until: <Fig prov={SIMULATED} kind="time">{formatLongDay(endOfHkDay(until), locale)}</Fig> }} />
+          </p>
+        ) : null}
         {capped ? <p className="onb-note" role="status"><Icon name="info" size={16} /> {t(OB.budget.cutShort)}</p> : null}
       </section>
 

@@ -8,9 +8,10 @@ import { cx } from "../../ui/cx";
 import { useLocale } from "../../ui/locale";
 import { Wally, type WallyState } from "../../wally/Wally";
 import { ConnectionBanners } from "../../shell/Connection";
+import type { SetupStep } from "./setupProgress";
 import "./onboarding.css";
 
-export type StepId = "hello" | "taste" | "budget";
+export type StepId = SetupStep;
 export const STEP_ORDER: readonly StepId[] = ["hello", "taste", "budget"];
 /** Setup is the three steps here; the fourth, the quick tour, plays on the real Budget screen. */
 export const TOTAL_STEPS = STEP_ORDER.length + 1;

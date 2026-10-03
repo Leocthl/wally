@@ -1,10 +1,11 @@
 // The first run as app state: not started, setting up (the four-step flow, full screen), or on the quick tour (coach marks
 // over the real Budget screen). It sits above the booth so the booth can hold back its ready-made budget while a new
 // visitor sets up their own (App passes autoSeal={phase !== "setup"}). Whether it shows at all is one stored flag.
-import { createContext, useCallback, useContext, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { parseHash } from "../../hooks/useRoute";
 import { profileStore, type ProfileStore } from "../../state/profile";
 import { boothFlag } from "../home/demoMode";
+import type { SetupProgress } from "./setupProgress";
 
 export type OnboardingPhase = "off" | "setup" | "tour";
 
@@ -12,15 +13,24 @@ export interface OnboardingApi {
   readonly phase: OnboardingPhase;
   /** Setup is over, finished or skipped: the flag is set and the quick tour starts. */
   readonly finishSetup: () => void;
+  /**
+   * Setup ends without having been done: a part of it failed, or the booth never answered. The flag is not set (the first run
+   * comes back next time) and there is no tour, because the app behind it is not in a state to point at. The booth seals its
+   * ready-made budget now (BoothProvider autoSeal).
+   */
+  readonly abandonSetup: () => void;
   /** The tour is over, finished or skipped. */
   readonly finishTour: () => void;
   /** About, "Take the tour again": the whole flow once more. */
   readonly replay: () => void;
+  /** Where setup had got to, for a flow that mounts again after "Try again"; null at the start. */
+  readonly resume: () => SetupProgress | null;
+  readonly remember: (progress: SetupProgress) => void;
 }
 
 const nothing = (): void => undefined;
 /** Without a provider (a screen in a test on its own) there is no first run. */
-const OFF: OnboardingApi = { phase: "off", finishSetup: nothing, finishTour: nothing, replay: nothing };
+const OFF: OnboardingApi = { phase: "off", finishSetup: nothing, abandonSetup: nothing, finishTour: nothing, replay: nothing, resume: () => null, remember: nothing };
 const OnboardingContext = createContext<OnboardingApi>(OFF);
 
 export function useOnboarding(): OnboardingApi {
@@ -46,12 +56,28 @@ export interface OnboardingProviderProps {
 export function OnboardingProvider({ children, store = profileStore }: OnboardingProviderProps): ReactElement {
   // Decided once, when the page opens: a visitor who lands on Budget with no flag is in their first run.
   const [phase, setPhase] = useState<OnboardingPhase>(() => (typeof window !== "undefined" && firstRunPending(store, window.location.hash, window.location.search) ? "setup" : "off"));
+  const progress = useRef<SetupProgress | null>(null);
   const finishSetup = useCallback(() => {
+    progress.current = null;
     store.markOnboarded();
     setPhase("tour");
   }, [store]);
+  const abandonSetup = useCallback(() => {
+    progress.current = null;
+    setPhase("off");
+  }, []);
   const finishTour = useCallback(() => setPhase("off"), []);
-  const replay = useCallback(() => setPhase("setup"), []);
-  const api = useMemo<OnboardingApi>(() => ({ phase, finishSetup, finishTour, replay }), [phase, finishSetup, finishTour, replay]);
+  const replay = useCallback(() => {
+    progress.current = null;
+    setPhase("setup");
+  }, []);
+  const resume = useCallback(() => progress.current, []);
+  const remember = useCallback((next: SetupProgress) => {
+    progress.current = next;
+  }, []);
+  const api = useMemo<OnboardingApi>(
+    () => ({ phase, finishSetup, abandonSetup, finishTour, replay, resume, remember }),
+    [phase, finishSetup, abandonSetup, finishTour, replay, resume, remember],
+  );
   return <OnboardingContext.Provider value={api}>{children}</OnboardingContext.Provider>;
 }

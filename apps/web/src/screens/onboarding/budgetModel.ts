@@ -61,6 +61,11 @@ export function draftFor(profile: Profile | null, now: Date): BudgetDraft {
   return { amount: presetFor(profile), custom: "", howLong: "month", date: dayAfter(now, DATE_DEFAULT_DAYS), categories: shop.length > 0 ? shop : ["apparel"], verifiedOnly: true };
 }
 
+/** A real YYYY-MM-DD day. A date field reports "" while it is cleared or half typed. */
+export function isDay(day: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) && !Number.isNaN(Date.parse(`${day}T00:00:00Z`));
+}
+
 /** The day the choice ends on, and whether a typed date had to be cut. */
 export function untilOf(draft: BudgetDraft, now: Date): { readonly day: string; readonly capped: boolean } {
   if (draft.howLong === "month") return { day: monthEndDay(now), capped: false };

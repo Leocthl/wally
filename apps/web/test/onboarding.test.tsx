@@ -88,13 +88,13 @@ describe("Skip, Skip: the judge's two taps", () => {
     expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull();
   });
 
-  it("lets the visitor into the app when the booth could not be reached (Skip is never a dead end)", async () => {
+  it("lets the visitor into the app when the booth could not be reached (Skip is never a dead end); test/onboardingRecovery.test.tsx follows it through", async () => {
     const { FirstLoadFails } = await import("./helpers/shellClients");
     const { user } = await openFirstRun({ api: new FirstLoadFails() });
     await hello();
     await user.click(skip());
     expect(await screen.findByText("Can't reach Wally")).toBeInTheDocument();
-    expect(flag()).toBe("1");
+    expect(flag()).toBeNull();
   });
 });
 
@@ -177,7 +177,7 @@ describe("the four steps", () => {
     expect(await screen.findByRole("button", { name: "Cozy" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("Skip on a later step keeps the steps before it and leaves out the one on screen", async () => {
+  it("Skip on a later step keeps the steps before it and the one on screen", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
@@ -185,7 +185,7 @@ describe("the four steps", () => {
     await screen.findByRole("heading", { level: 1, name: "What's your style?" });
     await user.click(screen.getByRole("button", { name: "Cozy" }));
     await skipToTour(user);
-    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", styles: [], colours: [], sizes: { top: null, bottom: null, shoe: null }, shopFor: [] });
+    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", styles: ["cozy"], colours: [], sizes: { top: null, bottom: null, shoe: null }, shopFor: [] });
   });
 
   it("saves nothing when nothing was told", async () => {
