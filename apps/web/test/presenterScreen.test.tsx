@@ -39,7 +39,8 @@ describe("presenter walk", () => {
     expect(document.querySelector('[data-card-state="USED"]')).not.toBeNull();
   });
 
-  it("DM3 to DM5 show the three live stops, each with its banner", async () => {
+  it("DM3 to DM5 show the three live stops, each with its banner and the engine's own sentence (the developer view)", async () => {
+    developerMode(); // plain words are the default; they are covered in plainPresenter.test.tsx
     const h = await bootApp("#/presenter");
     await stepTo(h, 4);
     const stop = (template: string): Element | null => document.querySelector(`[role="alert"][data-template="${template}"]`);
