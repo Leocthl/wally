@@ -2,6 +2,7 @@
 // compact big-number view of the default run with the wiring banner and T-H1/T-H2; #/evidence is the deeper view.
 import type { ReactElement } from "react";
 import { Tx } from "./Tx";
+import { useDisplayMode } from "../../state/displayMode";
 import { loadHarnessRuns, type Loaded } from "../data";
 import { DM8, DM9 } from "../dm9";
 import { pickRun, wiringStatus } from "../select";
@@ -9,13 +10,17 @@ import { E } from "../strings";
 import type { HarnessRun } from "../types";
 import { AcceptanceStrip } from "./AcceptanceStrip";
 import { BigNumbers } from "./BigNumbers";
+import { PlainStage } from "./plain/PlainStage";
 import "../evidence.css";
+import "../plain.css";
 
 const BUNDLED = loadHarnessRuns();
 
 export function Dm8View({ harness = BUNDLED }: { readonly harness?: Loaded<HarnessRun> }): ReactElement {
+  const [mode] = useDisplayMode();
   const pick = pickRun(harness.items);
   const run = harness.items.find((r) => r.file === pick?.file) ?? null;
+  if (mode === "plain") return <PlainStage run={run} />;
   if (run === null) return <div className="ev ev--stage" data-beat="DM8"><Tx as="p" text={E.unreadableNone} className="ev-unreadable" /></div>;
   const status = wiringStatus(run);
   return (

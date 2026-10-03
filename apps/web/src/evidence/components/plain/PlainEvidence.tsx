@@ -18,7 +18,7 @@ import { FilledSentence, PlainScope, WiringStamp } from "./PlainBits";
 
 const EU = UI.evidenceUi;
 
-function Hero({ model }: { readonly model: PlainModel }): ReactElement | null {
+export function Hero({ model }: { readonly model: PlainModel }): ReactElement | null {
   const id = useId();
   const { risky, honest, total } = model;
   const headline = headlineOf(risky === null ? null : shareOf(risky.wally), honest === null ? null : shareOf(honest.wally));
@@ -68,7 +68,7 @@ function Legend({ model }: { readonly model: PlainModel }): ReactElement {
   );
 }
 
-function WiringNote(): ReactElement {
+export function WiringNote(): ReactElement {
   const id = useId();
   return (
     <section className="ev-wiring" aria-labelledby={id} data-wiring-banner>

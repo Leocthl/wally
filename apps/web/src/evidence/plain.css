@@ -77,3 +77,16 @@
   [data-reveal="pending"] .evp-bar__fill { clip-path: inset(0 100% 0 0); }
   [data-reveal="in"] .evp-bar__fill { clip-path: inset(0 0 0 0); }
 }
+
+/* Presenter DM8: the same cards, bigger and two by two on a big screen. */
+.evp--stage .evp-hero__title { font-size: var(--text-3xl); }
+.evp--stage .evp-hero__layers { font-size: var(--text-xl); }
+.evp--stage .evp-hero__sub { font-size: var(--text-lg); }
+.evp-stage__cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+.evp-stage__cards > * { min-width: 0; }
+.evp--stage .evp-card { padding: var(--sp-5); }
+.evp--stage .evp-card__title { font-size: var(--text-lg); }
+.evp--stage .evp-card__sentence { font-size: var(--text-xl); }
+.evp--stage .evp-card__line { font-size: var(--text-lg); }
+.evp--stage .evp-bar__name, .evp--stage .evp-bar__value { font-size: var(--text-md); }
+@media (min-width: 60rem) { .evp-stage__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

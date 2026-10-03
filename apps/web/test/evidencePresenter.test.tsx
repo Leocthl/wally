@@ -11,6 +11,7 @@ import { parseHarnessFile } from "../src/evidence/harnessGuard";
 import { bootApp } from "./helpers/app";
 import { CLEAN, honestyProblems } from "./evidenceFigures";
 import { harnessFile } from "./evidenceFixtures";
+import { developerMode } from "./helpers/devMode";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -27,6 +28,7 @@ async function stepTo(h: Awaited<ReturnType<typeof bootApp>>, moment: string): P
 
 describe("presenter DM8 and DM9", () => {
   it("DM8 shows three big numbers with k/n and chips, T-H1 and T-H2, and the banner when the run is wiring-only", async () => {
+    developerMode();
     const h = await bootApp("#/presenter");
     await stepTo(h, "DM8");
     const beat = await screen.findByText("Model-only gate against the full pipeline");
@@ -51,6 +53,7 @@ describe("presenter DM8 and DM9", () => {
   });
 
   it("DM8 on a live all-real run shows no banner; with no readable run it says so and shows no figure", () => {
+    developerMode();
     const parsed = parseHarnessFile("h.json", harnessFile());
     if (!parsed.ok) throw new Error("parse");
     const { container, unmount } = render(<Dm8View harness={{ items: [parsed.value], unreadable: [] }} />);
@@ -65,6 +68,35 @@ describe("presenter DM8 and DM9", () => {
     const { container } = render(<Dm9Card />);
     expect(honestyProblems(container)).toEqual(CLEAN);
     expect(container.textContent).not.toMatch(/Mastercard|Tap & Go|lai see|red packet/i);
+  });
+});
+
+describe("presenter DM8 in plain words, the default", () => {
+  it("shows the headline and the four cards that carry the claim, each number with its chip and each zero with its limit", async () => {
+    const h = await bootApp("#/presenter");
+    await stepTo(h, "DM8");
+    const view = (await waitFor(() => {
+      const found = document.querySelector('[data-beat="DM8"]');
+      if (!found) throw new Error("no DM8 yet");
+      return found as HTMLElement;
+    }));
+    expect(view).toHaveAttribute("data-mode", "plain");
+    expect(view.querySelector("h2")?.textContent).toMatch(/^On our own test set, Wally /);
+    const ids = [...view.querySelectorAll("[data-plain-card]")].map((n) => n.getAttribute("data-plain-card"));
+    expect(ids.slice(0, 1)).toEqual(["hero"]);
+    expect(ids).toEqual(expect.arrayContaining(["limit", "risky", "honest"]));
+    expect(ids).not.toContain("speed");
+    expect(view.querySelector(".evp-stage__cards")).not.toBeNull();
+    expect(view.querySelector("[data-big]")).toBeNull();
+    expect(view.querySelector('a[href="#/evidence"]')).not.toBeNull();
+    expect(honestyProblems(view)).toEqual(CLEAN);
+    expect(view.textContent ?? "").not.toMatch(/\b(B0|B1|B2|CI|p50|p95|T-H\d|F38|seed|commit)\b/);
+  });
+
+  it("says so when no run can be read, and shows no figure", () => {
+    const { container } = render(<Dm8View harness={{ items: [], unreadable: [] }} />);
+    expect(container.querySelectorAll("[data-num]")).toHaveLength(0);
+    expect(container).toHaveTextContent("No test results could be read");
   });
 });
 
