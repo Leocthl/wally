@@ -6,11 +6,12 @@
 import { useState, type FormEvent, type ReactElement } from "react";
 import type { CompileResult } from "../../api/types";
 import { UI } from "../../i18n/ui";
+import { useProfile } from "../../state/useProfile";
 import { Button } from "../../ui/Button";
 import { TextArea } from "../../ui/Form";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
-import { EXAMPLES, type SealExample } from "./examples";
+import { examplesFor, type SealExample } from "./examples";
 import { ReadResult } from "./ReadResult";
 import { RulesEditor } from "./RulesEditor";
 import { applySentence, EMPTY_FORM, formFromRules, SENTENCE_MAX, type FieldName, type FormErrors, type RulesForm, type SuggestRules } from "./sealModel";
@@ -36,6 +37,8 @@ export interface DescribeStepProps {
 export function DescribeStep(props: DescribeStepProps): ReactElement {
   const { sentence, form, errors, shown, now, today, suggestRules, onSentence, onForm, onTouch, onNext, incomplete } = props;
   const { t, locale } = useLocale();
+  const { profile } = useProfile();
+  const examples = examplesFor(profile?.shopFor ?? []);
   const [reading, setReading] = useState(false);
   const [readFailed, setReadFailed] = useState(false);
   const [read, setRead] = useState<CompileResult | null>(null);
@@ -89,7 +92,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
         <TextArea label={t(UI["seal.sentence"])} rows={3} maxLength={SENTENCE_MAX} value={sentence} onChange={(e) => type(e.target.value)} />
         <div className="seal-examples" role="group" aria-label={t(UI["seal.examples"])}>
           <span className="seal-examples__label" aria-hidden="true">{t(UI["seal.examples"])}</span>
-          {EXAMPLES.map((ex) => (
+          {examples.map((ex) => (
             <button key={ex.id} type="button" className="seal-example" data-example={ex.id} onClick={() => pickExample(ex)}>
               {t(UI[`seal.ex.${ex.id}`])}
             </button>

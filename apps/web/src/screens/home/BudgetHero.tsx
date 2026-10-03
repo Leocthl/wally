@@ -4,7 +4,9 @@
 // All figures are SIMULATED and share one chip in the card's corner. The mood is a pure function of the packet.
 import type { ReactElement } from "react";
 import { HERO } from "../../i18n/hero";
+import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
+import { useNickname } from "../../state/useProfile";
 import { Tag } from "../../ui/Chip";
 import { ProgressBar } from "../../ui/Data";
 import { Icon } from "../../ui/icons";
@@ -12,7 +14,7 @@ import { useLocale } from "../../ui/locale";
 import { Card } from "../../ui/Surface";
 import { Wally } from "../../wally/Wally";
 import { Fill, Money, ScopeChip } from "../../shell/figures";
-import { heroMood, MOOD_POSE } from "./heroModel";
+import { greetingFor, heroMood, MOOD_POSE } from "./heroModel";
 import { leftLabel, meterText, MiniStat, PROV, RollingFig, RuleTags, UntilFig, useMeterValue, type HeroProps } from "./hero/heroParts";
 import { useHeroMotion } from "./useHeroMotion";
 import "./hero.css";
@@ -23,6 +25,8 @@ export type { HeroProps as BudgetHeroProps } from "./hero/heroParts";
 export function BudgetHero({ packet, mandate }: HeroProps): ReactElement {
   const { t, locale } = useLocale();
   const mood = heroMood(packet);
+  const nickname = useNickname();
+  const greeting = greetingFor(mood, nickname);
   const { welcome, moodSeq } = useHeroMotion(mood);
   const active = packet.status === "ACTIVE";
   const meter = useMeterValue(packet.remaining_minor);
@@ -31,7 +35,7 @@ export function BudgetHero({ packet, mandate }: HeroProps): ReactElement {
       <div className="home-hero__greet">
         <Wally state={MOOD_POSE[mood]} size={76} decorative className="home-hero__wally" />
         <p className="home-hero__bubble" key={moodSeq} data-pop={welcome || moodSeq > 0 || undefined}>
-          {mood === "fresh" ? <span className="home-hero__hi">{t(HERO.hi)}</span> : null}
+          {greeting === "none" ? null : <span className="home-hero__hi">{t(greeting === "intro" ? HERO.hi : greeting === "introNamed" ? OB.home.hiNamed(nickname) : OB.home.hi(nickname))}</span>}
           <span className="home-hero__mood">{t(HERO.mood[mood])}</span>
         </p>
       </div>
