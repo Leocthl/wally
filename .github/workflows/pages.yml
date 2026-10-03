@@ -1,8 +1,9 @@
 name: pages
 
 # Publishes the on-device app (pnpm pages:build) to https://<owner>.github.io/<repo>/.
-# While the repository is private the job is skipped, so a run stays green and quiet. After the repository is public and
-# Settings > Pages > Source is "GitHub Actions", a push to main or "Run workflow" publishes it (apps/web/README.md).
+# While the repository is private, or Pages is not switched on yet, the deploy job is skipped, so a run stays green and quiet.
+# After the repository is public and Settings > Pages > Source is "GitHub Actions", a push to main or "Run workflow" publishes
+# it (apps/web/README.md).
 
 on:
   push:
@@ -19,8 +20,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Only a 404 means "Pages is not switched on"; any other answer lets the deploy job try, so a real problem is not hidden.
+          if out="$(gh api "repos/${GITHUB_REPOSITORY}/pages" 2>&1)"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif printf '%s' "$out" | grep -q "Not Found"; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Pages is not switched on for this repository (Settings > Pages > Source > GitHub Actions): nothing to publish."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
   deploy:
-    if: ${{ !github.event.repository.private }}
+    needs: check
+    if: ${{ !github.event.repository.private && needs.check.outputs.enabled == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
