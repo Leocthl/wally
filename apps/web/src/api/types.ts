@@ -237,6 +237,8 @@ export interface ApiInfo {
   readonly replayed: boolean;
   /** The one OBSERVED decline for the REAL toggle. null until data/real-card-test.md holds one. */
   readonly realCapture: RealCapture | null;
+  /** On-device mode only: this page keeps the session in the browser's storage until the demo is started over (src/api/local/persist). Absent: it does not. */
+  readonly remembers?: boolean;
 }
 
 /** data/public-keys.json shape, for the keys the backend signs with right now. */
