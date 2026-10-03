@@ -28,7 +28,7 @@ describe("budget card", () => {
 
   it("drops by the exact amount after a purchase and lists it first in Recent", async () => {
     const h = await bootApp("#/budget");
-    expect(screen.getByText(/Nothing yet\. Try asking Wally below\./)).toBeInTheDocument();
+    expect(screen.getByText(/Nothing yet\. Your first purchase shows up here\./)).toBeInTheDocument();
     await press(h, "normal");
     expect(window.location.hash).toBe("#/wally");
     await go("#/budget");
@@ -62,14 +62,16 @@ describe("budget card", () => {
     expect(hero).toHaveTextContent("只限衣物");
     expect(hero).toHaveTextContent(/總預算 HK\$800 · 有效至/);
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "剩餘 HK$800，總額 HK$800，SIMULATED");
-    expect(screen.getByRole("heading", { name: "試吓問" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "你需要啲咩？" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "為你推介" })).toBeInTheDocument();
+    expect(document.querySelector(".home-demo__title")).toHaveTextContent("示範情境（供評審使用）");
   });
 });
 
-describe("Try asking", () => {
+describe("Try asking (the demo scenarios)", () => {
   it("shows every booth scenario in four plain-language groups", async () => {
     await bootApp("#/budget");
-    const groups = screen.getAllByRole("group").filter((g) => g.querySelector("[data-scenario]"));
+    const groups = screen.getAllByRole("group").filter((g) => g.hasAttribute("role") && g.querySelector("[data-scenario]"));
     expect(groups.map((g) => g.querySelector("h3")?.textContent)).toEqual(["Buy", "Stops", "Card", "Budget"]);
     expect(screen.getByRole("button", { name: /Earbuds on a clothes budget/ })).toHaveAttribute("data-scenario", "off_category");
     expect(document.querySelectorAll("main [data-scenario]")).toHaveLength(13);

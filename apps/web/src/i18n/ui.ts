@@ -279,7 +279,7 @@ const SHELL = {
   "home.pastCards": label("Earlier cards", "較早的卡"), // NEEDS-REVIEW
   "home.recent": label("Recent", "最近"), // NEEDS-REVIEW
   "home.seeAll": label("See all", "查看全部"), // NEEDS-REVIEW
-  "home.recentEmpty": label("Nothing yet. Try asking Wally below.", "暫時未有。喺下面試吓叫 Wally 做嘢。"), // NEEDS-REVIEW
+  "home.recentEmpty": label("Nothing yet. Your first purchase shows up here.", "暫時未有，第一次購買會喺呢度顯示。"), // NEEDS-REVIEW
   "home.outcome.APPROVE": label("Approved", "已批准"), // NEEDS-REVIEW
   "home.outcome.DENY": label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
   "home.outcome.ESCALATE": label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
