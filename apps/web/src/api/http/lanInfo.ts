@@ -8,6 +8,8 @@ export interface WalletStats {
   readonly created: number;
   readonly evicted: number;
   readonly expired: number;
+  /** Visitors turned away because every wallet was in use. */
+  readonly refused: number;
   /** How long the last and the slowest wallet took to make, in ms; null before the first. */
   readonly lastCreateMs: number | null;
   readonly maxCreateMs: number | null;

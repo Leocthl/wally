@@ -72,6 +72,7 @@ function setup(over: Partial<SessionRegistryOptions> = {}) {
       return counter.toString(16).padStart(32, "0");
     },
     tickMs: null,
+    recentMs: 0,
     ...over,
   });
   return { registry, made, advance: (ms: number) => void (now += ms), clock: () => now };
@@ -169,6 +170,17 @@ describe("limits", () => {
     expect(back).not.toBe(b);
   });
 
+  it("tells which wallet was used longest ago even when every use is in the same millisecond", async () => {
+    const ctx = setup({ maxVisitors: 3 }); // the clock does not move at all
+    const a = await idOf(ctx.registry);
+    const b = await idOf(ctx.registry);
+    const c = await idOf(ctx.registry);
+    await ctx.registry.resolve(phone(a)); // a is used again, after b and c were made
+    const d = await idOf(ctx.registry);
+    expect(ctx.registry.has(b)).toBe(false);
+    expect([a, c, d].every((id) => ctx.registry.has(id))).toBe(true);
+  });
+
   it("never lets the number of wallets pass the cap, however many visitors come", async () => {
     const { registry, made } = setup({ maxVisitors: 4 });
     for (let i = 0; i < 20; i += 1) await idOf(registry);
@@ -211,16 +223,131 @@ describe("limits", () => {
     expect(registry.size).toBe(1);
   });
 
-  it("does not expire a wallet while a page still has its event stream open, and does once the page is gone", async () => {
+  it("does not drop a wallet while a page has its event stream open, and gives it a whole idle time after the page goes", async () => {
     const { registry, made, advance } = setup();
     const id = await idOf(registry);
     const stream = made[0]?.hub.connect();
     advance(SESSION_IDLE_TTL_MS * 3);
-    expect(registry.sweep()).toBe(0);
+    expect(registry.sweep()).toBe(0); // the page is open: in use
     expect(registry.has(id)).toBe(true);
-    await stream?.body?.cancel();
+    await stream?.body?.cancel(); // the phone locks after an hour of reading
+    expect(registry.sweep()).toBe(0); // not dropped at the next sweep: the idle time restarted while the page was open
+    advance(SESSION_IDLE_TTL_MS - 1);
+    expect(registry.sweep()).toBe(0);
+    advance(1);
     expect(registry.sweep()).toBe(1);
     expect(registry.has(id)).toBe(false);
+  });
+});
+
+describe("a booth that is full", () => {
+  const page = (visitor: Fake | undefined) => visitor?.hub.connect();
+
+  /** A `create` that counts its calls and keeps the wallets it makes where the test can see them. */
+  const counting = () => {
+    const made: Fake[] = [];
+    const create = vi.fn(async () => {
+      const visitor = fakeVisitor();
+      made.push(visitor);
+      return visitor;
+    });
+    return { made, create };
+  };
+
+  it("never drops a wallet that has a page open: the next visitor is told it is full, at once, and no wallet is made", async () => {
+    const { made, create } = counting();
+    const ctx = setup({ maxVisitors: 2, create });
+    await idOf(ctx.registry);
+    await idOf(ctx.registry);
+    expect(create).toHaveBeenCalledTimes(2);
+    const pages = [page(made[0]), page(made[1])];
+    const turned = await ctx.registry.resolve(phone()).catch((err: unknown) => err);
+    expect(turned).toBeInstanceOf(BoothError);
+    expect(turned).toMatchObject({ status: 503, code: "SESSION_UNAVAILABLE" });
+    expect(String((turned as Error).message)).toMatch(/in use/i);
+    expect(create).toHaveBeenCalledTimes(2); // no work was done for the visitor who was turned away
+    expect(ctx.registry.stats()).toMatchObject({ live: 2, evicted: 0, refused: 1 });
+    expect(made.map((m) => m.closed())).toEqual([0, 0]);
+    await Promise.all(pages.map((p) => p?.body?.cancel()));
+  });
+
+  it("drops, among the wallets that have no page, the one used longest ago, and keeps a page's wallet even when it is the oldest", async () => {
+    const ctx = setup({ maxVisitors: 3 });
+    const a = await idOf(ctx.registry);
+    ctx.advance(1_000);
+    const b = await idOf(ctx.registry);
+    ctx.advance(1_000);
+    const c = await idOf(ctx.registry);
+    ctx.advance(1_000);
+    const open = page(ctx.made[0]); // a is the oldest and has a page
+    const d = await idOf(ctx.registry);
+    expect(ctx.registry.has(a)).toBe(true);
+    expect(ctx.registry.has(b)).toBe(false); // the oldest without a page
+    expect([c, d].every((id) => ctx.registry.has(id))).toBe(true);
+    await open?.body?.cancel();
+  });
+
+  it("makes room again as soon as a page goes", async () => {
+    const ctx = setup({ maxVisitors: 2 });
+    await idOf(ctx.registry);
+    await idOf(ctx.registry);
+    const pages = [page(ctx.made[0]), page(ctx.made[1])];
+    await expect(ctx.registry.resolve(phone())).rejects.toMatchObject({ status: 503 });
+    await pages[1]?.body?.cancel();
+    expect(await idOf(ctx.registry)).toMatch(SESSION_ID_RE);
+    expect(ctx.made[1]?.closed()).toBe(1);
+    expect(ctx.made[0]?.closed()).toBe(0);
+    await pages[0]?.body?.cancel();
+  });
+
+  it("does not drop a wallet that was used just now, so a request still using it is not cut off", async () => {
+    const ctx = setup({ maxVisitors: 2, recentMs: 5_000 });
+    await idOf(ctx.registry);
+    ctx.advance(1_000);
+    await idOf(ctx.registry);
+    ctx.advance(1_000);
+    await expect(ctx.registry.resolve(phone())).rejects.toMatchObject({ status: 503 });
+    ctx.advance(4_000); // the first wallet was last used 6 s ago, the second 5 s ago
+    expect(await idOf(ctx.registry)).toMatch(SESSION_ID_RE);
+    expect(ctx.made.map((m) => m.closed())).toEqual([1, 0, 0]);
+  });
+
+  it("makes at most the cap when many first requests arrive together: the rest are turned away, and nobody is handed a closed wallet", async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const made: Fake[] = [];
+    const ctx = setup({
+      maxVisitors: 12,
+      create: async () => {
+        await gate; // all thirteen are in flight at once
+        const visitor = fakeVisitor();
+        made.push(visitor);
+        return visitor;
+      },
+    });
+    const all = Promise.allSettled(Array.from({ length: 13 }, () => ctx.registry.resolve(phone())));
+    release();
+    const results = await all;
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(12);
+    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
+    expect(made.filter((m) => m.closed() > 0)).toHaveLength(0);
+    expect(ctx.registry.size).toBe(12);
+  });
+
+  it("asks nothing of the machine for a visitor it turns away again and again, and keeps the log short", async () => {
+    const lines: string[] = [];
+    const { made, create } = counting();
+    const ctx = setup({ maxVisitors: 1, create, logger: { info: (m) => void lines.push(m), error: () => undefined } });
+    await idOf(ctx.registry);
+    const open = page(made[0]);
+    for (let i = 0; i < 50; i += 1) await expect(ctx.registry.resolve(phone())).rejects.toMatchObject({ status: 503 });
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(ctx.registry.stats().refused).toBe(50);
+    expect(lines.filter((l) => l.includes("refused"))).toHaveLength(1);
+    ctx.advance(10_000);
+    await expect(ctx.registry.resolve(phone())).rejects.toMatchObject({ status: 503 });
+    expect(lines.filter((l) => l.includes("refused"))).toHaveLength(2);
+    await open?.body?.cancel();
   });
 });
 
@@ -250,6 +377,16 @@ describe("parallel requests from one page", () => {
     const { registry, made } = setup();
     await Promise.all([idOf(registry), idOf(registry), idOf(registry)]);
     expect(made).toHaveLength(3);
+  });
+
+  it("remembers at most 64 old ids, and forgets them when their window is over", async () => {
+    const ctx = setup({ maxVisitors: 4 });
+    for (let i = 0; i < 200; i += 1) await idOf(ctx.registry, i.toString(16).padStart(32, "0"));
+    expect(ctx.registry.remembered).toBeLessThanOrEqual(64);
+    expect(ctx.registry.remembered).toBeGreaterThan(0);
+    ctx.advance(REPLACEMENT_WINDOW_MS);
+    await idOf(ctx.registry, "f".repeat(32));
+    expect(ctx.registry.remembered).toBe(1);
   });
 
   it("does not hand a dropped wallet's replacement to a request for a different old id", async () => {
@@ -441,7 +578,7 @@ describe("measuring", () => {
   });
 
   it("has nothing to report before the first wallet", () => {
-    expect(setup().registry.stats()).toEqual({ live: 0, created: 0, evicted: 0, expired: 0, lastCreateMs: null, maxCreateMs: null });
+    expect(setup().registry.stats()).toEqual({ live: 0, created: 0, evicted: 0, expired: 0, refused: 0, lastCreateMs: null, maxCreateMs: null });
   });
 });
 

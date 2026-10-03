@@ -11,8 +11,8 @@ import { getCookie, setCookie } from "hono/cookie";
 import type { ApiInfo } from "../src/api/types";
 import type { BoothBackend } from "./backend";
 import { BoothError } from "./http/errors";
-import { NATIVE_ORIGINS } from "./http/lan";
-import { SESSION_COOKIE, SESSION_COOKIE_MAX_AGE_S, SESSION_HEADER } from "./http/sessionWire";
+import { isTokenExempt, NATIVE_ORIGINS } from "./http/lan";
+import { SESSION_COOKIE, SESSION_COOKIE_MAX_AGE_S, SESSION_HEADER, sessionIdFrom } from "./http/sessionWire";
 import type { SseHub } from "./http/sse";
 import type { SessionRegistry, SessionScope } from "./sessions";
 
@@ -48,6 +48,17 @@ function bound(target: object, prop: string | symbol): unknown {
   return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(target) : value;
 }
 
+/**
+ * What else a stand-in answers besides reading a property. `in` asks the current wallet (and fails outside a scope like any
+ * read); writing, deleting and listing keys are refused loudly, so nothing can quietly see an empty object or change one.
+ */
+function standInRules<T extends object>(current: () => Active, part: (active: Active) => object): Pick<ProxyHandler<T>, "has" | "ownKeys" | "set" | "defineProperty" | "deleteProperty"> {
+  const refuse = (): never => {
+    throw new TypeError("the stand-in for the current wallet is read through its methods only");
+  };
+  return { has: (_unused, prop) => prop in part(current()), ownKeys: refuse, set: refuse, defineProperty: refuse, deleteProperty: refuse };
+}
+
 type InfoWithKeys = ApiInfo & { readonly keys?: string };
 
 /** /api/info says whose wallet this is, so the app can say so: the Mac's is shared, a phone's is its own. */
@@ -67,14 +78,15 @@ export function createSessionLayer(opts: SessionLayerOptions): SessionLayer {
     return found;
   };
 
-  const backend = new Proxy({} as BoothBackend, {
+  const backend = new Proxy<BoothBackend>({} as BoothBackend, {
+    ...standInRules<BoothBackend>(current, (active) => active.backend),
     get(_unused, prop) {
       const active = current();
       if (prop === "info") return async (): Promise<ApiInfo> => describeWallet(await active.backend.info(), active.kind);
       return bound(active.backend, prop);
     },
   });
-  const hub = new Proxy({} as SseHub, { get: (_unused, prop) => bound(current().hub, prop) });
+  const hub = new Proxy<SseHub>({} as SseHub, { ...standInRules<SseHub>(current, (active) => active.hub), get: (_unused, prop) => bound(current().hub, prop) });
 
   /** A browser gets its id as a cookie, once. A client that cannot keep one (a native shell, a script) is told it in a header too. */
   const introduce = (c: Context, id: string, presented: string | null, asked: boolean): void => {
@@ -84,10 +96,14 @@ export function createSessionLayer(opts: SessionLayerOptions): SessionLayer {
   };
 
   const around = async (c: Context, next: () => Promise<void>): Promise<Response | void> => {
-    if (c.req.path === "/api/health") return next();
+    if (isTokenExempt(c.req.path)) return next(); // global, and not behind the token: it makes no wallet, whatever the method
+    const mac = opts.isBooth(c);
+    // A HEAD runs the GET handler and throws the body away, so it would register an event client that nobody ever closes.
+    if (!mac && c.req.method === "HEAD") return c.body(null, 405, { allow: "GET, POST" });
     const header = c.req.header(SESSION_HEADER);
-    const presented = header ?? getCookie(c, SESSION_COOKIE) ?? null; // the header wins: it is the explicit one
-    const found = await opts.registry.resolve({ booth: opts.isBooth(c), presented });
+    // The header wins over the cookie when it is an id; "new" (or anything else) only asks to be told the id.
+    const presented = sessionIdFrom(header) ?? sessionIdFrom(getCookie(c, SESSION_COOKIE));
+    const found = await opts.registry.resolve({ booth: mac, presented });
     if (found.kind === "booth") return scope.run({ ...found.scope, kind: "shared" }, () => next());
     await scope.run({ ...found.scope, kind: "private" }, () => next());
     introduce(c, found.id, presented, header !== undefined);

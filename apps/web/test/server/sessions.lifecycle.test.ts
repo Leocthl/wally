@@ -26,10 +26,11 @@ async function boot(...args: Parameters<typeof bootLan>): Promise<Booth> {
 }
 
 const cards = async (p: Phone): Promise<number> => (await p.snapshot()).cards.length;
+const tick = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 describe.skipIf(!REAL)("the cap", () => {
   it("drops the wallet nobody has used longest when one visitor too many comes; its owner meets a fresh one, not an error", async () => {
-    const booth = await boot({ sessionLimits: { maxVisitors: 3 } });
+    const booth = await boot({ sessionLimits: { maxVisitors: 3, recentMs: 0 } });
     const [a, b, c, d] = phonesOf(booth, 4) as [Phone, Phone, Phone, Phone];
     await a.run("normal");
     await b.run("normal");
@@ -45,14 +46,44 @@ describe.skipIf(!REAL)("the cap", () => {
     expect(b.sessionId).not.toBe(oldB);
   });
 
-  it("closes the dropped wallet's event hub, so its page sees the stream end", async () => {
-    const booth = await boot({ sessionLimits: { maxVisitors: 1 } });
+  it("never drops a wallet whose page is open: the next phone is told the booth is full (503), and the open page keeps its stream", async () => {
+    const booth = await boot({ sessionLimits: { maxVisitors: 1, recentMs: 0 } });
     const [a, b] = phonesOf(booth, 2) as [Phone, Phone];
     const reader = (await a.get("/api/events")).body?.getReader();
     await reader?.read(); // the ready comment
-    await b.info(); // the cap is 1: a's wallet makes room for b's
-    expect((await reader?.read())?.done).toBe(true);
-    expect(booth.sessions?.size).toBe(1);
+    const turned = await b.get("/api/info");
+    expect(turned.status).toBe(503);
+    const body = (await turned.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("SESSION_UNAVAILABLE");
+    expect(body.error.message).toMatch(/in use/i);
+    expect(turned.headers.getSetCookie()).toEqual([]);
+    expect(booth.sessions?.stats()).toMatchObject({ live: 1, evicted: 0, refused: 1 });
+    await Promise.race([reader?.read().then(() => "ended"), tick(50).then(() => "still open")]).then((state) => expect(state).toBe("still open"));
+    await reader?.cancel(); // the page goes: its wallet can be dropped for the phone that was turned away
+    expect((await b.get("/api/info")).status).toBe(200);
+    expect(booth.sessions?.stats()).toMatchObject({ live: 1, evicted: 1 });
+  });
+
+  it("does not cascade when more pages than wallets keep reconnecting: 13 pages at a cap of 12 make 12 wallets and drop none", async () => {
+    const booth = await boot({ sessionLimits: { maxVisitors: 12, recentMs: 0 } });
+    const phones = phonesOf(booth, 13);
+    const streams = new Map<number, ReadableStreamDefaultReader<Uint8Array>>();
+    // As the app's event stream does: ask again with the old cookie whenever the answer is not a stream (or it ended).
+    for (let round = 0; round < 6; round += 1) {
+      await Promise.all(
+        phones.map(async (phone, i) => {
+          if (streams.has(i)) return;
+          const res = await phone.get("/api/events");
+          if (res.ok && res.body !== null) streams.set(i, res.body.getReader());
+          else await res.body?.cancel();
+        }),
+      );
+    }
+    const stats = booth.sessions?.stats();
+    expect(stats).toMatchObject({ live: 12, created: 12, evicted: 0 });
+    expect(stats?.refused).toBeGreaterThan(0); // the 13th page was turned away every round, and made nothing
+    expect(streams.size).toBe(12);
+    for (const reader of streams.values()) await reader.cancel();
   });
 });
 
@@ -99,6 +130,27 @@ describe.skipIf(!REAL)("the idle drop", () => {
     await booth.sessions?.tickAll();
     await stream.until((m) => m.some((x) => x.event.type === "escalation" && x.event.escalation.state === "EXPIRED"));
     await stream.close();
+  });
+});
+
+describe.skipIf(!REAL)("a wallet whose log grows without end", () => {
+  it("takes runs up to a limit, then turns them away (409) until the demo is started over; reads keep working; the Mac has no such limit", async () => {
+    const booth = await boot({ sessionLimits: { maxEntries: 12 } });
+    const [a] = phonesOf(booth, 1) as [Phone];
+    const mac = macOf(booth);
+    let refused: { status: number; code: string } | null = null;
+    for (let i = 0; i < 30 && refused === null; i += 1) {
+      const res = await a.post("/api/scenario/normal");
+      if (res.status !== 200) refused = { status: res.status, code: ((await res.json()) as { error: { code: string } }).error.code };
+    }
+    expect(refused).toEqual({ status: 409, code: "WALLET_FULL" });
+    expect((await a.snapshot()).log.entries.length).toBeGreaterThanOrEqual(12);
+    expect((await a.verify()).result.ok).toBe(true); // reads and checks still work
+    expect((await a.post("/api/propose", { listingText: "Plain tee." })).status).toBe(409); // every run is turned away, not only one kind
+    expect((await a.post("/api/reset")).status).toBe(204); // starting the demo over
+    expect((await a.run("normal")).outcome).toBe("APPROVE");
+    for (let i = 0; i < 6; i += 1) await mac.run("small"); // the Mac's wallet is not capped
+    expect((await mac.snapshot()).log.entries.length).toBeGreaterThan(12);
   });
 });
 

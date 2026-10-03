@@ -18,6 +18,13 @@ export const NATIVE_ORIGINS: readonly string[] = ["capacitor://localhost", "http
 /** ASSUMED: how long a browser keeps the pairing cookie (the token itself ends with the server process). */
 export const COOKIE_MAX_AGE_S = 24 * 60 * 60;
 
+/**
+ * The only API paths the token check leaves open: health for the pre-flight scripts, and /api/lan, which answers (or says 404)
+ * by where the request comes from. The practice-wallet layer (server/sessionScope.ts) leaves them alone too, for every method:
+ * a request that skipped the token check must never make a wallet.
+ */
+export const isTokenExempt = (path: string): boolean => path === "/api/health" || path === "/api/lan";
+
 const ALLOWED_REQUEST_HEADERS = "content-type, x-wally-token";
 const ALLOWED_METHODS = "GET, POST, OPTIONS";
 /** The client waits on X-Event-Seq; a cross-origin page can read it only when it is exposed. */
@@ -164,7 +171,7 @@ export function registerLan(app: Hono, lan: LanOptions): void {
       return native === null ? refuse(c, 403, "FORBIDDEN_ORIGIN", "this API accepts requests from its own pages and the Wally app only") : preflight(native, lan);
     }
     // /api/lan answers (or says 404) by where the request comes from, so the token is not asked for there.
-    const open = c.req.path === "/api/health" || c.req.path === "/api/lan" || isLocalClient(c, lan);
+    const open = isTokenExempt(c.req.path) || isLocalClient(c, lan);
     if (!open && !hasToken(c, lan.token)) return refuse(c, 401, "UNAUTHORIZED", "pairing needed: open the link or scan the QR code shown on the booth screen");
     return next();
   });

@@ -28,7 +28,7 @@ import { oneAtATime, type PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
-import { Gate, gated, MODEL_RUNS_AT_ONCE } from "./gate";
+import { Gate, gated, MAX_WALLET_ENTRIES, MODEL_LINE_LENGTH, MODEL_RUNS_AT_ONCE } from "./gate";
 import { loadCatalogue, loadShopRecordings, loadTrickRecordings } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { ephemeralKeys, loadDemoKeys, type DemoKeys } from "./booth/keys";
@@ -37,6 +37,7 @@ import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
 import type { SeeMode } from "./booth/visionProbe";
 import { isLocalClient, type LanOptions } from "./http/lan";
+import { BoothError } from "./http/errors";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
 import { createSessionLayer } from "./sessionScope";
@@ -73,8 +74,8 @@ export interface ComposeOptions {
   readonly planner?: PlannerChoice;
   /** Private practice wallets for visitors (server/sessions.ts). Default: what WALLY_SESSIONS names; unset, on exactly when LAN mode is on. */
   readonly sessions?: "on" | "off";
-  /** Cap and idle drop of the visitors' wallets, and how many of their runs may be in the planner and judge at once (tests). Defaults: 12, 45 minutes, 2. */
-  readonly sessionLimits?: Pick<SessionRegistryOptions, "maxVisitors" | "idleTtlMs"> & { readonly runsAtOnce?: number };
+  /** Cap and idle drop of the visitors' wallets, how long a used wallet is safe from being dropped for room, how many of their runs may be in the planner and judge at once and how many may wait, and how long a wallet's log may grow (tests). Defaults: 12, 45 minutes, 5 s, 2, 48, 200 entries. */
+  readonly sessionLimits?: Pick<SessionRegistryOptions, "maxVisitors" | "idleTtlMs" | "recentMs"> & { readonly runsAtOnce?: number; readonly maxEntries?: number; readonly lineLength?: number };
   /** The log store of one visitor wallet (tests). Default: a new in-memory store each time, so a visitor's log never touches LOG_DIR. */
   readonly visitorStore?: () => LogStore;
   /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
@@ -219,17 +220,24 @@ export function composeBooth(opts: ComposeOptions): Booth {
 
   // A visitor's wallet is a second booth: its own throwaway keys, in-memory log, orchestrator and event hub, the preset
   // budget sealed at once. Nothing of it touches KEY_DIR or LOG_DIR. The judge and planner are shared.
-  const { runsAtOnce, ...registryLimits } = opts.sessionLimits ?? {};
-  const turns = new Gate(runsAtOnce ?? MODEL_RUNS_AT_ONCE); // visitors take turns at the shared models; the Mac does not wait in this line
+  const { runsAtOnce, maxEntries, lineLength, ...registryLimits } = opts.sessionLimits ?? {};
+  const turns = new Gate(runsAtOnce ?? MODEL_RUNS_AT_ONCE, lineLength ?? MODEL_LINE_LENGTH); // visitors take turns at the shared models; the Mac does not wait in this line
   const visitorDeps = (): SessionDeps => depsFor(ephemeralKeys(), (opts.visitorStore ?? (() => new MemoryLogStore()))());
   const createVisitor = async (): Promise<VisitorSession> => {
     const wallet = buildBackend(visitorDeps);
     const walletHub = newHub();
-    const unlisten = wallet.subscribe((event) => walletHub.publish(event));
+    let entries = 0; // entries of this wallet's current log, counted from its events: every request reads all of them
+    const unlisten = wallet.subscribe((event) => {
+      walletHub.publish(event);
+      if (event.type === "reset") entries = 0;
+      else if (event.type === "log") entries += 1;
+    });
+    const full = (): BoothError | null =>
+      entries < (maxEntries ?? MAX_WALLET_ENTRIES) ? null : new BoothError(409, "WALLET_FULL", "This practice wallet has a very long history, so Wally stops here. Start the demo over from About to go on.");
     // As for the booth's own: a failed preset seal is logged, not fatal; the page seals it itself.
     await wallet.start().catch((err: unknown) => logger.error(`could not seal the preset mandate for a visitor: ${err instanceof Error ? err.message : "unknown error"}`));
     return {
-      backend: gated(wallet, turns),
+      backend: gated(wallet, turns, full),
       hub: walletHub,
       tick: () => wallet.tick(),
       close: () => {

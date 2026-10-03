@@ -311,6 +311,41 @@ describe.skipIf(!REAL)("what runs before a wallet is made", () => {
     expect(booth.sessions?.size).toBe(1);
   });
 
+  it.each(["PUT", "DELETE", "PATCH", "POST"])("makes none for a stranger's %s to the two paths the token check leaves open", async (method) => {
+    const booth = await boot();
+    const stranger = new Phone(booth.app, { token: false });
+    const holder = new Phone(booth.app);
+    for (const path of ["/api/lan", "/api/health"]) {
+      for (const who of [stranger, holder]) {
+        const res = await who.call(path, { method, headers: { "content-type": "application/json" }, ...(method === "DELETE" ? {} : { body: "{}" }) });
+        expect(res.status, `${method} ${path}`).toBeLessThan(500);
+        expect(res.headers.getSetCookie(), `${method} ${path}`).toEqual([]);
+      }
+    }
+    expect(booth.sessions?.size).toBe(0);
+    expect(booth.sessions?.stats().created).toBe(0);
+  });
+
+  it("never lets a HEAD request reach a wallet: no wallet is made and no event client is left behind to guard one", async () => {
+    const booth = await boot({ sessionLimits: { maxVisitors: 1, recentMs: 0 } });
+    const [a, b] = phonesOf(booth, 2) as [Phone, Phone];
+    const first = await a.call("/api/events", { method: "HEAD" });
+    expect(first.status).toBe(405);
+    expect(booth.sessions?.size).toBe(0);
+    await a.info(); // a has its wallet now
+    expect((await a.call("/api/events", { method: "HEAD" })).status).toBe(405);
+    expect((await a.call("/api/snapshot", { method: "HEAD" })).status).toBe(405);
+    // a's wallet has no page open, so it can be dropped for b: a HEAD left nothing behind that would guard it
+    expect((await b.get("/api/info")).status).toBe(200);
+    expect(booth.sessions?.stats()).toMatchObject({ live: 1, evicted: 1, refused: 0 });
+  });
+
+  it("answers the Mac's HEAD as before: the booth wallet is not behind this rule", async () => {
+    const booth = await boot();
+    const res = await macOf(booth).call("/api/info", { method: "HEAD" });
+    expect(res.status).toBe(200);
+  });
+
   it("still wants the pairing token with a session id in hand", async () => {
     const booth = await boot();
     const [a] = phonesOf(booth, 1) as [Phone];
@@ -394,6 +429,19 @@ describe.skipIf(!REAL)("the header, for clients that keep no cookie", () => {
     await b.info();
     const res = await b.get("/api/snapshot", { "x-wally-session": a.sessionId ?? "" }); // b's cookie says b, the header says a
     expect(((await res.json()) as { cards: unknown[] }).cards).toHaveLength(1);
+  });
+
+  it("does not let a header that is not an id replace the cookie: the same wallet answers, and the header is only told the id", async () => {
+    const booth = await boot();
+    const [a] = phonesOf(booth, 1) as [Phone];
+    await a.run("normal");
+    for (const odd of ["new", "junk", "A".repeat(32)]) {
+      const res = await a.get("/api/snapshot", { "x-wally-session": odd });
+      expect(((await res.json()) as { cards: unknown[] }).cards, odd).toHaveLength(1);
+      expect(res.headers.get("x-wally-session"), odd).toBe(a.sessionId);
+      expect(res.headers.getSetCookie(), odd).toEqual([]); // the cookie holds the right id already
+    }
+    expect(booth.sessions?.size).toBe(1);
   });
 
   it("never tells a plain browser its id in a header (the cookie is HttpOnly so a page script cannot read it)", async () => {

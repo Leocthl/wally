@@ -16,8 +16,15 @@ export { newSessionId, SESSION_COOKIE, SESSION_HEADER, SESSION_ID_RE } from "./h
 
 /** ASSUMED: visitor wallets at one time. Enough for a crowd at the booth (the QA run used five phones) and bounded memory. */
 export const MAX_VISITOR_SESSIONS = 12;
-/** ASSUMED: a wallet nobody has used for this long is dropped. A page with its event stream open counts as in use. */
+/** ASSUMED: a wallet nobody has used for this long is dropped. A page with its event stream open counts as in use, and the clock restarts when the page goes. */
 export const SESSION_IDLE_TTL_MS = 45 * 60_000;
+/**
+ * ASSUMED: a wallet used within this time is not dropped to make room, so a request that is using it is never cut off. A
+ * wallet with a page open is never dropped to make room either: that page would reconnect at once with its old id, get a new
+ * wallet and drop the next one (13 pages at a cap of 12 made 20 drops in 5 s in a simulation). When nothing can be dropped the
+ * next visitor is told the booth is full (503) and the app falls back to its on-device mode.
+ */
+export const EVICT_GRACE_MS = 5_000;
 /**
  * ASSUMED: how often the visitors' wallets are swept and ticked, against the booth's own 1 s. A tick reads and folds the whole
  * log (MEASURED: about 0.8 ms per entry), so twelve wallets of 40 entries at a 1 s beat used 60% of a core on an idle booth Mac.
@@ -31,6 +38,9 @@ export const REPLACEMENT_WINDOW_MS = 10_000;
 const MAX_REPLACEMENTS = 64;
 
 const UNAVAILABLE_MESSAGE = "Wally could not start a practice wallet just now. Try again in a moment.";
+const FULL_MESSAGE = "Every practice wallet on the booth Mac is in use right now. Try again in a minute.";
+/** How often a "booth is full" line may reach the log: a refused page asks again every few seconds. */
+const FULL_LOG_EVERY_MS = 10_000;
 
 /** What a request runs against: a wallet and the hub that carries its events. */
 export interface SessionScope {
@@ -65,6 +75,8 @@ export interface SessionRegistryOptions {
   readonly newId?: () => string;
   readonly maxVisitors?: number;
   readonly idleTtlMs?: number;
+  /** Default EVICT_GRACE_MS. */
+  readonly recentMs?: number;
   /** Sweep and tick interval; null = no timer (tests do both by hand). */
   readonly tickMs?: number | null;
   readonly logger?: Logger;
@@ -78,6 +90,8 @@ interface Entry {
   /** What a request is handed: the wallet and its hub, without the power to tick or close it. Made once. */
   readonly scope: SessionScope;
   readonly lastSeen: number;
+  /** Which use of any wallet this was, counting up: breaks a tie between two uses in the same millisecond (or on a frozen clock). */
+  readonly used: number;
 }
 
 interface Replacement {
@@ -86,8 +100,11 @@ interface Replacement {
 }
 
 const unavailable = (): BoothError => new BoothError(503, "SESSION_UNAVAILABLE", UNAVAILABLE_MESSAGE);
+const full = (): BoothError => new BoothError(503, "SESSION_UNAVAILABLE", FULL_MESSAGE);
 const reason = (err: unknown): string => (err instanceof Error ? err.message : "unknown error");
 const shortId = (id: string): string => id.slice(0, 6);
+/** Was `a` used before `b`: by time, and for the same time by the order of the uses. */
+const usedBefore = (a: Entry, b: Entry): boolean => a.lastSeen < b.lastSeen || (a.lastSeen === b.lastSeen && a.used < b.used);
 
 export class SessionRegistry {
   readonly #opts: SessionRegistryOptions;
@@ -96,16 +113,21 @@ export class SessionRegistry {
   readonly #newId: () => string;
   readonly #max: number;
   readonly #ttl: number;
+  readonly #recent: number;
   readonly #log: Logger;
-  /** Insertion order is use order: the first entry is the one nobody has touched longest. Replaced, never edited. */
+  /** By id, in the order the wallets were made. Replaced, never edited. */
   #entries: ReadonlyMap<string, Entry> = new Map();
+  /** Wallets being made: their slots are already taken, before any work is done. */
+  #inFlight = 0;
+  #uses = 0;
+  #lastFullLog = Number.NEGATIVE_INFINITY;
   /** Wallets being made for a request that carried an id nobody knows, by that id. */
   #pending: ReadonlyMap<string, Promise<Entry>> = new Map();
   /** Old id -> the wallet it got, for REPLACEMENT_WINDOW_MS. */
   #replaced: ReadonlyMap<string, Replacement> = new Map();
   #timer: ReturnType<typeof setInterval> | null = null;
   #closed = false;
-  #stats = { created: 0, evicted: 0, expired: 0, lastCreateMs: null as number | null, maxCreateMs: null as number | null };
+  #stats = { created: 0, evicted: 0, expired: 0, refused: 0, lastCreateMs: null as number | null, maxCreateMs: null as number | null };
 
   constructor(opts: SessionRegistryOptions) {
     this.#opts = opts;
@@ -114,6 +136,7 @@ export class SessionRegistry {
     this.#newId = opts.newId ?? (() => newSessionId());
     this.#max = opts.maxVisitors ?? MAX_VISITOR_SESSIONS;
     this.#ttl = opts.idleTtlMs ?? SESSION_IDLE_TTL_MS;
+    this.#recent = opts.recentMs ?? EVICT_GRACE_MS;
     this.#log = opts.logger ?? SILENT_LOGGER;
     const every = opts.tickMs === undefined ? SESSION_TICK_MS : opts.tickMs;
     if (every !== null) {
@@ -130,6 +153,11 @@ export class SessionRegistry {
 
   has(id: string): boolean {
     return this.#entries.has(id);
+  }
+
+  /** Old ids kept for the replacement window (bounded; for tests). */
+  get remembered(): number {
+    return this.#replaced.size;
   }
 
   stats(): SessionStats {
@@ -151,12 +179,19 @@ export class SessionRegistry {
       if (!this.#expired(known, now)) return this.#visitor(this.#touch(known, now));
       this.#drop(known.id, "expired");
     }
-    return this.#visitor(await this.#fresh(presented, now));
+    const entry = await this.#fresh(presented, now);
+    if (!this.#entries.has(entry.id)) throw unavailable(); // dropped while this request waited: never hand out a closed wallet
+    return this.#visitor(entry);
   }
 
-  /** Drops every wallet that has been idle for the whole TTL (and has no page connected). Returns how many. */
+  /**
+   * Drops every wallet that has been idle for the whole TTL and has no page connected. Returns how many. A page that is open
+   * is use: it restarts the idle time of its wallet, so a phone that locks after an hour of reading keeps its wallet for the
+   * next 45 minutes instead of losing it at the next sweep.
+   */
   sweep(): number {
     const now = this.#now();
+    this.#entries = new Map<string, Entry>([...this.#entries].map(([id, entry]): [string, Entry] => [id, entry.session.hub.clientCount > 0 ? { ...entry, lastSeen: now } : entry]));
     const idle = [...this.#entries.values()].filter((entry) => this.#expired(entry, now));
     for (const entry of idle) this.#drop(entry.id, "expired");
     return idle.length;
@@ -197,10 +232,11 @@ export class SessionRegistry {
     return now - entry.lastSeen >= this.#ttl && entry.session.hub.clientCount === 0;
   }
 
-  /** The entry with its use time moved up; it goes to the back of the line. */
+  /** The entry, used now. */
   #touch(entry: Entry, now: number): Entry {
-    const next = { ...entry, lastSeen: now };
-    this.#entries = new Map([...[...this.#entries].filter(([id]) => id !== entry.id), [entry.id, next]]);
+    this.#uses += 1;
+    const next = { ...entry, lastSeen: now, used: this.#uses };
+    this.#entries = new Map<string, Entry>([...this.#entries].map(([id, found]): [string, Entry] => [id, id === entry.id ? next : found]));
     return next;
   }
 
@@ -243,36 +279,58 @@ export class SessionRegistry {
   }
 
   async #make(presented: string | null): Promise<Entry> {
+    this.#admit(); // before any work: a full booth is told so at once
+    this.#inFlight += 1;
     const started = this.#mono();
     let session: VisitorSession;
     try {
       session = await this.#opts.create();
     } catch (err) {
+      this.#inFlight -= 1;
       this.#log.error(`practice wallet could not be made: ${reason(err)}`);
       throw unavailable();
     }
     if (this.#closed) {
+      this.#inFlight -= 1;
       session.close();
       throw unavailable();
     }
     const took = Math.round(this.#mono() - started);
     const now = this.#now();
-    const entry: Entry = { id: this.#newId(), session, scope: { backend: session.backend, hub: session.hub }, lastSeen: now };
-    this.#insert(entry);
+    this.#uses += 1;
+    const entry: Entry = { id: this.#newId(), session, scope: { backend: session.backend, hub: session.hub }, lastSeen: now, used: this.#uses };
+    this.#inFlight -= 1;
+    this.#entries = new Map([...this.#entries, [entry.id, entry]]); // the slot was taken before the work began: nothing is dropped here
     this.#stats = { ...this.#stats, created: this.#stats.created + 1, lastCreateMs: took, maxCreateMs: Math.max(this.#stats.maxCreateMs ?? 0, took) };
     if (presented !== null) this.#remember(presented, entry.id, now);
     this.#log.info(`practice wallet ${shortId(entry.id)} started in ${took} ms; ${this.#entries.size} live`);
     return entry;
   }
 
-  /** Adds the entry at the back of the line, dropping the least recently used wallets first while the cap is full. */
-  #insert(entry: Entry): void {
-    while (this.#entries.size >= this.#max) {
-      const oldest = this.#entries.keys().next();
-      if (oldest.done === true) break;
-      this.#drop(oldest.value, "evicted");
+  /** Can this wallet be dropped to make room: no page open on it, and not used just now. */
+  #evictable(entry: Entry, now: number): boolean {
+    return entry.session.hub.clientCount === 0 && now - entry.lastSeen >= this.#recent;
+  }
+
+  /**
+   * Takes a slot for one more wallet. A free slot, else the wallet used longest ago among those that can be dropped; when none
+   * can, the booth is full: a plain 503 and no work. A wallet with a page open is never the one dropped (see EVICT_GRACE_MS).
+   */
+  #admit(): void {
+    if (this.#entries.size + this.#inFlight < this.#max) return;
+    const now = this.#now();
+    const victim = [...this.#entries.values()]
+      .filter((entry) => this.#evictable(entry, now))
+      .reduce<Entry | undefined>((oldest, entry) => (oldest === undefined || usedBefore(entry, oldest) ? entry : oldest), undefined);
+    if (victim === undefined) {
+      this.#stats = { ...this.#stats, refused: this.#stats.refused + 1 };
+      if (now - this.#lastFullLog >= FULL_LOG_EVERY_MS) {
+        this.#lastFullLog = now;
+        this.#log.info(`practice wallet refused: all ${this.#max} are in use (${this.#stats.refused} refused so far)`);
+      }
+      throw full();
     }
-    this.#entries = new Map([...this.#entries, [entry.id, entry]]);
+    this.#drop(victim.id, "evicted");
   }
 
   #remember(oldId: string, id: string, at: number): void {
