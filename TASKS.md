@@ -176,4 +176,4 @@
 | D-29 | Hallway tally at the 13:30 exhibition (12): 30 people, five questions, three quotes; say the result at 4:15 and add it to the notes of deck slide 16 [F99] | [TEAM] | 1h | D-27 | M6 | [ ] |
 | D-30 | Deck hand-offs: type the four names into slide 17; after the app screenshots change run `tools/swap-shots.sh` in the deck folder (one map file, `shots/map.json`); re-check slides 2, 3, 10 and 12 to 16 against the register [F42, F70] | [TEAM] | 1h | D-15 | M6 | [ ] |
 | D-31 | Re-capture in a browser the pages behind F94, F95 and F100 to F103 (and the grid pages); a lawyer reads the F100 and F101 readings before any pilot; send 09 only after OBSERVED | [TEAM] | 1.5h | D-06 | M5 | [ ] |
-| D-32 | Choose the repo licence and add `LICENSE` before the repo goes public; the Q&A calls it an open team decision (07) | [TEAM] | 0.25h | X-01 | M5 | [ ] |
+| D-32 | Repo licence: Apache-2.0, `LICENSE` and `NOTICE` merged (daf44e6); the Q&A and slide 21 say so (07); the repo stays private until the team says yes | [TEAM] | 0.25h | X-01 | M5 | [x] |

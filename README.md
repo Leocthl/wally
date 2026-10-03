@@ -67,4 +67,5 @@ pnpm demo                                            # http://127.0.0.1:8787
 - **AI coding assistants** were used, as the event rules allow; the team can explain every module [F16].
 
 ## Licence
-Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)). Built for HacKU 2026. No logos or brand assets used. Third-party code and models keep their own licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+- **Apache-2.0** ([LICENSE](LICENSE), [NOTICE](NOTICE)). Third-party code and models keep their own licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+- Built for HacKU 2026. No logos or brand assets used.
