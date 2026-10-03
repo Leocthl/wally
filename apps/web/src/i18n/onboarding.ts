@@ -29,8 +29,8 @@ export const OB = {
     title: label("What's your style?", "你鍾意咩風格？"), // NEEDS-REVIEW
     lead: label("Pick what fits. Wally shows these first. Nothing here changes how Wally decides.", "揀啱你的。Wally 會先顯示呢啲。呢度嘅選擇唔會影響 Wally 點樣決定。"), // NEEDS-REVIEW
     styles: label("Your style", "你的風格"), // NEEDS-REVIEW
-    colours: label("Colours you wear", "你常著的顏色"), // NEEDS-REVIEW
-    sizes: label("Your usual sizes", "你常著的尺碼"), // NEEDS-REVIEW
+    colours: label("Colours you wear", "你常着的顏色"), // NEEDS-REVIEW
+    sizes: label("Your usual sizes", "你常着的尺碼"), // NEEDS-REVIEW
     top: label("Top", "上衣"), // NEEDS-REVIEW
     bottom: label("Bottom", "褲或裙"), // NEEDS-REVIEW
     shoe: label("Shoes (EU)", "鞋（歐碼）"), // NEEDS-REVIEW
@@ -77,7 +77,7 @@ export const OB = {
   tour: {
     ask: {
       title: label("Ask Wally", "問 Wally"), // NEEDS-REVIEW
-      body: label("Tap here, or Ask below, to say what you need in your own words.", "喺呢度或者下面撳「問」，用你自己的說話話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
+      body: label("Tap here, or Ask below, to say what you need in your own words.", "喺呢度或者下面撳「問」，用你自己嘅講法話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
     },
     ideas: {
       title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW

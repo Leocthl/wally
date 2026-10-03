@@ -68,7 +68,7 @@ const RUN = {
   stoppedTitle: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
   noCard: label("No card was made. Nothing can be charged.", "沒有發出任何卡，所以不可能被扣款。"), // NEEDS-REVIEW
   cardCancelled: label("The card was cancelled. Nothing more can be charged.", "卡已取消，不能再被扣款。"), // NEEDS-REVIEW
-  cheaper: label("See cheaper options", "睇平啲的選擇"), // NEEDS-REVIEW
+  cheaper: label("See cheaper options", "睇更平嘅選擇"), // NEEDS-REVIEW
   editRules: label("Edit rules", "修改規則"), // NEEDS-REVIEW
   pickElse: label("Pick something else", "揀其他嘢"), // NEEDS-REVIEW
   changeAmount: label("Change the amount", "更改金額"), // NEEDS-REVIEW
