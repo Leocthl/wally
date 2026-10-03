@@ -13,6 +13,7 @@
     "android:open": "cap open android",
     "ios:sim": "node scripts/ios-sim.mjs",
     "android:apk": "node scripts/android-apk.mjs",
+    "android:aab": "node scripts/android-aab.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

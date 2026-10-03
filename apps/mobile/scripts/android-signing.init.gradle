@@ -1,0 +1,46 @@
+// Gradle init script for a Play upload build. Pass it with -I (scripts/android-aab.mjs does). It signs the release bundle with
+// an upload key kept OUTSIDE this repository and lets the version come from the command line, so nothing about a key, a
+// password or a version bump is ever committed (test/hygiene.test.ts keeps the native sources free of signing material).
+//
+//   WALLY_KEYSTORE_PROPERTIES  path of a properties file with storeFile, storePassword, keyAlias, keyPassword
+//   -PwallyVersionCode=<int>   versionCode of this upload (Play wants a higher number every time)
+//   -PwallyVersionName=<text>  versionName (default 1.0)
+def propsPath = System.getenv('WALLY_KEYSTORE_PROPERTIES')
+if (propsPath == null || !new File(propsPath).isFile()) {
+    throw new GradleException('WALLY_KEYSTORE_PROPERTIES must name the keystore properties file (storeFile, storePassword, keyAlias, keyPassword)')
+}
+def keys = new Properties()
+new File(propsPath).withInputStream { keys.load(it) }
+['storeFile', 'storePassword', 'keyAlias', 'keyPassword'].each {
+    if (!keys.getProperty(it)) throw new GradleException("keystore properties file lacks ${it}")
+}
+
+allprojects {
+    plugins.withId('com.android.application') {
+        android {
+            signingConfigs {
+                release {
+                    storeFile file(keys.getProperty('storeFile'))
+                    storePassword keys.getProperty('storePassword')
+                    keyAlias keys.getProperty('keyAlias')
+                    keyPassword keys.getProperty('keyPassword')
+                }
+            }
+            buildTypes {
+                release { signingConfig signingConfigs.release }
+            }
+        }
+        def code = project.findProperty('wallyVersionCode')
+        def name = project.findProperty('wallyVersionName')
+        if (code != null || name != null) {
+            androidComponents {
+                onVariants(selector().all()) { variant ->
+                    variant.outputs.each { output ->
+                        if (code != null) output.versionCode.set(code.toString().toInteger())
+                        if (name != null) output.versionName.set(name.toString())
+                    }
+                }
+            }
+        }
+    }
+}

@@ -46,6 +46,21 @@ xcrun devicectl device install app --device <device id> ~/Library/Caches/wally-i
 - **Via Xcode instead**: set the Team under Signing and Capabilities, then run `git restore apps/mobile/ios/App/App.xcodeproj/project.pbxproj` before committing.
 - **Release signing**: keep keystores and profiles outside the repo; `*.keystore`, `*.jks`, `*.p12`, `*.mobileprovision` are gitignored and `test/hygiene.test.ts` fails on team ids or passwords in the native sources.
 
+## Store builds (TestFlight and Google Play internal testing)
+- **Nothing secret is committed**: the upload key, its passwords and the team id stay on the building Mac, outside the repo.
+- **Android**: make an upload key once, for example `keytool -genkeypair -keystore ~/.android-keys/wally-upload.jks -storetype PKCS12 -alias wally-upload -keyalg RSA -keysize 4096 -validity 10000`, and a properties file next to it (mode 600) with `storeFile`, `storePassword`, `keyAlias`, `keyPassword`; `WALLY_KEYSTORE_PROPERTIES` names it (default `~/.android-keys/wally-upload.properties`). Then `pnpm --filter @wally/mobile sync` and `pnpm --filter @wally/mobile android:aab -- --code <n> --name 1.0`: the versionCode must rise on every upload, and `scripts/android-signing.init.gradle` signs the bundle. Upload `android/app/build/outputs/bundle/release/app-release.aab` in Play Console, Internal testing, Create new release (Play App Signing stays on); testers are an email list of Google accounts.
+- **iOS**: the Apple ID is in Xcode (Settings, Accounts). Archive without signing, then export with automatic signing, which makes the distribution certificate and the App Store profile and uploads the build:
+
+```
+xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
+  -archivePath <dir>/Wally.xcarchive CODE_SIGNING_ALLOWED=NO MARKETING_VERSION=1.0 CURRENT_PROJECT_VERSION=<build> archive
+xcodebuild -exportArchive -archivePath <dir>/Wally.xcarchive -exportPath <dir>/export \
+  -exportOptionsPlist <ExportOptions.plist> -allowProvisioningUpdates
+```
+
+- **ExportOptions.plist** (kept outside the repo because it names the team): `method` app-store-connect, `destination` upload (or export to get the .ipa), `teamID`, `signingStyle` automatic. The build number must rise on every upload. `Info.plist` sets `ITSAppUsesNonExemptEncryption` to false (HTTPS and signatures only) and `App/PrivacyInfo.xcprivacy` declares no tracking and no collected data.
+- **App Store Connect**: the app record needs the bundle id `app.wally.demo` (the store name may differ: "Wally" was taken). TestFlight internal testers must be App Store Connect users with a role that can test (for example Customer Support, limited to this app); no review is needed for internal testing.
+
 ## Behaviour in the shell
 - **Safe areas**: the shell insets the page below the status bar and above the home indicator (iOS `contentInset: always`, Android system-bar insets), and `build-web.mjs` drops `viewport-fit=cover` from the shell copy of `index.html`. For an edge-to-edge page that pads itself with `env(safe-area-inset-*)`, run `WALLY_EDGE_TO_EDGE=1 pnpm sync`.
 - **Backgrounds**: `#F4F7FE` light, `#0B1220` dark, native on both platforms (iOS colour set and launch screen, Android `values` and `values-night`); `test/hygiene.test.ts` keeps them equal to the design tokens.
