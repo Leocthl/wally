@@ -12,6 +12,25 @@ import type { BackendLogger } from "./types";
 /** Reads one picture into typed words (describeImage on the local model); null when this booth has no picture reader. */
 export type PictureReader = (bytes: Uint8Array) => Promise<Described>;
 
+/**
+ * One picture is read at a time [F96]: the model server has two slots and the planner and the judge share them, so a
+ * flood of pictures would delay a purchase. A picture that arrives while another is being read is not read at all; it
+ * comes back as "busy", which see() turns into the colour plates and the chips. The guard is free again when the read
+ * ends, whether it answered, failed or threw.
+ */
+export function oneAtATime(read: PictureReader): PictureReader {
+  let reading = false;
+  return async (bytes) => {
+    if (reading) return { attributes: null, reason: "busy", bytes: bytes.length, width: null, height: null, latencyMs: 0, model: null, failure: null };
+    reading = true;
+    try {
+      return await read(bytes);
+    } finally {
+      reading = false;
+    }
+  };
+}
+
 export interface SeeDeps {
   readonly shop: Shop;
   readonly reader: PictureReader | null;
@@ -63,6 +82,9 @@ function matchesFor(attributes: SeeAttributes, shop: Shop): readonly ShopMatch[]
   });
 }
 
+/** A reader that throws (it should not) is a read that failed: the chips path, never an error to the shopper. */
+const FAILED_READ = (bytes: number): Described => ({ attributes: null, reason: "model_unavailable", bytes, width: null, height: null, latencyMs: 0, model: null, failure: null });
+
 const logLine = (read: Described): string =>
   `see: ${read.bytes} bytes${read.width === null ? "" : ` ${read.width}x${read.height}`}, ${Math.round(read.latencyMs)} ms, ${read.reason}${read.failure === null ? "" : ` (${read.failure})`}`;
 
@@ -75,7 +97,7 @@ export async function see(input: SeeInput, deps: SeeDeps): Promise<SeeResult> {
   if (input.image === null || deps.reader === null) {
     return { source: "palette", attributes: fallback, palette: input.palette, matches: [] };
   }
-  const read = await deps.reader(input.image.bytes);
+  const read = await deps.reader(input.image.bytes).catch(() => FAILED_READ(input.image?.bytes.length ?? 0));
   deps.logger.info(logLine(read));
   if (read.attributes === null) return { source: "palette", attributes: fallback, palette: input.palette, matches: [], notice: "model_failed" };
   const attributes = fromModel(read.attributes, input.palette);

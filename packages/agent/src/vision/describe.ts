@@ -9,14 +9,15 @@ import { checkImage, type ImageProblem } from "./image";
 import { buildSeeMessages, buildSeeSchema, SEE_SCHEMA_NAME } from "./prompt";
 import type { Attributes } from "./vocab";
 
-/** Longest wait for the model, in ms. The brief's cap; 29 pictures took 1.7 to 2.9 s each on the booth Mac. */
+/** Longest wait for the model, in ms [F68a]: 29 pictures took 1.7 to 2.9 s each on the booth Mac, so 15 s is five times the slowest. */
 export const DEFAULT_DESCRIBE_TIMEOUT_MS = 15_000;
-/** Completion token cap: the longest valid answer, every field full, is about 60 tokens. */
+/** Completion token cap [F68a]: the longest valid answer, every field full, is about 60 tokens. */
 export const DESCRIBE_MAX_TOKENS = 120;
-/** Fixed sampling seed; temperature is always 0. */
+/** Fixed sampling seed [F68a]; temperature is always 0. */
 export const DESCRIBE_SEED = 42;
 
-export type DescribeReason = "ok" | ImageProblem | "model_unavailable" | "invalid_answer";
+/** "busy": the booth was already reading another picture (set by the booth's one-at-a-time guard, never by describeImage itself). */
+export type DescribeReason = "ok" | ImageProblem | "model_unavailable" | "invalid_answer" | "busy";
 
 export interface Described {
   readonly attributes: Attributes | null;
@@ -63,6 +64,8 @@ export async function describeImage(bytes: Uint8Array, options: DescribeOptions)
     const attributes = parseAttributes(res.content);
     return { ...base, attributes, reason: attributes === null ? "invalid_answer" : "ok", latencyMs: res.latencyMs, model: res.model, failure: null };
   } catch {
-    return { attributes: null, reason: "model_unavailable", bytes: size, width: null, height: null, latencyMs: 0, model: null, failure: "network" }; // never throws
+    // Never throws. No failure word on purpose: every known failure of the model call carries one, so a bare "model_unavailable"
+    // in the log line means something inside this function broke, not that the server is down.
+    return { attributes: null, reason: "model_unavailable", bytes: size, width: null, height: null, latencyMs: 0, model: null, failure: null };
   }
 }

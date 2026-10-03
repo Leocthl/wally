@@ -90,7 +90,7 @@ describe("POST /api/see", () => {
     ["a body that is not JSON", "not json", 400, "INVALID_JSON"],
     ["a JSON list", "[]", 400, "INVALID_BODY"],
     ["an unknown key", JSON.stringify({ attributes: { kind: "tee" }, url: "https://example.com" }), 400, "UNKNOWN_FIELD"],
-    ["a picture that is not a JPEG, PNG or WebP", JSON.stringify({ image: { mime: "image/jpeg", data: toBase64(Uint8Array.from([71, 73, 70, 56, 57, 97, 1, 0, 1, 0])) } }), 415, "UNSUPPORTED_MEDIA_TYPE"],
+    ["a picture that is not a JPEG", JSON.stringify({ image: { mime: "image/jpeg", data: toBase64(Uint8Array.from([71, 73, 70, 56, 57, 97, 1, 0, 1, 0])) } }), 415, "UNSUPPORTED_MEDIA_TYPE"],
     ["a picture and chips together", JSON.stringify({ ...picture(100), attributes: { kind: "tee" } }), 400, "INVALID_FIELD"],
   ])("refuses %s", async (_name, body, status, code) => {
     const res = await post(body);

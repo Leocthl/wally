@@ -4,7 +4,9 @@
 import { join } from "node:path";
 import type { Described } from "@wally/agent/vision";
 import { describe, expect, it } from "vitest";
-import { see, type PictureReader } from "../src/booth/backend/see";
+import { localInfo } from "../src/api/local/info";
+import { featuresFor } from "../src/booth/backend/info";
+import { oneAtATime, see, type PictureReader } from "../src/booth/backend/see";
 import { SILENT_BACKEND_LOGGER, type BackendLogger } from "../src/booth/backend/types";
 import { parseSeeRequest } from "../src/booth/backend/validate";
 import { loadCatalogue } from "../server/booth/catalogue";
@@ -137,5 +139,82 @@ describe("what the matches carry", () => {
         expect(m.score).toBeLessThanOrEqual(100);
       }
     }
+  });
+});
+
+describe("a reader that breaks", () => {
+  it("is the chips path with the model_failed notice, never an error (the booth keeps working)", async () => {
+    const breaking: PictureReader = () => Promise.reject(new Error("boom: the picture bytes"));
+    const out = await see(parseSeeRequest({ ...PICTURE, palette: NAVY_PLATES }), { shop, reader: breaking, logger: SILENT_BACKEND_LOGGER });
+    expect(out).toMatchObject({ source: "palette", notice: "model_failed", matches: [] });
+    expect(out.attributes.colors).toEqual(["navy", "white"]);
+    expect(JSON.stringify(out)).not.toMatch(/boom|bytes/);
+  });
+
+  it("is logged as a reason word and nothing else", async () => {
+    const lines: string[] = [];
+    const breaking: PictureReader = () => Promise.reject(new Error("boom: secret"));
+    await see(parseSeeRequest({ ...PICTURE }), { shop, reader: breaking, logger: { info: (m) => void lines.push(m), error: (m) => void lines.push(m) } });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/^see: /);
+    expect(lines[0]).not.toMatch(/secret|boom/);
+  });
+});
+
+describe("oneAtATime (the model server has two slots, and the planner and the judge share them)", () => {
+  const gate = () => {
+    let open: (d: Described) => void = () => undefined;
+    const done = new Promise<Described>((resolve) => (open = resolve));
+    return { done, open };
+  };
+
+  it("lets one picture be read at a time: a second one while the first is running is not read", async () => {
+    const first = gate();
+    const calls: Uint8Array[] = [];
+    const slow: PictureReader = (bytes) => (calls.push(bytes), first.done);
+    const wrapped = oneAtATime(slow);
+    const running = wrapped(Uint8Array.of(1, 2, 3));
+    const refused = await wrapped(Uint8Array.of(4, 5, 6, 7));
+    expect(refused).toMatchObject({ attributes: null, reason: "busy", bytes: 4, failure: null });
+    expect(calls).toHaveLength(1);
+    first.open(described());
+    expect((await running).reason).toBe("ok");
+  });
+
+  it("is free again as soon as the read ends, whether it answered or failed", async () => {
+    const calls: number[] = [];
+    const flaky: PictureReader = async () => {
+      calls.push(calls.length);
+      if (calls.length === 1) throw new Error("boom");
+      return described();
+    };
+    const wrapped = oneAtATime(flaky);
+    await expect(wrapped(Uint8Array.of(1))).rejects.toThrow("boom");
+    expect((await wrapped(Uint8Array.of(1))).reason).toBe("ok");
+    expect((await wrapped(Uint8Array.of(1))).reason).toBe("ok");
+    expect(calls).toHaveLength(3);
+  });
+
+  it("turns a busy reader into the chips path with the model_failed notice", async () => {
+    const first = gate();
+    const wrapped = oneAtATime(() => first.done);
+    const running = wrapped(Uint8Array.of(1));
+    const out = await see(parseSeeRequest({ ...PICTURE, palette: NAVY_PLATES }), { shop, reader: wrapped, logger: SILENT_BACKEND_LOGGER });
+    expect(out).toMatchObject({ source: "palette", notice: "model_failed", matches: [] });
+    first.open(described());
+    await running;
+  });
+});
+
+describe("features.see (what the page reads before it offers a picture)", () => {
+  it("is left out when there is no photo shelf, so no entry is offered that could find nothing", () => {
+    expect(featuresFor("replay", false)).not.toHaveProperty("see");
+    expect(localInfo(false, false).features).not.toHaveProperty("see");
+  });
+
+  it("says palette on the device, and whatever the start-up probe found on the booth", () => {
+    expect(localInfo(false).features.see).toBe("palette");
+    expect(featuresFor("local", false, "model").see).toBe("model");
+    expect(featuresFor("local", false, "palette").see).toBe("palette");
   });
 });

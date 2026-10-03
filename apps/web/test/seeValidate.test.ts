@@ -25,16 +25,18 @@ describe("parseSeeRequest: the picture", () => {
     expect(out.attributes).toBeNull();
   });
 
-  it("accepts a PNG, and a picture with the colour plates", () => {
-    const out = parseSeeRequest({ image: { mime: "image/png", data: toBase64(pngBytes()) }, palette: [{ color: "navy", share: 0.6 }] });
-    expect(out.image?.mime).toBe("image/png");
+  it("accepts a picture together with the page's colour plates", () => {
+    const out = parseSeeRequest({ image: { mime: "image/jpeg", data: jpegBase64() }, palette: [{ color: "navy", share: 0.6 }] });
+    expect(out.image?.mime).toBe("image/jpeg");
     expect(out.palette).toEqual([{ color: "navy", share: 0.6 }]);
   });
 
   it.each([
-    ["a type that is not JPEG, PNG or WebP", { image: { mime: "image/gif", data: jpegBase64() } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
+    ["a type that is not JPEG", { image: { mime: "image/gif", data: jpegBase64() } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
+    ["a PNG, claimed as a PNG (the page always sends JPEG, and the model server's PNG decoder is unbounded)", { image: { mime: "image/png", data: toBase64(pngBytes()) } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
+    ["a WebP claim", { image: { mime: "image/webp", data: jpegBase64() } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
+    ["a PNG hidden under a JPEG claim", { image: { mime: "image/jpeg", data: toBase64(pngBytes()) } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
     ["bytes that are not a picture, whatever the claimed type", { image: { mime: "image/jpeg", data: toBase64(gifBytes()) } }, 415, "UNSUPPORTED_MEDIA_TYPE"],
-    ["a claimed type that is not the picture's type", { image: { mime: "image/png", data: jpegBase64() } }, 400, "INVALID_FIELD"],
     ["text that is not base64", { image: { mime: "image/jpeg", data: "not base64 at all!" } }, 400, "INVALID_FIELD"],
     ["an empty picture", { image: { mime: "image/jpeg", data: "" } }, 400, "INVALID_FIELD"],
     ["an unknown key inside image", { image: { mime: "image/jpeg", data: jpegBase64(), url: "https://example.com/x.jpg" } }, 400, "UNKNOWN_FIELD"],
@@ -43,6 +45,11 @@ describe("parseSeeRequest: the picture", () => {
     ["a huge pixel count", { image: { mime: "image/jpeg", data: toBase64(jpegBytes(30_000, 30_000)) } }, 400, "INVALID_FIELD"],
   ])("refuses %s", (_name, body, status, code) => {
     expect(refused(() => parseSeeRequest(body as never))).toEqual({ status, code });
+  });
+
+  it("checks the small fields before it decodes the picture: a bad colour is the answer, not the picture's type", () => {
+    const outcome = refused(() => parseSeeRequest({ image: { mime: "image/gif", data: jpegBase64() }, palette: [{ color: "mauve", share: 0.5 }] } as never));
+    expect(outcome).toEqual({ status: 400, code: "INVALID_FIELD" });
   });
 
   it("refuses more than 6 MB with 413 before decoding it", () => {
@@ -54,6 +61,11 @@ describe("parseSeeRequest: the picture", () => {
 });
 
 describe("parseSeeRequest: chips and colour plates", () => {
+  it("reads a fit of unknown (the model's way to say it cannot tell) as no preference, like a chip left alone", () => {
+    expect(parseSeeRequest({ attributes: { kind: "hoodie", fit: "unknown" } }).attributes?.fit).toBeNull();
+    expect(parseSeeRequest({ attributes: { kind: "hoodie", fit: "relaxed" } }).attributes?.fit).toBe("relaxed");
+  });
+
   it("fills what the chips leave out with no preference", () => {
     expect(parseSeeRequest({ attributes: { kind: "hoodie" } }).attributes).toEqual({ kind: "hoodie", colors: [], pattern: null, fit: null, style: [] });
   });

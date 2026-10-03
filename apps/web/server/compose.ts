@@ -23,7 +23,7 @@ import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
 import { buildInfo, featuresFor, type JudgeHealth, type PlannerChoice } from "../src/booth/backend/info";
 import { replayPlannerFactory, withRecordedFallback } from "../src/booth/backend/planner";
 import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
-import type { PictureReader } from "../src/booth/backend/see";
+import { oneAtATime, type PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
@@ -118,11 +118,15 @@ function compileModel(settings: BoothSettings, choice: PlannerChoice): ModelComp
   return ({ text, locale, now }) => compileMandateText({ text, locale, now, client, model: settings.plannerModel });
 }
 
-/** Reads one picture into typed words on the local Qwen server (describeImage); only when the start-up probe found vision. */
+/**
+ * Reads one picture into typed words on the local Qwen server (describeImage); only when the start-up probe found vision.
+ * One picture at a time, and never a remote server: PLANNER_ALLOW_REMOTE may let a typed request leave this Mac, a shopper's
+ * picture never leaves it (the probe already answered "palette" for a non-loopback server).
+ */
 function pictureReader(settings: BoothSettings, see: SeeMode): PictureReader | null {
   if (see !== "model") return null;
-  const client = createChatClient({ baseUrl: settings.plannerUrl, allowRemote: settings.plannerAllowRemote });
-  return (bytes) => describeImage(bytes, { client, model: settings.plannerModel });
+  const client = createChatClient({ baseUrl: settings.plannerUrl, allowRemote: false });
+  return oneAtATime((bytes) => describeImage(bytes, { client, model: settings.plannerModel }));
 }
 
 /** The replay judge serves the fixture recordings and, with a photo shelf, that shelf's recorded answers too. Other providers load nothing. */
@@ -154,7 +158,8 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const records = choice.provider === "replay" ? recorded : [];
   const planner = plannerFactory(settings, choice, table, recorded);
   const see = opts.see ?? "palette";
-  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")), see);
+  // Show Wally a photo is offered only with a photo shelf to look through.
+  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")), catalogue.shop.size > 0 ? see : undefined);
   const store = opts.store ?? new FileLogStore(settings.logDir);
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
   let keys = loadKeys();

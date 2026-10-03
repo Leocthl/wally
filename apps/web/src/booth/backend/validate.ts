@@ -3,7 +3,7 @@
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
 import { DEFAULT_PLANNER_CONFIG } from "@wally/agent/planner";
-import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_STYLES, type Color, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
+import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_STYLES, type Color, type Fit, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
 import type { CompiledRules } from "@wally/core/generated";
 import {
   SCENARIO_IDS,
@@ -110,12 +110,13 @@ export function parseAskRequest(body: JsonObject): AskRequest {
 
 // ---------- Show Wally a photo (POST /api/see) ----------
 
-/** The most colour entries the page sends: its palette keeps four. */
+/** The most colour entries the page sends: its palette keeps four [F96]. */
 export const MAX_PALETTE_ENTRIES = 6;
-const IMAGE_MIMES: readonly ImageMime[] = ["image/jpeg", "image/png", "image/webp"];
+/** JPEG only: the page always sends one (see vision/image.ts for why PNG and WebP are refused) [F96]. */
+const IMAGE_MIMES: readonly ImageMime[] = ["image/jpeg"];
 /** base64 of the largest accepted picture. */
 const MAX_IMAGE_BASE64_CHARS = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;
-/** The body cap of POST /api/see: the base64 picture plus a little for the rest of the object. */
+/** The body cap of POST /api/see: the base64 picture plus a little for the rest of the object [F96]. Every other route keeps F64's 128 KiB. */
 export const MAX_SEE_BODY_BYTES = MAX_IMAGE_BASE64_CHARS + 16 * 1024;
 
 /** A request to see(), checked: a decoded picture (or none), the page's colour plates and the shopper's chips. */
@@ -131,7 +132,7 @@ function parseImage(value: unknown): NonNullable<SeeInput["image"]> {
   if (!isObject(value)) throw badRequest("INVALID_FIELD", "image must be an object");
   onlyKeys(value, ["mime", "data"]);
   const mime = IMAGE_MIMES.find((m) => m === value["mime"]);
-  if (mime === undefined) throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG, PNG or WebP");
+  if (mime === undefined) throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG");
   const data = value["data"];
   if (typeof data !== "string" || data.length === 0) throw badRequest("INVALID_FIELD", "image.data must be a base64 string");
   if (data.length > MAX_IMAGE_BASE64_CHARS) throw new BoothError(413, "PAYLOAD_TOO_LARGE", `the picture is larger than ${MAX_IMAGE_BYTES} bytes`);
@@ -139,8 +140,8 @@ function parseImage(value: unknown): NonNullable<SeeInput["image"]> {
   if (bytes === null) throw badRequest("INVALID_FIELD", "image.data is not base64");
   const checked = checkImage(bytes);
   if (!checked.ok) {
-    if (checked.reason === "too_large") throw new BoothError(413, "PAYLOAD_TOO_LARGE", `the picture is larger than ${MAX_IMAGE_BYTES} bytes`);
-    if (checked.reason === "unsupported_type") throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG, PNG or WebP");
+    // The length check above already bounds the decoded size, so a picture over the byte cap cannot get here.
+    if (checked.reason === "unsupported_type") throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG");
     throw badRequest("INVALID_FIELD", checked.reason === "empty" ? "the picture is empty" : "the picture has no usable size");
   }
   if (checked.info.mime !== mime) throw badRequest("INVALID_FIELD", "image.mime does not match the picture");
@@ -174,6 +175,9 @@ function oneWord<T extends string>(value: unknown, key: string, known: (v: unkno
   return value;
 }
 
+/** "unknown" is how the model says it cannot tell; for the shopper's chips it is the same as no choice. */
+const noPreference = (fit: Fit | null): Exclude<Fit, "unknown"> | null => (fit === "unknown" ? null : fit);
+
 function parseSeeAttributes(value: unknown): SeeAttributes {
   if (!isObject(value)) throw badRequest("INVALID_FIELD", "attributes must be an object");
   onlyKeys(value, ["kind", "colors", "pattern", "fit", "style"]);
@@ -181,7 +185,7 @@ function parseSeeAttributes(value: unknown): SeeAttributes {
     kind: oneWord(value["kind"], "kind", isKind),
     colors: knownWords<Color>(value["colors"], "colors", isColor, MAX_COLORS),
     pattern: oneWord(value["pattern"], "pattern", isPattern),
-    fit: oneWord(value["fit"], "fit", isFit),
+    fit: noPreference(oneWord(value["fit"], "fit", isFit)),
     style: knownWords<Style>(value["style"], "style", isStyle, MAX_STYLES),
   };
 }
@@ -193,11 +197,10 @@ export function parseSeeRequest(body: JsonObject): SeeInput {
   const hasAttributes = body["attributes"] !== undefined;
   if (hasImage && hasAttributes) throw badRequest("INVALID_FIELD", "send either image or attributes, not both");
   if (!hasImage && !hasAttributes && body["palette"] === undefined) throw badRequest("INVALID_FIELD", "send an image, a palette or attributes");
-  return {
-    image: hasImage ? parseImage(body["image"]) : null,
-    palette: parsePalette(body["palette"]),
-    attributes: hasAttributes ? parseSeeAttributes(body["attributes"]) : null,
-  };
+  // The small fields first: a bad word is refused before the picture is decoded.
+  const palette = parsePalette(body["palette"]);
+  const attributes = hasAttributes ? parseSeeAttributes(body["attributes"]) : null;
+  return { image: hasImage ? parseImage(body["image"]) : null, palette, attributes };
 }
 
 export function parseAlternativesRequest(body: JsonObject): AlternativesRequest {

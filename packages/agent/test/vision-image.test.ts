@@ -4,46 +4,38 @@ import { describe, expect, it } from "vitest";
 import { checkImage, MAX_IMAGE_BYTES, MAX_IMAGE_PIXELS, sniffImage } from "../src/vision/image";
 
 const u16 = (n: number): number[] => [(n >> 8) & 0xff, n & 0xff];
-const le16 = (n: number): number[] => [n & 0xff, (n >> 8) & 0xff];
-const le24 = (n: number): number[] => [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff];
 const be32 = (n: number): number[] => [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+const le32 = (n: number): number[] => [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >>> 24) & 0xff];
 const ascii = (s: string): number[] => [...s].map((c) => c.charCodeAt(0));
 
-function jpeg(width: number, height: number, withExif = false): Uint8Array {
-  const exif = withExif ? [0xff, 0xe1, ...u16(8), ...ascii("Exif"), 0, 0] : [];
-  return Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, ...u16(16), ...ascii("JFIF"), 0, 1, 1, 0, ...u16(1), ...u16(1), 0, 0, ...exif, 0xff, 0xc0, ...u16(17), 8, ...u16(height), ...u16(width), 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1, 0xff, 0xd9]);
+/** A JPEG header by hand: JFIF, an optional EXIF block, then a frame header with the given marker (SOF0 by default). */
+function jpeg(width: number, height: number, options: { readonly exif?: boolean; readonly sof?: number; readonly fill?: boolean } = {}): Uint8Array {
+  const exif = options.exif === true ? [0xff, 0xe1, ...u16(8), ...ascii("Exif"), 0, 0] : [];
+  const fill = options.fill === true ? [0xff, 0xff] : [];
+  return Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, ...u16(16), ...ascii("JFIF"), 0, 1, 1, 0, ...u16(1), ...u16(1), 0, 0, ...exif, ...fill, 0xff, options.sof ?? 0xc0, ...u16(17), 8, ...u16(height), ...u16(width), 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1, 0xff, 0xd9]);
 }
 
-function png(width: number, height: number): Uint8Array {
-  return Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...be32(13), ...ascii("IHDR"), ...be32(width), ...be32(height), 8, 2, 0, 0, 0, 0, 0, 0, 0]);
-}
-
-function webp(kind: "VP8 " | "VP8L" | "VP8X", width: number, height: number): Uint8Array {
-  const body =
-    kind === "VP8 "
-      ? [0x30, 0x01, 0x00, 0x9d, 0x01, 0x2a, ...le16(width), ...le16(height)]
-      : kind === "VP8L"
-        ? [0x2f, ...le32bits(((width - 1) & 0x3fff) | (((height - 1) & 0x3fff) << 14))]
-        : [0, 0, 0, 0, ...le24(width - 1), ...le24(height - 1)];
-  return Uint8Array.from([...ascii("RIFF"), ...le32(body.length + 12), ...ascii("WEBP"), ...ascii(kind), ...le32(body.length), ...body]);
-}
-function le32(n: number): number[] {
-  return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >>> 24) & 0xff];
-}
-const le32bits = le32;
+const png = (width: number, height: number): Uint8Array => Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...be32(13), ...ascii("IHDR"), ...be32(width), ...be32(height), 8, 2, 0, 0, 0, 0, 0, 0, 0]);
+const webp = (width: number, height: number): Uint8Array => Uint8Array.from([...ascii("RIFF"), ...le32(30), ...ascii("WEBP"), ...ascii("VP8 "), ...le32(18), 0x30, 0x01, 0x00, 0x9d, 0x01, 0x2a, width & 0xff, (width >> 8) & 0xff, height & 0xff, (height >> 8) & 0xff, 0, 0, 0, 0, 0, 0]);
 
 describe("sniffImage", () => {
-  it("reads a JPEG's size, with or without an EXIF block in front of the frame header", () => {
+  it("reads a JPEG's size, with or without an EXIF block or fill bytes in front of the frame header", () => {
     expect(sniffImage(jpeg(768, 1024))).toEqual({ mime: "image/jpeg", width: 768, height: 1024 });
-    expect(sniffImage(jpeg(640, 480, true))).toEqual({ mime: "image/jpeg", width: 640, height: 480 });
+    expect(sniffImage(jpeg(640, 480, { exif: true }))).toEqual({ mime: "image/jpeg", width: 640, height: 480 });
+    expect(sniffImage(jpeg(640, 480, { exif: true, fill: true }))).toEqual({ mime: "image/jpeg", width: 640, height: 480 });
   });
 
-  it("reads a PNG's size", () => {
-    expect(sniffImage(png(1024, 683))).toEqual({ mime: "image/png", width: 1024, height: 683 });
+  it("takes the three frame types the model server's decoder can read: baseline, extended and progressive", () => {
+    for (const sof of [0xc0, 0xc1, 0xc2]) expect(sniffImage(jpeg(100, 50, { sof })), `SOF${sof - 0xc0}`).toEqual({ mime: "image/jpeg", width: 100, height: 50 });
   });
 
-  it.each(["VP8 ", "VP8L", "VP8X"] as const)("reads a WebP (%s) size", (kind) => {
-    expect(sniffImage(webp(kind, 800, 600))).toEqual({ mime: "image/webp", width: 800, height: 600 });
+  it("refuses the frame types it cannot read: lossless, differential and arithmetic-coded JPEGs", () => {
+    for (const sof of [0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]) expect(sniffImage(jpeg(100, 50, { sof })), `SOF${sof - 0xc0}`).toBeNull();
+  });
+
+  it("does not accept PNG or WebP: the page always sends JPEG, and the model server's PNG decoder has no cap on how far a small file may inflate", () => {
+    expect(sniffImage(png(1024, 683))).toBeNull();
+    expect(sniffImage(webp(800, 600))).toBeNull();
   });
 
   it("does not trust anything but the bytes: GIF, SVG, text, HEIC and empty input are not accepted types", () => {
@@ -56,8 +48,6 @@ describe("sniffImage", () => {
 
   it("returns null for a header cut short instead of throwing", () => {
     expect(sniffImage(jpeg(100, 100).slice(0, 12))).toBeNull();
-    expect(sniffImage(png(100, 100).slice(0, 20))).toBeNull();
-    expect(sniffImage(webp("VP8X", 100, 100).slice(0, 22))).toBeNull();
     expect(sniffImage(Uint8Array.from([0xff, 0xd8]))).toBeNull();
   });
 
@@ -74,9 +64,14 @@ describe("checkImage", () => {
   it("refuses empty input, a wrong type, a zero size and a huge pixel count", () => {
     expect(checkImage(new Uint8Array(0))).toEqual({ ok: false, reason: "empty" });
     expect(checkImage(Uint8Array.from(ascii("hello world, not a picture")))).toEqual({ ok: false, reason: "unsupported_type" });
-    expect(checkImage(png(0, 10))).toEqual({ ok: false, reason: "bad_dimensions" });
+    expect(checkImage(jpeg(0, 10))).toEqual({ ok: false, reason: "bad_dimensions" });
     const wide = Math.ceil(Math.sqrt(MAX_IMAGE_PIXELS)) + 10;
-    expect(checkImage(png(wide, wide))).toEqual({ ok: false, reason: "bad_dimensions" });
+    expect(checkImage(jpeg(wide, wide))).toEqual({ ok: false, reason: "bad_dimensions" });
+  });
+
+  it("refuses PNG and WebP as an unsupported type, whatever their size", () => {
+    expect(checkImage(png(64, 64))).toEqual({ ok: false, reason: "unsupported_type" });
+    expect(checkImage(webp(64, 64))).toEqual({ ok: false, reason: "unsupported_type" });
   });
 
   it("refuses more than 6 MB before reading any header", () => {

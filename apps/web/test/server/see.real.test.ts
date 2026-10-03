@@ -119,6 +119,32 @@ describe.skipIf(!REAL)("Show Wally a photo on the real stack", () => {
     expect(lines.join("\n")).not.toContain(PICTURE.image.data.slice(0, 40));
   });
 
+  it("reads one picture at a time: a second picture while the model is busy goes to the colour plates and the chips, and costs no model call", async () => {
+    const booth = await boot("model");
+    llama.set({ answer: (): string => JSON.stringify(SEEN), delayMs: 250 });
+    const [a, b] = await Promise.all([post(booth, "/api/see", PICTURE), post(booth, "/api/see", PICTURE)]);
+    const results = [(await a.json()) as SeeResult, (await b.json()) as SeeResult];
+    expect(results.filter((r) => r.source === "model")).toHaveLength(1);
+    expect(results.filter((r) => r.source === "palette" && r.notice === "model_failed")).toHaveLength(1);
+    expect(llama.requests()).toHaveLength(1);
+    // The guard is free again once the read ends.
+    llama.set({ answer: (): string => JSON.stringify(SEEN), delayMs: 0 });
+    expect(((await (await post(booth, "/api/see", PICTURE)).json()) as SeeResult).source).toBe("model");
+  });
+
+  it("a picture reader cannot be pointed at a server that is not on this Mac, even with PLANNER_ALLOW_REMOTE=1 (the booth refuses to start rather than send the picture away)", () => {
+    expect(() =>
+      composeBooth({
+        env: { JUDGE_PROVIDER: "replay", PLANNER_PROVIDER: "replay", PLANNER_BASE_URL: "http://192.0.2.7:8809", PLANNER_ALLOW_REMOTE: "1" },
+        store: new MemoryLogStore(),
+        keys: ephemeralKeys,
+        tickMs: null,
+        warmUp: false,
+        see: "model",
+      }),
+    ).toThrow(/loopback/);
+  });
+
   it("a pick over HTTP buys through the normal pipeline: one decision, one card for the exact total, paid", async () => {
     const booth = await boot("palette");
     const res = await post(booth, "/api/ask", { requestText: "Navy relaxed hoodie, Demo Outlet", locale: "en", listingId: "lst_photoHoodieNavy" });
@@ -145,7 +171,7 @@ describe.skipIf(!REAL)("Show Wally a photo on the real stack", () => {
 });
 
 describe("probeVision (asked once at start)", () => {
-  const settings = (url: string, remote = false) => ({ plannerUrl: url, plannerAllowRemote: remote });
+  const settings = (url: string) => ({ plannerUrl: url });
   const answering = (body: unknown, init: ResponseInit = {}): typeof fetch => (async () => new Response(JSON.stringify(body), { status: 200, ...init })) as unknown as typeof fetch;
 
   it("is model when the server reports vision", async () => {
@@ -162,12 +188,20 @@ describe("probeVision (asked once at start)", () => {
     expect(await probeVision(settings("http://127.0.0.1:8809"), 1_000, fetchImpl)).toBe("palette");
   });
 
-  it("is palette for a host that is not loopback unless remote is allowed, and for user info in the url", async () => {
+  it("is palette for a host that is not loopback, whatever PLANNER_ALLOW_REMOTE says (a picture never leaves this Mac), and for user info in the url", async () => {
     const yes = answering({ modalities: { vision: true } });
     expect(await probeVision(settings("http://192.168.1.9:8809"), 1_000, yes)).toBe("palette");
-    expect(await probeVision(settings("http://192.168.1.9:8809", true), 1_000, yes)).toBe("model");
+    expect(await probeVision(settings("http://example.com:8809"), 1_000, yes)).toBe("palette");
     expect(await probeVision(settings("http://user:pw@127.0.0.1:8809"), 1_000, yes)).toBe("palette");
     expect(await probeVision(settings("file:///etc/hosts"), 1_000, yes)).toBe("palette");
+  });
+
+  it("does not leave an unread body behind on an HTTP error", async () => {
+    let cancelled = false;
+    const body = new ReadableStream({ cancel: () => void (cancelled = true) });
+    const failing = (async () => new Response(body, { status: 503 })) as unknown as typeof fetch;
+    expect(await probeVision(settings("http://127.0.0.1:8809"), 1_000, failing)).toBe("palette");
+    expect(cancelled).toBe(true);
   });
 
   it("is palette for a server that does not answer in time", async () => {

@@ -2,7 +2,7 @@
 // logic and the mock llama-server for the wire shape. The photo reader never throws and never lets a bad file reach
 // the model server.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { createChatClient, type ChatClient, type ChatFailure, type ChatRequest, type ChatResult } from "../src/planner/local";
+import { buildChatBody, createChatClient, type ChatClient, type ChatFailure, type ChatRequest, type ChatResult } from "../src/planner/local";
 import { fromBase64, toBase64 } from "../src/vision/base64";
 import { DEFAULT_DESCRIBE_TIMEOUT_MS, describeImage } from "../src/vision/describe";
 import { MAX_IMAGE_BYTES } from "../src/vision/image";
@@ -91,7 +91,8 @@ describe("describeImage", () => {
       },
     };
     const out = await describeImage(JPEG, { client: throwing });
-    expect(out).toMatchObject({ attributes: null, reason: "model_unavailable" });
+    // No failure word: every failure of the model call carries one, so a bare reason says "something inside broke".
+    expect(out).toMatchObject({ attributes: null, reason: "model_unavailable", failure: null });
     expect(JSON.stringify(out)).not.toMatch(/secret/);
     await expect(describeImage(null as unknown as Uint8Array, { client: fakeClient(ok(ANSWER)) })).resolves.toMatchObject({ attributes: null });
   });
@@ -152,10 +153,18 @@ describe("on the wire (mock llama-server)", () => {
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
   });
 
-  it("a text-only request is byte for byte what it was before pictures existed", async () => {
-    await createChatClient({ baseUrl: mock.url }).complete({ model: "m", messages: [{ role: "user", content: "hi" }], schemaName: "s", schema: {}, maxTokens: 5, seed: 1 }, 2_000);
-    const body = JSON.parse(mock.requests()[0]?.rawBody ?? "{}") as { messages: { content: unknown }[] };
-    expect(body.messages[0]?.content).toBe("hi");
+  it("a text-only request is byte for byte what it was before pictures existed (the planner and the compiler send these)", async () => {
+    // The body the builder wrote before this lane added the optional picture, whole: key order, spacing and all.
+    const BEFORE = '{"model":"m","messages":[{"role":"system","content":"sys"},{"role":"user","content":"hi"}],"temperature":0,"top_k":1,"seed":1,"max_tokens":5,"stream":false,"chat_template_kwargs":{"enable_thinking":false},"response_format":{"type":"json_schema","json_schema":{"name":"s","strict":true,"schema":{"type":"object"}}}}';
+    const request = { model: "m", messages: [{ role: "system", content: "sys" }, { role: "user", content: "hi" }] as const, schemaName: "s", schema: { type: "object" }, maxTokens: 5, seed: 1 };
+    expect(buildChatBody({ ...request, messages: [...request.messages] })).toBe(BEFORE);
+    await createChatClient({ baseUrl: mock.url }).complete({ ...request, messages: [...request.messages] }, 2_000);
+    expect(mock.requests()[0]?.rawBody).toBe(BEFORE);
+  });
+
+  it("refuses to build a request with a picture and no user message to carry it, instead of dropping the picture", () => {
+    const request = { model: "m", messages: [{ role: "system" as const, content: "sys" }], schemaName: "s", schema: {}, maxTokens: 5, seed: 1, image: { mime: "image/jpeg" as const, base64: "AAAA" } };
+    expect(() => buildChatBody(request)).toThrow(TypeError);
   });
 
   it("times out on a server that never answers, as no description", async () => {

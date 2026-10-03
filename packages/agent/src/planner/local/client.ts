@@ -69,6 +69,7 @@ function messageContent(text: string, image: ChatImage | undefined): string | re
 /** Request body bytes: the same request always gives the same bytes (fixed key order, no clock, no random). */
 export function buildChatBody(request: ChatRequest): string {
   const pictureAt = request.image === undefined ? -1 : request.messages.map((m) => m.role).lastIndexOf("user");
+  if (request.image !== undefined && pictureAt < 0) throw new TypeError("a picture rides with a user message, and this request has none"); // a coding error, never a shopper's input
   return JSON.stringify({
     model: request.model,
     messages: request.messages.map((m, index) => ({ role: m.role, content: messageContent(m.content, index === pictureAt ? request.image : undefined) })),
