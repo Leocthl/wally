@@ -3,6 +3,7 @@
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
 import { DEFAULT_PLANNER_CONFIG } from "@wally/agent/planner";
+import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_LIMIT_DOLLARS, MAX_STYLES, type Color, type Fit, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
 import type { CompiledRules } from "@wally/core/generated";
 import {
   SCENARIO_IDS,
@@ -15,6 +16,7 @@ import {
   type ProposeRequest,
   type ScenarioId,
   type SealRequest,
+  type SeeAttributes,
 } from "../../api/types";
 import { badRequest, BoothError } from "./errors";
 
@@ -93,12 +95,133 @@ function locale(body: JsonObject, required: boolean): AskLocale | undefined {
   return value;
 }
 
-/** requestText comes back NFKC-normalised, as the planners read it. */
+/** mandate.schema.json ListingId. */
+const LISTING_ID_RE = /^lst_[A-Za-z0-9]{3,40}$/;
+
+/** requestText comes back NFKC-normalised, as the planners read it. `listingId` is a photo pick (a listing id, checked by the backend). */
 export function parseAskRequest(body: JsonObject): AskRequest {
-  onlyKeys(body, ["requestText", "locale"]);
+  onlyKeys(body, ["requestText", "locale", "listingId"]);
   const requestText = sentence(body, "requestText", MAX_REQUEST_CHARS);
   const chosen = locale(body, false);
-  return { requestText, ...(chosen === undefined ? {} : { locale: chosen }) };
+  const listingId = body["listingId"];
+  if (listingId !== undefined && (typeof listingId !== "string" || !LISTING_ID_RE.test(listingId))) throw badRequest("INVALID_FIELD", "listingId is not a listing id");
+  return { requestText, ...(chosen === undefined ? {} : { locale: chosen }), ...(typeof listingId === "string" ? { listingId } : {}) };
+}
+
+// ---------- Show Wally a photo (POST /api/see) ----------
+
+/** The most colour entries the page sends: its palette keeps four [F105]. */
+export const MAX_PALETTE_ENTRIES = 6;
+/** JPEG only: the page always sends one (see vision/image.ts for why PNG and WebP are refused) [F105]. */
+const IMAGE_MIMES: readonly ImageMime[] = ["image/jpeg"];
+/** base64 of the largest accepted picture. */
+const MAX_IMAGE_BASE64_CHARS = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;
+/** The body cap of POST /api/see: the base64 picture plus a little for the rest of the object [F105]. Every other route keeps F64's 128 KiB. */
+export const MAX_SEE_BODY_BYTES = MAX_IMAGE_BASE64_CHARS + 16 * 1024;
+
+/** A request to see(), checked: a decoded picture (or none), the page's colour plates and the shopper's chips. */
+export interface SeeInput {
+  readonly image: { readonly bytes: Uint8Array; readonly mime: ImageMime } | null;
+  readonly palette: readonly PaletteEntry[];
+  readonly attributes: SeeAttributes | null;
+  /** The shopper's own words, NFKC-normalised; null when a picture or chips came. */
+  readonly text: string | null;
+  /** The price limit the chips carry (integer minor units); null: none. */
+  readonly maxPriceMinor: number | null;
+}
+
+/** The most a price limit may be, in minor units: HK$99,999 [F105], the same bound the words are read with. */
+const MAX_LIMIT_MINOR = MAX_LIMIT_DOLLARS * 100;
+
+const isObject = (value: unknown): value is JsonObject => value !== null && typeof value === "object" && !Array.isArray(value);
+
+function parseImage(value: unknown): NonNullable<SeeInput["image"]> {
+  if (!isObject(value)) throw badRequest("INVALID_FIELD", "image must be an object");
+  onlyKeys(value, ["mime", "data"]);
+  const mime = IMAGE_MIMES.find((m) => m === value["mime"]);
+  if (mime === undefined) throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG");
+  const data = value["data"];
+  if (typeof data !== "string" || data.length === 0) throw badRequest("INVALID_FIELD", "image.data must be a base64 string");
+  if (data.length > MAX_IMAGE_BASE64_CHARS) throw new BoothError(413, "PAYLOAD_TOO_LARGE", `the picture is larger than ${MAX_IMAGE_BYTES} bytes`);
+  const bytes = fromBase64(data);
+  if (bytes === null) throw badRequest("INVALID_FIELD", "image.data is not base64");
+  const checked = checkImage(bytes);
+  if (!checked.ok) {
+    // The length check above already bounds the decoded size, so a picture over the byte cap cannot get here.
+    if (checked.reason === "unsupported_type") throw new BoothError(415, "UNSUPPORTED_MEDIA_TYPE", "the picture must be a JPEG");
+    throw badRequest("INVALID_FIELD", checked.reason === "empty" ? "the picture is empty" : "the picture has no usable size");
+  }
+  if (checked.info.mime !== mime) throw badRequest("INVALID_FIELD", "image.mime does not match the picture");
+  return { bytes, mime };
+}
+
+function parsePalette(value: unknown): readonly PaletteEntry[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_PALETTE_ENTRIES) throw badRequest("INVALID_FIELD", `palette must be a list of at most ${MAX_PALETTE_ENTRIES} colours`);
+  const entries = value.map((entry): PaletteEntry => {
+    if (!isObject(entry)) throw badRequest("INVALID_FIELD", "palette entries must be objects");
+    onlyKeys(entry, ["color", "share"]);
+    const color = entry["color"];
+    const share = entry["share"];
+    if (!isColor(color)) throw badRequest("INVALID_FIELD", "palette.color is not a known colour");
+    if (typeof share !== "number" || !Number.isFinite(share) || share <= 0 || share > 1) throw badRequest("INVALID_FIELD", "palette.share must be above 0 and at most 1");
+    return { color, share: Math.round(share * 1000) / 1000 };
+  });
+  return entries.filter((e, i) => entries.findIndex((o) => o.color === e.color) === i).sort((a, b) => b.share - a.share);
+}
+
+function knownWords<T extends string>(value: unknown, key: string, known: (v: unknown) => v is T, max: number): readonly T[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > max || !value.every(known)) throw badRequest("INVALID_FIELD", `${key} must be at most ${max} known words`);
+  return value.filter((w, i) => value.indexOf(w) === i);
+}
+
+function oneWord<T extends string>(value: unknown, key: string, known: (v: unknown) => v is T): T | null {
+  if (value === undefined || value === null) return null;
+  if (!known(value)) throw badRequest("INVALID_FIELD", `${key} is not a known word`);
+  return value;
+}
+
+/** "unknown" is how the model says it cannot tell; for the shopper's chips it is the same as no choice. */
+const noPreference = (fit: Fit | null): Exclude<Fit, "unknown"> | null => (fit === "unknown" ? null : fit);
+
+function parseSeeAttributes(value: unknown): SeeAttributes {
+  if (!isObject(value)) throw badRequest("INVALID_FIELD", "attributes must be an object");
+  onlyKeys(value, ["kind", "colors", "pattern", "fit", "style"]);
+  return {
+    kind: oneWord(value["kind"], "kind", isKind),
+    colors: knownWords<Color>(value["colors"], "colors", isColor, MAX_COLORS),
+    pattern: oneWord(value["pattern"], "pattern", isPattern),
+    fit: noPreference(oneWord(value["fit"], "fit", isFit)),
+    style: knownWords<Style>(value["style"], "style", isStyle, MAX_STYLES),
+  };
+}
+
+function parseLimit(value: unknown): number | null {
+  if (value === undefined) return null;
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1 || value > MAX_LIMIT_MINOR) throw badRequest("INVALID_FIELD", `maxPriceMinor must be a whole number of minor units from 1 to ${MAX_LIMIT_MINOR}`);
+  return value;
+}
+
+/**
+ * Exactly one of a picture, chips or the shopper's words, plus the colour plates when the page has them (with a picture or
+ * chips) and the price limit the chips carry. Unknown keys and words are refused.
+ */
+export function parseSeeRequest(body: JsonObject): SeeInput {
+  onlyKeys(body, ["image", "palette", "attributes", "text", "maxPriceMinor"]);
+  const hasImage = body["image"] !== undefined;
+  const hasAttributes = body["attributes"] !== undefined;
+  const hasText = body["text"] !== undefined;
+  if (Number(hasImage) + Number(hasAttributes) + Number(hasText) > 1) throw badRequest("INVALID_FIELD", "send one of image, attributes or text");
+  if (!hasImage && !hasAttributes && !hasText && body["palette"] === undefined) throw badRequest("INVALID_FIELD", "send an image, a palette, attributes or text");
+  if (hasText && body["palette"] !== undefined) throw badRequest("INVALID_FIELD", "text does not come with a palette");
+  if (body["maxPriceMinor"] !== undefined && !hasAttributes) throw badRequest("INVALID_FIELD", "maxPriceMinor goes with attributes");
+  // The small fields first: a bad word is refused before the picture is decoded.
+  const palette = parsePalette(body["palette"]);
+  const attributes = hasAttributes ? parseSeeAttributes(body["attributes"]) : null;
+  const maxPriceMinor = parseLimit(body["maxPriceMinor"]);
+  const text = hasText ? sentence(body, "text", MAX_REQUEST_CHARS) : null;
+  return { image: hasImage ? parseImage(body["image"]) : null, palette, attributes, text, maxPriceMinor };
 }
 
 export function parseAlternativesRequest(body: JsonObject): AlternativesRequest {

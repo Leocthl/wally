@@ -4,6 +4,7 @@
 import type { CardRecord, Cart, CompiledRules, Decision, LogEntry, Mandate, MandateCredential, PacketState } from "@wally/core/generated";
 import type { ParentSummary } from "@wally/core/family";
 import type { CardEvent, Checkpoint, JudgeRecord, TemplateId, VerifyFailure, VerifyResult } from "@wally/core/ports";
+import type { Color, Fit, ImageMime, Kind, Pattern, PaletteEntry, ReasonId, Style } from "@wally/agent/vision";
 
 export type { CardEvent, CardRecord, Cart, CompiledRules, Decision, JudgeRecord, LogEntry, Mandate, PacketState, TemplateId };
 
@@ -142,6 +143,77 @@ export interface AskRequest {
   /** What the shopper wants, in their own words. At most 1,000 characters after NFKC [F56]. Untrusted. */
   readonly requestText: string;
   readonly locale?: AskLocale;
+  /**
+   * Show Wally a photo: the photo-shelf item the shopper picked from the matches (see()). The planner's proposal is then fixed
+   * by code, since the shopper chose the item; the judge, the rules and the one-off card work exactly as for any ask.
+   */
+  readonly listingId?: string;
+}
+
+/** The picture sent to see(): re-encoded by the page (JPEG, at most 1024 px, no metadata). base64 without the data: prefix. */
+export interface SeeImage {
+  readonly mime: ImageMime;
+  readonly data: string;
+}
+
+/** What a picture, or the chips the shopper set, say about the item. Missing parts mean no preference. */
+export interface SeeAttributes {
+  readonly kind: Kind | null;
+  /** Most dominant first, at most 3. */
+  readonly colors: readonly Color[];
+  readonly pattern: Pattern | null;
+  readonly fit: Fit | null;
+  /** At most 2. */
+  readonly style: readonly Style[];
+}
+
+/**
+ * Show Wally a picture, or tell Wally in words. One of: `image` (the local model reads it when features.see is "model",
+ * then the colour plates are used), `attributes` (the shopper edited the chips: matches are rebuilt from them, nothing is
+ * read) or `text` (the shopper's own words, read by fixed keyword tables in English or Traditional Chinese: no model, the
+ * same answer on every host). `palette` is the dominant colours the page worked out from the pixels; it is the colour
+ * source when no model reads the picture. `maxPriceMinor` rides with `attributes`: the price limit a typed request named,
+ * kept while the chips change.
+ */
+export interface SeeRequest {
+  readonly image?: SeeImage;
+  readonly palette?: readonly PaletteEntry[];
+  readonly attributes?: Partial<SeeAttributes>;
+  readonly text?: string;
+  readonly maxPriceMinor?: number;
+}
+
+/** One simulated shop item that looks like the picture. The screen words the name and the reasons in its own language. */
+export interface ShopMatch {
+  readonly listingId: string;
+  readonly kind: Kind;
+  readonly colors: readonly Color[];
+  readonly pattern: Pattern;
+  readonly fit: Fit;
+  readonly style: readonly Style[];
+  readonly merchantName: string;
+  /** The item's price, and with shipping the total a card would be made for. Integer minor units, SIMULATED. */
+  readonly priceMinor: number;
+  readonly totalMinor: number;
+  /** 0 to 100. */
+  readonly score: number;
+  readonly reasons: readonly ReasonId[];
+}
+
+export interface SeeResult {
+  /** Where `attributes` came from: the local model read the picture, only the colour plates were used, the shopper's chips, or the shopper's words. */
+  readonly source: "model" | "palette" | "chips" | "text";
+  readonly attributes: SeeAttributes;
+  readonly palette: readonly PaletteEntry[];
+  /** The best four, best first. Empty when no kind is known yet (pick one on the chips), the shop has nothing like it, or nothing costs less than the limit. */
+  readonly matches: readonly ShopMatch[];
+  /** The price limit the matches respect (from the words, or kept from the chips), integer minor units; absent: none. */
+  readonly maxPriceMinor?: number;
+  /**
+   * not_clothing: the model saw nothing to wear. model_failed: it was asked and could not answer (the chips still work).
+   * nothing_found: the words named no kind the shop sells. not_sold: they named a product the shop does not sell (earbuds, a gift card).
+   */
+  readonly notice?: "not_clothing" | "model_failed" | "nothing_found" | "not_sold";
 }
 
 /** "See cheaper options": the decision a budget stop (R3, R4) gave. */
@@ -225,6 +297,11 @@ export interface ApiFeatures {
   readonly compile: "model" | "rules";
   /** Family budget: SealRequest.family and family() work, and the family_ok and family_over scenarios exist. Off hides the feature. */
   readonly family: boolean;
+  /**
+   * Show Wally a photo: "model" = the local model reads the picture into typed words, "palette" = only the colour plates and the
+   * item-type chips (always works). Absent = "palette". The photo entry is offered either way when the client has see().
+   */
+  readonly see?: "model" | "palette";
 }
 
 export interface ApiInfo {
@@ -239,6 +316,8 @@ export interface ApiInfo {
   readonly sessions?: "shared" | "private";
   /** The one OBSERVED decline for the REAL toggle. null until data/real-card-test.md holds one. */
   readonly realCapture: RealCapture | null;
+  /** On-device mode only: this page keeps the session in the browser's storage until the demo is started over (src/api/local/persist). Absent: it does not. */
+  readonly remembers?: boolean;
 }
 
 /** data/public-keys.json shape, for the keys the backend signs with right now. */
@@ -284,6 +363,8 @@ export interface ApiClient {
   ask?(req: AskRequest): Promise<RunSummary>;
   /** "See cheaper options" after a budget stop. Check info().features.alternatives. */
   suggestAlternatives?(req: AlternativesRequest): Promise<RunSummary>;
+  /** Show Wally a photo: a picture (or the chips) in, a few typed words and four similar simulated shop items out. Reads, buys and seals nothing. */
+  see?(req: SeeRequest): Promise<SeeResult>;
   /** Sentence to rule chips for the Seal screen; a suggestion only, never sealed here. */
   compileRules?(req: CompileRulesRequest): Promise<CompileResult>;
   /** The stored log and keys for the offline verifier (Receipts > Export). Offered by the booth server and the on-device client. */

@@ -5,8 +5,8 @@
 
 export const TOKEN_KEY = "wally:token";
 export const SERVER_KEY = "wally:server";
-/** The practice-wallet id of a client that keeps no cookie (the native shells), kept beside the pairing token. */
-export const SESSION_KEY = "wally:session";
+/** The practice-wallet id of a client that keeps no cookie (the native shells), kept beside the pairing token. Not the on-device session record (`wally:session:v1`, src/api/local/persist). */
+export const WALLET_KEY = "wally:wallet";
 /** Request header the booth server reads (server/http/lan.ts). */
 export const TOKEN_HEADER = "X-Wally-Token";
 /** Request and response header of the practice-wallet id (server/http/sessionWire.ts). A browser page never uses it: its id is an HttpOnly cookie. */
@@ -107,7 +107,7 @@ export function readToken(stores: ConnectionStores = browserStores()): string | 
 
 /** The practice-wallet id this client holds (only a client the server told one in a header has any), session storage first. */
 export function readSessionId(stores: ConnectionStores = browserStores()): string | null {
-  const found = read(stores.session, SESSION_KEY) ?? read(stores.local, SESSION_KEY);
+  const found = read(stores.session, WALLET_KEY) ?? read(stores.local, WALLET_KEY);
   return found !== null && SESSION_SHAPE.test(found) ? found : null;
 }
 
@@ -115,8 +115,8 @@ export function readSessionId(stores: ConnectionStores = browserStores()): strin
 export function saveSessionId(id: string, stores: ConnectionStores = browserStores()): void {
   if (!SESSION_SHAPE.test(id)) return;
   const native = read(stores.session, TOKEN_KEY) === null && read(stores.local, TOKEN_KEY) !== null;
-  write(native ? stores.local : stores.session, SESSION_KEY, id);
-  drop(native ? stores.session : stores.local, SESSION_KEY);
+  write(native ? stores.local : stores.session, WALLET_KEY, id);
+  drop(native ? stores.session : stores.local, WALLET_KEY);
 }
 
 /**
@@ -184,6 +184,6 @@ export function clearConnection(stores: ConnectionStores = browserStores()): voi
 }
 
 function dropSession(stores: ConnectionStores): void {
-  drop(stores.local, SESSION_KEY);
-  drop(stores.session, SESSION_KEY);
+  drop(stores.local, WALLET_KEY);
+  drop(stores.session, WALLET_KEY);
 }

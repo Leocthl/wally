@@ -7,11 +7,12 @@ import { loadReplayRecordings, ReplayJudge } from "@wally/agent/judge";
 import { loadReplayRecords } from "@wally/agent/planner";
 import type { JudgeInput, JudgeRecord } from "@wally/core/ports";
 import { describe, expect, it } from "vitest";
-import { loadCatalogue } from "../server/booth/catalogue";
+import { loadCatalogue, loadShopRecordings, loadTrickRecordings } from "../server/booth/catalogue";
 import { loadScenarioTable } from "../server/booth/scenarioTable";
 import { REPO_ROOT } from "../server/booth/settings";
 import { loadBundle } from "../src/api/local/bundle";
-import { judgeRecordingsFrom, RecordingLoadError } from "../src/api/local/recordings";
+import { judgeRecordingsFrom, RecordingLoadError, shopRecordingsFrom, trickRecordingsFrom } from "../src/api/local/recordings";
+import { TRICK_EXAMPLES } from "../src/booth/trickExamples";
 import { LocalReplayJudge } from "../src/api/local/replayJudge";
 
 const FIXTURES = join(REPO_ROOT, "data/fixtures");
@@ -41,6 +42,41 @@ describe("bundled on-device data equals the files the server reads", () => {
 
   it("judge recordings: same fingerprints, records and sources as loadReplayRecordings", () => {
     expect(BUNDLE.judgeRecordings).toEqual(loadReplayRecordings(FIXTURES));
+  });
+
+  it("the photo shelf's recordings: the page and the server read the same answers for the same 33 texts", () => {
+    const disk = loadCatalogue(FIXTURES, DISK_TABLE);
+    expect(BUNDLE.shopRecordings).toHaveLength(33);
+    expect(BUNDLE.shopRecordings).toEqual(loadShopRecordings(FIXTURES, disk));
+  });
+
+  it("the three trick examples' recordings: the page and the server read the same answers, each keyed by its own text", () => {
+    expect(BUNDLE.trickRecordings).toHaveLength(3);
+    expect(BUNDLE.trickRecordings).toEqual(loadTrickRecordings(FIXTURES));
+    expect(new Set(BUNDLE.trickRecordings.map((r) => r.fingerprint)).size).toBe(3);
+    for (const r of BUNDLE.trickRecordings) expect(r.record.status).toBe("OK");
+  });
+
+  it("refuses a trick-example recording file that does not fit its examples (fail closed)", () => {
+    const file = (records: unknown[]) => ({ provenance: "SIMULATED", schema: "trick-examples-judge", data: { records } });
+    const [good] = BUNDLE.trickRecordings;
+    const row = { example: "hidden_orders", text_sha256: good?.fingerprint, record: good?.record };
+    expect(() => trickRecordingsFrom(null, TRICK_EXAMPLES)).toThrow(RecordingLoadError);
+    expect(() => trickRecordingsFrom({ provenance: "SIMULATED", schema: "photo-shelf-judge", data: { records: [] } }, TRICK_EXAMPLES)).toThrow(RecordingLoadError);
+    expect(() => trickRecordingsFrom(file([null]), TRICK_EXAMPLES)).toThrow(/not an object/);
+    expect(() => trickRecordingsFrom(file([{ ...row, example: "nobody" }]), TRICK_EXAMPLES)).toThrow(/no such example/);
+    expect(() => trickRecordingsFrom(file([{ ...row, text_sha256: "0".repeat(64) }]), TRICK_EXAMPLES)).toThrow(/other text/);
+    expect(() => trickRecordingsFrom(file([row]), TRICK_EXAMPLES)).toThrow(/no judge answer for gift_card, padded/);
+  });
+
+  it("refuses a shelf recording file that is not what it says it is (fail closed)", () => {
+    const shop = BUNDLE.catalogue.shop;
+    const envelope = (records: unknown[]) => ({ provenance: "SIMULATED", schema: "photo-shelf-judge", data: { records } });
+    expect(() => shopRecordingsFrom(null, shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom({ provenance: "OBSERVED", schema: "photo-shelf-judge", data: { records: [] } }, shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom(envelope([null]), shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom(envelope([{ listing: "lst_nobodyHome" }]), shop)).toThrow(/no such photo-shelf item/);
+    expect(() => shopRecordingsFrom(envelope([]), shop)).toThrow(/no judge answer for/);
   });
 
   it("refuses a recording that is not an OK record, or that has no listing to fingerprint (fail closed)", () => {

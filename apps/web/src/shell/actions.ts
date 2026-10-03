@@ -1,7 +1,7 @@
 // Shell actions over the booth: every call goes through booth.exec, so a failure shows the shell's message and mints
 // nothing (I5). attempt() also says whether the call went through, for the success toast or the next step.
 import { useCallback, useMemo } from "react";
-import type { ScenarioId } from "../api/types";
+import type { RunSummary, ScenarioId } from "../api/types";
 import { useBoothContext, type Booth } from "../hooks/useBooth";
 import { navigate, PARAM } from "../hooks/useRoute";
 import { STAYS_ON_BUDGET } from "../screens/home/tryCatalog";
@@ -66,27 +66,30 @@ export function useProposer(): (listingText: string) => void {
 
 /**
  * Ask Wally in the shopper's own words: the text goes to api.ask with the screen language and Wally's screen shows the
- * run. undefined when this booth cannot take a typed ask (info.features.ask is off, or the client has no ask), so the
+ * run. Resolves with the run once it has ended (undefined if the call failed, which the shell has already said).
+ * undefined when this booth cannot take a typed ask (info.features.ask is off, or the client has no ask), so the
  * Ask sheet shows no field.
  */
-export function useAsker(): ((requestText: string) => void) | undefined {
+export function useAsker(): ((requestText: string) => Promise<RunSummary | undefined>) | undefined {
   const { api, info, exec } = useBoothContext();
   const { locale } = useLocale();
   const ask = api.ask;
   const available = info?.features?.ask === true && typeof ask === "function";
   return useMemo(() => {
     if (!available || !ask) return undefined;
-    return (requestText: string): void => {
+    return async (requestText: string): Promise<RunSummary | undefined> => {
       navigate("wally");
-      void exec(async () => {
+      let run: RunSummary | undefined;
+      await exec(async () => {
         try {
-          await ask.call(api, { requestText, locale });
+          run = await ask.call(api, { requestText, locale });
         } catch (err) {
           // The caller noted these words for a run that never started: drop them, so the next run does not wear them.
           noteAsk("");
           throw err;
         }
       });
+      return run;
     };
   }, [available, ask, api, exec, locale]);
 }

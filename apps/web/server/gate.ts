@@ -55,8 +55,12 @@ export class Gate {
   }
 }
 
-/** The operations that reach a shared model (the planner, the judge, the sentence reader, the picture reader). The rest are fast and local. */
-const MODEL_OPERATIONS: ReadonlySet<string | symbol> = new Set(["runScenario", "propose", "ask", "suggestAlternatives", "answerEscalation", "compileRules", "see"]);
+/**
+ * The operations that run the planner and the judge, or read a sentence with the model. The rest are fast and local.
+ * Reading a picture is not here: it has its own guard (one at a time for the whole booth, the next picture gets the colour
+ * plates at once), and a slow read must not hold up the decisions of the visitors behind it.
+ */
+const MODEL_OPERATIONS: ReadonlySet<string | symbol> = new Set(["runScenario", "propose", "ask", "suggestAlternatives", "answerEscalation", "compileRules"]);
 
 /** The same backend, whose model-reaching operations wait their turn in `gate`. Everything else passes straight through. */
 export function gated(backend: BoothBackend, gate: Gate): BoothBackend {

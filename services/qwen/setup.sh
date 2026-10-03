@@ -2,11 +2,11 @@
 # Idempotent setup for the local Qwen service (Wally's planner and sentence-to-rules compiler).
 #
 #   1. llama.cpp: checks that the Homebrew llama-server is new enough to load Qwen3.5 GGUF files.
-#   2. weights:   ONLY the pinned GGUF files (no vision projector), verified against the Hub's SHA-256,
-#                 pins written to MODEL_REVISION and MODEL_SHA256 on the first run, enforced afterwards.
+#   2. weights:   ONLY the pinned GGUF files (the two models and the 9b model's vision projector), verified against
+#                 the Hub's SHA-256, pins written to MODEL_REVISION and MODEL_SHA256 on the first run, enforced afterwards.
 #
-#   ./setup.sh                 both models (9b and 4b), about 9.2 GB
-#   QWEN_MODELS=9b ./setup.sh  only one
+#   ./setup.sh                 both models and the vision projector (9b, 4b, 9b-vision), about 10.1 GB
+#   QWEN_MODELS=9b ./setup.sh  only one (add 9b-vision for the photo feature)
 #
 # This is the only step that touches the network (huggingface.co). Everything lands in .cache (gitignored).
 # Uninstall: ./stop.sh; rm -rf .cache qwen-serve.log
@@ -33,13 +33,13 @@ if [ "$build" -lt "$MIN_LLAMA_BUILD" ]; then
 fi
 echo "$version_line (build $build >= b$MIN_LLAMA_BUILD)"
 
-echo "==> 2/2 weights (${QWEN_MODELS:-9b 4b})"
+echo "==> 2/2 weights (${QWEN_MODELS:-9b 4b 9b-vision})"
 unset HF_TOKEN HUGGING_FACE_HUB_TOKEN HF_ENDPOINT
 # shellcheck disable=SC2086 # word splitting of the key list is intended
-node fetch_model.mjs ${QWEN_MODELS:-9b 4b}
+node fetch_model.mjs ${QWEN_MODELS:-9b 4b 9b-vision}
 
 echo
-du -sh .cache 2>/dev/null || true
+du -sh "${QWEN_CACHE_DIR:-.cache}" 2>/dev/null || true
 cat MODEL_REVISION
 cat MODEL_SHA256
 echo "next: ./serve.sh   then: node smoke.mjs"

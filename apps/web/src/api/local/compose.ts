@@ -25,22 +25,24 @@ export interface LocalComposeOptions {
   readonly clock?: Clock;
   /** SIMULATED rail randomness; tests pass seededRandom. */
   readonly railRandom?: () => RandomSource;
-  /** Demo keys; default: new ephemeral keys on every reset (nothing is kept between page loads). */
+  /** Demo keys; default: new ephemeral keys on every reset (nothing is kept between page loads, unless persist/ supplies and stores them). */
   readonly keys?: () => DemoKeys;
   readonly logger?: BackendLogger;
   /** Overrides for ApiInfo.features (a flag turned off hides the feature and the backend refuses it). */
   readonly features?: Partial<ApiFeatures>;
+  /** Changes each session's dependencies after they are made, with the keys they use (on-device persistence, persist/). Default: unchanged. */
+  readonly wrapSession?: (deps: SessionDeps, keys: DemoKeys) => SessionDeps;
 }
 
 export function composeLocalBackend(opts: LocalComposeOptions = {}): OrchestratorBackend {
   const bundle = loadBundle();
   const clock = opts.clock ?? SYSTEM_CLOCK;
-  const judge = new LocalReplayJudge({ recordings: bundle.judgeRecordings });
+  const judge = new LocalReplayJudge({ recordings: [...bundle.judgeRecordings, ...bundle.shopRecordings, ...bundle.trickRecordings] });
   const planner = replayPlannerFactory(bundle.plannerRecords, bundle.table);
   const makeKeys = opts.keys ?? ephemeralKeys;
   const sessionDeps = (): SessionDeps => {
     const keys = makeKeys();
-    return {
+    const deps: SessionDeps = {
       engine,
       judge,
       planner,
@@ -55,6 +57,7 @@ export function composeLocalBackend(opts: LocalComposeOptions = {}): Orchestrato
       newId: (prefix) => randomId(prefix),
       createOrchestrator,
     };
+    return opts.wrapSession === undefined ? deps : opts.wrapSession(deps, keys);
   };
   return new OrchestratorBackend({
     sessionDeps,
@@ -64,7 +67,7 @@ export function composeLocalBackend(opts: LocalComposeOptions = {}): Orchestrato
     ask: { kind: "recorded", requests: recordedRequests(bundle.plannerTexts, bundle.catalogue, bundle.table), unknownNote: LOCAL_UNKNOWN_REQUEST_NOTE },
     compileModel: null, // no model runs on the device: sentences are read by the fixed rules parser
     info: () => {
-      const info = localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative")));
+      const info = localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative")), bundle.catalogue.shop.size > 0);
       return opts.features === undefined ? info : { ...info, features: { ...info.features, ...opts.features } };
     },
     presetSeal: (now) => m0Request(now),

@@ -9,7 +9,7 @@ import {
   saveSessionId,
   SERVER_KEY,
   SESSION_HEADER,
-  SESSION_KEY,
+  WALLET_KEY,
   sessionAware,
   TOKEN_KEY,
   type ConnectionStores,
@@ -42,9 +42,9 @@ const answer = (id: string | null, body: unknown = { ok: true }): Response =>
 
 describe("the stored wallet id", () => {
   it("is read from session storage first, then local storage, and a malformed value is ignored", () => {
-    expect(readSessionId(fakeStores({ [SESSION_KEY]: ID_A }, { [SESSION_KEY]: ID_B }).stores)).toBe(ID_B);
-    expect(readSessionId(fakeStores({ [SESSION_KEY]: ID_A }).stores)).toBe(ID_A);
-    expect(readSessionId(fakeStores({ [SESSION_KEY]: "not-an-id" }).stores)).toBeNull();
+    expect(readSessionId(fakeStores({ [WALLET_KEY]: ID_A }, { [WALLET_KEY]: ID_B }).stores)).toBe(ID_B);
+    expect(readSessionId(fakeStores({ [WALLET_KEY]: ID_A }).stores)).toBe(ID_A);
+    expect(readSessionId(fakeStores({ [WALLET_KEY]: "not-an-id" }).stores)).toBeNull();
     expect(readSessionId(fakeStores().stores)).toBeNull();
     expect(readSessionId({ local: null, session: null })).toBeNull();
   });
@@ -52,12 +52,12 @@ describe("the stored wallet id", () => {
   it("is saved beside the pairing token: local storage in the native shell, session storage in a page", () => {
     const native = fakeStores({ [TOKEN_KEY]: TOKEN });
     saveSessionId(ID_A, native.stores);
-    expect(native.l.data.get(SESSION_KEY)).toBe(ID_A);
-    expect(native.s.data.has(SESSION_KEY)).toBe(false);
+    expect(native.l.data.get(WALLET_KEY)).toBe(ID_A);
+    expect(native.s.data.has(WALLET_KEY)).toBe(false);
     const page = fakeStores({}, { [TOKEN_KEY]: TOKEN });
     saveSessionId(ID_A, page.stores);
-    expect(page.s.data.get(SESSION_KEY)).toBe(ID_A);
-    expect(page.l.data.has(SESSION_KEY)).toBe(false);
+    expect(page.s.data.get(WALLET_KEY)).toBe(ID_A);
+    expect(page.l.data.has(WALLET_KEY)).toBe(false);
   });
 
   it("saves nothing that is not an id, and survives storage that throws", () => {
@@ -70,11 +70,11 @@ describe("the stored wallet id", () => {
   });
 
   it("goes when the connection changes: a new pairing, a new Mac, or a disconnect means a new wallet", () => {
-    const first = fakeStores({ [SESSION_KEY]: ID_A }, { [SESSION_KEY]: ID_B });
+    const first = fakeStores({ [WALLET_KEY]: ID_A }, { [WALLET_KEY]: ID_B });
     saveConnection({ server: "http://192.168.0.6:8787", token: TOKEN }, first.stores);
     expect(readSessionId(first.stores)).toBeNull();
     expect(first.l.data.get(SERVER_KEY)).toBe("http://192.168.0.6:8787");
-    const second = fakeStores({ [SESSION_KEY]: ID_A });
+    const second = fakeStores({ [WALLET_KEY]: ID_A });
     clearConnection(second.stores);
     expect(readSessionId(second.stores)).toBeNull();
   });
@@ -114,7 +114,7 @@ describe("sessionAware", () => {
   });
 
   it("starts from the id the start-up probe left in storage", async () => {
-    const { stores } = fakeStores({ [TOKEN_KEY]: TOKEN, [SESSION_KEY]: ID_A });
+    const { stores } = fakeStores({ [TOKEN_KEY]: TOKEN, [WALLET_KEY]: ID_A });
     const sent: (string | null)[] = [];
     const inner = (async (_url: RequestInfo | URL, init?: RequestInit) => (sent.push(new Headers(init?.headers).get(SESSION_HEADER)), answer(null))) as typeof fetch;
     await sessionAware(inner, stores)("/api/info");
@@ -160,7 +160,7 @@ describe("probeInfo", () => {
     vi.stubGlobal("fetch", vi.fn(async (_url: string, init: RequestInit) => (sent.push(new Headers(init.headers).get(SESSION_HEADER)), answer(ID_A, { kind: "http" }))));
     expect(await probeInfo("http://192.168.0.6:8787", TOKEN)).toEqual({ kind: "http" });
     expect(sent).toEqual([null]);
-    expect(window.sessionStorage.getItem(SESSION_KEY)).toBe(ID_A);
+    expect(window.sessionStorage.getItem(WALLET_KEY)).toBe(ID_A);
     await probeInfo("http://192.168.0.6:8787", TOKEN);
     expect(sent).toEqual([null, ID_A]);
   });
@@ -168,7 +168,7 @@ describe("probeInfo", () => {
   it("changes nothing for a server that does not answer with an id", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => answer(null, { kind: "http" })));
     await probeInfo(null, null);
-    expect(window.sessionStorage.getItem(SESSION_KEY)).toBeNull();
-    expect(window.localStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(window.sessionStorage.getItem(WALLET_KEY)).toBeNull();
+    expect(window.localStorage.getItem(WALLET_KEY)).toBeNull();
   });
 });

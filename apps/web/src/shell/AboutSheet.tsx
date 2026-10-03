@@ -47,6 +47,8 @@ function ModeInfo({ info, developer }: { readonly info: ApiInfo; readonly develo
         <ListRow leading={<Icon name="sparkle" />} title={t(UI["shell.planner"])} subtitle={providerText(ABOUT.planner, info.planner.provider, t)} />
         <ListRow leading={<Icon name="eye" />} title={t(UI["shell.judge"])} subtitle={providerText(ABOUT.judge, info.judge.provider, t)} />
       </List>
+      {/* On-device mode keeps the session in this browser (src/api/local/persist); said only while it is true. */}
+      {info.remembers === true ? <p className="shell-about__remember">{t(ABOUT.remembers)}</p> : null}
       {/* The server's notes are English text from api.info(), long and technical (provider names, ports): developer mode only,
           one level down, kept lang="en" in the 繁 view. */}
       {developer ? (
