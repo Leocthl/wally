@@ -1,7 +1,7 @@
 // Colour words from pixels: sRGB to CIELAB, the distance between two Lab colours, the nearest colour word, and the
 // dominant colours of a small synthetic picture. Everything is deterministic: the same pixels give the same words.
 import { describe, expect, it } from "vitest";
-import { COLOR_ANCHORS, colorDistance, colorSwatch, deltaE, hexToRgb, nearestColor, rgbToLab, swatchLab, type Lab, type Rgb } from "../src/vision/color";
+import { COLOR_ANCHORS, colorDistance, colorSwatch, deltaE, hexToRgb, nearestColor, rgbToLab, swatchLab, type Rgb } from "../src/vision/color";
 import { extractPalette, type PixelImage } from "../src/vision/palette";
 import { COLORS, type Color } from "../src/vision/vocab";
 
@@ -119,9 +119,26 @@ describe("extractPalette", () => {
     expect([...first].sort((a, b) => b.share - a.share)).toEqual(first);
   });
 
-  it("agrees with Lab: every reported word is one the vocabulary knows", () => {
-    const labs: Lab[] = [[50, 20, 20]];
-    expect(labs).toHaveLength(1);
-    for (const entry of extractPalette(picture(64, 64, (x, y) => [(x * 4) % 256, (y * 4) % 256, 120]))) expect(COLORS).toContain(entry.color);
+  it("only reports words from the vocabulary, with shares that add up to at most 1", () => {
+    const out = extractPalette(picture(64, 64, (x, y) => [(x * 4) % 256, (y * 4) % 256, 120]));
+    expect(out.length).toBeGreaterThan(0);
+    for (const entry of out) expect(COLORS).toContain(entry.color);
+    expect(out.reduce((sum, e) => sum + e.share, 0)).toBeLessThanOrEqual(1.001);
+  });
+
+  it.each([
+    ["a wide strip", 2000, 20],
+    ["a tall strip", 20, 2000],
+    ["one pixel wide", 1, 2000],
+    ["a panorama", 5000, 40],
+  ])("still names the colour of %s (the sampling grid never skips the short side)", (_name, width, height) => {
+    expect(extractPalette(solid2(width, height, [31, 47, 85]))[0]?.color).toBe("navy");
   });
 });
+
+/** A flat picture of any shape, built without a per-pixel callback (a 5000 by 40 strip is 200,000 pixels). */
+function solid2(width: number, height: number, [r, g, b]: Rgb): PixelImage {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < width * height; i += 1) data.set([r, g, b, 255], i * 4);
+  return { data, width, height };
+}

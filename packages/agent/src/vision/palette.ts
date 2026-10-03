@@ -18,7 +18,7 @@ export interface PixelImage {
   readonly height: number;
 }
 
-/** Working grid: at most about this many samples per side. */
+/** Working grid: at most about this many samples per side. The colour plates' numbers (grid, clusters, ring, backdrop and centre weights) are F96's. */
 const GRID = 48;
 const CLUSTERS = 6;
 const ITERATIONS = 12;
@@ -52,9 +52,12 @@ const median = (values: readonly number[]): number => [...values].sort((a, b) =>
 function samplePixels(image: PixelImage): readonly Sample[] {
   const { data, width, height } = image;
   const step = Math.max(1, Math.floor(Math.max(width, height) / GRID));
+  // Start in the middle of the first cell, but never past the end of the short side (a 20 by 2000 strip still gets sampled).
+  const startX = Math.min(Math.floor(step / 2), width - 1);
+  const startY = Math.min(Math.floor(step / 2), height - 1);
   const samples: Sample[] = [];
-  for (let py = Math.floor(step / 2); py < height; py += step) {
-    for (let px = Math.floor(step / 2); px < width; px += step) {
+  for (let py = startY; py < height; py += step) {
+    for (let px = startX; px < width; px += step) {
       const at = (py * width + px) * 4;
       if ((data[at + 3] ?? 255) < ALPHA_MIN) continue;
       const x = (px + 0.5) / width;
