@@ -2,14 +2,14 @@
 
 - A sealed-budget wallet for AI shopping agents. The card rail is **SIMULATED**.
 - **Live demo**: https://wally-dev.vercel.app opens the on-device app in any browser: the real engine and rules with recorded model answers, no server. The booth Mac runs the live models.
-- **Built** during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
+- **Built** during HacKU 2026 (48 h) by push n prod (Dillon, Kanta, Kent, Leo), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
 
 ![Four phone screens: Home with a sealed budget, a one-off card paid for the exact price, a stop before paying, and Proof saying all receipts are untouched](docs/img/wally-screens.png)
 
 ![The laptop layout on the booth Mac: Budget on one screen, with the ask box, the budget, ideas and the demo scenarios in three columns](docs/img/wally-laptop.png)
 
 ## What it does
-- **Seal**: write a sentence, for example "HK$800 this month, clothes, verified sellers" (illustrative, SIMULATED [F20]). Wally suggests rules, you edit them and sign them as a W3C VC 2.0 delegation credential.
+- **Seal**: write a sentence, for example "HK$800 this month, groceries and clothes, verified sellers" (illustrative, SIMULATED [F20]). Wally suggests rules, you edit them and sign them as a W3C VC 2.0 delegation credential. A budget names the categories you pick.
 - **Shop**: type, speak or show a photo (a screenshot works too). A planner proposes a cart, a judge reads the listing as data, and deterministic rules decide. Only an approved cart gets a one-off card for the exact total.
 - **Stops**: over budget (shipping included), a flagged or unverified seller, orders hidden in a listing, a cancelled or ended budget, an unanswered Needs your OK.
 - **Proof**: every decision is a signed, hash-chained receipt. An offline page checks tamper, order, truncation (with a checkpoint), consent and money for what is logged.
@@ -55,6 +55,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 ## Honest status
 - **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); what each layer adds: a bare AI judge (our weak B0 baseline) let 43 of 84 stop cases through, rules only (no seller check, no judge) 28, Wally (all rules plus the judge) 0 (an upper bound of about 4 in 100 [F96]), at the price of 5 of 66 honest buys blocked against 3; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
 - **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
+- **Scope**: the rules name no category, so a budget covers whatever its owner picks. The judge and the photo reader are fitted on clothing, and the demo shop sells clothes and one gadget; for other goods Wally says so or asks first [F36].
 - **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68]. **Photo reader**: right kind of garment in 25 of 29 retailer photos [F68a].
 - **Tests**: over 6,000 automated tests; core line coverage above 95%; exact numbers and the last green CI commit in [F91].
 - **Shortcuts**: the booth server holds the delegator's demo key, and Mum's for a family budget. The offline page cannot check the parent link.
