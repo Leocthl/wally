@@ -1,5 +1,5 @@
-// The footer the About sheet and the Proof screen carry: the prototype's "not affiliated" line, and that the shop and the card
-// are a practice version (Developer mode: the rail is SIMULATED). The first line comes from strings.ts, the only source file allowed to name the brands (branding test).
+// The footer the About sheet and the Proof screen carry: the prototype line, and that the shop and the card
+// are a practice version (Developer mode: the rail is SIMULATED). The first line comes from strings.ts.
 import type { ReactElement } from "react";
 import { S } from "../i18n/strings";
 import { UI } from "../i18n/ui";

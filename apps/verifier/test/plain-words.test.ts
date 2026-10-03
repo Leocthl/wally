@@ -66,7 +66,6 @@ describe.each<Lang>(["en", "zh-HK"])("the words a reader sees (%s)", (lang) => {
     const text = visibleText(root, lang);
     expect(text).toContain(lang === "en" ? "Receipt checker" : "收據檢查");
     expect(text).toContain("SIMULATED");
-    expect(text).toContain("Mastercard");
   });
 });
 

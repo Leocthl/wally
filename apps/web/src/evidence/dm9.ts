@@ -44,7 +44,7 @@ export const DM9: readonly Dm9Column[] = [
       label("The same engine, credential and log run on any rail; only the rail adapter changes [F19].", "同一套規則引擎、憑證與紀錄可用於任何支付渠道，只需更換渠道接口 [F19]。"), // NEEDS-REVIEW zh-HK
       label("The sealed budget is already a verifiable credential with did:key identities [F19]; the agent-ID pilot uses DIDs and verifiable credentials [F8]. No claim about that pilot's results.", "已鎖定的預算本身已是使用 did:key 身份的可驗證憑證 [F19]；代理身份試驗採用 DID 及可驗證憑證 [F8]。不對該試驗結果作任何聲稱。"), // NEEDS-REVIEW zh-HK
     ],
-    foot: label("A one-page proposal, not an HKT commitment. Not affiliated with HKT.", "一頁建議書，並非 HKT 的承諾；與 HKT 並無關連。"), // NEEDS-REVIEW zh-HK
+    foot: label("A one-page proposal, not an HKT commitment.", "一頁建議書，並非 HKT 的承諾。"), // NEEDS-REVIEW zh-HK
   },
 ];
 

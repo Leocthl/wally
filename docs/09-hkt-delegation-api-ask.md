@@ -1,6 +1,6 @@
 # 09 HKT delegation API ask
 
-**Proposal, not an HKT commitment. Not affiliated with HKT.**
+**Proposal, not an HKT commitment.**
 
 ## Observed gaps
 - **Not found in public sources as of 2026-10-02**: an issuing API for delegates (cards are made by hand [F1]); a role for software acting for a holder (T&C: platform-only, no disclosure of security details, no cancel after payment [F2]); a merchant lock or purpose [F1]; a loss rule for delegated purchases (dispute fee HK$150 [F3.dispute_fee]).

@@ -171,7 +171,7 @@ describe("words on screen", () => {
   });
 
   it("keeps the footer exactly as it was, and the SIMULATED statements", () => {
-    expect(q(".foot").textContent).toContain("Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.");
+    expect(q(".foot").textContent).toContain("Prototype. Demo keys are throwaway; the rail is SIMULATED.");
     expect(q(".top .chip--sim").textContent).toContain("Rail SIMULATED");
     click("demo");
     expect(q(".demo-badge").hasAttribute("hidden")).toBe(false);

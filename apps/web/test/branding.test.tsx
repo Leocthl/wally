@@ -30,9 +30,9 @@ describe("source files", () => {
     for (const file of all.filter((f) => f.endsWith(".css"))) expect(readFileSync(file, "utf8"), file).not.toMatch(/url\(/);
   });
 
-  it("name HKT, Tap & Go and Mastercard only in the footer line", () => {
+  it("name no card brand anywhere in the UI source", () => {
     const hits = all.filter((f) => /\.(tsx?|css)$/.test(f)).filter((f) => /Mastercard|Tap & Go/.test(readFileSync(f, "utf8")));
-    expect(hits.map((f) => f.slice(SRC.length + 1))).toEqual(["i18n/strings.ts"]);
+    expect(hits.map((f) => f.slice(SRC.length + 1))).toEqual([]);
   });
 
   it("use no purple gradient or glass effect", () => {
@@ -51,7 +51,7 @@ describe("rendered screens", () => {
   it("keeps the prototype footer and says the shop and the card are practice in the About sheet; Developer mode keeps the rail line", async () => {
     const h = await bootApp("#/budget");
     await h.user.click(screen.getByRole("button", { name: /About and settings/ }));
-    expect(await screen.findByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeInTheDocument();
+    expect(await screen.findByText("Prototype built at HacKU.")).toBeInTheDocument();
     expect(screen.getByText("The shop and the card are a safe practice version. No real money moves.")).toBeInTheDocument();
     expect(screen.queryByText("The rail is SIMULATED. No money moves.")).toBeNull();
     await h.user.click(screen.getByRole("switch", { name: /Show technical details/ }));

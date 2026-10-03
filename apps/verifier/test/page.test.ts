@@ -42,7 +42,7 @@ afterEach(() => {
 describe("judge flow: Load demo log, Verify, Tamper, Restore", () => {
   it("starts NOT VERIFIED with the honesty footer", () => {
     expect(outcome()).toBe("idle");
-    expect(root.textContent).toContain("Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.");
+    expect(root.textContent).toContain("Demo keys are throwaway; the rail is SIMULATED.");
     expect(root.textContent).toContain("Computed here, offline");
   });
 

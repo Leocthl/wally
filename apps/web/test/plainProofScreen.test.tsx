@@ -394,7 +394,7 @@ describe("Proof (plain): around the card", () => {
     expect(screen.getByRole("link", { name: "Why trust Wally?" })).toHaveAttribute("href", "#/evidence");
     expect(screen.queryByRole("button", { name: "Save a copy of the receipts" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export receipts" })).toBeNull();
-    expect(screen.getByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeInTheDocument();
+    expect(screen.getByText("Prototype built at HacKU.")).toBeInTheDocument();
     expect(screen.getByText("The shop and the card are a safe practice version. No real money moves.")).toBeInTheDocument();
   });
 

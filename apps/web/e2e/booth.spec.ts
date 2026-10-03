@@ -25,7 +25,7 @@ test("shows the SIMULATED note, the sealed HK$800 budget, and the footer in Abou
   await expect(page.getByRole("note")).toContainText("SIMULATED");
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$800 left of HK\$800, SIMULATED/);
   await page.getByRole("button", { name: "About and settings" }).click();
-  await expect(page.getByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeVisible();
+  await expect(page.getByText("Prototype built at HacKU.")).toBeVisible();
 });
 
 const wally = (page: Page) => page.locator('[data-screen="wally"]');

@@ -107,7 +107,7 @@ describe("presenter DM9 in plain words, the default", () => {
     expect(all).toContain("settings are assumed");
     expect(all).toContain("wrong block");
     expect(all).toContain("We make no claim about that pilot's results");
-    expect(all).toContain("Not affiliated with HKT");
+    expect(all).toContain("not an HKT commitment");
     expect(all).toContain("can only make a decision stricter");
   });
 });

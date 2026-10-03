@@ -2,7 +2,7 @@
 
 ## Look
 - **Cool wallet** (D14): light fintech UI, blue primary, teal accent, a wallet character. Red and orange mean stop or error only; amber means Needs your OK only. Colour never works alone: icon and words too.
-- **Guards**: no HKT, Tap & Go or Mastercard logos or lookalikes; one gradient, on the budget card and the one-off card; no glass (`backdrop-filter`); no emoji. About carries "Prototype. Not affiliated with HKT, Tap & Go or Mastercard."
+- **Guards**: no HKT, Tap & Go or Mastercard logos or lookalikes; one gradient, on the budget card and the one-off card; no glass (`backdrop-filter`); no emoji. About carries "Prototype built at HacKU."
 - **Warm palette** (`data-palette="warm"`, orange for blue): not shipped.
 
 ## Where it lives

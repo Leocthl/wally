@@ -1,7 +1,7 @@
 # Offline receipt verifier (C-09, T-V1)
 
 - **What**: one static page that checks Wally's receipts (the signed log) with no server and no network. Paste or load the receipts (JSONL), the public keys JSON (`{ engine: [...], delegator, ... }`, as in `data/public-keys.json`) and, optionally, the head checkpoint (`{ log_id, seq, entry_hash }`).
-- **Rail SIMULATED.** Demo keys are throwaway. Not affiliated with HKT, Tap & Go or Mastercard.
+- **Rail SIMULATED.** Demo keys are throwaway.
 
 ## Build and open
 | Step | Command |

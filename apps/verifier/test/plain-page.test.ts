@@ -33,7 +33,7 @@ describe("the header and the buttons", () => {
   });
 
   it("keeps the honesty lines exactly as they are in developer mode", () => {
-    expect(q(".foot").textContent).toContain("Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.");
+    expect(q(".foot").textContent).toContain("Prototype. Demo keys are throwaway; the rail is SIMULATED.");
     click("demo");
     expect(q(".demo-badge").hasAttribute("hidden")).toBe(false);
     expect(q(".demo-badge").textContent).toContain("SIMULATED demo log and throwaway test keys, not the booth keys.");

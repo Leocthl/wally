@@ -7,7 +7,7 @@
 - **Format**: every team gets a booth; judges watch or try the demo, 5 min per team (3 pitch + 2 Q&A). Only the top 8 pitch on stage, 5 + 2 [F14]
 - **Submit**: pitch deck, public GitHub link, prototype video (3 min) or live link, declaration of problem statement and extra awards [F18]
 - **Unknown**: HKT sandbox, API or mentor access [F17]
-- **Product**: Wally, a sealed-budget mandate engine for AI shopping agents. Not affiliated with HKT, Tap & Go or Mastercard
+- **Product**: Wally, a sealed-budget mandate engine for AI shopping agents
 
 ## Statement digest
 | ID | Requirement (binding; the evidence paragraph is the scoring sheet) |
@@ -187,7 +187,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ### Provenance and citation
 - **Tags**: OBSERVED(date) / SIMULATED / MEASURED(n) / ASSUMED. The register row carries the tag; the doc cites the ID next to the number: `HK$2,000 [F1]`.
 - **Never** write a number that is not in the register. Missing? Add the register row in the same commit as the doc that uses it.
-- **Not affiliated with HKT.** No logos, no lookalike branding.
+- **No logos**, no lookalike branding.
 
 ## Assumptions to confirm
 - [ ] **Team** is 3-4 and writes TypeScript; at least one member reads zh-HK for copy review

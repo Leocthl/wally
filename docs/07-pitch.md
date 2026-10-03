@@ -50,5 +50,5 @@
 | **Limits** | Models read no raw pages, do no sums; judge thresholds fitted on simulated cases, seller gate inert [F36]; Cantonese rests on the model [F68]; the photo reader names the kind of garment, nothing more [F68a] |
 | **Assumed** | Card TTL [F30], fee [F98], pilot [F97] |
 
-- **Measured**: our own runs only; vendor figures stay VENDOR-REPORTED [F94]. **Not affiliated** with HKT, Tap & Go, Mastercard.
+- **Measured**: our own runs only; vendor figures stay VENDOR-REPORTED [F94].
 - [ ] Before the pitch: re-capture READ-BY-CLAUDE facts; add the hallway tally.

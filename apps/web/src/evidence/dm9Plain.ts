@@ -39,6 +39,6 @@ export const DM9_PLAIN: readonly Dm9Column[] = [
       label("The same rules, signed budget and receipts work on any card network; only the connection to the card changes.", "同一套規則、已簽署的預算與收據可用於任何支付網絡，只需更換與卡的連接。"), // NEEDS-REVIEW zh-HK
       label("The sealed budget is already a verifiable credential, and the agent-ID pilot uses the same kind of credential. We make no claim about that pilot's results.", "已鎖定的預算本身已是可驗證憑證；代理身份試驗亦使用可驗證憑證。我們不對該試驗的結果作任何聲稱。"), // NEEDS-REVIEW zh-HK
     ],
-    foot: label("A one-page proposal, not an HKT commitment. Not affiliated with HKT.", "一頁建議書，並非 HKT 的承諾；與 HKT 並無關連。"), // NEEDS-REVIEW zh-HK
+    foot: label("A one-page proposal, not an HKT commitment.", "一頁建議書，並非 HKT 的承諾。"), // NEEDS-REVIEW zh-HK
   },
 ];

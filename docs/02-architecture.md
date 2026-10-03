@@ -1,6 +1,6 @@
 # 02 Architecture
 
-- **Rail is SIMULATED** throughout. Not affiliated with HKT, Tap & Go or Mastercard.
+- **Rail is SIMULATED** throughout.
 
 ## 1. Context
 

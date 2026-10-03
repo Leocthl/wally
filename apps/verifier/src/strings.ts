@@ -61,8 +61,8 @@ export const S = {
     zh: "模擬示範紀錄及一次性測試公鑰，並非展位所用的金鑰。", // NEEDS-REVIEW zh-HK
   },
   footer: {
-    en: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.",
-    zh: "原型作品。與 HKT、Tap & Go 及 Mastercard 並無關連。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
+    en: "Prototype. Demo keys are throwaway; the rail is SIMULATED.",
+    zh: "原型作品。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
   },
 } as const satisfies Record<string, Bi>;
 

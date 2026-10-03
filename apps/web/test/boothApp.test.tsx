@@ -83,7 +83,7 @@ describe("booth on load (DM1 preset)", () => {
     const h = await bootApp();
     await h.user.click(screen.getByRole("button", { name: /About and settings/ }));
     const sheet = await screen.findByRole("dialog", { name: "About Wally" });
-    expect(within(sheet).getByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeInTheDocument();
+    expect(within(sheet).getByText("Prototype built at HacKU.")).toBeInTheDocument();
     expect(within(sheet).getByText(/The shop and the card are a safe practice version\. No real money moves\./)).toBeInTheDocument();
     expect(within(sheet).queryByText(/The rail is SIMULATED/)).toBeNull();
     expect(within(sheet).getByText(/Replayed: recorded answers, no network/)).toBeInTheDocument();
