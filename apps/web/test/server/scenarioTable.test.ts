@@ -44,6 +44,23 @@ describe("booth scenario table", () => {
     }
   });
 
+  it("names a cheaper set for the shipping stop only: the three demo clothes and the request the recorded cheaper pick was made for", () => {
+    expect(table.scenarios.overflow.cheaper).toEqual({ request: "something cheaper, like ankle socks", listings: ["lst_demoJacket", "lst_demoTee", "lst_demoSocks"] });
+    for (const s of Object.values(table.scenarios).filter((x) => x.id !== "overflow")) expect([s.id, s.cheaper]).toEqual([s.id, null]);
+  });
+
+  it("refuses a cheaper set that is not well formed, or that names a listing the catalogue does not have", () => {
+    const base = { provenance: "SIMULATED", derivedListings: [], custom: { request: "x", listings: ["a"], plannerReplay: "b" } };
+    const withCheaper = (cheaper: unknown) => ({ ...base, scenarios: Object.fromEntries(SCENARIO_IDS.map((id) => [id, { ...JSON.parse(JSON.stringify(table.scenarios[id])), ...(id === "overflow" ? { cheaper } : {}) }])) });
+    expect(parseScenarioTable(withCheaper(undefined)).scenarios.overflow.cheaper).toBeNull();
+    expect(parseScenarioTable(withCheaper({ request: "cheaper", listings: ["lst_demoSocks"] })).scenarios.overflow.cheaper).toEqual({ request: "cheaper", listings: ["lst_demoSocks"] });
+    for (const bad of ["socks", 7, { request: "", listings: ["lst_demoSocks"] }, { request: "cheaper", listings: [] }, { request: "cheaper", listings: [7] }, { listings: ["lst_demoSocks"] }]) {
+      expect(() => parseScenarioTable(withCheaper(bad)), JSON.stringify(bad)).toThrow(ScenarioTableError);
+    }
+    const unknown = parseScenarioTable(withCheaper({ request: "cheaper", listings: ["lst_nowhere"] }));
+    expect(() => loadCatalogue(join(REPO_ROOT, "data/fixtures"), unknown)).toThrow(/lst_nowhere/);
+  });
+
   it("refuses a family scenario that is not well formed", () => {
     const base = { provenance: "SIMULATED", derivedListings: [], custom: { request: "x", listings: ["a"], plannerReplay: "b" } };
     const entry = (over: Record<string, unknown>) => ({ ...base, scenarios: Object.fromEntries(SCENARIO_IDS.map((id) => [id, { ...JSON.parse(JSON.stringify(table.scenarios[id])), ...(id === "family_over" ? over : {}) }])) });

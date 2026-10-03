@@ -38,6 +38,16 @@ export interface ScenarioFamily {
   readonly sealMinor: number;
 }
 
+/**
+ * "See cheaper options" after a stop from this button: a planner shown only the button's own listing has nothing cheaper to
+ * pick, so the replan runs over these listings with this request (the recorded cheaper pick was made for the pair). The pick
+ * is a proposal like any other: the cart builder, the judge and rules R1 to R12 decide it.
+ */
+export interface ScenarioCheaper {
+  readonly request: string;
+  readonly listings: readonly string[];
+}
+
 export interface ScenarioEntry {
   readonly id: ScenarioId;
   readonly label: string;
@@ -56,6 +66,8 @@ export interface ScenarioEntry {
   readonly beats: readonly ScenarioBeat[];
   /** Price the listing so its total is just over what is left (F22 shape), when the stored one would fit. */
   readonly overflow: boolean;
+  /** Where "See cheaper options" looks after this button's R3 or R4 stop; null: over the button's own listings. */
+  readonly cheaper: ScenarioCheaper | null;
   readonly note: string | null;
   readonly expect: ScenarioExpect;
 }
@@ -122,6 +134,12 @@ function parseFamily(o: Obj, where: string): ScenarioFamily | null {
   return { sealMinor };
 }
 
+function parseCheaper(o: Obj, where: string): ScenarioCheaper | null {
+  if (o["cheaper"] === undefined || o["cheaper"] === null) return null;
+  const cheaper = obj(o["cheaper"], `${where}.cheaper`);
+  return { request: str(cheaper, "request", `${where}.cheaper`), listings: strList(cheaper, "listings", `${where}.cheaper`, false) };
+}
+
 function parseScenario(id: ScenarioId, raw: unknown): ScenarioEntry {
   const where = `scenarios.${id}`;
   const o = obj(raw, where);
@@ -149,6 +167,7 @@ function parseScenario(id: ScenarioId, raw: unknown): ScenarioEntry {
     card: card as ScenarioEntry["card"],
     beats,
     overflow: o["overflow"] === true,
+    cheaper: parseCheaper(o, where),
     note: optStr(o, "note", where),
     expect: parseExpect(o["expect"], where),
   };

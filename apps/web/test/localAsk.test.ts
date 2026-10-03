@@ -126,14 +126,34 @@ describe("cheaper options on the device", () => {
     expect(mine.at(-1)).toBe("run.finished");
   });
 
-  it("a stop with no recorded cheaper pick is an INFO run: no_alternative, nothing decided", async () => {
+  it("after Shipping tips it over the recorded cheaper pick is bought too: the replan runs over the three demo clothes", async () => {
     const { client } = await sealed();
-    await client.runScenario("normal");
-    const overflow = await client.runScenario("overflow"); // the jacket alone: no record for that listing set
+    await client.runScenario("normal"); // HK$541 left
+    const overflow = await client.runScenario("overflow"); // the jacket alone has nothing cheaper; the table names the set to replan over
     expect(overflow.outcome).toBe("DENY");
+    const cheaper = await client.suggestAlternatives({ decisionId: overflow.decisionId ?? "" });
+    expect(cheaper).toMatchObject({ scenario: "custom", outcome: "APPROVE", alternativeTo: overflow.decisionId });
+    expect((await client.snapshot()).cards.map((c) => c.limit_minor)).toEqual([25_900, 12_000]);
+    expect((await client.verify()).result.ok).toBe(true);
+  });
+
+  it("works from a fresh budget as well, where the stored jacket would have fitted and is priced over what is left", async () => {
+    const { client } = await sealed();
+    const overflow = await client.runScenario("overflow");
+    expect(overflow.outcome).toBe("DENY");
+    const cheaper = await client.suggestAlternatives({ decisionId: overflow.decisionId ?? "" });
+    expect(cheaper).toMatchObject({ outcome: "APPROVE", alternativeTo: overflow.decisionId });
+    expect((await client.snapshot()).cards.map((c) => c.limit_minor)).toEqual([12_000]);
+  });
+
+  it("a stop from a button with no cheaper set is an INFO run: no_alternative, nothing decided", async () => {
+    const { client } = await sealed();
+    for (let i = 0; i < 3; i += 1) await client.runScenario("normal"); // HK$777 spent, HK$23 left
+    const fourth = await client.runScenario("normal"); // the tee alone: no record for that listing set
+    expect(fourth.outcome).toBe("DENY");
     const before = (await decisionsOf(client)).length;
-    const run = await client.suggestAlternatives({ decisionId: overflow.decisionId ?? "" });
-    expect(run).toMatchObject({ outcome: "INFO", code: "NO_PROPOSAL:no_alternative", alternativeTo: overflow.decisionId });
+    const run = await client.suggestAlternatives({ decisionId: fourth.decisionId ?? "" });
+    expect(run).toMatchObject({ outcome: "INFO", code: "NO_PROPOSAL:no_alternative", alternativeTo: fourth.decisionId });
     expect(await decisionsOf(client)).toHaveLength(before);
   });
 
