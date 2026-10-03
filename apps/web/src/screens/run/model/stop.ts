@@ -31,6 +31,8 @@ export interface StopView {
   readonly chip?: LabelPair;
   /** A top-up can help (R3, R4). */
   readonly budget: boolean;
+  /** The person's own rules decided it (R6: a category or a shop they did not allow), so editing them can help. */
+  readonly editRules: boolean;
   /** A card had been made and was cancelled (a price change at checkout). */
   readonly cancelled: boolean;
 }
@@ -47,6 +49,7 @@ export function stopView(result: Result): StopView | null {
     ...(reason ? { reason } : {}),
     ...(chip ? { chip } : {}),
     budget: isBudgetStop(decision),
+    editRules: templateOf(decision)?.startsWith("R6.") === true,
     cancelled: result.card !== undefined,
   };
 }

@@ -84,19 +84,39 @@ export interface StopActionsProps {
   readonly onTopUp: () => void;
   readonly onAsk: () => void;
   readonly onCheaper?: (() => void) | undefined;
+  /** Opens the rules to change them (Seal, for a new budget). Offered when the person's own rules were what stopped it. */
+  readonly onEditRules?: (() => void) | undefined;
+  /** The budget is cancelled or ended: nothing can be bought with it, so the way on is a new budget, not another ask. */
+  readonly closed?: boolean | undefined;
+  readonly onNewBudget?: (() => void) | undefined;
 }
 
-export function StopActions({ view, onWhy, onTopUp, onAsk, onCheaper }: StopActionsProps): ReactElement {
+export function StopActions({ view, onWhy, onTopUp, onAsk, onCheaper, onEditRules, closed = false, onNewBudget }: StopActionsProps): ReactElement {
   const { t } = useLocale();
+  const why = <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.why)}</Button>;
+  if (closed && onNewBudget) {
+    return (
+      <div className="run-actions">
+        <Button size="lg" block icon={<Icon name="plus" size={20} />} onClick={onNewBudget} data-new-budget>{t(UI["home.newBudget"])}</Button>
+        {why}
+      </div>
+    );
+  }
   return (
     <div className="run-actions">
       {onCheaper && view.budget ? <Button size="lg" block onClick={onCheaper}>{t(R.cheaper)}</Button> : null}
       {view.budget ? (
         <Button size="lg" variant={onCheaper ? "secondary" : "primary"} block icon={<Icon name="plus" size={20} />} onClick={onTopUp}>{t(R.topUp)}</Button>
+      ) : view.editRules && onEditRules ? (
+        <>
+          <Button size="lg" block icon={<Icon name="list" size={20} />} onClick={onEditRules} data-edit-rules>{t(R.editRules)}</Button>
+          <p className="run-actions__note">{t(UI["seal.newLog"])}</p>
+          <Button size="lg" variant="secondary" block icon={<Icon name="sparkle" size={20} />} onClick={onAsk}>{t(R.pickElse)}</Button>
+        </>
       ) : (
         <Button size="lg" variant="secondary" block icon={<Icon name="sparkle" size={20} />} onClick={onAsk}>{t(R.ask)}</Button>
       )}
-      <Button variant="ghost" block onClick={onWhy} icon={<Icon name="info" size={20} />}>{t(R.why)}</Button>
+      {why}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 // Everything is a pure view of the TraceEvent state (selectScreen); #/wally?d=<decisionId> pins one purchase.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type RefObject } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
+import { PARAM, routeHref } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
 import { ASK_EVENT } from "../../shell/askEvent";
 import { haptic, type HapticKind } from "../../ui/haptics";
@@ -18,6 +19,8 @@ import { RepeatNote } from "./components/RepeatNote";
 import { Stopped } from "./components/Stopped";
 import { WhySheet } from "./components/WhySheet";
 import { logSeqOf } from "./model/chain";
+import { cheaperTried, type CheaperTried } from "./model/cheaper";
+import { closedBudget, type ClosedBudget } from "./model/closed";
 import { itemTitle, shopName } from "./model/item";
 import { currentRun, type BoothState } from "../../state/booth";
 import { knownDecisions } from "./model/chain";
@@ -142,13 +145,23 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
   const topUp = useCallback(() => {
     window.location.hash = "#/seal";
   }, []);
+  // Where the dead ends lead: a new budget when this one is over, the rules or the amount when they were the reason.
+  const closed = closedBudget(booth.state);
+  const newBudget = topUp;
+  const editRules = useCallback(() => {
+    window.location.hash = routeHref("seal", { [PARAM.mode]: "edit" });
+  }, []);
+  const changeAmount = useCallback(() => {
+    window.location.hash = routeHref("seal", { [PARAM.mode]: "topup" });
+  }, []);
+  const tried = cheaperTried(booth.state);
   const back = useCallback(() => window.history.back(), []);
 
   return (
     <div className="run-screen" lang={locale} data-screen="wally">
       <Bar model={model} pinned={pinned} onBack={back} />
       <div className="run-body">
-        {model.kind === "idle" ? <Calm kind="idle" onAsk={ask} /> : null}
+        {model.kind === "idle" ? <Calm kind="idle" onAsk={ask} closed={closed} onNewBudget={newBudget} /> : null}
         {model.kind === "working" ? <Progress run={model.run} info={booth.info} /> : null}
         {result?.repeat ? <RepeatNote kind={result.kind} /> : null}
         {result ? (
@@ -165,6 +178,11 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
             onAnswer={answer}
             onWhy={() => setWhy(true)}
             onTopUp={topUp}
+            onEditRules={editRules}
+            onChangeAmount={changeAmount}
+            onNewBudget={newBudget}
+            closed={closed}
+            tried={tried}
             {...(cheaper ? { onCheaper: cheaper } : {})}
             {...(now ? { now } : {})}
           />
@@ -200,6 +218,11 @@ interface ResultViewProps {
   readonly onAnswer: (choice: "APPROVE" | "DENY") => void;
   readonly onWhy: () => void;
   readonly onTopUp: () => void;
+  readonly onEditRules: () => void;
+  readonly onChangeAmount: () => void;
+  readonly onNewBudget: () => void;
+  readonly closed: ClosedBudget | null;
+  readonly tried: CheaperTried | null;
   readonly onCheaper?: () => void;
   readonly now?: () => number;
 }
@@ -210,12 +233,12 @@ function ResultView(p: ResultViewProps): ReactElement {
     case "approved":
       return <Approved result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} paying={p.paying} canPay={p.canPay} onPay={p.onPay} onWhy={p.onWhy} />;
     case "stopped":
-      return <Stopped result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} onWhy={p.onWhy} onTopUp={p.onTopUp} onAsk={p.onAsk} {...(p.onCheaper ? { onCheaper: p.onCheaper } : {})} />;
+      return <Stopped result={result} packet={p.packet} fresh={p.fresh} headingRef={p.heading} onWhy={p.onWhy} onTopUp={p.onTopUp} onAsk={p.onAsk} onEditRules={p.onEditRules} closed={p.closed} onNewBudget={p.onNewBudget} {...(p.onCheaper ? { onCheaper: p.onCheaper } : {})} />;
     case "needsOk":
       return <NeedsOk result={result} headingRef={p.heading} answering={p.answering} onAnswer={p.onAnswer} onWhy={p.onWhy} {...(p.now ? { now: p.now } : {})} />;
     case "noPick":
     case "error":
     case "info":
-      return <Calm kind={result.kind} code={result.code} runId={result.run?.runId} onAsk={p.onAsk} headingRef={p.heading} />;
+      return <Calm kind={result.kind} code={result.code} runId={result.run?.runId} onAsk={p.onAsk} headingRef={p.heading} closed={p.closed} onNewBudget={p.onNewBudget} tried={p.tried} onChangeAmount={p.onChangeAmount} />;
   }
 }

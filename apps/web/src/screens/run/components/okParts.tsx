@@ -41,7 +41,7 @@ function useAnnouncement(left: number | undefined, windowS: number): string {
     } else if (left !== undefined && left > 0 && said.current === "none") said.current = "start";
   }, [left]);
   if (left === undefined) return "";
-  return left === 0 ? t(R.timesUp) : t(R.answerStart(String(windowS)));
+  return left === 0 ? t(R.timesUp) : t(R.waitsFor(String(windowS)));
 }
 
 export function useOkClock(result: Result, now?: () => number): OkClock {
@@ -55,17 +55,17 @@ export function useOkClock(result: Result, now?: () => number): OkClock {
   return { esc, left, windowS, over, ratio, announcement };
 }
 
-/** "Time to answer" and the seconds left, over a line that drains once a second without stepping. */
+/** The clock as a promise ("Wally waits 60 seconds, then cancels this for you."), over a line that drains once a second without stepping. */
 export function Countdown({ clock }: { readonly clock: OkClock }): ReactElement | null {
   const { t } = useLocale();
   if (!clock.esc || clock.left === undefined) return null;
   return (
     <div className="run-countdown" data-over={clock.over || undefined}>
+      <p className="run-countdown__promise">{clock.over ? t(R.timesUp) : t(R.waitsFor(String(clock.windowS)))}</p>
       <div className="run-countdown__row">
-        <span>{t(R.timeToAnswer)}</span>
-        <span role="timer" aria-live="off" className="run-countdown__left">{clock.over ? t(R.timesUp) : t(R.secondsLeft(String(clock.left)))}</span>
+        <span className="run-countdown__track" aria-hidden="true"><span className="run-countdown__fill" style={{ transform: `scaleX(${clock.ratio.toFixed(3)})` }} /></span>
+        {clock.over ? null : <span role="timer" aria-live="off" className="run-countdown__left">{t(R.secondsLeft(String(clock.left)))}</span>}
       </div>
-      <span className="run-countdown__track" aria-hidden="true"><span className="run-countdown__fill" style={{ transform: `scaleX(${clock.ratio.toFixed(3)})` }} /></span>
     </div>
   );
 }

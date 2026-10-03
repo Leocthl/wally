@@ -69,6 +69,9 @@ const RUN = {
   noCard: label("No card was made. Nothing can be charged.", "沒有發出任何卡，不會有任何扣款。"), // NEEDS-REVIEW
   cardCancelled: label("The card was cancelled. Nothing more can be charged.", "卡已取消，不會再有扣款。"), // NEEDS-REVIEW
   cheaper: label("See cheaper options", "睇平啲的選擇"), // NEEDS-REVIEW
+  editRules: label("Edit rules", "修改規則"), // NEEDS-REVIEW
+  pickElse: label("Pick something else", "揀其他嘢"), // NEEDS-REVIEW
+  changeAmount: label("Change the amount", "更改金額"), // NEEDS-REVIEW
   topUp: label("Top up budget", "增加預算"), // NEEDS-REVIEW
   why: label("Why?", "點解？"), // NEEDS-REVIEW
   rulesDecided: label("Fixed rules decided this, not the AI.", "由固定規則決定，唔係 AI。"), // NEEDS-REVIEW
@@ -80,10 +83,10 @@ const RUN = {
   approve: label("Approve", "批准"), // NEEDS-REVIEW
   noThanks: label("No thanks", "唔使喇"), // NEEDS-REVIEW
   answerLimit: label("Your answer can't override a fixed rule.", "你的回覆唔可以推翻固定規則。"), // NEEDS-REVIEW
-  timeToAnswer: label("Time to answer", "回覆時限"), // NEEDS-REVIEW
   secondsLeft: (n: string): LabelPair => label(`${n} s left`, `尚餘 ${n} 秒`), // NEEDS-REVIEW
-  answerStart: (n: string): LabelPair => label(`You have ${n} seconds to answer.`, `你有 ${n} 秒回覆。`), // NEEDS-REVIEW
-  timesUp: label("Time's up. Wally is stopping it.", "時間到，Wally 會攔截。"), // NEEDS-REVIEW
+  // The clock on a question is told as a promise, not a threat: Wally waits, then cancels it for you.
+  waitsFor: (n: string): LabelPair => label(`Wally waits ${n} seconds, then cancels this for you.`, `Wally 會等 ${n} 秒，之後幫你取消。`), // NEEDS-REVIEW
+  timesUp: label("Time's up, so Wally cancelled this for you.", "時間到，Wally 已幫你取消。"), // NEEDS-REVIEW
   whyAsk: label("Why is Wally asking?", "Wally 點解問你？"), // NEEDS-REVIEW
 
   noPickTitle: label("Wally couldn't pick a clear item", "Wally 揀唔到合適的貨品"), // NEEDS-REVIEW
@@ -101,6 +104,8 @@ const RUN = {
   reasonR4Ask: (total: string, ask: string): LabelPair => label(`It costs ${total}, more than the ${ask} you asked Wally to check with you first.`, `要 ${total}，超過你要求先問你的 ${ask}。`), // NEEDS-REVIEW
   reasonR5: (total: string, ceiling: string): LabelPair => label(`It costs ${total}, more than a one-off card can hold (${ceiling}).`, `要 ${total}，超過一次性卡上限（${ceiling}）。`), // NEEDS-REVIEW
   reasonR6: label("That isn't something your rules let Wally buy.", "你的規則唔容許 Wally 買呢樣嘢。"), // NEEDS-REVIEW
+  // The same stop with the rules named, from the categories the decision recorded: "Your budget is for Clothes only."
+  reasonR6Category: (en: string, zh: string): LabelPair => label(`Your budget is for ${en} only.`, `你的預算只限${zh}。`), // NEEDS-REVIEW
   reasonR7: label("Wally made too many cards in a short time. Try again later.", "短時間內發卡太多，請稍後再試。"), // NEEDS-REVIEW
   reasonR8: label("Too many one-off cards are still open. Use or cancel one first.", "未用的一次性卡太多，請先用或取消一張。"), // NEEDS-REVIEW
   reasonR9Flagged: label("This seller is flagged as a possible scam.", "呢個賣家被標記為可能詐騙。"), // NEEDS-REVIEW
@@ -185,6 +190,8 @@ const RUN = {
   unknownAskBody: label("Live asks need the booth server. Try one of the cards on Budget instead.", "即時提問需要展位伺服器。請改試預算頁的卡。"), // NEEDS-REVIEW
   noCheaperTitle: label("No cheaper option fits", "冇更平而合適的選擇"), // NEEDS-REVIEW
   noCheaperBody: label("Nothing cheaper fits what is left in your budget.", "冇更平的貨品放得入你剩餘的預算。"), // NEEDS-REVIEW
+  // What was tried, when it is known: the item that was stopped and what the budget has left. {item} is text, {left} a figure.
+  noCheaperTried: label("Wally looked for something cheaper than the {item} that fits the {left} left in your budget, and found nothing.", "Wally 搵過比{item}平、又放得入預算剩餘 {left} 的貨品，但搵唔到。"), // NEEDS-REVIEW
 } as const;
 
 /** Lane b-shell strings (shell., home., seal., console.). Placeholders in braces take formatted figures as elements. */
@@ -264,8 +271,8 @@ const SHELL = {
   "home.status.EXHAUSTED": label("All used", "已用完"), // NEEDS-REVIEW
   "home.cancelledTitle": label("This budget is cancelled", "呢個預算已取消"), // NEEDS-REVIEW
   "home.endedTitle": label("This budget has ended", "呢個預算已到期"), // NEEDS-REVIEW
-  "home.cancelledBody": label("Wally can't make new cards. Set up a new budget to keep shopping.", "Wally 唔可以再發卡。設定新預算就可以繼續購物。"), // NEEDS-REVIEW
-  "home.newBudget": label("Set up a new budget", "設定新預算"), // NEEDS-REVIEW
+  "home.cancelledBody": label("Wally can't make new cards. Start a new budget to keep shopping.", "Wally 唔可以再發卡。開始新預算就可以繼續購物。"), // NEEDS-REVIEW
+  "home.newBudget": label("Start a new budget", "開始新預算"), // NEEDS-REVIEW
   "home.usedUpTitle": label("This budget is all used", "呢個預算已用完"), // NEEDS-REVIEW
   "home.usedUpBody": label("Wally can't make a new card until you top up.", "增加預算之前，Wally 唔可以再發卡。"), // NEEDS-REVIEW
   "home.cards": label("One-off cards", "一次性卡"), // NEEDS-REVIEW

@@ -37,7 +37,7 @@ test("runs Normal purchase from Try asking and shows it in Recent and on the bud
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED");
   const first = page.getByRole("list", { name: "Recent" }).getByRole("link").first();
-  await expect(first).toContainText("Approved");
+  await expect(first).toContainText("Paid · Receipt 2");
   await expect(first).toContainText("HK$259");
   await first.click();
   await expect(page).toHaveURL(/#\/wally\?d=dec_/);
@@ -87,7 +87,7 @@ test("cancels the budget: hold, confirm, the card stops working and a new budget
   await expect(page.getByText("This budget is cancelled")).toBeVisible();
   await expect(page.locator('[data-card-state="VOIDED"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "Hold to cancel this budget" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Set up a new budget" }).first().click();
+  await page.getByRole("link", { name: "Start a new budget" }).first().click();
   await expect(page).toHaveURL(/#\/seal$/);
   await expect(page.getByRole("heading", { level: 1, name: "Describe your budget" })).toBeVisible();
 });
