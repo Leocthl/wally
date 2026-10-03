@@ -46,4 +46,4 @@
 | T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright); tamper fails the verifier; booth smoke (X-17): scenarios offline, no key, Laya stopped → ESCALATE |
 
 ## CI (X-03)
-- **Steps**: `gen-types --check`, `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`. Over 4,000 tests, core coverage above 95% [F91].
+- **Steps**: `gen-types --check`, `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`. Over 6,000 tests, core coverage above 95% [F91].

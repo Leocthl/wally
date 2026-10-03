@@ -34,7 +34,7 @@
 ## Real or simulated
 | Part | Status |
 |---|---|
-| Engine, credential, signed log, offline verifier; over 4,000 automated tests [F91] | Real code |
+| Engine, credential, signed log, offline verifier; over 6,000 automated tests [F91] | Real code |
 | Laya and Qwen3.5 on this Mac | Real, third-party, Apache-2.0 [F11c, F27] |
 | Card rail, merchants, flagged seller, amounts, every scenario | **SIMULATED** [F20-F23] |
 | Seller data; delegator key | Fixture, gate inert [F36]; server-held demo key |
