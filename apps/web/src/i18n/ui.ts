@@ -11,7 +11,7 @@ const RUN = {
   subtitle: label("Your shopping assistant", "你的購物助手"), // NEEDS-REVIEW
   forYourBudget: label("For your budget", "按你的預算"), // NEEDS-REVIEW
   idleTitle: label("Ready when you are", "隨時準備好"), // NEEDS-REVIEW
-  idleBody: label("Tell Wally what you need. Fixed rules check every purchase before any money moves.", "話俾 Wally 知你想買乜。每次購買都會先經固定規則檢查，先至會付款。"), // NEEDS-REVIEW
+  idleBody: label("Tell Wally what you need. Fixed rules check every purchase before any money moves.", "話俾 Wally 知你想買乜。每次購買，都會在付款前先經固定規則檢查。"), // NEEDS-REVIEW
   ask: label("Ask Wally", "問 Wally"), // NEEDS-REVIEW
   recent: label("Recent", "最近"), // NEEDS-REVIEW
   earlier: label("Earlier", "較早前"), // NEEDS-REVIEW
@@ -66,8 +66,8 @@ const RUN = {
   beatDeclined: label("Declined.", "已拒絕。"), // NEEDS-REVIEW
 
   stoppedTitle: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
-  noCard: label("No card was made. Nothing can be charged.", "冇發出任何卡，唔會有任何扣款。"), // NEEDS-REVIEW
-  cardCancelled: label("The card was cancelled. Nothing more can be charged.", "卡已取消，不會再有扣款。"), // NEEDS-REVIEW
+  noCard: label("No card was made. Nothing can be charged.", "沒有發出任何卡，所以不可能被扣款。"), // NEEDS-REVIEW
+  cardCancelled: label("The card was cancelled. Nothing more can be charged.", "卡已取消，不能再被扣款。"), // NEEDS-REVIEW
   cheaper: label("See cheaper options", "睇平啲的選擇"), // NEEDS-REVIEW
   editRules: label("Edit rules", "修改規則"), // NEEDS-REVIEW
   pickElse: label("Pick something else", "揀其他嘢"), // NEEDS-REVIEW
@@ -613,11 +613,11 @@ export const UI = {
     stopped: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
     needsOk: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
     failedRun: label("Something failed, so nothing was bought. No card was made.", "過程出錯，所以冇購買，亦冇發卡。"), // NEEDS-REVIEW
-    noCardMade: label("No card was made. Nothing can be charged.", "冇發卡，唔會有任何扣款。"), // NEEDS-REVIEW
+    noCardMade: label("No card was made. Nothing can be charged.", "沒有發卡，所以不可能被扣款。"), // NEEDS-REVIEW
     exactly: label("A one-off card for exactly {amount}", "剛好 {amount} 的一次性卡"), // NEEDS-REVIEW
     atCheckout: label("At checkout", "結帳時"), // NEEDS-REVIEW
     beatPaid: label("Paid {amount}: exactly the card limit.", "已扣款 {amount}，剛好是卡額。"), // NEEDS-REVIEW
-    beatRetry: label("The reply timed out; the retry used the same key, so the rail charged once: {amount}.", "回覆逾時；重試用同一個鍵，發卡層只扣款一次：{amount}。"), // NEEDS-REVIEW
+    beatRetry: label("The reply timed out; the retry used the same key, so the rail charged once: {amount}.", "回覆逾時；重試用同一個識別碼，所以發卡層只扣款一次：{amount}。"), // NEEDS-REVIEW
     beatTried: label("The shop tried {amount}.", "商戶嘗試扣款 {amount}。"), // NEEDS-REVIEW
     beatVoided: label("Card cancelled. The budget gets its limit back.", "卡已取消，額度退回預算。"), // NEEDS-REVIEW
     beatExpired: label("Card expired unused. The budget gets its limit back.", "卡未用已過期，額度退回預算。"), // NEEDS-REVIEW
