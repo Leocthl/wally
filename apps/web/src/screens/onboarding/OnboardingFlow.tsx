@@ -17,7 +17,7 @@ import { ensureBudget } from "./ensureBudget";
 import { HelloStep } from "./HelloStep";
 import { useOnboarding } from "./OnboardingProvider";
 import type { SetupProgress } from "./setupProgress";
-import { STEP_ORDER, type StepId } from "./StepFrame";
+import { STEP_ORDER, type SkipControl, type StepId } from "./StepFrame";
 import { TasteStep } from "./TasteStep";
 
 export interface OnboardingFlowProps {
@@ -84,15 +84,18 @@ export default function OnboardingFlow({ onRetry }: OnboardingFlowProps): ReactE
     else setLeaving(false);
   };
   const busy = leaving || (booth.info === null && booth.error === null);
+  // Skip seals the ready-made budget only when the booth answered and holds none (a held budget, even one that is over, stays).
+  const readyMade = booth.info !== null && booth.state.mandate === null;
   /** What was entered on Hello or Your taste is kept when Skip is pressed there. */
-  const skipKeeping = (): { readonly onSkip: () => void; readonly busy: boolean } => ({
+  const skipKeeping = (): SkipControl => ({
     onSkip: () => {
       keep();
       void leave();
     },
     busy,
+    readyMade,
   });
-  const skipPlain = { onSkip: () => void leave(), busy };
+  const skipPlain: SkipControl = { onSkip: () => void leave(), busy, readyMade };
 
   if (step === "hello") {
     return (

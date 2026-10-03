@@ -12,7 +12,8 @@ import { FamilyMock, hello, instantMock, openFirstRun, skip, tourCard } from "./
 vi.setConfig({ testTimeout: 30_000 });
 
 const nextButton = () => screen.getByRole("button", { name: /^Next/ });
-const SKIP_NOTE = "Or skip to use a ready-made budget.";
+/** The note under the Skip link ("Skip uses a ready-made HK$800 budget for clothes."), or null when there is none. */
+const skipNote = (): string | null => document.querySelector("[data-skip-note]")?.textContent?.replace(/\s+/g, " ").trim() ?? null;
 
 async function toTaste(options: Parameters<typeof openFirstRun>[0] = {}) {
   const run = await openFirstRun(options);
@@ -42,7 +43,7 @@ describe("a budget that is over", () => {
     expect(screen.queryByRole("heading", { level: 1, name: "Your budget is ready" })).toBeNull();
     expect(await screen.findByRole("radiogroup", { name: "How much?" })).toBeInTheDocument();
     // Skip leaves the cancelled budget as it is; it seals nothing, so it has no ready-made budget to promise.
-    expect(screen.queryByText(SKIP_NOTE)).toBeNull();
+    expect(skipNote()).toBeNull();
   });
 
   it("says on Check and lock in that sealing starts a new budget and new receipts, and then it does", async () => {
@@ -88,12 +89,12 @@ describe("a budget that is over", () => {
 });
 
 describe("Skip on Check and lock in", () => {
-  it("says it uses the ready-made budget, which is what it does", async () => {
+  it("says under the link that it uses the ready-made budget, which is what it does", async () => {
     const { api, user } = await toBudget();
     await user.click(await screen.findByRole("radio", { name: "HK$300" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
     await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
-    expect(screen.getByText(SKIP_NOTE)).toBeInTheDocument();
+    expect(skipNote()).toMatch(/^Skip uses a ready-made HK\$800 budget for clothes\./);
     await user.click(skip());
     expect(await tourCard()).toBeInTheDocument();
     expect((await api.snapshot()).packet?.budget_minor).toBe(80_000);
@@ -104,7 +105,7 @@ describe("Skip on Check and lock in", () => {
     await user.click(await screen.findByRole("button", { name: "Review budget" }));
     await user.click(await screen.findByRole("button", { name: /Lock in budget/ }));
     await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
-    expect(screen.queryByText(SKIP_NOTE)).toBeNull();
+    expect(skipNote()).toBeNull();
   });
 });
 

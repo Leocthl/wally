@@ -35,6 +35,10 @@
 .onb-progress__seg[data-state="done"] { background: var(--c-primary); }
 .onb-progress__seg[data-state="now"] { flex-grow: 2; background: var(--c-primary); }
 .onb-skip { flex: none; margin-right: calc(-1 * var(--sp-2)); }
+/* Under the Skip link while Skip would seal the ready-made budget: what it does, said before the tap. In the flow, not sticky, so
+   it costs the short phones nothing once the person has scrolled on. */
+.onb-skiphint { margin: 0; padding: 0 max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left)); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: right; }
+.onb-skiphint .fig-chip { margin-inline-start: var(--sp-2); vertical-align: middle; }
 
 /* Main column. */
 .onb-main { flex: 1; display: grid; align-content: start; gap: var(--sp-5); min-width: 0; padding: var(--sp-3) max(var(--gutter), var(--safe-right)) var(--sp-5) max(var(--gutter), var(--safe-left)); }
@@ -131,17 +135,12 @@
 /* The actions stay in reach at the bottom of the screen. */
 .onb-actions { position: sticky; bottom: 0; z-index: var(--z-raised); display: grid; gap: var(--sp-2); padding: var(--sp-3) max(var(--gutter), var(--safe-right)) max(var(--sp-3), var(--safe-bottom)) max(var(--gutter), var(--safe-left)); background: var(--c-bg); }
 .onb-actions:empty { display: none; }
-/* Check and seal: the Seal button is the one pinned control (the Seal screen's own sticky bar), so the skip note under it is plain
-   text at the end of the page. Two sticky bars stacked at the bottom hid most of the button on a short phone. */
-.onb-actions[data-pinned="false"] { position: static; padding-top: var(--sp-1); }
-.onb-actions[data-pinned="false"]::before { content: none; }
 /* Scroll edge: content fades out above the bar instead of being cut by a hard line (no blur: the branding guard bans glass). */
 .onb-actions::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sp-5); background: linear-gradient(to top, var(--c-bg), transparent); pointer-events: none; }
 .onb-actions__row { display: flex; gap: var(--sp-2); }
 /* Two buttons share the row on the narrowest phone: tighter sides so a label stays on one line. */
 .onb-actions__row .w-btn--lg { padding-inline: var(--sp-4); }
 .onb-actions__grow { flex: 1; min-width: 0; }
-.onb-skipnote { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 
 /* The quick tour: a ring on the target, a card above the tab bar. The page behind waits. */
 .tour { position: fixed; inset: 0; z-index: var(--z-dialog); }

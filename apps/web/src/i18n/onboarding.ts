@@ -6,6 +6,8 @@ import { label, type LabelPair } from "./label";
 
 export const OB = {
   skip: label("Skip", "略過"), // NEEDS-REVIEW
+  // Under the Skip link while no budget exists yet: Skip seals the ready-made one, and says so before it does.
+  skipNote: label("Skip uses a ready-made {amount} budget for clothes.", "略過會用現成嘅 {amount} 預算買衫。"), // NEEDS-REVIEW
   next: label("Next", "下一步"), // NEEDS-REVIEW
   back: label("Back", "返回"), // NEEDS-REVIEW
   continue: label("Continue", "繼續"), // NEEDS-REVIEW
@@ -65,7 +67,6 @@ export const OB = {
     ends: label("Ends {until}", "{until} 結束"), // NEEDS-REVIEW
     cutShort: label("A budget can run for a month at most, so the date is set to the latest day.", "一個預算最長維持一個月，所以日期已設為最遲可揀嘅一日。"), // NEEDS-REVIEW
     review: label("Review budget", "檢查預算"), // NEEDS-REVIEW
-    skipNote: label("Or skip to use a ready-made budget.", "或者略過，用現成預算。"), // NEEDS-REVIEW
     loading: label("Getting your budget ready", "正在準備你的預算"), // NEEDS-REVIEW
     readyTitle: label("Your budget is ready", "你的預算準備好了"), // NEEDS-REVIEW
     readyBody: label("Wally can shop inside it now. You can top up or cancel it any time under Manage this budget.", "Wally 而家可以喺預算之內購物。你隨時可以喺「管理預算」增加或取消。"), // NEEDS-REVIEW

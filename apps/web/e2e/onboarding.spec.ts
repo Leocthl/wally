@@ -161,7 +161,7 @@ async function sealButtonReach(page: Page): Promise<{ readonly reach: number; re
 }
 
 test.describe("Check and lock in on a short phone", () => {
-  // The Seal button is the one pinned control: the skip note under it is plain text, not a second bar stacked over it.
+  // The Seal button is the one pinned control: nothing else is stacked over it (the skip note sits under the Skip link at the top).
   for (const viewport of [{ width: 360, height: 740 }, { width: 390, height: 664 }, { width: 390, height: 844 }, { width: 430, height: 932 }] as const) {
     test(`Lock in budget is fully tappable at ${viewport.width}x${viewport.height}, at the top of the page and at the bottom`, async ({ page }) => {
       test.skip(test.info().project.name !== "phone", "the sizes are set inside the test");
@@ -178,12 +178,19 @@ test.describe("Check and lock in on a short phone", () => {
       await expect(button).toBeVisible();
       const top = await sealButtonReach(page);
       expect(top, "before any scrolling").toMatchObject({ reach: 1, inside: true });
+      // Skip would seal the ready-made budget instead of the one on screen: the note under the Skip link says so, in view at the top.
+      const skipLink = page.getByRole("button", { name: "Skip", exact: true });
+      const hint = page.locator("[data-skip-note]");
+      await expect(hint).toBeVisible();
+      await expect(hint).toContainText("Skip uses a ready-made HK$800 budget for clothes.");
+      const [skipBox, hintBox] = [await skipLink.boundingBox(), await hint.boundingBox()];
+      expect(hintBox?.y ?? 0, "the note is under the link").toBeGreaterThanOrEqual((skipBox?.y ?? 0) + (skipBox?.height ?? 0) - 1);
+      expect((hintBox?.x ?? 0) + (hintBox?.width ?? 0), "inside the screen").toBeLessThanOrEqual(viewport.width);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "no sideways scroll").toBe(true);
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await page.waitForTimeout(250);
       const end = await sealButtonReach(page);
       expect(end, "scrolled to the end").toMatchObject({ reach: 1, inside: true });
-      // The note under the button is still there, reached by scrolling.
-      await expect(page.getByText(/^Or skip/)).toBeVisible();
       // And the tap goes through: the budget is sealed.
       await button.click();
       await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
