@@ -4,13 +4,16 @@ import type { ReactElement } from "react";
 import type { ApiInfo } from "../api/types";
 import { BRAND } from "../brand";
 import { ABOUT } from "../i18n/about";
+import { MODE } from "../i18n/mode";
 import { useBoothContext } from "../hooks/useBooth";
 import { routeHref } from "../hooks/useRoute";
 import { UI } from "../i18n/ui";
 import { InstallRow } from "../pwa/InstallUi";
+import { useDisplayMode } from "../state/displayMode";
 import { Tag } from "../ui/Chip";
 import type { ThemeChoice } from "../ui/hooks/useColorScheme";
 import { Icon } from "../ui/icons";
+import { Switch } from "../ui/Form";
 import { useLocale } from "../ui/locale";
 import { Segmented } from "../ui/Nav";
 import { Sheet } from "../ui/Overlay";
@@ -34,7 +37,7 @@ function providerText(table: Readonly<Record<string, { readonly en: string; read
   return known ? t(known) : provider;
 }
 
-function ModeInfo({ info }: { readonly info: ApiInfo }): ReactElement {
+function ModeInfo({ info, developer }: { readonly info: ApiInfo; readonly developer: boolean }): ReactElement {
   const { t } = useLocale();
   return (
     <>
@@ -43,17 +46,20 @@ function ModeInfo({ info }: { readonly info: ApiInfo }): ReactElement {
         <ListRow leading={<Icon name="sparkle" />} title={t(UI["shell.planner"])} subtitle={providerText(ABOUT.planner, info.planner.provider, t)} />
         <ListRow leading={<Icon name="eye" />} title={t(UI["shell.judge"])} subtitle={providerText(ABOUT.judge, info.judge.provider, t)} />
       </List>
-      {/* The server's notes are English text from api.info(), long and technical: one level down, kept lang="en" in the 繁 view. */}
-      <details className="shell-about__notes">
-        <summary>{t(ABOUT.notes)}</summary>
-        <p className="shell-about__notes-lead">{t(ABOUT.notesLead)}</p>
-        <dl lang="en" className="shell-about__notes-list" data-ident>
-          <dt>{t(UI["shell.planner"])}</dt>
-          <dd><span data-ident>{info.planner.provider}</span> · {info.planner.note}</dd>
-          <dt>{t(UI["shell.judge"])}</dt>
-          <dd><span data-ident>{info.judge.provider}</span> · {info.judge.note}</dd>
-        </dl>
-      </details>
+      {/* The server's notes are English text from api.info(), long and technical (provider names, ports): developer mode only,
+          one level down, kept lang="en" in the 繁 view. */}
+      {developer ? (
+        <details className="shell-about__notes">
+          <summary>{t(ABOUT.notes)}</summary>
+          <p className="shell-about__notes-lead">{t(ABOUT.notesLead)}</p>
+          <dl lang="en" className="shell-about__notes-list" data-ident>
+            <dt>{t(UI["shell.planner"])}</dt>
+            <dd><span data-ident>{info.planner.provider}</span> · {info.planner.note}</dd>
+            <dt>{t(UI["shell.judge"])}</dt>
+            <dd><span data-ident>{info.judge.provider}</span> · {info.judge.note}</dd>
+          </dl>
+        </details>
+      ) : null}
     </>
   );
 }
@@ -68,6 +74,7 @@ export interface AboutSheetProps {
 export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): ReactElement {
   const { t } = useLocale();
   const { info } = useBoothContext();
+  const [mode, setMode] = useDisplayMode();
   return (
     <Sheet open={open} onClose={onClose} title={t(UI["shell.aboutTitle"](BRAND.name))}>
       <div className="shell-about">
@@ -81,11 +88,12 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
             <span className="shell-about__label">{t(UI.language)}</span>
             <LanguageSwitch size="md" />
           </div>
+          <Switch checked={mode === "developer"} onChange={(on) => setMode(on ? "developer" : "plain")} label={t(MODE.switchLabel)} description={t(MODE.switchHint)} />
         </div>
         {info ? (
           <section className="shell-about__block" aria-labelledby="about-mode">
             <h3 id="about-mode" className="shell-about__heading">{t(UI["shell.modeTitle"])}</h3>
-            <ModeInfo info={info} />
+            <ModeInfo info={info} developer={mode === "developer"} />
           </section>
         ) : null}
         <PhoneQr />

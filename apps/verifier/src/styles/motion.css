@@ -30,6 +30,10 @@
   .row--broken { animation: row-land 520ms var(--ease-out) calc(var(--i, 0) * var(--step, 40ms) + 120ms) both; }
   .row--broken .row__disc { animation: pop var(--dur-pop) var(--ease-spring) calc(var(--i, 0) * var(--step, 40ms) + 160ms) both; }
   .row--unchecked { animation: row-fade 320ms var(--ease-out) calc(var(--i, 0) * var(--step, 40ms) + 280ms) both; }
+
+  /* Flipping Show technical details rebuilds the page, but nothing happened on it: src/app.ts marks the parts it
+     rebuilds with data-quiet, and they and everything under them stay still. A later press builds new parts. */
+  [data-quiet], [data-quiet] *, [data-quiet] *::before, [data-quiet] *::after { animation: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

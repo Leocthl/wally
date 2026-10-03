@@ -1,8 +1,11 @@
 // Static parts of the page: one field per input (label, textarea, file picker, source line, error line) and the
-// action buttons. Built once; app.ts updates their values and states.
+// action buttons. Built once per layout; app.ts updates their values and states. The words come from the Copy of the
+// display mode in force; the structure is the same in both modes.
+import type { Action, Copy } from "../copy";
 import { bi, el } from "../dom";
 import type { Field } from "../inputs";
-import { S, type Bi } from "../strings";
+
+export type { Action } from "../copy";
 
 export interface FieldParts {
   readonly field: Field;
@@ -13,20 +16,16 @@ export interface FieldParts {
   readonly error: HTMLElement;
 }
 
-const SPEC: Readonly<Record<Field, { readonly label: Bi; readonly fileLabel: Bi; readonly rows: string }>> = {
-  log: { label: S.logLabel, fileLabel: S.fileLog, rows: "6" },
-  keys: { label: S.keysLabel, fileLabel: S.fileKeys, rows: "4" },
-  checkpoint: { label: S.checkpointLabel, fileLabel: S.fileCheckpoint, rows: "3" },
-};
+const ROWS: Readonly<Record<Field, string>> = { log: "6", keys: "4", checkpoint: "3" };
 
 const ACCEPT = ".jsonl,.json,.txt,application/json,text/plain";
 
-export function buildField(field: Field): FieldParts {
-  const spec = SPEC[field];
+export function buildField(field: Field, copy: Copy): FieldParts {
+  const words = copy.fields[field];
   const id = (part: string): string => `${field}-${part}`;
   const textarea = el("textarea", {
     id: id("text"),
-    rows: spec.rows,
+    rows: ROWS[field],
     spellcheck: "false",
     autocomplete: "off",
     autocapitalize: "off",
@@ -40,10 +39,10 @@ export function buildField(field: Field): FieldParts {
   const source = el("p", { id: id("source"), class: "field__source soft" });
   const error = el("p", { id: id("error"), class: "field__error", hidden: "" });
   const root = el("div", { class: "field", "data-field": field }, [
-    el("label", { for: id("text"), class: "field__label" }, [bi(spec.label)]),
+    el("label", { for: id("text"), class: "field__label" }, [bi(words.label)]),
     textarea,
     el("div", { class: "field__meta" }, [
-      el("span", { class: "file" }, [file, el("label", { for: id("file"), class: "file__label" }, [bi(spec.fileLabel)])]),
+      el("span", { class: "file" }, [file, el("label", { for: id("file"), class: "file__label" }, [bi(words.fileLabel)])]),
       source,
     ]),
     error,
@@ -51,12 +50,9 @@ export function buildField(field: Field): FieldParts {
   return { field, root, textarea, file, source, error };
 }
 
-export type Action = "verify" | "demo" | "tamper" | "restore";
-
-const TEXT: Readonly<Record<Action, Bi>> = { verify: S.verify, demo: S.loadDemo, tamper: S.tamper, restore: S.restore };
 /** Verify is the one filled button; Load demo log is outlined, Tamper is the danger outline, Restore is quiet. */
 const LOOK: Readonly<Record<Action, string>> = { verify: "btn--primary", demo: "btn--secondary", tamper: "btn--danger", restore: "btn--ghost" };
 
-export function buildButton(action: Action): HTMLButtonElement {
-  return el("button", { type: "button", class: `btn ${LOOK[action]}`, "data-action": action }, [bi(TEXT[action])]);
+export function buildButton(action: Action, copy: Copy): HTMLButtonElement {
+  return el("button", { type: "button", class: `btn ${LOOK[action]}`, "data-action": action }, [bi(copy.buttons[action])]);
 }

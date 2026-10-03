@@ -49,7 +49,8 @@ function envelope(name: string, record: JudgeRecord, o: RecordOptions): unknown 
 
 export async function recordFixtures(o: RecordOptions): Promise<readonly Recorded[]> {
   const dir = o.fixturesDir ?? DEFAULT_FIXTURES_DIR;
-  const judge = new SystemOneJudge({ provider: "laya", baseUrl: o.baseUrl, model: o.model, rotations: true, questions: o.questions });
+  // languageGate off: a fixture is what the raw checkpoint answered for that text.
+  const judge = new SystemOneJudge({ provider: "laya", baseUrl: o.baseUrl, model: o.model, rotations: true, questions: o.questions, languageGate: false });
   const recorded: Recorded[] = [];
   for (const a of loadAnchors(loadMandate(), dir)) {
     const record = await judge.assess(a.input, { timeoutMs: o.timeoutMs });

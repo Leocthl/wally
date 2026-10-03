@@ -5,6 +5,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PRESENTER_SCRIPT } from "../src/booth/presenterScript";
 import { bootApp } from "./helpers/app";
+import { developerMode } from "./helpers/devMode";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -38,7 +39,8 @@ describe("presenter walk", () => {
     expect(document.querySelector('[data-card-state="USED"]')).not.toBeNull();
   });
 
-  it("DM3 to DM5 show the three live stops, each with its banner", async () => {
+  it("DM3 to DM5 show the three live stops, each with its banner and the engine's own sentence (the developer view)", async () => {
+    developerMode(); // plain words are the default; they are covered in plainPresenter.test.tsx
     const h = await bootApp("#/presenter");
     await stepTo(h, 4);
     const stop = (template: string): Element | null => document.querySelector(`[role="alert"][data-template="${template}"]`);
@@ -54,6 +56,7 @@ describe("presenter walk", () => {
   });
 
   it("can skip the optional DM6 and carries on to the log", async () => {
+    developerMode(); // the developer view names the button "Verify receipts"; plain says "Check receipts" (plainProofStage.test.tsx)
     const h = await bootApp("#/presenter");
     await stepTo(h, 7);
     expect(screen.getByText("DM6")).toBeInTheDocument();

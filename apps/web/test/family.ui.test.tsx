@@ -15,6 +15,7 @@ import { ProofScreen } from "../src/screens/proof/ProofScreen";
 import { bootApp, go, screenReady } from "./helpers/app";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
 import { delegate, instantMock, mountScreen, seed } from "./helpers/proofHarness";
+import { developerModeForFile } from "./helpers/devMode";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -318,6 +319,7 @@ describe("Try asking", () => {
 });
 
 describe("Export receipts", () => {
+  developerModeForFile(); // the export sheet reads as in the developer view; plain words are covered in plainProofScreen.test.tsx
   async function exportSheet(parentCredential?: unknown) {
     const { api, clock } = instantMock();
     await seed(api, clock, ["normal"]);

@@ -54,6 +54,8 @@ export const S = {
   snippetLabel: { en: "Changed byte in context", zh: "已改動的位元組及其前後文字" }, // NEEDS-REVIEW zh-HK
   tamperTitle: { en: "Tampered copy. The original is kept; Restore puts it back.", zh: "已竄改的副本。原文已保留，按「還原」即可復原。" }, // NEEDS-REVIEW zh-HK
   noFile: { en: "No file chosen.", zh: "未選擇檔案。" }, // NEEDS-REVIEW zh-HK
+  modeLabel: { en: "Show technical details", zh: "顯示技術細節" }, // NEEDS-REVIEW zh-HK
+  modeHint: { en: "For engineers: receipt ids, fingerprints and the exact codes.", zh: "給工程師：收據編號、指紋及確切代碼。" }, // NEEDS-REVIEW zh-HK
   demoBadge: {
     en: "SIMULATED demo log and throwaway test keys, not the booth keys.",
     zh: "模擬示範紀錄及一次性測試公鑰，並非攤位所用的金鑰。", // NEEDS-REVIEW zh-HK

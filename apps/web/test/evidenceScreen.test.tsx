@@ -9,6 +9,7 @@ import { EvidenceScreen } from "../src/screens/EvidenceScreen";
 import { bootApp } from "./helpers/app";
 import { CLEAN, honestyProblems } from "./evidenceFigures";
 import { harnessFile, rate, wiringFile } from "./evidenceFixtures";
+import { developerModeForFile } from "./helpers/devMode";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -21,6 +22,8 @@ function run(raw: Record<string, unknown>, file = "harness-1-live.json"): Harnes
 function show(...runs: HarnessRun[]): HTMLElement {
   return render(<EvidenceScreen harness={{ items: runs, unreadable: [] }} />).container;
 }
+
+developerModeForFile(); // plain is the default; these tests are about the developer view
 
 describe("Evidence screen on the committed files", () => {
   it("is reachable from the nav, shows the chosen file and why, and passes every honesty scan", async () => {

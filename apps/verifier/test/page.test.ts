@@ -1,8 +1,8 @@
 // T-V1 at page level in jsdom: the mounted page, driven like a judge would (Load demo, Verify, Tamper, Restore).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mountVerifier, type VerifierPage } from "../src/app";
+import type { VerifierPage } from "../src/app";
 import { LIMITS } from "../src/limits";
-import { KEYS, LOG } from "./helpers";
+import { KEYS, LOG, mountDeveloper, resetMode } from "./helpers";
 
 let root: HTMLElement;
 let page: VerifierPage;
@@ -30,12 +30,13 @@ async function chooseFile(field: string, file: File): Promise<void> {
 beforeEach(() => {
   root = document.createElement("div");
   document.body.replaceChildren(root);
-  page = mountVerifier(root);
+  page = mountDeveloper(root); // the page pins the technical wording; plain mode (the default) is in plain-page.test.ts
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.replaceChildren();
+  resetMode();
 });
 
 describe("judge flow: Load demo log, Verify, Tamper, Restore", () => {

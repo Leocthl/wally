@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30_000 });
 import { bootApp, go, press, screenReady, type Harness } from "./helpers/app";
+import { developerMode } from "./helpers/devMode";
 import { bareFigures, figuresOutsideChipSurface, numsWithoutChip } from "./helpers/figures";
 
 const FAKE_CLOCK_START = new Date("2026-10-03T02:00:00Z");
@@ -260,6 +261,7 @@ describe("free text: Try to trick Wally", () => {
 
 describe("a new seal starts clean", () => {
   it("shows none of the earlier budget's purchases, cards or receipts after Start over", async () => {
+    developerMode(); // the developer view: plain words are the default
     const h = await bootApp();
     await press(h, "normal");
     await press(h, "flagged");
@@ -283,6 +285,7 @@ describe("log, verify, tamper, start over", () => {
   const card = (): HTMLElement => document.querySelector<HTMLElement>(".pf-card")!;
 
   it("verifies, fails after Try to tamper at the changed receipt, and passes again after Restore", async () => {
+    developerMode(); // the developer view: plain words are the default
     const h = await bootApp();
     await press(h, "normal");
     await go("#/proof");
@@ -299,6 +302,7 @@ describe("log, verify, tamper, start over", () => {
   });
 
   it("says which checks the mock could not run", async () => {
+    developerMode(); // the developer view: plain words are the default
     const h = await bootApp();
     await go("#/proof");
     await h.user.click(screen.getByRole("button", { name: "Verify receipts" }));
@@ -321,6 +325,7 @@ describe("log, verify, tamper, start over", () => {
 
 describe("no number without a chip, across the whole app", () => {
   it("holds on Wally (a chip on every surface), and strictly on Budget, Receipts and Proof, after every scenario has run", async () => {
+    developerMode(); // the developer view: plain words are the default
     const h = await bootApp();
     for (const id of ["normal", "small", "flagged", "overflow", "injected", "off_category", "unverified", "overshoot", "replay", "wrong_merchant", "drift", "timeout"]) {
       await press(h, id);

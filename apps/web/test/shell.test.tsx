@@ -9,6 +9,7 @@ import { decisionIdFromHash, PARAM, parseHash, receiptHref, routeHref, wallyHref
 import { ErrorBoundary } from "../src/shell/ErrorBoundary";
 import { THEME_KEY } from "../src/shell/theme";
 import { bootApp, go, screenReady } from "./helpers/app";
+import { developerMode } from "./helpers/devMode";
 import { FirstLoadFails, FirstSealFails } from "./helpers/shellClients";
 
 vi.setConfig({ testTimeout: 20_000 });
@@ -119,7 +120,8 @@ describe("About sheet", () => {
     return { user: h.user, sheet: await screen.findByRole("dialog", { name: "About Wally" }) };
   }
 
-  it("says how the demo runs, from api.info()", async () => {
+  it("says how the demo runs, from api.info(), with the booth's own notes in developer mode", async () => {
+    developerMode();
     const { sheet } = await openAbout();
     expect(within(sheet).getByText("Offline demo in this browser")).toBeInTheDocument();
     expect(within(sheet).getByText("Replayed")).toBeInTheDocument();

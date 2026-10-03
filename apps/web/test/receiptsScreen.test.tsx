@@ -5,9 +5,12 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ReceiptsScreen } from "../src/screens/proof/ReceiptsScreen";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
+import { developerModeForFile } from "./helpers/devMode";
 import { emptyClient, instantMock, mountBare, mountScreen, seed } from "./helpers/proofHarness";
 
 vi.setConfig({ testTimeout: 20_000 });
+// These are the developer screens: hashes, #seq, reason codes and raw entries. Plain mode has its own plain*.test files.
+developerModeForFile();
 
 async function seeded(steps: Parameters<typeof seed>[2], opts?: Parameters<typeof mountScreen>[2]) {
   const { api, clock } = instantMock();

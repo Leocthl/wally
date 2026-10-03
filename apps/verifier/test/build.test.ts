@@ -6,7 +6,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build } from "vite";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { forbiddenApis } from "../build/scan";
 
 // join on import.meta.dirname: Vite rewrites `new URL(path, import.meta.url)` into a served asset URL.
@@ -70,26 +70,67 @@ describe("built page: one self-contained file", () => {
 });
 
 describe("built page: the inlined script runs the judge flow with no network", () => {
-  it("Load demo log, Verify PASS, Tamper FAIL at seq 1, Restore PASS", () => {
-    const spies = [vi.fn(), vi.fn(), vi.fn(), vi.fn()];
+  const spies = [vi.fn(), vi.fn(), vi.fn(), vi.fn()];
+  const click = (action: string): void => document.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)?.click();
+  const outcome = (): string | null | undefined => document.querySelector("[data-outcome]")?.getAttribute("data-outcome");
+  const text = (selector: string): string => document.querySelector(selector)?.textContent ?? "";
+
+  /** The page's own script on the page's own markup, with every network entry point watched. */
+  function mountBuilt(): void {
     vi.stubGlobal("fetch", spies[0]);
     vi.stubGlobal("XMLHttpRequest", spies[1]);
     vi.stubGlobal("WebSocket", spies[2]);
     vi.stubGlobal("EventSource", spies[3]);
     document.body.replaceChildren(...[...page.body.children].filter((n) => n.tagName !== "SCRIPT").map((n) => document.importNode(n, true)));
     new Function(page.querySelector("script")?.textContent ?? "")();
-    const click = (action: string): void => document.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)?.click();
-    const outcome = (): string | null | undefined => document.querySelector("[data-outcome]")?.getAttribute("data-outcome");
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.body.replaceChildren();
+    window.localStorage.clear();
+    document.documentElement.removeAttribute("data-mode");
+    for (const spy of spies) spy.mockClear();
+  });
+
+  it("developer mode: Load demo log, Verify PASS, Tamper FAIL at seq 1, Restore PASS", () => {
+    window.localStorage.setItem("wally:mode", "developer");
+    mountBuilt();
     click("demo");
     click("verify");
     expect(outcome()).toBe("pass");
     click("tamper");
     expect(outcome()).toBe("fail");
     expect(document.querySelector("[data-failed-seq]")?.getAttribute("data-failed-seq")).toBe("1");
+    expect(text(".verdict")).toContain("Chain broken at entry 1");
     click("restore");
     expect(outcome()).toBe("pass");
     for (const spy of spies) expect(spy).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
-    document.body.replaceChildren();
+  });
+
+  it("plain mode is the default: the same flow in everyday words, and the switch shows the technical page", () => {
+    mountBuilt();
+    expect(document.documentElement.dataset["mode"]).toBe("plain");
+    click("demo");
+    click("verify");
+    expect(outcome()).toBe("pass");
+    expect(text(".verdict")).toContain("All 10 receipts are untouched.");
+    click("tamper");
+    expect(outcome()).toBe("fail");
+    expect(document.querySelector("[data-failed-seq]")?.getAttribute("data-failed-seq")).toBe("1");
+    expect(text(".verdict")).toContain("Changed at receipt 2");
+    document.querySelector<HTMLButtonElement>('[role="switch"]')?.click();
+    expect(document.documentElement.dataset["mode"]).toBe("developer");
+    expect(outcome()).toBe("fail");
+    expect(text(".verdict")).toContain("Chain broken at entry 1");
+    document.querySelector<HTMLButtonElement>('[role="switch"]')?.click();
+    click("restore");
+    expect(outcome()).toBe("pass");
+    for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("carries the plain page's style sheets in the one inline style", () => {
+    const style = page.querySelector("style")?.textContent ?? "";
+    for (const rule of [".modeswitch", ".more__summary", ".row--plain", "[data-quiet]"]) expect(style, rule).toContain(rule);
   });
 });

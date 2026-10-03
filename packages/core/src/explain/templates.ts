@@ -1,7 +1,7 @@
 // One pure line builder per template id (docs/00-context Stops; docs/01 Stop catalogue; docs/02 section 8).
 // Text = rule prefix + fragment from recorded inputs. Every zh-HK string is a draft owed a native read
 // (docs/04 Microcopy, C-12): each carries a NEEDS-REVIEW marker.
-import type { TemplateId } from "../ports";
+import { JUDGE_REASON_UNSUPPORTED_LANGUAGE, type TemplateId } from "../ports";
 import {
   formatCount,
   formatDuration,
@@ -163,7 +163,21 @@ function unavailableReason(i: TemplateInputs, l: Locale): string {
   return zhOr(l, "unknown status", "狀態不明"); // NEEDS-REVIEW zh-HK
 }
 
+/**
+ * The adapter did not ask its model because the listing is in a language the model does not read (a cut-off listing
+ * keeps its own line). Exported so the app's plain words pick the same branch as this sentence.
+ */
+export const isLanguageSkip = (inputs: TemplateInputs): boolean =>
+  field(inputs, "reason") === JUDGE_REASON_UNSUPPORTED_LANGUAGE && field(inputs, "input_truncated") !== true;
+
 const r10Unavailable: Fragment = (i, l) => {
+  if (isLanguageSkip(i)) {
+    return zhOr(
+      l,
+      "Wally's listing checker reads English best and could not check this listing, so it asks you.",
+      "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。", // NEEDS-REVIEW zh-HK
+    );
+  }
   const reason = unavailableReason(i, l);
   return zhOr(l, `The judge gave no usable answer (${reason}), so you decide.`, `評審未能給出可用答案（${reason}），由你決定。`); // NEEDS-REVIEW zh-HK
 };

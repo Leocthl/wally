@@ -49,6 +49,24 @@ describe("runTune against the mock server", () => {
     expect(saved.selection?.winner).toBe(run.selection?.winner);
   });
 
+  it("measures Chinese cases on the raw checkpoint: the language gate is off for this tool", { timeout: 60_000 }, async () => {
+    const zhDir = mkdtempSync(join(tmpdir(), "tune-zh-"));
+    try {
+      const cases = (JSON.parse(readFileSync(join(dir, "tiny.json"), "utf8")) as { cases: { listing: { text: string } }[] }).cases;
+      const chinese = ["輕量羽絨褸好輕身，摺埋可以塞入細袋。", "粗針羊毛冷衫，人手收邊，厚身得嚟又唔痕。", "校服背心裙，滌棉布料，唔易皺，七日內可以換尺碼。", "藍牙耳機，連續播放十小時，附送充電盒。"];
+      const doc = { corpus: "judge-corpus/tiny-zh", provenance: "SIMULATED", note: "test", cases: cases.map((c, i) => ({ ...c, listing: { ...c.listing, text: chinese[i] ?? "" } })) };
+      writeFileSync(join(zhDir, "tiny-zh.json"), JSON.stringify(doc));
+      const run = await runTune({ ...options(), corpusDir: zhDir, runPath: join(runDir, "zh-run.json") });
+      const results = [...run.variants.flatMap((v) => v.results), ...(run.heldout?.results ?? [])];
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.every((r) => r.status === "OK" && r.answers !== null)).toBe(true);
+      const asked = mock.judgeRequests().map((r) => (r.body as { state: { listing: { description: string } } }).state.listing.description);
+      expect(asked.some((d) => chinese.some((c) => d.includes(c.slice(0, 6))))).toBe(true);
+    } finally {
+      rmSync(zhDir, { recursive: true, force: true });
+    }
+  });
+
   it("resumes from the run file without asking the server again", { timeout: 60_000 }, async () => {
     await runTune(options());
     const calls = mock.judgeRequests().length;
