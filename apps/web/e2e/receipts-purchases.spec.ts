@@ -1,6 +1,7 @@
 // One purchase, one row, on a real phone: the Receipts list shows a bought item once (its decision, one-off card and charge are the
-// "3 steps" under it), the number a purchase carries is the same on Home, in Receipts, in Proof and on Wally's screen, the steps
-// are 44 px targets that open their own receipt, and the changed copy of the tamper demo is flagged on the row and its step.
+// "3 steps" under it), the number a purchase row carries is that of the receipt it opens (the same on Home, in Receipts and its
+// sheet, and in Proof), the steps are 44 px targets that open their own receipt, and the changed copy of the tamper demo is flagged
+// on the row and its step.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -53,20 +54,28 @@ test("a bought item is one row with its steps behind it, and the steps are 44 px
   await expect(page.getByRole("dialog", { name: "Paid" })).toBeVisible();
 });
 
-test("the purchase has one number everywhere: Home, Receipts, Proof and Wally's details", async ({ page }) => {
+test("a purchase row and the receipt it opens say one number: Home, Receipts, its sheet and Proof", async ({ page }) => {
   await buyTee(page);
-  // Wally's details for nerds.
+  // Wally's details for nerds name the decision's own receipt (2), the one "See receipt" opens.
   await page.getByRole("button", { name: "Why was this approved?" }).click();
   const why = page.getByRole("dialog");
   await why.locator("summary", { hasText: "Details for nerds" }).click();
   await expect(why.locator(".run-nerd-ids")).toContainText("Receipt2");
   await page.keyboard.press("Escape");
+  // The purchase ended with the charge, receipt 4: Home's Recent, the Receipts row and the sheet the row opens all say 4.
   await page.goto("/?api=mock#/budget");
-  await expect(page.locator(".home-recent").first()).toContainText("Paid · Receipt 2");
+  await expect(page.locator(".home-recent").first()).toContainText("Paid · Receipt 4");
   await page.goto("/?api=mock#/receipts");
-  await expect(page.locator(".rc-purchase .rc-row__meta")).toContainText("Paid · Receipt 2");
+  const row = page.locator(".rc-purchase .rc-row__meta");
+  await expect(row).toContainText("Paid · Receipt 4");
+  await row.click();
+  await expect(page.getByRole("dialog", { name: "Paid" }).locator(".rc-hero__meta")).toContainText("Receipt 4");
+  await page.keyboard.press("Escape");
+  // Proof's timeline gives that receipt (the charge) the same number, and the decision its own.
   await page.goto("/?api=mock#/proof");
   const timeline = page.locator(".pf-tl__item");
+  await expect(timeline.nth(3)).toContainText("Receipt 4");
+  await expect(timeline.nth(3)).toContainText("Charged");
   await expect(timeline.nth(1)).toContainText("Receipt 2");
   await expect(timeline.nth(1)).toContainText("Approved");
 });

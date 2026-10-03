@@ -1,6 +1,6 @@
 // Recent: the last three purchases of this budget, one row each. A row says what happened in words beside an icon (paid, stopped
-// before paying, waiting for your OK...), carries its receipt number, the same one the Receipts list and Proof use, and the
-// amount, and opens that purchase on Wally's screen.
+// before paying, waiting for your OK...), carries the number of the receipt that says so, the same one the Receipts list shows on
+// that purchase's row and its sheet, and the amount, and opens that purchase on Wally's screen.
 import type { ReactElement } from "react";
 import { SIMULATED } from "../../domain/provenance";
 import { PARAM, routeHref } from "../../hooks/useRoute";

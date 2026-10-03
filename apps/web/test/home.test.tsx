@@ -35,8 +35,9 @@ describe("budget card", () => {
     await waitFor(() => expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED"));
     const recent = screen.getByRole("list", { name: "Recent" });
     const first = within(recent).getAllByRole("link")[0]!;
-    // One purchase is one row, worded by where it ended up, and numbered the way the Receipts list numbers it (the decision is receipt 2).
-    expect(first).toHaveTextContent("Paid · Receipt 2");
+    // One purchase is one row, worded by where it ended up, and numbered the way the Receipts list numbers it: by the receipt that
+    // says so (the charge is receipt 4; the decision is receipt 2, the card 3).
+    expect(first).toHaveTextContent("Paid · Receipt 4");
     expect(first).not.toHaveTextContent("#");
     expect(first).toHaveTextContent("HK$259");
     expect(first).toHaveTextContent("Cotton tee");
@@ -114,8 +115,9 @@ describe("selectors", () => {
     const asked = entry(1, "log", "DECISION", decision("dec_1", "ESCALATE", "Tee", 25900));
     const expired = entry(2, "log", "DECISION", decision("dec_2", "DENY", "Tee", 25900, "dec_1"));
     const rows = recentPurchases(stateWith([asked, expired], "log"));
-    // The row is the purchase: it carries the decision it started with (the number and the link) and where it ended up.
-    expect(rows).toEqual([{ id: "dec_1", seq: 1, state: "stopped", title: "Tee", merchant: "Demo", totalMinor: 25900, at: "2026-10-03T02:00:00Z" }]);
+    // The row is the purchase: it carries the decision it started with (the link), where it ended up, and the receipt that says
+    // so (the closing decision, seq 2): the number the Receipts row and its sheet show.
+    expect(rows).toEqual([{ id: "dec_1", seq: 2, state: "stopped", title: "Tee", merchant: "Demo", totalMinor: 25900, at: "2026-10-03T02:00:00Z" }]);
   });
 
   it("make one row of a purchase's decision, card and charge, and leave the budget's own receipts out", () => {
@@ -125,7 +127,8 @@ describe("selectors", () => {
     const sealed = entry(0, "log", "MANDATE_SEALED", { credentialSubject: { rules: { budget: { amount_minor: 80000 } } } });
     const rows = recentPurchases(stateWith([sealed, approved, minted, charged], "log"));
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ id: "dec_1", seq: 1, state: "paid", totalMinor: 25900 });
+    // The decision is seq 1 and the link; the row's number comes from the charge (seq 3), the receipt that says it was paid.
+    expect(rows[0]).toMatchObject({ id: "dec_1", seq: 3, state: "paid", totalMinor: 25900 });
   });
 
   it("group cards: ready first, the rest after, newest first", () => {
