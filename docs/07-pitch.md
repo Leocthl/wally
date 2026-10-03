@@ -5,10 +5,10 @@
 |---|---|---|---|
 | **Hook** | 0:00-0:40 | 1-3 | The pipe is live: Mastercard [F7a], Visa [F7b] and HKT's Single Use Card [F1]. The brake is not: the control we found is trust, or a limit set by hand. 12,505 scams in 2025 [F4] is why the seller check matters; early 2026 is down 28% [F5b]. One shopper: Gen Z, 21 to 30 [F5a]. Mum is a feature. |
 | **Demo** | 0:40-3:00 | Presenter | Seal one sentence [F20]. Wally can only ask: the planner names a title, code prices the cart, the rules decide, the decision is logged first, then a one-off card for the exact total [F21]. Charge more: declined. Three stops. Flip one byte: Proof fails. |
-| **Evidence** | 3:00-3:30 | 10-11 | What each layer adds, on our own 150 scenarios [F69]. Zero of 84 allows up to about 4 in 100 [F96]; 5 of 66 honest buys blocked. Limits: rail simulated, seller data a fixture, consent one tap [F36]. Over 4,000 tests [F91]. |
-| **Market, moat** | 3:30-4:15 | 12-13 | A wallet or issuer pays; the shopper pays nothing; fee guess untested [F98]. Anchors, not Hong Kong figures [F94, F95]. Rails will bundle limits and AP2 defines signed budgets; we found no one that also screens listing text, sizes each card to the cart and keeps a decision log anyone can verify offline [F103]. |
-| **Path** | 4:15-4:45 | 14-16 | Delegate software inside the licensed wallet, exposure capped at the sealed budget; HKMA sandbox route [F8]. Pilot on today's card, no new API: 90 days, 50 holders [F97]. One ask: a delegation API. Then Club Points. Hallway result ([12](12-hallway-interviews.md)). |
-| **Team** | 4:45-5:00 | 17-18 | Four roles, four names. Repo public at submission [F18]. |
+| **Evidence** | 3:00-3:30 | 11-12 | What each layer adds, on our own 150 scenarios [F69]. Zero of 84 allows up to about 4 in 100 [F96]; 5 of 66 honest buys blocked. Limits: rail simulated, seller data a fixture, consent one tap [F36]. Over 4,000 tests [F91]. |
+| **Market, moat** | 3:30-4:15 | 13-14 | A wallet or issuer pays; the shopper pays nothing; fee guess untested [F98]. Anchors, not Hong Kong figures [F94, F95]. Rails will bundle limits and AP2 defines signed budgets; we found no one that also screens listing text, sizes each card to the cart and keeps a decision log anyone can verify offline [F103]. |
+| **Path** | 4:15-4:45 | 15-17 | Delegate software inside the licensed wallet, exposure capped at the sealed budget; HKMA sandbox route [F8]. Pilot on today's card, no new API: 90 days, 50 holders [F97]. One ask: a delegation API. Then Club Points. Hallway result ([12](12-hallway-interviews.md)). |
+| **Team** | 4:45-5:00 | 18-19 | Four roles, four names. Repo public at submission [F18]. |
 
 ## Booth: 3 minutes, same beats [F45]
 | Block | Time | Say |
@@ -20,10 +20,10 @@
 | Limits + ask | 2:40-3:00 | The rail is simulated. Both models are third-party open source on this Mac. Every number is from our harness. HKT has the wallet, the card and an agent-ID pilot [F1, F2, F8]; we found no delegation API [F1]. |
 
 - **What each layer adds** [F69]: rules only = B1; Wally = rules plus judge = B2; AI alone = our B0 (Laya trusted, no arithmetic, no card limit), a baseline we built, shown last, no claim about shopping agents.
-- **Deck**: slides 4-9 are stills if the app fails; 19-22 are hidden. **Then**: Q&A or hands-on [F45]; see [06](06-demo-script.md).
+- **Deck**: slides 4-10 are stills if the app fails; 20-23 are hidden. **Then**: Q&A or hands-on [F45]; see [06](06-demo-script.md).
 
 ## Scoring map [F15]
-- **HKT weights**: fit 25, slides 2-3 · execution 25, engine, models, harness · UX 20, phone-first app · trust 15, credential, consent design [F19] · rail 15, slides 14-16, [09](09-hkt-delegation-api-ask.md). **Stage**: framing 2-3, market 12-13, vision 14-16.
+- **HKT weights**: fit 25, slides 2-3 · execution 25, engine, models, harness · UX 20, phone-first app · trust 15, credential, consent design [F19] · rail 15, slides 15-17, [09](09-hkt-delegation-api-ask.md). **Stage**: framing 2-3, market 13-14, vision 15-17.
 
 ## Hard Q&A
 | Question | Answer |
