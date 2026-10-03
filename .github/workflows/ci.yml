@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - name: Freeze guard (F16)
+        run: bash scripts/freeze-guard.sh "$(git log -1 --format=%ct)"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

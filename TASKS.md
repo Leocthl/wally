@@ -3,7 +3,7 @@
 ## Top 10 do-first
 1. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
 1b. **Persist (done on main)**: human check left: reload on a real phone (Safari and Chrome) and in the iOS and Android shells.
-2. **X-01, X-18** Public repo: a private remote exists (pushed through 78d0257, CI green); making it public needs the team's explicit yes (licence: Apache-2.0, chosen 2026-10-03); then the freeze guard. Audit findings are fixed before it goes public.
+2. **X-01** Public repo: the private remote has `main` pushed; making it public needs the team's explicit yes (licence: Apache-2.0, chosen 2026-10-03). The 2026-10-03 audit found no secret or brand material; two owner decisions are open: the personal email on every commit, and whether the organiser-pack digests (F13 to F19) may be public.
 3. **D-17, D-18, D-30** Film and deck refresh (the demo half re-shot on the current build, the photo slide, the live link); then a human listens to the narration and watches every join, and types the four names into slide 17.
 4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
 5. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
@@ -36,7 +36,7 @@
 | X-15 | Lane worktrees: `git worktree add .worktrees/<name> -b lane/<name>` for a, b, c, d; each lane commits on its branch; merge to `main` at gates in the order X, A, B, C, D | [TEAM] | 0.25h | X-01 | M1 | [x] |
 | X-16 | Integrate V2: `SystemOneJudge` (laya default), planner backend (`rule` default, `replay` fallback), credential seal and rail token features wired in `apps/web`; env names per 02 §Env config; a stopped Laya server falls back without a crash | [TEAM] | 1.5h | X-10, A-32, A-33, B-14, B-15 | M3 | [x] |
 | X-17 | Booth smoke inside T-E2E: every scenario button (04 §Booth) runs with network off and no API key; Laya stopped gives judge ERROR, then ESCALATE `R10.unavailable`; Reset returns to step 0. See X-11. | [TEAM] | 1.5h | X-11, C-16 | M4 | [x] |
-| X-18 | Freeze guard: pre-push hook and CI check that refuse pushes after Sun 13:00 HKT [F16]; run with the 03 §Freeze checklist (D-26) | [TEAM] | 0.5h | X-03 | M5 | [ ] |
+| X-18 | Freeze guard: pre-push hook and CI check that refuse pushes after Sun 13:00 HKT [F16]; run with the 03 §Freeze checklist (D-26) | [TEAM] | 0.5h | X-03 | M5 | [x] |
 | X-19 | Credits keeper: every dependency or model added appears in `THIRD_PARTY.md` and README Credits with its licence [F16]; CI lists packages missing from it | [TEAM] | 0.5h | X-02 | M5 | [ ] |
 
 ### Lane A: policy + rail

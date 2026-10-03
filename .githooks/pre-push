@@ -1,0 +1,3 @@
+#!/bin/sh
+# Refuses every push from this clone once the code freeze has passed (scripts/freeze-guard.sh).
+exec "$(git rev-parse --show-toplevel)/scripts/freeze-guard.sh"
