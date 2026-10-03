@@ -19,9 +19,9 @@ const OUT_FILE = join(ROOT, "packages/core/src/generated/schemas.ts");
 const MANIFEST = join(ROOT, "packages/core/src/schema/manifest.json");
 const OUT_VALIDATORS = join(ROOT, "packages/core/src/schema/compiled/validators.ts");
 const SCHEMA_ID_BASE = "https://laisee.local/schemas/";
-// ajv is a dependency of @laisee/core, so it is resolved from there.
+// ajv is a dependency of @wally/core, so it is resolved from there.
 const coreRequire = createRequire(join(ROOT, "packages/core/package.json"));
-const ROOT_TITLE = "LaiseeSchemaIndex";
+const ROOT_TITLE = "WallySchemaIndex";
 const DROP_KEYS = new Set(["$schema", "$id", "$defs", "$comment", "examples"]);
 
 const BANNER = [

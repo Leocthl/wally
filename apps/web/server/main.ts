@@ -1,5 +1,5 @@
 // Starts the booth server on 127.0.0.1 only (PORT, default 8787): the API, the SSE trace, the built UI at / and the
-// offline verifier page at /verifier/. Run: pnpm --filter @laisee/web api (or pnpm demo from the repo root).
+// offline verifier page at /verifier/. Run: pnpm --filter @wally/web api (or pnpm demo from the repo root).
 // LAN mode (opt-in, pnpm demo:lan, `--lan` or HOST): binds the network and asks every API call for a pairing token, so
 // phones on the same Wi-Fi can open the live app (server/lanMode.ts, server/http/lan.ts).
 // This file is the startup logger: the only place the server writes to the console.

@@ -1,8 +1,8 @@
 // The date a budget ends on, read out of a sentence for the fixed rules parser (compile.ts, no model). Only a date that an
 // end word introduces counts ("until 31 Oct", "by 2026-10-31", "10月31日前"), or the end of a month ("end of November",
 // "十月底"). A date that merely sits in the sentence, belongs to a seller (ships by, sale until) or competes with another
-// date sets nothing. The year is never read: a date means its next occurrence (@laisee/agent/compiler resolves and caps it).
-import { isRealDate, type EndDate } from "@laisee/agent/compiler";
+// date sets nothing. The year is never read: a date means its next occurrence (@wally/agent/compiler resolves and caps it).
+import { isRealDate, type EndDate } from "@wally/agent/compiler";
 
 const MONTHS: Readonly<Record<string, number>> = {
   jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,

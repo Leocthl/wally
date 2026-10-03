@@ -1,7 +1,7 @@
 // The sentence a refused family seal carries. Kept apart from family.ts so session.ts can word a refusal without importing
 // the module that imports session.ts.
-import { hkd } from "@laisee/core/family";
-import type { ExceedsParentDetails } from "@laisee/core/orchestrator";
+import { hkd } from "@wally/core/family";
+import type { ExceedsParentDetails } from "@wally/core/orchestrator";
 
 /** The core's sentences speak of "the parent"; the booth's parent is Mum. */
 const inMumsWords = (message: string): string => message.replace(/the parent budget/gi, "Mum's budget").replace(/the parent/gi, "Mum");

@@ -1,6 +1,6 @@
 // What R10 would do with a judge record under a set of thresholds (shown for the demo listings in the report).
 // The engine in core is the only producer of a Decision; this mirrors its comparisons for reading only.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import { gateById, stops } from "./gates";
 import type { GateThresholds } from "./thresholds";
 

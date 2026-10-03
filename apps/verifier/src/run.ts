@@ -1,6 +1,6 @@
-// One Verify press: read the three inputs, then verifyLogText from @laisee/core/verify. PASS only when the inputs
+// One Verify press: read the three inputs, then verifyLogText from @wally/core/verify. PASS only when the inputs
 // read cleanly AND the report is ok; an exception from the library is shown as NOT VERIFIED (fail closed).
-import { parseLogText, verifyLogText, type Checkpoint, type VerifyReport } from "@laisee/core/verify";
+import { parseLogText, verifyLogText, type Checkpoint, type VerifyReport } from "@wally/core/verify";
 import { readCheckpoint, readKeys, readLog, type InputError } from "./inputs";
 import { buildTimeline, type Timeline } from "./timeline";
 

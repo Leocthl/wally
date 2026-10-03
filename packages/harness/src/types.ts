@@ -8,9 +8,9 @@ import type {
   RuleId,
   ScameterCapture,
   TemplateId,
-} from "@laisee/core/generated";
-import type { CardEvent } from "@laisee/core/ports";
-import type { MerchantMode } from "@laisee/rail-sim";
+} from "@wally/core/generated";
+import type { CardEvent } from "@wally/core/ports";
+import type { MerchantMode } from "@wally/rail-sim";
 import type { Category } from "./config";
 
 export type { Category } from "./config";

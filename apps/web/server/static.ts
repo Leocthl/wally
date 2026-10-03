@@ -67,6 +67,6 @@ export function registerStaticRoutes(app: Hono, roots: StaticRoots): void {
     const exact = await fileResponse(c, resolveInside(roots.ui, c.req.path));
     if (exact !== null) return exact;
     // Hash routes never reach the server; any other unknown path gets the app shell.
-    return (await fileResponse(c, join(resolve(roots.ui), "index.html"))) ?? missing(c, "the booth UI (run pnpm --filter @laisee/web build)");
+    return (await fileResponse(c, join(resolve(roots.ui), "index.html"))) ?? missing(c, "the booth UI (run pnpm --filter @wally/web build)");
   });
 }

@@ -1,5 +1,5 @@
 // Trace reporting: every typed decision goes to opts.onTrace as one PlannerTraceStep.
-import type { PlannerTraceStep } from "@laisee/core/ports";
+import type { PlannerTraceStep } from "@wally/core/ports";
 
 export interface Tracer {
   /** Number of decisions reported so far; the step cap reads this. */

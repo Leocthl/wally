@@ -3,7 +3,7 @@
 // step): the app boots on-device with no /api call, the worker registers under /wally/, the manifest and icons resolve
 // inside it, a Try asking card runs a purchase and shows the one-off card, every screen's chunk loads, the Proof link opens
 // /wally/verifier/, and with the server gone the app still boots from the worker's cache. Run by
-// `pnpm --filter @laisee/web e2e:pages`, which builds dist-pages first. Not part of the default e2e project list
+// `pnpm --filter @wally/web e2e:pages`, which builds dist-pages first. Not part of the default e2e project list
 // (playwright.config.ts ignores this folder). Uses 127.0.0.1:8801.
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -37,7 +37,7 @@ const nav = (p: Page) => p.getByRole("navigation", { name: "Main" });
 const onDeviceNote = (p: Page) => p.locator('[data-api-mode="local"]');
 
 test.beforeAll(async ({ browser }) => {
-  if (!existsSync(join(ROOT, "index.html"))) throw new Error("apps/web/dist-pages is missing: run `pnpm pages:build` (or `pnpm --filter @laisee/web e2e:pages`, which builds first)");
+  if (!existsSync(join(ROOT, "index.html"))) throw new Error("apps/web/dist-pages is missing: run `pnpm pages:build` (or `pnpm --filter @wally/web e2e:pages`, which builds first)");
   server = await startPagesServer({ root: ROOT, mount: MOUNT, port: PORT });
   app = `${server.origin}${MOUNT}`;
   context = await browser.newContext({ ...devices["Pixel 7"] });

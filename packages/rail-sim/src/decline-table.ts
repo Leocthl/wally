@@ -2,7 +2,7 @@
 // loaded from a JSON file so the one real observed decline [F40] drops in with no code change.
 // The shipped default is SIMULATED (data/decline-table.default.json). Only OVER_LIMIT is calibrated by the real
 // test; the other codes stay SIMULATED [F1]. Validated at load; anything unexpected fails closed.
-import type { CardEvent } from "@laisee/core/ports";
+import type { CardEvent } from "@wally/core/ports";
 import defaultTableJson from "../data/decline-table.default.json" with { type: "json" };
 
 export const DECLINE_CODES = ["OVER_LIMIT", "CARD_USED", "CARD_VOIDED", "CARD_EXPIRED", "UNKNOWN_HANDLE", "MERCHANT_MISMATCH"] as const;

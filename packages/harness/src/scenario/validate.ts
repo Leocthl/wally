@@ -1,6 +1,6 @@
 // Every generated scenario is checked against the core schemas before it can reach a system under test. A generator bug
 // then fails loudly at the source instead of showing up as a strange outcome further down.
-import { formatIssues, validateCart, validateListingRecord, validateMandate, validatePacketState, validatePlannerReplayRecord, validateScameterCapture, type ValidationResult } from "@laisee/core/schema";
+import { formatIssues, validateCart, validateListingRecord, validateMandate, validatePacketState, validatePlannerReplayRecord, validateScameterCapture, type ValidationResult } from "@wally/core/schema";
 import type { Scenario } from "../types";
 
 function check(scenario: Scenario, what: string, result: ValidationResult<unknown>): void {

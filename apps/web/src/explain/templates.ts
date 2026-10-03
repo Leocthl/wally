@@ -1,7 +1,7 @@
 // STUB explanation templates: renders the documented examples (docs/01 Stop catalogue) until lane A's explain module
 // merges. Same signature as core's Render, so the swap is one line in renderStop.ts. zh-HK lines are drafts for the
 // native read owed in C-12. Pure: no I/O, no clock, no LLM prose (D4).
-import type { TemplateId } from "@laisee/core/ports";
+import type { TemplateId } from "@wally/core/ports";
 import { formatHkd } from "../domain/money";
 import { formatHkTime } from "../domain/time";
 

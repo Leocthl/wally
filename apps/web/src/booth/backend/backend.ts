@@ -3,12 +3,12 @@
 // (R11 expiry, card expiry, packet expiry). DEMO SHORTCUT: the delegator's throwaway key lives here and signs seal,
 // revoke and escalation answers for the shopper; a real deployment keeps that key on the shopper's device.
 // Portable (no node:*): the Node server (server/compose.ts) and the on-device client (src/api/local) both run it.
-import type { OrchestratorEvent } from "@laisee/core/orchestrator";
-import { toJsonl } from "@laisee/core/log";
-import { signEscalationAnswer, signRevocation } from "@laisee/core/log";
-import type { Decision, LogEntry } from "@laisee/core/generated";
-import type { VerifyFailure } from "@laisee/core/ports";
-import { verifyChain } from "@laisee/core/verify";
+import type { OrchestratorEvent } from "@wally/core/orchestrator";
+import { toJsonl } from "@wally/core/log";
+import { signEscalationAnswer, signRevocation } from "@wally/core/log";
+import type { Decision, LogEntry } from "@wally/core/generated";
+import type { VerifyFailure } from "@wally/core/ports";
+import { verifyChain } from "@wally/core/verify";
 import type {
   AlternativesRequest,
   ApiInfo,

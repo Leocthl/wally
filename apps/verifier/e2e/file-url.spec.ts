@@ -14,7 +14,7 @@ interface Watch {
 }
 
 async function open(page: Page): Promise<Watch> {
-  if (!existsSync(FILE)) throw new Error("dist/index.html is missing: run `pnpm --filter @laisee/verifier e2e` (it builds first)");
+  if (!existsSync(FILE)) throw new Error("dist/index.html is missing: run `pnpm --filter @wally/verifier e2e` (it builds first)");
   const watch: Watch = { requests: [], errors: [] };
   page.on("request", (r) => watch.requests.push(r.url()));
   page.on("pageerror", (e) => watch.errors.push(e.message));

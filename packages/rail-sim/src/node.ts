@@ -1,4 +1,4 @@
-// @laisee/rail-sim/node: Node-only helpers (file access). Kept apart so the main entry stays free of node: imports.
+// @wally/rail-sim/node: Node-only helpers (file access). Kept apart so the main entry stays free of node: imports.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DeclineTableError, parseDeclineTable, type DeclineTable } from "./decline-table";

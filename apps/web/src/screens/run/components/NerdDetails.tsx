@@ -2,7 +2,7 @@
 // source, Wally's read of the listing (probability against its limit), the checker record, the decision id and its
 // receipt. Rule ids live here and only here. Values are formatted, never dumped as JSON.
 import type { ReactElement } from "react";
-import { render as coreRender } from "@laisee/core/explain";
+import { render as coreRender } from "@wally/core/explain";
 import type { Decision, TemplateId } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import { ASSUMED, cartProv, judgeProv, type Prov } from "../../../domain/provenance";

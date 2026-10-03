@@ -2,8 +2,8 @@
 // It has no limit, no single-use rule, no merchant lock and no expiry; it keeps one property of any payment API, an
 // idempotency key (a retry with the same key returns the first answer). It exists so B0 can be "no rail limit" while
 // the real RailSim, which enforces the approved total at mint (I2), stays on the governed path only.
-import type { CardRecord } from "@laisee/core/generated";
-import type { AuthoriseRequest, CardEvent, MintRequest, RailPort } from "@laisee/core/ports";
+import type { CardRecord } from "@wally/core/generated";
+import type { AuthoriseRequest, CardEvent, MintRequest, RailPort } from "@wally/core/ports";
 
 /** limit_minor of a card with no limit. Reported as null in outcomes. */
 export const NO_LIMIT_MINOR = Number.MAX_SAFE_INTEGER;

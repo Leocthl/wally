@@ -2,10 +2,10 @@
 // operations. A "buy" run submits the scenario's listings and plays its checkout beats on the new card; a "card" run
 // uses the newest card in the wanted state, or buys one first, so every button works in any order. The merchant
 // stub's mode is set for each beat and always put back to honest. Everything here is SIMULATED.
-import type { ListingRecord } from "@laisee/core/generated";
-import type { Orchestrator } from "@laisee/core/orchestrator";
-import type { Clock } from "@laisee/core/ports";
-import type { MerchantMode } from "@laisee/rail-sim";
+import type { ListingRecord } from "@wally/core/generated";
+import type { Orchestrator } from "@wally/core/orchestrator";
+import type { Clock } from "@wally/core/ports";
+import type { MerchantMode } from "@wally/rail-sim";
 import type { RunSummary, TraceEvent } from "../../api/types";
 import { requestKey, type AskSource } from "./ask";
 import { listingsFor, overflowListing, visitorListing, type Catalogue } from "./catalogue";

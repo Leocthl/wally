@@ -49,7 +49,7 @@
 
 ### M: mobile, second model, brand
 - **Tasks**: M-01 to M-12: Wally rename, Qwen service, local planner and compiler, design system, PWA shell, screens, on-device mode, key on the phone, LAN mode, device pass, voice input.
-- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode; LAN mode serves phone browsers; the Capacitor shells run on a simulator and an emulator, and their LAN link is untested; `scripts/rename-scope.mjs` runs last, after every lane has merged.
+- **Done**: Qwen files pinned and measured; planner and compiler fail to a fallback and never throw; the booth runs offline in on-device mode; LAN mode serves phone browsers; the Capacitor shells run on a simulator and an emulator, and their LAN link is untested; the workspace scope was renamed to `@wally/*` after every lane merged.
 
 ### X: cross-lane
 - **Tasks**: X-01 to X-19: worktrees, CI, contracts, integration, T-E2E with booth smoke, freeze guard, credits.
@@ -89,7 +89,7 @@
 ## Freeze and submission [F16, F18, F41]
 - [ ] **M6**: rehearsals on both clocks [F45, F42]; video (D-18); deck (D-15).
 - [ ] **Before Sun 13:00 HKT**: final merge to `main`; repo public, link checked logged out; README Credits and `THIRD_PARTY.md` complete [F16]; declaration of the HKT problem statement, Raccoon only if really used [F15]; form submitted with deck, repo link, video (D-25).
-- [ ] **Live link (optional)**: once the repo is public, Settings, Pages, Source: GitHub Actions; run the `pages` workflow; check the deploy finished before 13:00 HKT and run `pnpm --filter @laisee/web e2e:pages`; put the URL in README, deck and declaration.
+- [ ] **Live link (optional)**: once the repo is public, Settings, Pages, Source: GitHub Actions; run the `pages` workflow; check the deploy finished before 13:00 HKT and run `pnpm --filter @wally/web e2e:pages`; put the URL in README, deck and declaration.
 - [ ] **After Sun 13:00 HKT**: no commits, pushes, tags or repo setting changes [F16]; freeze guard on (X-18). The booth and the stage run from the frozen commit.
 
 ## Collapse plan, team of 3 [F13]

@@ -1,7 +1,7 @@
 // What one orchestrator operation means for a booth run: a Step (outcome, decision, plain note, stable code) built from
 // a SubmitResult or a CheckoutResult. Notes are plain English from recorded facts; a screen words them in its own
 // language from `code`. Nothing here decides anything.
-import type { CardView, CheckoutResult, NoProposalReason, SubmitResult } from "@laisee/core/orchestrator";
+import type { CardView, CheckoutResult, NoProposalReason, SubmitResult } from "@wally/core/orchestrator";
 import type { RunOutcome } from "../../api/types";
 
 export interface Step {

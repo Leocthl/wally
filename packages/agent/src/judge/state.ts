@@ -8,7 +8,7 @@
 // separation, and the demo's clean listings were then denied (see the commit that introduced this shape). The
 // thresholds in F36 were read off states shaped like this one (a mandate and a listing object), so this shape also
 // keeps them meaningful. Re-run judge:fit after any change here.
-import type { JudgeInput } from "@laisee/core/ports";
+import type { JudgeInput } from "@wally/core/ports";
 import { MAX_INLINE_TEXT_CHARS, MAX_INTENT_CHARS, MAX_SUMMARY_ITEMS } from "./config";
 
 export interface ListingPart {

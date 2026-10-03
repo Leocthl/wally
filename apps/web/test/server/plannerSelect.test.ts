@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROBE_TIMEOUT_MS, probeHealth, selectPlanner, settledChoice, type HealthProbe } from "../../server/booth/plannerSelect";
 import { settingsFromEnv } from "../../server/booth/settings";
 import { composeBooth } from "../../server/compose";
-import { MemoryLogStore } from "@laisee/core/testing";
+import { MemoryLogStore } from "@wally/core/testing";
 import { ephemeralKeys } from "../../server/booth/keys";
 
 const QWEN = "http://127.0.0.1:8809";

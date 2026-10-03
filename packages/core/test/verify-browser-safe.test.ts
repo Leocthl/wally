@@ -1,4 +1,4 @@
-// @laisee/core/verify runs in the offline verifier page: its whole relative import graph must stay free of
+// @wally/core/verify runs in the offline verifier page: its whole relative import graph must stay free of
 // node: built-ins (and of FileLogStore), and must not reach signing-only code paths it does not need.
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -35,7 +35,7 @@ function importGraph(entry: string): Map<string, string[]> {
   return graph;
 }
 
-describe("@laisee/core/verify is browser-safe", () => {
+describe("@wally/core/verify is browser-safe", () => {
   const graph = importGraph(join(SRC, "verify/index.ts"));
 
   it("imports no Node built-ins anywhere in its graph", () => {
@@ -51,7 +51,7 @@ describe("@laisee/core/verify is browser-safe", () => {
     }
   });
 
-  it("keeps @laisee/core/crypto, vc and log free of Node built-ins too", () => {
+  it("keeps @wally/core/crypto, vc and log free of Node built-ins too", () => {
     for (const entry of ["crypto/index.ts", "vc/index.ts", "log/index.ts"]) {
       const offenders = [...importGraph(join(SRC, entry))].flatMap(([, specs]) => specs.filter((s) => NODE_BUILTINS.test(s)));
       expect(offenders, entry).toEqual([]);

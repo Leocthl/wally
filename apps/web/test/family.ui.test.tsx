@@ -1,7 +1,7 @@
 // Mum's budget in the app (family budget): the "Whose money?" choice in the Seal flow, the ceiling card, the capped amount
 // field, the request that is sent, the Budget tag, and the two Try asking cards. Everything is hidden when the booth does not
 // offer family budgets (info.features.family), and my own budget behaves exactly as before.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";

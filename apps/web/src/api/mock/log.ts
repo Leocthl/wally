@@ -1,9 +1,9 @@
 // Hash-chained log for the offline mock: real SHA-256 over canonical JSON (docs/02 section 11 rules 1-5), placeholder
 // signatures. The mock can therefore detect a flipped byte, but it cannot check signatures and says so (VerifyOutcome.skipped).
-import { validateLogEntry } from "@laisee/core/schema";
-import { PLACEHOLDER_ENGINE_DID, PLACEHOLDER_SIGNATURE } from "@laisee/core/testing";
-import type { LogEntry, LogEntryKind, LogPayloadByKind } from "@laisee/core/generated";
-import type { Checkpoint, VerifyFailure, VerifyResult } from "@laisee/core/ports";
+import { validateLogEntry } from "@wally/core/schema";
+import { PLACEHOLDER_ENGINE_DID, PLACEHOLDER_SIGNATURE } from "@wally/core/testing";
+import type { LogEntry, LogEntryKind, LogPayloadByKind } from "@wally/core/generated";
+import type { Checkpoint, VerifyFailure, VerifyResult } from "@wally/core/ports";
 import { canonicalize, sha256Hex } from "./hash";
 
 const ZERO_HASH = "0".repeat(64);

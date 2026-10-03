@@ -1,21 +1,21 @@
 // THE swap point. Every implementation the harness runs against is chosen here and nowhere else (test/factory.test.ts
 // checks it). All of them are the real ones:
 //
-//   engine        @laisee/core/engine                      the policy engine, R1-R12 (decide, decideCheckout)
-//   orchestrator  @laisee/core/orchestrator                B2: planner, cart, judge, engine, mint, checkout, escalation, revoke
-//   planner       @laisee/agent/planner replay             the scenario's recorded proposal, re-checked against the listing
-//   cart          @laisee/core/cart buildCart              prices from the listing record (scenario/cart.ts is its one caller)
-//   rail          @laisee/rail-sim RailSim                 SIMULATED single-use cards, seeded per scenario
-//   merchant      @laisee/rail-sim MerchantStub            SIMULATED shop with the scenario's failure mode
-//   executor      @laisee/core/executor createExecutor     re-quote (R12), idempotent charge; B1 calls it, the orchestrator builds its own
-//   judge         @laisee/agent/judge SystemOneJudge       loopback Laya, one request, k rotations, strict parse
-import { SystemOneJudge } from "@laisee/agent/judge";
-import { createReplayPlanner } from "@laisee/agent/planner";
-import { engine } from "@laisee/core/engine";
-import { createExecutor } from "@laisee/core/executor";
-import { createOrchestrator } from "@laisee/core/orchestrator";
-import type { JudgePort } from "@laisee/core/ports";
-import { MerchantStub, RailSim, seededRandom, type MerchantMode } from "@laisee/rail-sim";
+//   engine        @wally/core/engine                      the policy engine, R1-R12 (decide, decideCheckout)
+//   orchestrator  @wally/core/orchestrator                B2: planner, cart, judge, engine, mint, checkout, escalation, revoke
+//   planner       @wally/agent/planner replay             the scenario's recorded proposal, re-checked against the listing
+//   cart          @wally/core/cart buildCart              prices from the listing record (scenario/cart.ts is its one caller)
+//   rail          @wally/rail-sim RailSim                 SIMULATED single-use cards, seeded per scenario
+//   merchant      @wally/rail-sim MerchantStub            SIMULATED shop with the scenario's failure mode
+//   executor      @wally/core/executor createExecutor     re-quote (R12), idempotent charge; B1 calls it, the orchestrator builds its own
+//   judge         @wally/agent/judge SystemOneJudge       loopback Laya, one request, k rotations, strict parse
+import { SystemOneJudge } from "@wally/agent/judge";
+import { createReplayPlanner } from "@wally/agent/planner";
+import { engine } from "@wally/core/engine";
+import { createExecutor } from "@wally/core/executor";
+import { createOrchestrator } from "@wally/core/orchestrator";
+import type { JudgePort } from "@wally/core/ports";
+import { MerchantStub, RailSim, seededRandom, type MerchantMode } from "@wally/rail-sim";
 import { TIMEOUTS_MS } from "./config";
 import { hashString } from "./prng";
 import type { Scenario } from "./types";
@@ -119,13 +119,13 @@ export type { JudgePort };
 export function describeComponents(engineVersion: string): ComponentReport {
   const engineReal = !/stub|double|reference/i.test(engineVersion);
   return {
-    engine: { name: "@laisee/core/engine", real: engineReal, note: engineReal ? engineVersion : `${engineVersion}: not the real engine` },
-    orchestrator: { name: "createOrchestrator (@laisee/core/orchestrator)", real: true, note: "B2 runs through it: seal, submit, answer, checkout, revoke over a signed log; B0 and B1 do not use it by definition" },
-    planner: { name: "createReplayPlanner (@laisee/agent/planner)", real: true, note: "replays the scenario's recorded proposal (docs/05: one recorded planner output feeds all three baselines)" },
-    cartBuilder: { name: "buildCart (@laisee/core/cart)", real: true, note: "prices from the listing record in HKD; used for every baseline, so all three read the same cart" },
-    rail: { name: "RailSim (@laisee/rail-sim)", real: true, note: "SIMULATED single-use cards, F1 semantics" },
-    merchant: { name: "MerchantStub (@laisee/rail-sim)", real: true, note: "SIMULATED shop with honest, overshoot, drift, preauth, timeout and wrong_merchant modes" },
-    executor: { name: "createExecutor (@laisee/core/executor)", real: true, note: "re-quote, idempotent charge, CARD_EVENT appended to the signed log" },
-    judge: { name: "SystemOneJudge (@laisee/agent/judge) on Laya typed-decisions", real: true, note: "live: the product adapter; recorded: its answers replayed" },
+    engine: { name: "@wally/core/engine", real: engineReal, note: engineReal ? engineVersion : `${engineVersion}: not the real engine` },
+    orchestrator: { name: "createOrchestrator (@wally/core/orchestrator)", real: true, note: "B2 runs through it: seal, submit, answer, checkout, revoke over a signed log; B0 and B1 do not use it by definition" },
+    planner: { name: "createReplayPlanner (@wally/agent/planner)", real: true, note: "replays the scenario's recorded proposal (docs/05: one recorded planner output feeds all three baselines)" },
+    cartBuilder: { name: "buildCart (@wally/core/cart)", real: true, note: "prices from the listing record in HKD; used for every baseline, so all three read the same cart" },
+    rail: { name: "RailSim (@wally/rail-sim)", real: true, note: "SIMULATED single-use cards, F1 semantics" },
+    merchant: { name: "MerchantStub (@wally/rail-sim)", real: true, note: "SIMULATED shop with honest, overshoot, drift, preauth, timeout and wrong_merchant modes" },
+    executor: { name: "createExecutor (@wally/core/executor)", real: true, note: "re-quote, idempotent charge, CARD_EVENT appended to the signed log" },
+    judge: { name: "SystemOneJudge (@wally/agent/judge) on Laya typed-decisions", real: true, note: "live: the product adapter; recorded: its answers replayed" },
   };
 }

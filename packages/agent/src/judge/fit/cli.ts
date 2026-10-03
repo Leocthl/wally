@@ -1,4 +1,4 @@
-// judge:fit command line. Run with: pnpm --filter @laisee/agent judge:fit  (tsx src/judge/fit/cli.ts)
+// judge:fit command line. Run with: pnpm --filter @wally/agent judge:fit  (tsx src/judge/fit/cli.ts)
 // Queries the running local Laya server; writes data/results/judge-fit-<date>.json and .md.
 import { parseArgs } from "node:util";
 import { DEFAULT_LAYA_BASE_URL, DEFAULT_LAYA_MODEL } from "../config";

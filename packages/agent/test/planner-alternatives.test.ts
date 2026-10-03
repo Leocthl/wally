@@ -1,8 +1,8 @@
 // planner.alternatives: after a budget stop (R3, R4) pick a cheaper item that fits, or return null.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerStop, PlannerTraceStep } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerStop, PlannerTraceStep } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 import { createRulePlanner } from "../src/planner/rule-planner";
 import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
 import { OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";

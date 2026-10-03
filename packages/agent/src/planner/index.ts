@@ -1,4 +1,4 @@
-// @laisee/agent/planner: PlannerPort backends rule (default), replay and local (Qwen, lane m-qwen). Owner: lane B.
+// @wally/agent/planner: PlannerPort backends rule (default), replay and local (Qwen, lane m-qwen). Owner: lane B.
 // No credentials, no card handle, no rail, no log (I4). A claude backend is not built. Node only (replay reads files).
 //
 // Composition root (apps/web), server side:
@@ -14,7 +14,7 @@
 //   });
 //   const proposal = await planner.propose({ intentText, listings }, { timeoutMs, onTrace });  // null = ask the shopper
 // `intentText` must carry the shopper's request (the item they want), not only the mandate sentence.
-import type { PlannerProvider } from "@laisee/core/ports";
+import type { PlannerProvider } from "@wally/core/ports";
 
 export const PLANNER_PROVIDERS: readonly PlannerProvider[] = ["rule", "replay", "local"];
 export const DEFAULT_PLANNER_PROVIDER: PlannerProvider = "rule";

@@ -1,4 +1,4 @@
-// @laisee/core/config: every engine threshold, window and limit, each citing its facts-register row
+// @wally/core/config: every engine threshold, window and limit, each citing its facts-register row
 // (docs/facts-register.md). Browser-safe: no node imports. Deeply frozen: change the register row
 // first, then the value here. engine.config_sha256 pins the values in force (docs/02 section 9).
 

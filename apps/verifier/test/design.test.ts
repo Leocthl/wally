@@ -1,6 +1,6 @@
 // The look of the page, checked where jsdom can: the markup the CSS hangs on, the words on screen (budget, rules,
 // receipts, Wally; never packet, mandate, mint, lai see), the page template, and the phone rules in the style sheets.
-import type { VerifyFailure } from "@laisee/core/verify";
+import type { VerifyFailure } from "@wally/core/verify";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

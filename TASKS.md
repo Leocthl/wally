@@ -7,7 +7,7 @@
 4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
 5. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
 6. **D-26, D-27, X-19** Freeze procedure, booth kit, credits check.
-7. **M-01** After every lane has merged: `node scripts/rename-scope.mjs --dry-run`, apply, then `pnpm install && pnpm test`.
+7. **M-01** Done: the workspace scope is `@wally/*`. Protocol ids keep `laisee` on purpose (`urn:laisee:mandate`, `laisee.log.v1`, `https://laisee.local/...`): they sit inside signed data and recorded fixtures.
 8. **C-12, C-19** Native zh-HK read of the NEEDS-REVIEW strings.
 9. **A-21, B-09, B-12** Calibration after D-03, Scameter loader, latency logging.
 10. **M-09** Delegator key on the phone (stretch; design in `apps/web/src/api/local/KEYS.md`).
@@ -129,10 +129,10 @@
 ### Lane M: mobile, second model, brand
 | ID | Task | Owner | Est | Deps | Milestone | Done |
 |---|---|---|---|---|---|---|
-| M-01 | Rename to Wally: user-facing strings through one brand constant now; one scripted rename of the `@laisee/*` scope, README, CLAUDE.md, docs and schema ids after all lanes merge | [TEAM] | 1h | all lanes merged | M3 | [ ] |
+| M-01 | Rename to Wally: user-facing strings through one brand constant now; one scripted rename of the workspace scope to `@wally/*`; protocol ids keep `laisee` | [TEAM] | 1h | all lanes merged | M3 | [x] |
 | M-02 | Qwen install: `services/qwen/` (setup, serve, stop, smoke), llama-server on 127.0.0.1:8809, pinned GGUF revision and sha, FINDINGS | [TEAM] | 1.5h | none | M2 | [x] |
-| M-03 | Local planner (`PLANNER_PROVIDER=local`): grammar-constrained proposal, English, Chinese and Cantonese requests, alternatives, never throws, logged trace. Built in `@laisee/agent`; the booth server uses it with `PLANNER_PROVIDER=local`, or `auto` when Qwen answers | [TEAM] | 2h | M-02 | M2 | [x] |
-| M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile. Built as `@laisee/agent/compiler`, served by `POST /api/compile`; the Seal screen calls it ("Read my sentence") | [TEAM] | 1.5h | M-02 | M2 | [x] |
+| M-03 | Local planner (`PLANNER_PROVIDER=local`): grammar-constrained proposal, English, Chinese and Cantonese requests, alternatives, never throws, logged trace. Built in `@wally/agent`; the booth server uses it with `PLANNER_PROVIDER=local`, or `auto` when Qwen answers | [TEAM] | 2h | M-02 | M2 | [x] |
+| M-04 | Sentence-to-rules compiler for the Seal screen: schema-constrained output, deterministic clamps, fallback to the rule-based compile. Built as `@wally/agent/compiler`, served by `POST /api/compile`; the Seal screen calls it ("Read my sentence") | [TEAM] | 1.5h | M-02 | M2 | [x] |
 | M-05 | Design system phase A: cool-wallet tokens, Wally character, primitives, style guide route | [TEAM] | 2h | none | M2 | [x] |
 | M-06 | PWA shell: manifest, icons, service worker, install prompt, offline fallback | [TEAM] | 1.5h | M-05 | M2 | [x] |
 | M-07 | Design phase B: mobile-first screens from the primitives (home, ask, run and result, seal, console, proof, evidence, presenter), EN and 繁 toggle. All merged: the app shell, Budget home, Seal flow, Manage this budget, Ask sheet, Wally, Receipts, Proof, Why trust Wally and Presenter | [TEAM] | 4h | M-05, e-server and e-evidence merged | M3 | [x] |

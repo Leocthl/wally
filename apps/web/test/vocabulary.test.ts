@@ -1,7 +1,7 @@
 // The words a person reads: budget, rules, one-off card, Stopped before paying, Needs your OK, Cancel this budget, Wally.
 // The build-time words (packet, mandate, mint, Lai See, red packet, 利是) never reach the screen. Internal names keep them
 // (types, scenario ids, rule and template ids, log fields, comments), so this walks the string tables only.
-import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@laisee/agent/compiler";
+import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@wally/agent/compiler";
 import { describe, expect, it } from "vitest";
 import { compileMandate } from "../src/booth/compile";
 import { DM8, DM9 } from "../src/evidence/dm9";

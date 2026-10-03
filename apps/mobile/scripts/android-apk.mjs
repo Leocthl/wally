@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Builds the debug APK with Gradle. Picks a JDK Gradle can run on (21 preferred, 17 works through the shim in
 // android/build.gradle), points Gradle at the Android SDK, keeps memory low (one worker, no daemon, 1 GiB heap) and
-// never downloads SDK components. Run `pnpm --filter @laisee/mobile sync` first.
+// never downloads SDK components. Run `pnpm --filter @wally/mobile sync` first.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -62,7 +62,7 @@ function ensureLocalProperties(sdk) {
   writeFileSync(file, `sdk.dir=${sdk}\n`);
 }
 
-if (!existsSync(join(android, "app/src/main/assets/public/index.html"))) throw new Error("web files missing in the Android project: run `pnpm --filter @laisee/mobile sync` first");
+if (!existsSync(join(android, "app/src/main/assets/public/index.html"))) throw new Error("web files missing in the Android project: run `pnpm --filter @wally/mobile sync` first");
 
 const jdk = pickJdk();
 const sdk = sdkDir();

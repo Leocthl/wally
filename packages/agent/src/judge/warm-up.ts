@@ -1,6 +1,6 @@
 // Warm-up: the first call after a Laya restart took 2,568 ms [F26], which is over the judge timeout (F34),
 // so the first demo decision would TIMEOUT and ESCALATE. Call warmUp once at start, before anyone is watching.
-import type { JudgePort } from "@laisee/core/ports";
+import type { JudgePort } from "@wally/core/ports";
 
 export interface WarmUpResult {
   /** true when the server answered a full-size request. */

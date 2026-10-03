@@ -1,6 +1,6 @@
 // Re-renders an evaluation report from its JSON after the run, optionally dropping one model's hijack records
 // (for example when that server was stopped mid-run) and adding run notes. Not a test: run it by hand.
-//   pnpm --filter @laisee/agent exec tsx test/support/qwen/rerender.ts <base path without extension> [--drop-hijack 4b] [--note "..."]
+//   pnpm --filter @wally/agent exec tsx test/support/qwen/rerender.ts <base path without extension> [--drop-hijack 4b] [--note "..."]
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { renderMarkdown, type EvalReport } from "./eval-report";

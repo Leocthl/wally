@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { averageDistributions } from "../src/judge/average";
 import { parseSystemOneResponse } from "../src/judge/parse";
 import { planRows } from "../src/judge/plan";

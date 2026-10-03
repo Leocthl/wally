@@ -1,6 +1,6 @@
 // What B0's model is shown. Text only: numbers appear as "HK$..." strings, the way a listing page shows them. The judge
 // (SystemOneJudge) builds its own state; this one is B0's, defined here so the baseline is a stated, stable thing.
-import type { Cart, Mandate, PacketState } from "@laisee/core/generated";
+import type { Cart, Mandate, PacketState } from "@wally/core/generated";
 import { formatHkd } from "../scenario/money";
 
 export interface ListingState {

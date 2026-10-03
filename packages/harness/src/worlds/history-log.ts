@@ -2,11 +2,11 @@
 // handed one. Cards, charges and the approvals behind them are SIMULATED and unknown to the rail; they exist to make the
 // fold come out right. Each card follows an APPROVE for it, as in a real log: the orchestrator verifies the log before it
 // reads it, and the verifier refuses a mint no earlier APPROVE stands behind (I1).
-import type { CardRecord, Decision, JudgeRecord } from "@laisee/core/generated";
-import { appendEntry, signRevocation } from "@laisee/core/log";
-import { foldPacket } from "@laisee/core/packet";
-import type { CardEvent, LogStore, Signer } from "@laisee/core/ports";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { CardRecord, Decision, JudgeRecord } from "@wally/core/generated";
+import { appendEntry, signRevocation } from "@wally/core/log";
+import { foldPacket } from "@wally/core/packet";
+import type { CardEvent, LogStore, Signer } from "@wally/core/ports";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { cardExpiryIso } from "../scenario/history";
 import type { HistoryEvent, Scenario } from "../types";
 

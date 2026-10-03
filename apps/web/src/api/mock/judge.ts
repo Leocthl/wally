@@ -1,7 +1,7 @@
 // Mock judge. Presets return the recorded SIMULATED answers (provider replay). Free text gets a keyword heuristic that
 // blends two recorded answer sets, so the engine's real thresholds decide. It is NOT Laya and the UI says so
 // (model "mock-heuristic"). The live Laya judge arrives with the HTTP client; docs/00 D12.
-import type { JudgeAnswers, JudgeRecord } from "@laisee/core/generated";
+import type { JudgeAnswers, JudgeRecord } from "@wally/core/generated";
 import { CHARS_PER_TOKEN_ESTIMATE, MOCK_CONFIG } from "./config";
 import { JUDGE_RECORDS } from "./fixtures";
 

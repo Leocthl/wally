@@ -3,8 +3,8 @@
 // sealing. One grammar-constrained completion from the local Qwen server reads the sentence; code does the money,
 // the dates, the clamps and the labels. Never sealed automatically, never throws: { ok: false } on any failure,
 // and the caller falls back to the rule-based compile (apps/web/src/booth/compile.ts).
-import type { CompiledRules } from "@laisee/core/generated";
-import { validateMandate } from "@laisee/core/schema";
+import type { CompiledRules } from "@wally/core/generated";
+import { validateMandate } from "@wally/core/schema";
 import { normaliseRequest, type ChatClient } from "../planner/local";
 import { parseCompilerAnswer } from "./answer";
 import {

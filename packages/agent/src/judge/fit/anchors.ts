@@ -2,9 +2,9 @@
 // recorded (replay) answers beside them. Read-only: nothing under data/fixtures is written.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import type { Cart, JudgeAnswers, ListingRecord, Mandate } from "@laisee/core/generated";
-import type { JudgeInput } from "@laisee/core/ports";
-import { formatIssues, validateCart, validateListingRecord } from "@laisee/core/schema";
+import type { Cart, JudgeAnswers, ListingRecord, Mandate } from "@wally/core/generated";
+import type { JudgeInput } from "@wally/core/ports";
+import { formatIssues, validateCart, validateListingRecord } from "@wally/core/schema";
 import { isRecord } from "../guards";
 import { DEFAULT_FIXTURES_DIR, loadReplayRecordings } from "../replay-recordings";
 import { cartFromListing, sha256Hex } from "./inputs";

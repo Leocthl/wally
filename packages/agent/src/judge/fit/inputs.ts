@@ -1,8 +1,8 @@
 // Turns a listing record into the JudgeInput the orchestrator would build for it. The real cart builder is
 // lane A's (core); this synthetic one prices the first item at quantity 1 so fits and tests have a valid Cart.
 import { createHash } from "node:crypto";
-import type { Cart, ListingRecord, Mandate } from "@laisee/core/generated";
-import type { JudgeInput } from "@laisee/core/ports";
+import type { Cart, ListingRecord, Mandate } from "@wally/core/generated";
+import type { JudgeInput } from "@wally/core/ports";
 
 export type ScameterState = Cart["scameter"]["state"];
 

@@ -1,6 +1,6 @@
 // Receipts model: one receipt per signed log entry, newest first, grouped by Hong Kong day, filtered by state, and found
 // by decision id for the #/receipts?d=<id> deep link. Entries come from the offline mock's real hash-chained log.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import type { LogEntry } from "../src/api/types";

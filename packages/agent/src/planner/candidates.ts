@@ -1,7 +1,7 @@
 // Structured candidates from listing records (title, category, price, shipping, fees). The planner never
 // reads the listing text: it is untrusted data that goes to the judge, not to the planner.
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerListing } from "@laisee/core/ports";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerListing } from "@wally/core/ports";
 import { parseColours, parseSizes } from "./parse-request";
 
 export interface PlannerCandidate {

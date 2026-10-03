@@ -1,5 +1,5 @@
 // Test harness: the real App on an instant MockApiClient (no timers, no network), driven the way a visitor would.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import type { ReactElement } from "react";

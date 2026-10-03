@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as judge from "../src/judge";
 
-describe("@laisee/agent/judge public surface (other lanes import these)", () => {
+describe("@wally/agent/judge public surface (other lanes import these)", () => {
   it("exports the adapters, factory, warm-up helpers, windows and corpus loader", () => {
     for (const name of [
       "SystemOneJudge",

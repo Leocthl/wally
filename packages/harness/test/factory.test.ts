@@ -22,12 +22,12 @@ function valueImports(text: string, module: string): readonly string[] {
 // The implementations a swap replaces: only factory.ts may import them as values. The cart builder is the one exception: the
 // scenario generator calls it through scenario/cart.ts, which is the single place that does.
 const SWAPPABLE: readonly (readonly [module: string, names: readonly string[]])[] = [
-  ["@laisee/core/engine", ["engine", "createEngine"]],
-  ["@laisee/core/executor", ["createExecutor"]],
-  ["@laisee/core/orchestrator", ["createOrchestrator"]],
-  ["@laisee/rail-sim", ["RailSim", "MerchantStub"]],
-  ["@laisee/agent/judge", ["SystemOneJudge", "ReplayJudge", "createJudgeFromEnv"]],
-  ["@laisee/agent/planner", ["createReplayPlanner", "createRulePlanner", "createPlanner"]],
+  ["@wally/core/engine", ["engine", "createEngine"]],
+  ["@wally/core/executor", ["createExecutor"]],
+  ["@wally/core/orchestrator", ["createOrchestrator"]],
+  ["@wally/rail-sim", ["RailSim", "MerchantStub"]],
+  ["@wally/agent/judge", ["SystemOneJudge", "ReplayJudge", "createJudgeFromEnv"]],
+  ["@wally/agent/planner", ["createReplayPlanner", "createRulePlanner", "createPlanner"]],
 ];
 const CART_SEAM = "scenario/cart.ts";
 
@@ -40,22 +40,22 @@ describe("factory.ts is the one swap point", () => {
   });
 
   it("only the cart seam imports the cart builder", () => {
-    const offenders = sources.filter((s) => s.file !== CART_SEAM && valueImports(s.text, "@laisee/core/cart").includes("buildCart")).map((s) => s.file);
+    const offenders = sources.filter((s) => s.file !== CART_SEAM && valueImports(s.text, "@wally/core/cart").includes("buildCart")).map((s) => s.file);
     expect(offenders).toEqual([]);
-    expect(valueImports(sources.find((s) => s.file === CART_SEAM)?.text ?? "", "@laisee/core/cart")).toContain("buildCart");
+    expect(valueImports(sources.find((s) => s.file === CART_SEAM)?.text ?? "", "@wally/core/cart")).toContain("buildCart");
   });
 
   it("the factory does import all of them, so the check above reads something", () => {
     const factory = sources.find((s) => s.file === "factory.ts")?.text ?? "";
     for (const [module, names] of SWAPPABLE) expect(valueImports(factory, module).some((n) => names.includes(n)), module).toBe(true);
-    expect(valueImports(factory, "@laisee/agent/judge")).toContain("SystemOneJudge");
+    expect(valueImports(factory, "@wally/agent/judge")).toContain("SystemOneJudge");
   });
 
   it("no fake is imported into src: from core's testing module only the in-memory log store, fixtures and the clean answers", () => {
     const fakes = sources.filter((s) => /\bFake[A-Z]\w*/.test(s.text.replace(/^\s*\/\/.*$/gm, ""))).map((s) => s.file);
     expect(fakes).toEqual([]);
     const allowed = new Set(["MemoryLogStore", "CLEAN_ANSWERS"]);
-    const stray = sources.flatMap((s) => valueImports(s.text, "@laisee/core/testing").filter((n) => !allowed.has(n)).map((n) => `${s.file}: ${n}`));
+    const stray = sources.flatMap((s) => valueImports(s.text, "@wally/core/testing").filter((n) => !allowed.has(n)).map((n) => `${s.file}: ${n}`));
     expect(stray).toEqual([]);
   });
 

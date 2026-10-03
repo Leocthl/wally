@@ -2,7 +2,7 @@
 // not reachable, so CI and a laptop without the model stay green and offline. Kept small: each call is a real
 // generation. Timeouts are generous on purpose (the machine is shared and loaded; F33 is for an idle booth).
 import { describe, expect, it } from "vitest";
-import type { PlannerTraceStep } from "@laisee/core/ports";
+import type { PlannerTraceStep } from "@wally/core/ports";
 import { DEFAULT_LOCAL_PLANNER_URL } from "../src/planner/local/config";
 import { createLocalPlanner } from "../src/planner/local/local-planner";
 import { ALL_FIXTURE_LISTINGS, GRAPHIC_TEE_LISTING, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";

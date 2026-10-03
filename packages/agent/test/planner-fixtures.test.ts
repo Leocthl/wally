@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { FIXTURES_DIR, listFixtureFiles, loadFixture } from "@laisee/core/testing/fixtures";
+import { FIXTURES_DIR, listFixtureFiles, loadFixture } from "@wally/core/testing/fixtures";
 import { ALTERNATIVE_SUFFIX, createReplayPlanner } from "../src/planner/replay-planner";
 import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
 import { OPTS, fixtureListing, ALL_FIXTURE_LISTINGS } from "./support/planner/data";

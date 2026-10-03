@@ -1,9 +1,9 @@
 // T-S1..T-S6 through the orchestrator on RailSim + MerchantStub + FileLogStore (SIMULATED), each finishing with
 // verifyChain over the exported log (passes) and one flipped byte (fails).
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ENGINE_CONFIG } from "@laisee/core/config";
-import type { ListingRecord, ProposeCartInput } from "@laisee/core/generated";
-import type { DecidedResult } from "@laisee/core/orchestrator";
+import { ENGINE_CONFIG } from "@wally/core/config";
+import type { ListingRecord, ProposeCartInput } from "@wally/core/generated";
+import type { DecidedResult } from "@wally/core/orchestrator";
 import { HOODIE, INJECTED, JACKET, P_A1, P_A2, P_A3, P_A3B, P_A4, SOCKS, TEE, credential, flipOneByte, integration, type Integration } from "./orchestrator-helpers";
 
 vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded

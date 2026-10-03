@@ -31,7 +31,7 @@ services/laya/setup.sh && services/laya/serve.sh     # judge
 services/qwen/setup.sh && services/qwen/serve.sh     # planner, optional
 pnpm demo                                            # http://127.0.0.1:8787
 ```
-2. **On-device** (no server, no models): `pnpm --filter @laisee/web dev`, then open `http://127.0.0.1:5173/?api=local`. The page also falls back to this when no booth answers.
+2. **On-device** (no server, no models): `pnpm --filter @wally/web dev`, then open `http://127.0.0.1:5173/?api=local`. The page also falls back to this when no booth answers.
 3. **Phones**: `pnpm demo:lan`, then scan the QR in About or Presenter on the same Wi-Fi. Or build the native shells: `apps/mobile/README.md`.
 - Without Laya the booth still runs and every judged decision escalates. `PLANNER_PROVIDER=rule` pins the Laya planner (default `auto`).
 

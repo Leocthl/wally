@@ -1,7 +1,7 @@
 // Plain words for each verifyChain failure code (docs/02 section 11 steps 1-9). The code is always shown too.
 // Nouns follow the Wally app (budget, rules, card made); apps/web/src/i18n/ui.ts proof.reasons says the same in fewer
 // words for some codes (the codes and their meanings are the same).
-import type { VerifyFailure } from "@laisee/core/verify";
+import type { VerifyFailure } from "@wally/core/verify";
 import type { Bi } from "./strings";
 
 const REASONS: Readonly<Record<VerifyFailure, Bi>> = {

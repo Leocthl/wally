@@ -1,6 +1,6 @@
 // Sentence-to-rules compiler configuration. Limits come from the engine config (which cites the register) or
 // from the mandate schema; the values marked ASSUMED have no register row yet (listed in the m-qwen report).
-import { ENGINE_CONFIG } from "@laisee/core/config";
+import { ENGINE_CONFIG } from "@wally/core/config";
 
 /** Category slugs the Seal screen knows, with words that name them; the same four apps/web/src/booth/compile.ts maps. */
 export const DEFAULT_CATEGORIES: Readonly<Record<string, { readonly words: string; readonly en: string; readonly zhHK: string }>> = {

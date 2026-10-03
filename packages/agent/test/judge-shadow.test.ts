@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { FakeJudge } from "@laisee/core/testing";
-import { validateJudgeRecord } from "@laisee/core/schema";
-import type { JudgeInput, JudgePort } from "@laisee/core/ports";
+import { FakeJudge } from "@wally/core/testing";
+import { validateJudgeRecord } from "@wally/core/schema";
+import type { JudgeInput, JudgePort } from "@wally/core/ports";
 import { ShadowJudge } from "../src/judge/shadow-judge";
 import { demoInput } from "./support/inputs";
 

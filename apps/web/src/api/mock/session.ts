@@ -1,8 +1,8 @@
 // Mutable core of the offline mock: the log, the rail, the mandate and the listeners. Every update replaces a value
 // (no in-place edits of entries); flows.ts and MockApiClient.ts drive it. Single writer: callers serialise through a queue.
-import type { CardRecord, LogEntry, LogPayloadByKind, LogEntryKind, Mandate, PacketState } from "@laisee/core/generated";
-import type { Clock } from "@laisee/core/ports";
-import { FakeRail } from "@laisee/core/testing";
+import type { CardRecord, LogEntry, LogPayloadByKind, LogEntryKind, Mandate, PacketState } from "@wally/core/generated";
+import type { Clock } from "@wally/core/ports";
+import { FakeRail } from "@wally/core/testing";
 import type { EscalationView, TraceEvent, TraceListener, Unsubscribe } from "../types";
 import { appendEntry, headOf, type TamperedCopy } from "./log";
 import { foldCards, foldMockPacket } from "./packet";

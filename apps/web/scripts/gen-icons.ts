@@ -1,6 +1,6 @@
 // Generates the PWA icons and the offline page from the Wally art and tokens.css (no network, no image tools: the
 // PNGs are rendered by the Chromium already in the Playwright cache). Run:
-//   pnpm --filter @laisee/web exec tsx scripts/gen-icons.ts
+//   pnpm --filter @wally/web exec tsx scripts/gen-icons.ts
 // Writes public/icons/{icon.svg, icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon-180.png},
 // public/favicon.svg, public/mask-icon.svg and public/offline.html.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";

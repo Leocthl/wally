@@ -1,5 +1,5 @@
 // T-R1 (F1 parity for authorise): single use, blocked replay, limit held, idempotency, merchant lock.
-import { validateCardEvent } from "@laisee/core/schema";
+import { validateCardEvent } from "@wally/core/schema";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { RailSimError } from "../src";

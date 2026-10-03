@@ -1,5 +1,5 @@
 {
-  "name": "laisee-agent",
+  "name": "wally",
   "version": "0.0.0",
   "private": true,
   "description": "Lai See Agent: sealed-budget mandate engine for AI shopping agents (rail SIMULATED)",
@@ -12,18 +12,18 @@
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "lint": "eslint .",
     "test": "vitest run",
-    "coverage": "pnpm --filter @laisee/core test:coverage",
+    "coverage": "pnpm --filter @wally/core test:coverage",
     "build": "pnpm -r build",
     "gen:types": "node scripts/gen-types.mjs",
     "docs:check": "python3 scripts/docs-check.py",
-    "harness": "pnpm --filter @laisee/harness harness",
+    "harness": "pnpm --filter @wally/harness harness",
     "keys:gen": "node scripts/keys-gen.mjs",
     "verify-log": "node scripts/verify-log.mjs",
-    "verifier": "pnpm --filter @laisee/verifier build",
+    "verifier": "pnpm --filter @wally/verifier build",
     "pages:build": "node scripts/pages-build.mjs",
     "demo:reset": "node scripts/demo-reset.mjs",
-    "demo": "node scripts/booth-check.mjs --build-if-needed && pnpm --filter @laisee/web api",
-    "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @laisee/web api:lan"
+    "demo": "node scripts/booth-check.mjs --build-if-needed && pnpm --filter @wally/web api",
+    "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @wally/web api:lan"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

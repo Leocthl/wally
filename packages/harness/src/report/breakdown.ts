@@ -1,6 +1,6 @@
 // Why a number is what it is, one scenario at a time: which legitimate purchases a baseline blocked and at which gate, and
 // which stop cases got through. Plain rows for the result file and its summary. Pure functions over (scenario, outcome).
-import type { RuleId } from "@laisee/core/generated";
+import type { RuleId } from "@wally/core/generated";
 import type { Pair } from "../metrics/metrics";
 import type { RunOutcome } from "../systems/types";
 import type { Category } from "../types";

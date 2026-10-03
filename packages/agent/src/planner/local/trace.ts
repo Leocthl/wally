@@ -1,6 +1,6 @@
 // One PlannerTraceStep per local planner call: source "generative", the chosen title (or the action, or
 // no_answer) as the choice, no probabilities and margin 0 (a generative answer carries none), and the latency.
-import type { PlannerOptions } from "@laisee/core/ports";
+import type { PlannerOptions } from "@wally/core/ports";
 
 export const LOCAL_PLAN_QUESTION = "local_plan";
 export const LOCAL_ALTERNATIVES_QUESTION = "local_alternatives";

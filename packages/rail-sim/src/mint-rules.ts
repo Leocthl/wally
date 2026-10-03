@@ -1,8 +1,8 @@
 // Pure checks for RailPort.mint (F1 semantics, I1, I2, I6 backstop). Each throws MintError and nothing else,
 // so a caller can tell exactly which rule stopped the mint. Nothing here touches rail state.
-import type { Decision } from "@laisee/core/generated";
-import { MintError } from "@laisee/core/ports";
-import { formatIssues, validateDecision } from "@laisee/core/schema";
+import type { Decision } from "@wally/core/generated";
+import { MintError } from "@wally/core/ports";
+import { formatIssues, validateDecision } from "@wally/core/schema";
 import { addMonthsUtc } from "./time";
 
 /** Every message the SIMULATED rail produces says so (rail outputs carry the label). */

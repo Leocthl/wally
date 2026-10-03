@@ -1,6 +1,6 @@
 // PLANNER_PROVIDER selection: rule (default), replay and local (lane m-qwen); claude is not built.
 import { describe, expect, it } from "vitest";
-import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
 import { PlannerConfigError } from "../src/planner/config";
 import {
   createPlanner,

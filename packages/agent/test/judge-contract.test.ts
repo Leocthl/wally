@@ -1,7 +1,7 @@
 // Runs the shared JudgePort contract against every implementation: SystemOneJudge (laya and jev, through the
 // mock server), ReplayJudge, and the ShadowJudge wrapper around each.
 import { afterAll, beforeAll } from "vitest";
-import type { JudgePort } from "@laisee/core/ports";
+import type { JudgePort } from "@wally/core/ports";
 import { MAX_RESPONSE_BYTES } from "../src/judge/config";
 import { planRows } from "../src/judge/plan";
 import { loadReplayRecordings } from "../src/judge/replay-recordings";

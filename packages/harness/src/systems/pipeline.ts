@@ -1,8 +1,8 @@
 // Pipeline shared by B0, B1 and B2: decide each submission, log the decision (I7), mint what was approved, check out,
 // optionally replay the charge, handle a revoke. A Gate decides; a Policy says which orchestrator behaviours and which
 // world the baseline has. Core's orchestrator (TASKS A-26) replaces the body of this file; the Gate and Policy split stays.
-import type { CardRecord, Decision } from "@laisee/core/generated";
-import { MintError, type CardEvent, type MerchantQuote } from "@laisee/core/ports";
+import type { CardRecord, Decision } from "@wally/core/generated";
+import { MintError, type CardEvent, type MerchantQuote } from "@wally/core/ports";
 import type { Baseline, Scenario } from "../types";
 import type { Timer } from "../timer";
 import { NO_LIMIT_MINOR } from "../worlds/unlimited-rail";

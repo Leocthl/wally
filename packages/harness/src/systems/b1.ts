@@ -1,10 +1,10 @@
 // B1: rules R1-R8 and R12 plus the rail limit, no judge. It reuses the engine's own rule results and folds the outcome
 // over R1-R8 only; R9 (seller check) and R10 (judge) are left out by definition. R12 runs in the executor, as in B2.
-import { canonicalJson, sha256Hex, type LaiseeEngine } from "@laisee/core/engine";
-import type { Decision, RuleResult } from "@laisee/core/generated";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { skipped } from "@laisee/core/rules";
-import { CLEAN_ANSWERS } from "@laisee/core/testing";
+import { canonicalJson, sha256Hex, type WallyEngine } from "@wally/core/engine";
+import type { Decision, RuleResult } from "@wally/core/generated";
+import type { JudgeRecord } from "@wally/core/ports";
+import { skipped } from "@wally/core/rules";
+import { CLEAN_ANSWERS } from "@wally/core/testing";
 import { cartOfSubmission } from "../scenario/cart";
 import type { Scenario } from "../types";
 import type { Gate, GateDecision } from "./pipeline";
@@ -43,7 +43,7 @@ function approvedByRules(decision: Decision, limitMinor: number): Decision {
 }
 
 /** R12 at checkout through the engine: a DENY that resolves the approval, or null when the price stands. */
-function engineCheckout(engine: LaiseeEngine): NonNullable<Gate["decideCheckout"]> {
+function engineCheckout(engine: WallyEngine): NonNullable<Gate["decideCheckout"]> {
   return (scenario, world, approved, quote, at) =>
     engine.decideCheckout({ mandate: scenario.mandate, packet: scenario.packet, approved, quote, now: at, ctx: { mandateProofValid: world.mandateProofValid === true } });
 }

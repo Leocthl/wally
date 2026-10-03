@@ -1,9 +1,9 @@
 // The model's answer: a JSON schema built from the listing records actually supplied (so the model can only name
 // real listings and items), and the parser that re-checks every field in code. The parsed answer is untrusted
 // until it passes; the proposal built from it has no money fields and a note written from a template (I4).
-import type { ListingRecord } from "@laisee/core/generated";
-import type { ProposeCartInput } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { ListingRecord } from "@wally/core/generated";
+import type { ProposeCartInput } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 import { parseTitle } from "../candidates";
 import type { LocalPlannerConfig } from "./config";
 

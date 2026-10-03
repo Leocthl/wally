@@ -1,7 +1,7 @@
 // ShadowJudge (JUDGE_MODE=shadow): runs the real judge and marks its record shadow = true, so the engine
 // logs the verdict without letting it change the decision. It never loosens anything (I3) and never throws (I5).
-import type { JudgeProvider } from "@laisee/core/generated";
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
+import type { JudgeProvider } from "@wally/core/generated";
+import type { JudgeInput, JudgePort, JudgeRecord } from "@wally/core/ports";
 import { errorMessage } from "./guards";
 import { failureRecord } from "./record";
 import { isWarmable, type WarmUpOptions, type WarmUpResult, type WarmableJudge } from "./warm-up";

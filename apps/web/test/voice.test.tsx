@@ -1,7 +1,7 @@
 // Voice input in the Ask sheet. A fake recogniser stands in for the browser's (jsdom has none), so every state a person
 // can meet is driven from here: the words arriving, each error code, the end, the first-use note, stop, and the cleanup.
 // The AskSheet itself is rendered, so the wiring inside AskField is covered too. The pure parts are in voiceCore.test.ts.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";

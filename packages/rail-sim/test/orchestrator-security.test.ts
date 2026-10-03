@@ -2,9 +2,9 @@
 // A2-05 an under-reporting merchant cannot free budget (the rail's own record wins), A2-04 two approvals cannot
 // over-commit the packet, A2-06 the merchant lock is the approved merchant. Each log still verifies offline.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ListingRecord, ProposeCartInput } from "@laisee/core/generated";
-import type { DecidedResult } from "@laisee/core/orchestrator";
-import type { CardEvent } from "@laisee/core/ports";
+import type { ListingRecord, ProposeCartInput } from "@wally/core/generated";
+import type { DecidedResult } from "@wally/core/orchestrator";
+import type { CardEvent } from "@wally/core/ports";
 import { P_A1, P_A4, SOCKS, TEE, credential, integration, type Integration } from "./orchestrator-helpers";
 
 vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded

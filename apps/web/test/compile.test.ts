@@ -1,6 +1,6 @@
 // Sentence -> rule chips -> rules (docs/01 Example mandates M0, M1, M2). The chips are the enforced rules; the sentence is display.
-import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@laisee/agent/compiler";
-import { validateMandate } from "@laisee/core/schema";
+import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@wally/agent/compiler";
+import { validateMandate } from "@wally/core/schema";
 import { describe, expect, it } from "vitest";
 import { compileMandate, chipsToRules, expiryClamps, M0_SENTENCE, m0Request, sealRequestFrom, validUntilFor, type ChipValue } from "../src/booth/compile";
 import { M0_CREDENTIAL } from "../src/api/mock/fixtures";

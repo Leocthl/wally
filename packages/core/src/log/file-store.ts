@@ -1,4 +1,4 @@
-// FileLogStore (Node only, @laisee/core/log/file): append-only JSONL at <dir>/<log_id>.jsonl, one JCS line
+// FileLogStore (Node only, @wally/core/log/file): append-only JSONL at <dir>/<log_id>.jsonl, one JCS line
 // per entry, fsync after every append. The directory is created 0700 and each log file 0600 (they hold the
 // packet's whole history). Appends to one file are serialised across every FileLogStore in this process,
 // keyed by absolute path; a wrong seq or prev_hash, an invalid entry, card data (I8), oversized rule inputs or

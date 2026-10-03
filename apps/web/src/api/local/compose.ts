@@ -1,12 +1,12 @@
 // Composition root of on-device mode (browser): the bundled data -> replay judge and planner, the real engine and
 // orchestrator, an in-memory log, a SIMULATED rail, keys made in this page -> the same OrchestratorBackend the Node
 // server runs. Nothing here reads files or opens a connection.
-import { engine } from "@laisee/core/engine";
-import { appendEntry } from "@laisee/core/log";
-import { createOrchestrator } from "@laisee/core/orchestrator";
-import type { Clock } from "@laisee/core/ports";
-import { MemoryLogStore } from "@laisee/core/testing";
-import { cryptoRandom, type RandomSource } from "@laisee/rail-sim";
+import { engine } from "@wally/core/engine";
+import { appendEntry } from "@wally/core/log";
+import { createOrchestrator } from "@wally/core/orchestrator";
+import type { Clock } from "@wally/core/ports";
+import { MemoryLogStore } from "@wally/core/testing";
+import { cryptoRandom, type RandomSource } from "@wally/rail-sim";
 import { recordedRequests } from "../../booth/backend/ask";
 import { OrchestratorBackend } from "../../booth/backend/backend";
 import { scameterLookup } from "../../booth/backend/catalogue";

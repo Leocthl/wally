@@ -1,7 +1,7 @@
 // Shared builders for rail-sim tests. Everything here is SIMULATED test data.
-import type { CardRecord, Cart, Decision } from "@laisee/core/generated";
-import type { CardEvent } from "@laisee/core/ports";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { CardRecord, Cart, Decision } from "@wally/core/generated";
+import type { CardEvent } from "@wally/core/ports";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { RAIL_SIM_DEFAULTS, RailSim, seededRandom, type RailSimOptions } from "../src";
 
 export const NOW = new Date("2026-10-03T02:05:02Z");

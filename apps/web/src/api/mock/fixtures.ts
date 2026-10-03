@@ -1,6 +1,6 @@
 // SIMULATED fixtures bundled into the offline booth (data/fixtures, read only). Each envelope is validated against its
 // schema when this module loads, so a bad fixture fails loudly instead of rendering a wrong demo (CLAUDE.md, ADR-0006).
-import { formatIssues, VALIDATORS, type SchemaName, type SchemaTypes } from "@laisee/core/schema";
+import { formatIssues, VALIDATORS, type SchemaName, type SchemaTypes } from "@wally/core/schema";
 import sockListing from "@fixtures/listings/apparel-socks.json";
 import teeListing from "@fixtures/listings/apparel-tee.json";
 import earbudsListing from "@fixtures/listings/off-category-earbuds.json";

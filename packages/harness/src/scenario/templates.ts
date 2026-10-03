@@ -1,6 +1,6 @@
 // Listing templates. The six fixtures in data/fixtures/listings are reused as they are; the generated ones are
 // SIMULATED look-alikes so a run spans many merchants. No real shop, seller or person.
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import { loadFixture } from "@wally/core/testing/fixtures";
 
 export interface Template {
   readonly slug: string;

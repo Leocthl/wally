@@ -1,9 +1,9 @@
 // ApiClient: the one boundary between the UI and the engine side (docs/02 section 18, lane C brief).
 // HttpApiClient talks to the booth server (live mode); LocalApiClient runs the same real stack on the device with
 // recorded model answers (on-device mode); MockApiClient is a UI-test double.
-import type { CardRecord, Cart, CompiledRules, Decision, LogEntry, Mandate, MandateCredential, PacketState } from "@laisee/core/generated";
-import type { ParentSummary } from "@laisee/core/family";
-import type { CardEvent, Checkpoint, JudgeRecord, TemplateId, VerifyFailure, VerifyResult } from "@laisee/core/ports";
+import type { CardRecord, Cart, CompiledRules, Decision, LogEntry, Mandate, MandateCredential, PacketState } from "@wally/core/generated";
+import type { ParentSummary } from "@wally/core/family";
+import type { CardEvent, Checkpoint, JudgeRecord, TemplateId, VerifyFailure, VerifyResult } from "@wally/core/ports";
 
 export type { CardEvent, CardRecord, Cart, CompiledRules, Decision, JudgeRecord, LogEntry, Mandate, PacketState, TemplateId };
 

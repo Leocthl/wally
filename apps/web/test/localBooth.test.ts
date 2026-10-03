@@ -2,8 +2,8 @@
 // data/scenarios/booth.json expects on the real engine; the presenter order gives the storyline numbers [F20-F23];
 // tamper fails verification of the real signed chain at the changed seq; typed text with no recording escalates
 // (R10.unavailable) and says the judge is offline on this device; nothing reaches the network.
-import type { Decision } from "@laisee/core/generated";
-import { seededRandom } from "@laisee/rail-sim";
+import type { Decision } from "@wally/core/generated";
+import { seededRandom } from "@wally/rail-sim";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCAL_JUDGE_OFFLINE_NOTE } from "../src/api/local/info";
 import { LocalApiClient } from "../src/api/local/LocalApiClient";

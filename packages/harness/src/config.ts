@@ -1,5 +1,5 @@
 // Harness constants. Every number cites its facts-register row (docs/facts-register.md); prose never restates them.
-import { ENGINE_CONFIG } from "@laisee/core/config";
+import { ENGINE_CONFIG } from "@wally/core/config";
 
 /** F37: 150-200 seeded scenarios, cut to 100 only by D9. */
 export const SCENARIO_COUNT = { default: 150, minimum: 100, targetMax: 200 } as const;
@@ -7,7 +7,7 @@ export const SCENARIO_COUNT = { default: 150, minimum: 100, targetMax: 200 } as 
 /** F38: acceptance targets for T-H1 and T-H2. Percent kept as an integer so the check is exact integer math. */
 export const ACCEPTANCE = { maxOverLimitMintsDeterministic: 0, minLegitimateApprovedPct: 90 } as const;
 
-// Limits and thresholds are read from @laisee/core/config (ENGINE_CONFIG, each value cites its register row there).
+// Limits and thresholds are read from @wally/core/config (ENGINE_CONFIG, each value cites its register row there).
 // The names below are views of that config, not copies: a change to the register row and the config reaches the harness
 // with no edit here. The generator uses them to place boundary scenarios on both sides of a limit.
 /** F1.ceiling, F1.active, F30: per-card ceiling, cards active at once, card TTL. */

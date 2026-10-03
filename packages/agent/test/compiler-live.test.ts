@@ -2,8 +2,8 @@
 // when the server is not reachable. With the model up it must agree with the rule-based compile
 // (apps/web/src/booth/compile.ts, compile.test.ts) on the mandate sentences M0, M1 and M2 [F20, F90], and read an end date.
 import { describe, expect, it } from "vitest";
-import type { CompiledRules } from "@laisee/core/generated";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { CompiledRules } from "@wally/core/generated";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { compileMandateText } from "../src/compiler";
 import { createChatClient, DEFAULT_LOCAL_PLANNER_URL } from "../src/planner/local";
 

@@ -1,7 +1,7 @@
 // Where the judge's answers come from, stated in every result file: a live Laya on loopback, or recorded answers.
 // The judge itself (SystemOneJudge) and B0's client are injected by factory.ts; this file only wires recording and replay
 // around them and never names a concrete implementation.
-import type { JudgePort } from "@laisee/core/ports";
+import type { JudgePort } from "@wally/core/ports";
 import type { Scenario } from "../types";
 import type { ChoiceClient } from "./choice-client";
 import { createRecorder, createReplayer, type Recording, type RecordingSource, type ReplayStats } from "./recording";

@@ -1,10 +1,10 @@
 // TEST ONLY, not the engine. A small independent implementation of the R1-R10 semantics in docs/00 and docs/02 §7, written
 // from the docs and the register before lane A's engine existed. Its one job now is a differential cross-check
 // (test/differential.test.ts): two implementations of the same specification must agree on every generated scenario. It
-// carries its own copy of the register values on purpose, so a wrong value in @laisee/core/config shows up as a disagreement.
+// carries its own copy of the register values on purpose, so a wrong value in @wally/core/config shows up as a disagreement.
 // It is never imported from src/ and never produces a result file.
-import type { Cart, Decision, Mandate, PacketState, RuleId, RuleResult, TemplateId } from "@laisee/core/generated";
-import type { DecideContext, Engine, EscalationResolution, JudgeRecord } from "@laisee/core/ports";
+import type { Cart, Decision, Mandate, PacketState, RuleId, RuleResult, TemplateId } from "@wally/core/generated";
+import type { DecideContext, Engine, EscalationResolution, JudgeRecord } from "@wally/core/ports";
 
 export const REFERENCE_ENGINE_VERSION = "harness-reference-double@test";
 

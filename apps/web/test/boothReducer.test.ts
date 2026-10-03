@@ -1,5 +1,5 @@
 // The UI state is a pure fold of trace events (no hidden state), so the same reducer serves the mock and the SSE client.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0SealRequest } from "../src/api/mock/presets";

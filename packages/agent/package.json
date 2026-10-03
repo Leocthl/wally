@@ -1,5 +1,5 @@
 {
-  "name": "@laisee/agent",
+  "name": "@wally/agent",
   "version": "0.0.0",
   "private": true,
   "description": "Planner backends and judge adapters (lane B). No signing code, no rail (I4)",
@@ -18,7 +18,7 @@
     "judge:record": "tsx src/judge/fit/record-cli.ts"
   },
   "dependencies": {
-    "@laisee/core": "workspace:*"
+    "@wally/core": "workspace:*"
   },
   "devDependencies": {
     "fast-check": "^4.10.2",

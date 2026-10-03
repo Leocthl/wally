@@ -1,6 +1,6 @@
 // Compact per-entry timeline: a tick for each entry before the first failure, a cross on it, "not checked" after.
 // Labels (seq, kind, time) are read from the unverified lines and shown as text; status comes from the report.
-import type { Checkpoint, ParsedLog, VerifyReport } from "@laisee/core/verify";
+import type { Checkpoint, ParsedLog, VerifyReport } from "@wally/core/verify";
 import { ownInteger, ownString } from "./entry-fields";
 import { LIMITS } from "./limits";
 

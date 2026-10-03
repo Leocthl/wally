@@ -1,9 +1,9 @@
 // Seals a scenario's mandate the way the delegator would: an AgentDelegationCredential signed with eddsa-jcs-2022 (ADR-0007).
 // The proof is then verified, and that result is what R1 receives, so R1 runs on a real signature in every scenario.
-import type { MandateCredential } from "@laisee/core/generated";
-import type { Signer } from "@laisee/core/ports";
-import { credentialIdForMandate, signMandateCredential, verifyMandateCredential, type UnsignedMandateCredential } from "@laisee/core/vc";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { MandateCredential } from "@wally/core/generated";
+import type { Signer } from "@wally/core/ports";
+import { credentialIdForMandate, signMandateCredential, verifyMandateCredential, type UnsignedMandateCredential } from "@wally/core/vc";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import type { Scenario } from "../types";
 
 // The two contexts the credential schema requires, read from the example credential fixture so this file names neither.

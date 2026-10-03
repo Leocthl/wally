@@ -1,6 +1,6 @@
-// The swap point for stop texts. Lane A's explain module (@laisee/core/explain, `render`) replaces the stub here:
-//   import { render } from "@laisee/core/explain";   export const renderStop: Render = render;
-import type { Render } from "@laisee/core/ports";
+// The swap point for stop texts. Lane A's explain module (@wally/core/explain, `render`) replaces the stub here:
+//   import { render } from "@wally/core/explain";   export const renderStop: Render = render;
+import type { Render } from "@wally/core/ports";
 import { renderTemplate } from "./templates";
 
 export const renderStop: Render = (templateId, inputs, locale) => renderTemplate(templateId, inputs, locale);

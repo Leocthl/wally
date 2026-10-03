@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Static guard: the portable booth backend and the on-device client run in a browser, so they import no node:*
-// module, no server file, and nothing at runtime from @laisee/agent/judge (its index reads files at load; only types
+// module, no server file, and nothing at runtime from @wally/agent/judge (its index reads files at load; only types
 // may come from there). The planner index is browser-loadable (its file loader is only called by the server).
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -42,16 +42,16 @@ describe("portable backend and on-device client", () => {
     for (const { specifier, typeOnly } of refs) {
       expect(specifier).not.toMatch(/^node:/);
       expect(specifier).not.toMatch(/^(\.\.\/)+server\//);
-      expect(specifier).not.toMatch(/^@laisee\/(core\/(log\/file|testing\/fixtures)|rail-sim\/node)$/);
-      if (specifier === "@laisee/agent/judge") expect(typeOnly, "@laisee/agent/judge may be imported for types only").toBe(true);
+      expect(specifier).not.toMatch(/^@wally\/(core\/(log\/file|testing\/fixtures)|rail-sim\/node)$/);
+      if (specifier === "@wally/agent/judge") expect(typeOnly, "@wally/agent/judge may be imported for types only").toBe(true);
     }
   });
 
   it("the scan sees a multi-line import and a type-only import", () => {
-    const refs = importsOf('import {\n  a,\n  b,\n} from "node:fs";\nimport type { X } from "@laisee/agent/judge";\nconst y = this.#require();');
+    const refs = importsOf('import {\n  a,\n  b,\n} from "node:fs";\nimport type { X } from "@wally/agent/judge";\nconst y = this.#require();');
     expect(refs).toEqual([
       { typeOnly: false, specifier: "node:fs" },
-      { typeOnly: true, specifier: "@laisee/agent/judge" },
+      { typeOnly: true, specifier: "@wally/agent/judge" },
     ]);
   });
 });

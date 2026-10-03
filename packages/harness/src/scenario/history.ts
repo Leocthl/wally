@@ -4,8 +4,8 @@
 // folds that log with core's foldPacket and compares. Times are SIMULATED scenario-clock choices, not product thresholds.
 // Every past purchase is a logged APPROVE, so the verifier (step 9) holds it to the sealed terms: each purchase fits the
 // per-purchase terms and happens while the mandate is valid. The money spent may therefore be several purchases.
-import type { Mandate, PacketState } from "@laisee/core/generated";
-import { logIdForMandate } from "@laisee/core/log";
+import type { Mandate, PacketState } from "@wally/core/generated";
+import { logIdForMandate } from "@wally/core/log";
 import { RAIL } from "../config";
 import type { HistoryEvent } from "../types";
 

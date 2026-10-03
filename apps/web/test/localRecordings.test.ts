@@ -1,11 +1,11 @@
 // @vitest-environment node
 // The bundled on-device data equals what the Node server loads from disk, file for file: scenario table, catalogue,
 // planner replay records and judge recordings. LocalReplayJudge (browser port: SHA-256 via @noble/hashes instead of
-// node:crypto) answers exactly like @laisee/agent's ReplayJudge for every recording, for unknown text and for timeouts.
+// node:crypto) answers exactly like @wally/agent's ReplayJudge for every recording, for unknown text and for timeouts.
 import { join } from "node:path";
-import { loadReplayRecordings, ReplayJudge } from "@laisee/agent/judge";
-import { loadReplayRecords } from "@laisee/agent/planner";
-import type { JudgeInput, JudgeRecord } from "@laisee/core/ports";
+import { loadReplayRecordings, ReplayJudge } from "@wally/agent/judge";
+import { loadReplayRecords } from "@wally/agent/planner";
+import type { JudgeInput, JudgeRecord } from "@wally/core/ports";
 import { describe, expect, it } from "vitest";
 import { loadCatalogue } from "../server/booth/catalogue";
 import { loadScenarioTable } from "../server/booth/scenarioTable";

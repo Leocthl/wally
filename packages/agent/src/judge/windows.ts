@@ -2,7 +2,7 @@
 // Each window gets its own call; the answers are merged conservatively: the worst window decides every question,
 // scope_fit included (the least in-scope window, so an off-category tail cannot hide behind a clothing head; audit
 // low). Whole distributions are taken from one window, never mixed label by label.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import { DEFAULT_MAX_WINDOWS, DEFAULT_WINDOW_CHARS, DEFAULT_WINDOW_OVERLAP_CHARS } from "./config";
 import type { ListingPart } from "./state";
 

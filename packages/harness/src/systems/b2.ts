@@ -2,9 +2,9 @@
 // builder prices, the judge reads the listing, the engine decides, the rail mints, the executor charges. Nothing in this file
 // decides anything. It plays the shopper's part (what the label says the shopper wants decides the answer to an escalation)
 // and reads what happened back from the log.
-import type { Decision, LogEntry } from "@laisee/core/generated";
-import type { AnswerResult, CheckoutResult, OperationFailure, RevokeResult, SubmitResult } from "@laisee/core/orchestrator";
-import type { JudgeInput } from "@laisee/core/ports";
+import type { Decision, LogEntry } from "@wally/core/generated";
+import type { AnswerResult, CheckoutResult, OperationFailure, RevokeResult, SubmitResult } from "@wally/core/orchestrator";
+import type { JudgeInput } from "@wally/core/ports";
 import type { Scenario } from "../types";
 import { factsOf, summariseEvent, summariseJudge } from "./summary";
 import type { EscalationSummary, OrchestratedWorld, RunOutcome, SystemDeps, SystemUnderTest } from "./types";

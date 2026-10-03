@@ -2,7 +2,7 @@
 // The shipped wording is B-19 variant v5 (fit/variants.ts). services/laya/fixtures/questions.json still holds v0, the
 // wording F36 was read off and the Laya smoke test uses; a test guards that copy against drift.
 // Labels are never boolean words: the Laya README warns checkpoints can follow yes/no over the option text.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 
 export const JUDGE_QUESTIONS = ["scope_fit", "injection_risk", "seller_risk", "escalate_or_proceed"] as const;
 export type JudgeQuestion = (typeof JUDGE_QUESTIONS)[number];

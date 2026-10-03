@@ -2,8 +2,8 @@
 // shadow | enforce, LAYA_BASE_URL, LAYA_MODEL, JEV_BASE_URL, JEV_MODEL and the Jev key. Bad configuration is
 // reported once, at composition time. There is no automatic failover between providers: a failed judge is an
 // ERROR record and R10 escalates it. Switching to replay is a deliberate, labelled operator choice.
-import type { JudgeProvider } from "@laisee/core/generated";
-import type { JudgePort } from "@laisee/core/ports";
+import type { JudgeProvider } from "@wally/core/generated";
+import type { JudgePort } from "@wally/core/ports";
 import { DEFAULT_JEV_BASE_URL, DEFAULT_JEV_MODEL, DEFAULT_LAYA_BASE_URL, DEFAULT_LAYA_MODEL } from "./config";
 import type { DiagnosticSink } from "./diagnostics";
 import type { FetchLike } from "./http";

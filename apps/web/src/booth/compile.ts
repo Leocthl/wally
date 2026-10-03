@@ -1,9 +1,9 @@
 // Mandate sentence -> compiled rule chips -> rules (docs/01 Example mandates, C-03). A small deterministic parser:
 // no model, no network. The chips are the enforced rules; the sentence is display only (docs/06 DM1 talker line).
 // The budget's end is this month's end unless the sentence gives a length ("14 days") or a date (endDate.ts); a date is
-// resolved and capped by the same code the model compiler uses (@laisee/agent/compiler), so both end a budget alike.
-import { capEnd, DEFAULT_COMPILER_LIMITS, describeEndDate, monthEndHk, periodClamp, resolveEndDate, toTimestamp, type Clamp } from "@laisee/agent/compiler";
-import type { CompiledRules } from "@laisee/core/generated";
+// resolved and capped by the same code the model compiler uses (@wally/agent/compiler), so both end a budget alike.
+import { capEnd, DEFAULT_COMPILER_LIMITS, describeEndDate, monthEndHk, periodClamp, resolveEndDate, toTimestamp, type Clamp } from "@wally/agent/compiler";
+import type { CompiledRules } from "@wally/core/generated";
 import type { SealRequest } from "../api/types";
 import { dollarsToMinor } from "../domain/money";
 import { type Prov, SIMULATED } from "../domain/provenance";

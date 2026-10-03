@@ -21,7 +21,7 @@
 
 ## Use from the app
 - **Planner**: `PLANNER_PROVIDER=local`, `PLANNER_BASE_URL` (default `http://127.0.0.1:8809`), `PLANNER_MODEL` (`qwen3.5-9b-q4km` or `qwen3.5-4b-q4km`), `PLANNER_ALLOW_REMOTE=1` only for a non-loopback host
-- **Compiler**: `compileMandateText` from `@laisee/agent/compiler`, with `createChatClient` from `@laisee/agent/planner`; `{ ok: false }` means fall back to the rule-based compile
+- **Compiler**: `compileMandateText` from `@wally/agent/compiler`, with `createChatClient` from `@wally/agent/planner`; `{ ok: false }` means fall back to the rule-based compile
 - **Request shape**: OpenAI `POST /v1/chat/completions`, `temperature 0`, `seed`, `chat_template_kwargs.enable_thinking=false`, `response_format: json_schema` (llama-server turns it into a grammar)
 
 ## Files

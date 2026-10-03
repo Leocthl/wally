@@ -4,8 +4,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Mandate } from "@laisee/core/generated";
-import { formatIssues, validateMandate } from "@laisee/core/schema";
+import type { Mandate } from "@wally/core/generated";
+import { formatIssues, validateMandate } from "@wally/core/schema";
 import { DEFAULT_FIXTURES_DIR } from "../replay-recordings";
 import type { FitMeta } from "./report";
 

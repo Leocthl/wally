@@ -2,8 +2,8 @@
 // Jev (optional). One request carries the four typed questions as k option-order rotations; the answers are
 // averaged back into canonical order. One attempt, no retries, a deadline from the caller (F34). Any failure,
 // timeout, malformed answer or truncated input comes back as a TIMEOUT or ERROR record, which R10 escalates (I5).
-import type { JudgeProvider } from "@laisee/core/generated";
-import type { JudgeInput, JudgeRecord } from "@laisee/core/ports";
+import type { JudgeProvider } from "@wally/core/generated";
+import type { JudgeInput, JudgeRecord } from "@wally/core/ports";
 import {
   DEFAULT_LAYA_MODEL,
   HEALTH_PATH,

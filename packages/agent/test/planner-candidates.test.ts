@@ -1,7 +1,7 @@
 // Structured candidates from listing records: title attributes, families, labels. Listing text is never read.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { validateListingRecord } from "@laisee/core/schema";
+import { validateListingRecord } from "@wally/core/schema";
 import {
   candidatesFromListing,
   groupFamilies,

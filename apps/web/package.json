@@ -1,5 +1,5 @@
 {
-  "name": "@laisee/web",
+  "name": "@wally/web",
   "version": "0.0.0",
   "private": true,
   "description": "Booth UI (Vite + React) and thin Node API (Hono) under server/ (lane C, wiring by lane X)",
@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.3",
-    "@laisee/agent": "workspace:*",
-    "@laisee/core": "workspace:*",
-    "@laisee/rail-sim": "workspace:*",
+    "@wally/agent": "workspace:*",
+    "@wally/core": "workspace:*",
+    "@wally/rail-sim": "workspace:*",
     "@noble/hashes": "^2.4.0",
     "@number-flow/react": "^0.6.2",
     "hono": "^4.13.12",

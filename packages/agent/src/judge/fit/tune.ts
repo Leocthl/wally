@@ -4,7 +4,7 @@
 // The run file is rewritten after every stage, so a stopped run resumes without asking the server again, and its
 // timestamps show the wording and thresholds were fixed before the held-out run started.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import type { Mandate } from "@laisee/core/generated";
+import type { Mandate } from "@wally/core/generated";
 import { SystemOneJudge } from "../system-one-judge";
 import { DEFAULT_WINDOWING, type WindowingOptions } from "../windows";
 import { loadAnchors } from "./anchors";

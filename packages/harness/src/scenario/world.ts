@@ -8,7 +8,7 @@ import type {
   PlannerReplayRecord,
   ProposeCartInput,
   ScameterCapture,
-} from "@laisee/core/generated";
+} from "@wally/core/generated";
 import { EXAMPLE_MANDATE, RAIL, SCENARIO_EPOCH, type Category } from "../config";
 import type { Rng } from "../prng";
 import type { HistoryEvent, InjectionInfo, Scenario, ScenarioEvents, ScenarioLabel } from "../types";

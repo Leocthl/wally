@@ -1,10 +1,10 @@
 // M-09 groundwork: an async-capable delegator signer (a WebCrypto key, a confirmation screen or a platform key would
 // sign later) used with the UNCHANGED synchronous core Signer port. A dry run captures the exact bytes, the async signer
 // signs them, a second run uses the signatures and checks the bytes did not change; anything odd fails closed.
-import { createSigner, generateKeyPair } from "@laisee/core/crypto";
-import { delegatorSigningMessage, signEscalationAnswer, signRevocation, verifyEscalationAnswer, verifyRevocation } from "@laisee/core/log";
-import type { Signer } from "@laisee/core/ports";
-import { signMandateCredential, verifyMandateCredential } from "@laisee/core/vc";
+import { createSigner, generateKeyPair } from "@wally/core/crypto";
+import { delegatorSigningMessage, signEscalationAnswer, signRevocation, verifyEscalationAnswer, verifyRevocation } from "@wally/core/log";
+import type { Signer } from "@wally/core/ports";
+import { signMandateCredential, verifyMandateCredential } from "@wally/core/vc";
 import { describe, expect, it, vi } from "vitest";
 import { AsyncSignError, memoryAsyncSigner, signWithAsync, type AsyncSigner } from "../src/api/local/signer";
 import { buildCredential } from "../src/booth/backend/session";

@@ -1,4 +1,4 @@
-// judge:tune command line. Run with: pnpm --filter @laisee/agent judge:tune  (tsx src/judge/fit/tune-cli.ts)
+// judge:tune command line. Run with: pnpm --filter @wally/agent judge:tune  (tsx src/judge/fit/tune-cli.ts)
 // Queries the running local Laya server, then writes data/results/judge-fit-<date>.json and .md and
 // data/results/judge-thresholds-proposal.json. --render-only rebuilds the three files from the run file.
 import { readFileSync } from "node:fs";

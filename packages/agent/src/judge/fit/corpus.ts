@@ -3,8 +3,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { JudgeAnswers, ListingRecord } from "@laisee/core/generated";
-import { formatIssues, validateListingRecord } from "@laisee/core/schema";
+import type { JudgeAnswers, ListingRecord } from "@wally/core/generated";
+import { formatIssues, validateListingRecord } from "@wally/core/schema";
 import { isRecord } from "../guards";
 import type { ScameterState } from "./inputs";
 

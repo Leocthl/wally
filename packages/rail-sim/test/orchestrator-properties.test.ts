@@ -3,15 +3,15 @@
 // revoke and ticks. After each sequence: T-I1, T-I2, T-I5, T-I6, T-I7, T-I8. Seed pinned for CI.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { ENGINE_CONFIG } from "@laisee/core/config";
-import { createEngine } from "@laisee/core/engine";
-import type { CardRecord, Decision, ListingRecord, LogEntry, ProposeCartInput } from "@laisee/core/generated";
-import { appendEntry, findCardData, signEscalationAnswer, signRevocation } from "@laisee/core/log";
-import { createOrchestrator, type OrchestratorEvent } from "@laisee/core/orchestrator";
-import type { JudgeRecord, RailPort } from "@laisee/core/ports";
-import { FakeClock, FakeJudge, FakePlanner, MemoryLogStore } from "@laisee/core/testing";
-import { loadFixture } from "@laisee/core/testing/fixtures";
-import { verifyChain } from "@laisee/core/verify";
+import { ENGINE_CONFIG } from "@wally/core/config";
+import { createEngine } from "@wally/core/engine";
+import type { CardRecord, Decision, ListingRecord, LogEntry, ProposeCartInput } from "@wally/core/generated";
+import { appendEntry, findCardData, signEscalationAnswer, signRevocation } from "@wally/core/log";
+import { createOrchestrator, type OrchestratorEvent } from "@wally/core/orchestrator";
+import type { JudgeRecord, RailPort } from "@wally/core/ports";
+import { FakeClock, FakeJudge, FakePlanner, MemoryLogStore } from "@wally/core/testing";
+import { loadFixture } from "@wally/core/testing/fixtures";
+import { verifyChain } from "@wally/core/verify";
 import { MerchantStub, RailSim, seededRandom, sequentialIds, type MerchantMode } from "../src";
 import { HOODIE, INJECTED, JACKET, P_A1, P_A2, P_A3, P_A3B, P_A4, SEAL_AT, SOCKS, TEE, credential, keys } from "./orchestrator-helpers";
 

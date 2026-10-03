@@ -4,10 +4,10 @@
 // answers placed on either side of each threshold. A disagreement is a finding: either the engine, the reference or a
 // config value is wrong, and the register decides which.
 import { describe, expect, it } from "vitest";
-import { engine } from "@laisee/core/engine";
-import type { Decision, JudgeAnswers } from "@laisee/core/generated";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { CLEAN_ANSWERS } from "@laisee/core/testing";
+import { engine } from "@wally/core/engine";
+import type { Decision, JudgeAnswers } from "@wally/core/generated";
+import type { JudgeRecord } from "@wally/core/ports";
+import { CLEAN_ANSWERS } from "@wally/core/testing";
 import { createRng, type Rng } from "../src/prng";
 import { generateScenarios } from "../src/scenario/generate";
 import type { Scenario } from "../src/types";

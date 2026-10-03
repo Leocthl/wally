@@ -1,6 +1,6 @@
 // The Ask sheet's typed request (api.ask), shown only when the booth says it can take one (info.features.ask), and the
 // honest hint on a device that only knows the sample asks.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";

@@ -1,11 +1,11 @@
 // MockApiClient: replays the SIMULATED storyline offline (docs/01 Storyboard, docs/06 beats) with real packet math, so a
 // judge can press anything in any order with no network and no key. Every output is SIMULATED and the UI says so.
 // The HTTP + SSE client replaces this behind the same ApiClient interface; nothing in the UI knows which one it has.
-import { formatIssues, validateMandate, validateMandateCredential } from "@laisee/core/schema";
-import type { MandateCredential, Revocation } from "@laisee/core/generated";
-import type { Clock } from "@laisee/core/ports";
-import { credentialIdForMandate, mandateFromCredential } from "@laisee/core/vc";
-import { PLACEHOLDER_SIGNATURE } from "@laisee/core/testing";
+import { formatIssues, validateMandate, validateMandateCredential } from "@wally/core/schema";
+import type { MandateCredential, Revocation } from "@wally/core/generated";
+import type { Clock } from "@wally/core/ports";
+import { credentialIdForMandate, mandateFromCredential } from "@wally/core/vc";
+import { PLACEHOLDER_SIGNATURE } from "@wally/core/testing";
 import type {
   ApiClient,
   ApiInfo,

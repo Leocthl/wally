@@ -1,5 +1,5 @@
-// @laisee/core/log: appendEntry, hashing, JSONL, head checkpoint, delegator-signed payloads, I8 guard.
-// Browser-safe. The Node-only FileLogStore lives at @laisee/core/log/file.
+// @wally/core/log: appendEntry, hashing, JSONL, head checkpoint, delegator-signed payloads, I8 guard.
+// Browser-safe. The Node-only FileLogStore lives at @wally/core/log/file.
 export { LogError, type LogErrorCode } from "./errors";
 export { assertLogId, LOG_ID_RE, logIdForMandate } from "./ids";
 export {

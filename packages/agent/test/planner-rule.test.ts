@@ -1,9 +1,9 @@
 // Rule planner: deterministic harness around Laya's typed choices, tested against the mock server.
 import fc from "fast-check";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerTraceStep, ProposeCartInput } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerTraceStep, ProposeCartInput } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 import { createRulePlanner } from "../src/planner/rule-planner";
 import { startMockLaya, type MockLaya } from "./support/planner/mock-laya";
 import { GRAPHIC_TEE_LISTING, OPTS, VARIANT_LISTING, ctxOf, fixtureListing, nonEmpty } from "./support/planner/data";

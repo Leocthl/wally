@@ -1,6 +1,6 @@
 // Packet fold for the mock (docs/00 Packet accounting): commit on CARD_MINTED, release on VOIDED or EXPIRED,
 // settle on AUTHORISED with the actual amount. A pure fold of the log; lane A's foldPacket replaces it.
-import type { CardRecord, LogEntry, Mandate, PacketState } from "@laisee/core/generated";
+import type { CardRecord, LogEntry, Mandate, PacketState } from "@wally/core/generated";
 
 type CardState = CardRecord["state"];
 

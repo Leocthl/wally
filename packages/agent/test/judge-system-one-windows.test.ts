@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { SystemOneJudge, type SystemOneJudgeOptions } from "../src/judge/system-one-judge";
 import { splitListing } from "../src/judge/windows";
 import { inputWithText } from "./support/inputs";

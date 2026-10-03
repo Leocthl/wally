@@ -1,7 +1,7 @@
 // One deterministic harness run for tests: the real engine, rail, merchant and executor behind factory.ts, a test double
 // for the judge and the model (a keyword oracle), pinned metadata, a fake clock and a counting timer.
-import { FakeClock } from "@laisee/core/testing";
-import type { JudgePort } from "@laisee/core/ports";
+import { FakeClock } from "@wally/core/testing";
+import type { JudgePort } from "@wally/core/ports";
 import { createComponents, describeComponents } from "../../src/factory";
 import type { ChoiceClient } from "../../src/judge/choice-client";
 import { createClientSource, type JudgeSource } from "../../src/judge/sources";

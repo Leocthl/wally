@@ -1,6 +1,6 @@
 // Cart builder (A-31 analog): prices a proposal from the listing record, never from planner text (I4).
 // total = subtotal + shipping + fees (+ fx fee); the engine boundary check is re-run by the tests.
-import type { Cart, ListingRecord, Mandate, ProposeCartInput } from "@laisee/core/generated";
+import type { Cart, ListingRecord, Mandate, ProposeCartInput } from "@wally/core/generated";
 import { sha256Hex } from "./hash";
 
 export interface BuildCartArgs {

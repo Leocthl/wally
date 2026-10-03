@@ -1,6 +1,6 @@
 // The R10 gates as the fit sees them, with the engine's own comparisons (docs/02 section 9, [F36, F50]).
 // Thresholds are in the engine's units: scope_fit stops when P(in_scope) < T, the others when value >= T.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import type { JudgeQuestion } from "../questions";
 import type { CorpusLabels } from "./corpus";
 import type { GateThresholds } from "./thresholds";

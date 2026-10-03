@@ -1,7 +1,7 @@
 // The on-device client against the shared ApiClient contract: the same tests the mock and the HTTP client pass, here
 // on the real orchestrator, engine, cart builder, executor, signed log and verifier running in this process, with
 // recorded planner and judge answers and a seeded SIMULATED rail.
-import { seededRandom } from "@laisee/rail-sim";
+import { seededRandom } from "@wally/rail-sim";
 import { afterEach } from "vitest";
 import { LocalApiClient } from "../src/api/local/LocalApiClient";
 import { apiClientContract } from "./apiClientContract";

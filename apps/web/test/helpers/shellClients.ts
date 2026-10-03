@@ -1,5 +1,5 @@
 // Mock clients that fail on purpose, for the shell's first-run, retry and error paths (lane b-shell tests).
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { MockApiClient } from "../../src/api/MockApiClient";
 import type { ApiInfo, SealRequest, SealResult } from "../../src/api/types";
 

@@ -3,8 +3,8 @@
 // judgement (one annotator), not ground truth. The new ones are also written to data/fixtures/planner/qwen/ as
 // planner-replay envelopes holding the EXPECTED proposal (not a recording); the replay backend reads only the
 // top level of data/fixtures/planner, so these never change what the booth replays.
-import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
-import type { PlannerStop } from "@laisee/core/ports";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
+import type { PlannerStop } from "@wally/core/ports";
 import { GRAPHIC_TEE_LISTING, R3_STOP, VARIANT_LISTING, fixtureListing } from "../planner/data";
 import { SCENARIOS as B_SCENARIOS } from "../planner/scenarios";
 

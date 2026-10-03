@@ -2,7 +2,7 @@
 // pnpm demo preflight: a short PASS / WARN / FAIL list before the booth starts. Laya being down is a WARN, not a FAIL:
 // the booth still runs and every decision escalates (R10.unavailable) until Laya is back. Network: loopback only.
 // Usage: node scripts/booth-check.mjs [--build-if-needed] [--lan]
-//   --build-if-needed  builds the booth UI (pnpm --filter @laisee/web build) when apps/web/dist is missing
+//   --build-if-needed  builds the booth UI (pnpm --filter @wally/web build) when apps/web/dist is missing
 //   --lan              checklist for phones on the booth Wi-Fi (pnpm demo:lan): this Mac's addresses, the macOS firewall,
 //                      client isolation; the port is checked on every interface instead of loopback only
 import { spawnSync } from "node:child_process";
@@ -35,11 +35,11 @@ function checkNode() {
 function checkBuild(buildIfNeeded) {
   const ui = join(ROOT, "apps/web/dist/index.html");
   if (!existsSync(ui) && buildIfNeeded) {
-    process.stdout.write("building the booth UI (pnpm --filter @laisee/web build) ...\n");
-    const built = spawnSync("pnpm", ["--filter", "@laisee/web", "build"], { cwd: ROOT, stdio: "inherit" });
+    process.stdout.write("building the booth UI (pnpm --filter @wally/web build) ...\n");
+    const built = spawnSync("pnpm", ["--filter", "@wally/web", "build"], { cwd: ROOT, stdio: "inherit" });
     if (built.status !== 0) return record("FAIL", "booth UI", "build failed");
   }
-  record(existsSync(ui) ? "PASS" : "WARN", "booth UI", existsSync(ui) ? "apps/web/dist" : "not built: run pnpm --filter @laisee/web build");
+  record(existsSync(ui) ? "PASS" : "WARN", "booth UI", existsSync(ui) ? "apps/web/dist" : "not built: run pnpm --filter @wally/web build");
   const verifier = join(ROOT, "apps/verifier/dist/index.html");
   record(existsSync(verifier) ? "PASS" : "WARN", "verifier page", existsSync(verifier) ? "apps/verifier/dist, served at /verifier/" : "not built: /verifier/ answers 404");
 }

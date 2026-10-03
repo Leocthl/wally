@@ -2,13 +2,13 @@
 // mandate id). Seal builds the AgentDelegationCredential (W3C VC 2.0, urn:laisee:mandate:<mnd_id>) from the UI's
 // SealRequest and signs it with the delegator key (DEMO SHORTCUT, see keys.ts). The new orchestrator's events are
 // held until the seal succeeds, so a refused seal changes nothing the visitor can see (fail closed).
-import type { ScameterLookup } from "@laisee/core/cart";
-import { parentLinkOf } from "@laisee/core/family";
-import type { MandateCredential, ParentLink } from "@laisee/core/generated";
-import type { Orchestrator, OrchestratorDeps, OrchestratorEvent, PlannerFactory } from "@laisee/core/orchestrator";
-import type { AppendEntry, Clock, Engine, JudgePort, LogStore, Signer } from "@laisee/core/ports";
-import { credentialIdForMandate, CredentialSignError, signMandateCredential, type UnsignedMandateCredential } from "@laisee/core/vc";
-import { MerchantStub, RailSim, type RandomSource } from "@laisee/rail-sim";
+import type { ScameterLookup } from "@wally/core/cart";
+import { parentLinkOf } from "@wally/core/family";
+import type { MandateCredential, ParentLink } from "@wally/core/generated";
+import type { Orchestrator, OrchestratorDeps, OrchestratorEvent, PlannerFactory } from "@wally/core/orchestrator";
+import type { AppendEntry, Clock, Engine, JudgePort, LogStore, Signer } from "@wally/core/ports";
+import { credentialIdForMandate, CredentialSignError, signMandateCredential, type UnsignedMandateCredential } from "@wally/core/vc";
+import { MerchantStub, RailSim, type RandomSource } from "@wally/rail-sim";
 import type { SealRequest } from "../../api/types";
 import { BoothError } from "./errors";
 import type { FamilyKit } from "./family";

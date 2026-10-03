@@ -1,6 +1,6 @@
 // Mounts a b-proof screen on its own (no shell): the real BoothProvider on an instant MockApiClient, seeded by running
 // scenarios first, in a fixed language. Lets Receipts and Proof be tested before the new shell lands.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { render, waitFor, type RenderResult } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import type { ReactElement } from "react";

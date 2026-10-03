@@ -1,11 +1,11 @@
-// T-R1 parity: the fake that other lanes test against (FakeRail in @laisee/core/testing) and the real SIMULATED
+// T-R1 parity: the fake that other lanes test against (FakeRail in @wally/core/testing) and the real SIMULATED
 // rail must agree on the shared F1 semantics, so swapping one for the other changes no outcome.
 // Not covered here because the two differ on purpose: id formats, schema strictness of the decision, the packet
 // remaining check (RailSim only), key reuse with different parameters (RailSim refuses, FakeRail replays), amount
 // zero, and the merchant lock (RailSim binds it to the approved cart's domain and defaults to it; FakeRail takes the
 // caller's). Both return a repeat mint in its current state.
-import type { RailPort } from "@laisee/core/ports";
-import { FakeRail } from "@laisee/core/testing";
+import type { RailPort } from "@wally/core/ports";
+import { FakeRail } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { RailSim, seededRandom } from "../src";
 import { MERCHANT, NOW, approvedDecision, decisionId, deniedDecision } from "./helpers";

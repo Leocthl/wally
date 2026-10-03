@@ -179,7 +179,7 @@ importers:
 
   apps/verifier:
     dependencies:
-      '@laisee/core':
+      '@wally/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -195,21 +195,21 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.3
         version: 2.1.3(hono@4.13.12)
-      '@laisee/agent':
-        specifier: workspace:*
-        version: link:../../packages/agent
-      '@laisee/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@laisee/rail-sim':
-        specifier: workspace:*
-        version: link:../../packages/rail-sim
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
       '@number-flow/react':
         specifier: ^0.6.2
         version: 0.6.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@wally/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
+      '@wally/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@wally/rail-sim':
+        specifier: workspace:*
+        version: link:../../packages/rail-sim
       hono:
         specifier: ^4.13.12
         version: 4.13.12
@@ -271,7 +271,7 @@ importers:
 
   packages/agent:
     dependencies:
-      '@laisee/core':
+      '@wally/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -309,13 +309,13 @@ importers:
 
   packages/harness:
     dependencies:
-      '@laisee/agent':
+      '@wally/agent':
         specifier: workspace:*
         version: link:../agent
-      '@laisee/core':
+      '@wally/core':
         specifier: workspace:*
         version: link:../core
-      '@laisee/rail-sim':
+      '@wally/rail-sim':
         specifier: workspace:*
         version: link:../rail-sim
     devDependencies:
@@ -325,7 +325,7 @@ importers:
 
   packages/rail-sim:
     dependencies:
-      '@laisee/core':
+      '@wally/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

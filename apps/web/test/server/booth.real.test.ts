@@ -4,7 +4,7 @@
 // order reproduces the storyline numbers [F20-F23], tamper fails verification at the right seq with real signatures,
 // reset returns to HK$800, and a judge that cannot be reached escalates (R10.unavailable) without stopping the server.
 import { join } from "node:path";
-import type { Decision } from "@laisee/core/generated";
+import type { Decision } from "@wally/core/generated";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Booth } from "../../server/compose";
 import { loadScenarioTable } from "../../server/booth/scenarioTable";

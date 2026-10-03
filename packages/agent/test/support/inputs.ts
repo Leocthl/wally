@@ -1,7 +1,7 @@
 // JudgeInput builders from the SIMULATED fixtures, as the orchestrator would pass them.
-import type { Cart, ListingRecord } from "@laisee/core/generated";
-import type { JudgeInput } from "@laisee/core/ports";
-import { listFixtureFiles, loadFixture } from "@laisee/core/testing/fixtures";
+import type { Cart, ListingRecord } from "@wally/core/generated";
+import type { JudgeInput } from "@wally/core/ports";
+import { listFixtureFiles, loadFixture } from "@wally/core/testing/fixtures";
 import { cartFromListing, type ScameterState } from "../../src/judge/fit/inputs";
 
 export const DEMO_LISTINGS = [

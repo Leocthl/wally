@@ -1,4 +1,4 @@
-// @laisee/core/rules: R1-R12 as pure functions (docs/02 section 7). Browser-safe: no I/O, no clock.
+// @wally/core/rules: R1-R12 as pure functions (docs/02 section 7). Browser-safe: no I/O, no clock.
 // Hard rules R1-R8 and R12 only ever DENY; only ESCALATE verdicts (R4 ask_above, R9 unverified,
 // R10) can be answered by the delegator, and the engine enforces that.
 export { evaluateR1, evaluateR2, type R1Input, type R2Input } from "./mandate";

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Builds the iOS app for the Simulator (no signing), boots the device, installs and launches the app.
-// Run `pnpm --filter @laisee/mobile sync` first. Env: IOS_SIM_NAME (default "iPhone 17"), WALLY_IOS_BUILD (build folder,
+// Run `pnpm --filter @wally/mobile sync` first. Env: IOS_SIM_NAME (default "iPhone 17"), WALLY_IOS_BUILD (build folder,
 // default ~/Library/Caches/wally-ios, outside the repo so doc and lint scans never see SwiftPM checkouts). Flags:
 // --no-boot-ui keeps the Simulator window closed (the device still boots).
 import { spawnSync } from "node:child_process";
@@ -22,7 +22,7 @@ function run(cmd, args, { allowFail = false } = {}) {
   return res.status === 0;
 }
 
-if (!existsSync(join(mobile, "ios/App/App/public/index.html"))) throw new Error("web files missing in the iOS project: run `pnpm --filter @laisee/mobile sync` first");
+if (!existsSync(join(mobile, "ios/App/App/public/index.html"))) throw new Error("web files missing in the iOS project: run `pnpm --filter @wally/mobile sync` first");
 
 run("xcodebuild", [
   "-project", project,

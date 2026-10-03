@@ -1,6 +1,6 @@
 // Test double: the offline MockApiClient (which passes apiClientContract) behind the BoothBackend interface, so the
 // HTTP, SSE and client layers can be tested without the orchestrator. Never used outside tests.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { MockApiClient } from "../../../src/api/MockApiClient";
 import type { BoothBackend } from "../../../server/backend";
 

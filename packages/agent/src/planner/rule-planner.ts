@@ -1,9 +1,9 @@
 // PLANNER_PROVIDER=rule (default): a Laya-driven decision loop inside a deterministic harness.
 // PlannerPort: propose and alternatives never throw and return null on any failure (I5). The planner holds
 // no keys, no card handle and no log (I4); its only output is a ProposeCartInput without money fields.
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, ProposeCartInput } from "@laisee/core/ports";
-import { validateListingRecord } from "@laisee/core/schema";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, ProposeCartInput } from "@wally/core/ports";
+import { validateListingRecord } from "@wally/core/schema";
 import { resolveCandidates } from "./candidates";
 import { DEFAULT_LAYA_URL, PlannerConfigError, resolveConfig, type PlannerConfig } from "./config";
 import type { DecisionContext } from "./decisions";

@@ -1,6 +1,6 @@
 // Short plain-language chip labels in English and zh-HK, produced in code from the validated rules (never by the
 // model), so the Seal screen can show one chip per rule without extra logic. Dates are shown in Hong Kong time.
-import type { CompiledRules } from "@laisee/core/generated";
+import type { CompiledRules } from "@wally/core/generated";
 import type { DEFAULT_CATEGORIES } from "./config";
 import { SHORT_MONTHS } from "./end-date";
 

@@ -1,6 +1,6 @@
 // T-R1 (F1 parity for mint), T-I1 and T-I2 on the SIMULATED rail.
-import { MintError } from "@laisee/core/ports";
-import { validateCardRecord } from "@laisee/core/schema";
+import { MintError } from "@wally/core/ports";
+import { validateCardRecord } from "@wally/core/schema";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { RAIL_SIM_DEFAULTS, RailSim, RailSimError, seededRandom } from "../src";

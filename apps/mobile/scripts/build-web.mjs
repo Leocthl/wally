@@ -15,7 +15,7 @@ const www = join(mobile, "www");
 const EDGE_TO_EDGE = process.env.WALLY_EDGE_TO_EDGE === "1";
 
 function buildWeb() {
-  const args = ["--filter", "@laisee/web", "exec", "vite", "build", "--outDir", "../mobile/www", "--emptyOutDir"];
+  const args = ["--filter", "@wally/web", "exec", "vite", "build", "--outDir", "../mobile/www", "--emptyOutDir"];
   const run = spawnSync("pnpm", args, { cwd: repo, stdio: "inherit", env: { ...process.env, VITE_API: "local" } });
   if (run.status !== 0) throw new Error(`web build failed (exit ${run.status ?? run.signal})`);
 }

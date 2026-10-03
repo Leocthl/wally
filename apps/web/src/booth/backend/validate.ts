@@ -2,8 +2,8 @@
 // routes run them on parsed JSON bodies; the on-device client runs them on every call from the UI. Unknown keys are
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
-import { DEFAULT_PLANNER_CONFIG } from "@laisee/agent/planner";
-import type { CompiledRules } from "@laisee/core/generated";
+import { DEFAULT_PLANNER_CONFIG } from "@wally/agent/planner";
+import type { CompiledRules } from "@wally/core/generated";
 import {
   SCENARIO_IDS,
   type AlternativesRequest,

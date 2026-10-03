@@ -1,4 +1,4 @@
-import type { JudgeProvider } from "@laisee/core/generated";
+import type { JudgeProvider } from "@wally/core/generated";
 import type { FailureReason } from "./parse";
 
 export type DiagnosticReason =

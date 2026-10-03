@@ -1,6 +1,6 @@
 // The three pasted inputs, validated at the page boundary. Fail closed: anything unreadable is an input error and
 // the chain is never checked (so never PASS). The log text itself is passed on byte for byte, never trimmed.
-import { parseCheckpoint, parsePublicKeys, type Checkpoint, type PublicKeys } from "@laisee/core/verify";
+import { parseCheckpoint, parsePublicKeys, type Checkpoint, type PublicKeys } from "@wally/core/verify";
 import { LIMITS } from "./limits";
 import { formatCount } from "./phrases";
 import type { Bi } from "./strings";

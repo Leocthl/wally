@@ -1,4 +1,4 @@
-// judge:record command line (B-10). Run with: pnpm --filter @laisee/agent judge:record
+// judge:record command line (B-10). Run with: pnpm --filter @wally/agent judge:record
 // Re-records data/fixtures/judge/*.json from the running local Laya server with the shipped wording.
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";

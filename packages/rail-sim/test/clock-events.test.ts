@@ -1,7 +1,7 @@
 // Audit LOW and H5 on the SIMULATED rail (lane s-fix-core): expiry is judged on the rail's own monotonic time (an
 // injected clock, and never earlier than any time the rail has seen), and the rail can hand back its own record of a
 // charge by idempotency key without charging again.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { RailSim, seededRandom } from "../src";
 import { CARD_TTL_MS, MERCHANT, NOW, approvedDecision, mintCard, pay } from "./helpers";

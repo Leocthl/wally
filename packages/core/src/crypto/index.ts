@@ -1,4 +1,4 @@
-// @laisee/core/crypto: JCS, SHA-256, Ed25519, base58btc/multibase, did:key, Signer (docs/02 section 11).
+// @wally/core/crypto: JCS, SHA-256, Ed25519, base58btc/multibase, did:key, Signer (docs/02 section 11).
 // Browser-safe (no node: imports). Raw signing stays inside the Signer closure; it is not exported.
 export { CryptoError } from "./errors";
 export {

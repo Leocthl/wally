@@ -1,8 +1,8 @@
 // The SIMULATED merchant lock (audit S-RAIL-4). The lock is not the caller's free choice: it defaults to the approved
 // cart's merchant domain, and a lock for any other domain is refused, so a card can only pay the merchant the
 // delegator's policy approved. The real Single Use Card has no lock [F1]; this one is asked of HKT in docs/09.
-import type { Decision } from "@laisee/core/generated";
-import { MintError } from "@laisee/core/ports";
+import type { Decision } from "@wally/core/generated";
+import { MintError } from "@wally/core/ports";
 import { RailSimError } from "./errors";
 
 /** mandate.schema.json Domain: lowercase host name, no scheme or path. */

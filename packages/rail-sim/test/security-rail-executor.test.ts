@@ -1,13 +1,13 @@
 // Audit (lane s-audit): I1/I2/I6 at the rail and executor, the components the orchestrator will sit on.
 // Every hostile run is computed at module level, so a setup error turns the file red instead of passing
 // as an expected failure. Rail and merchant are SIMULATED.
-import { engine } from "@laisee/core/engine";
-import { createExecutor } from "@laisee/core/executor";
-import type { Cart, LogEntry } from "@laisee/core/generated";
-import { PacketFoldError, foldPacket } from "@laisee/core/packet";
-import type { AppendEntry, MerchantPort, Signer } from "@laisee/core/ports";
-import { FakeClock, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "@laisee/core/testing";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import { engine } from "@wally/core/engine";
+import { createExecutor } from "@wally/core/executor";
+import type { Cart, LogEntry } from "@wally/core/generated";
+import { PacketFoldError, foldPacket } from "@wally/core/packet";
+import type { AppendEntry, MerchantPort, Signer } from "@wally/core/ports";
+import { FakeClock, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "@wally/core/testing";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { describe, expect, it } from "vitest";
 import { MerchantStub, RailSim, seededRandom } from "../src";
 import { cartWithTotal } from "./helpers";

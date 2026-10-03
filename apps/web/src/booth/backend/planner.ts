@@ -1,10 +1,10 @@
 // PLANNER_PROVIDER=replay for the booth: recorded planner outputs chosen by the listing set of each submit, mapped
 // through data/scenarios/booth.json (each listing set names one record). The host loads the records (Node: files via
 // loadReplayRecords; browser: the bundled JSON via parseReplayFile); a table that names an unknown record is a
-// start-up error. The replay planner itself is @laisee/agent's, unchanged.
-import { createReplayPlanner } from "@laisee/agent/planner";
-import type { PlannerReplayRecord } from "@laisee/core/generated";
-import type { PlannerFactory } from "@laisee/core/orchestrator";
+// start-up error. The replay planner itself is @wally/agent's, unchanged.
+import { createReplayPlanner } from "@wally/agent/planner";
+import type { PlannerReplayRecord } from "@wally/core/generated";
+import type { PlannerFactory } from "@wally/core/orchestrator";
 import type { ScenarioTable } from "./scenarioTable";
 
 const keyOf = (ids: readonly string[]): string => [...ids].sort().join("|");

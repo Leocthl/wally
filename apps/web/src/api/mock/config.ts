@@ -1,4 +1,4 @@
-// Limits the mock engine enforces. Each value cites its facts-register row. When @laisee/core/config lands (lane A),
+// Limits the mock engine enforces. Each value cites its facts-register row. When @wally/core/config lands (lane A),
 // import from there instead and delete this file; these are copies for the offline booth, not new decisions.
 
 export const MOCK_CONFIG = {

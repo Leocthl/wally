@@ -1,8 +1,8 @@
 // Test data for the planner: the storyline listing fixtures plus in-memory listings with variants
 // (the shared listing fixtures have no size or colour options). All SIMULATED, no real shop or person.
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerContext, PlannerStop } from "@laisee/core/ports";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerContext, PlannerStop } from "@wally/core/ports";
+import { loadFixture } from "@wally/core/testing/fixtures";
 
 export const LISTING_FIXTURES = {
   tee: "listings/apparel-tee.json",

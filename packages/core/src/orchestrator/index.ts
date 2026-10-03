@@ -1,4 +1,4 @@
-// @laisee/core/orchestrator (A-26): pipeline per docs/00 Pipeline contract v0, one serialised queue per packet.
+// @wally/core/orchestrator (A-26): pipeline per docs/00 Pipeline contract v0, one serialised queue per packet.
 // Node and browser: no node: imports (the FileLogStore is injected by the composition root).
 export { createOrchestrator } from "./create";
 export { ORCHESTRATOR_DEFAULTS, OrchestratorConfigError, purposeOf } from "./config";

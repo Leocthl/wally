@@ -3,7 +3,7 @@ import { evaluateCorpus } from "../src/judge/corpus-eval";
 import { createClientSource } from "../src/judge/sources";
 import { BENIGN_IMPERATIVES, INJECTION_CORPUS } from "../src/scenario/injections";
 import { generateScenarios } from "../src/scenario/generate";
-import { FakeJudge } from "@laisee/core/testing";
+import { FakeJudge } from "@wally/core/testing";
 import { createOracleClient } from "./support/oracle-client";
 import { keywordJudge } from "./support/keyword-model";
 

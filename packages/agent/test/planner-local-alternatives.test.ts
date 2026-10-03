@@ -1,7 +1,7 @@
 // Local planner alternatives after a budget stop (R3/R4): code keeps only items whose order total fits what is
 // left, the model picks among them, and code re-checks the total. The model never does the arithmetic.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { PlannerStop, PlannerTraceStep } from "@laisee/core/ports";
+import type { PlannerStop, PlannerTraceStep } from "@wally/core/ports";
 import { createLocalPlanner } from "../src/planner/local/local-planner";
 import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, ctxOf, fixtureListing } from "./support/planner/data";
 import { proposeAnswer, schemaChoices, startMockLlama, userMessage, type MockLlama } from "./support/qwen/mock-llama";

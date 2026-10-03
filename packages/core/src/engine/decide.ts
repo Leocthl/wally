@@ -43,7 +43,7 @@ export interface EngineOptions {
   readonly version?: string;
 }
 
-export interface LaiseeEngine extends Engine {
+export interface WallyEngine extends Engine {
   readonly version: string;
   readonly config: EngineConfig;
   readonly configSha256: string;
@@ -117,7 +117,7 @@ function decideWith(config: EngineConfig, meta: Decision["engine"], a: DecideArg
 }
 
 /** An engine bound to one frozen config. Throws EngineConfigError on an invalid config (fail fast). */
-export function createEngine(options: EngineOptions = {}): LaiseeEngine {
+export function createEngine(options: EngineOptions = {}): WallyEngine {
   const config = options.config ?? ENGINE_CONFIG;
   const issues = validateEngineConfig(config);
   if (issues.length > 0) throw new EngineConfigError(issues);

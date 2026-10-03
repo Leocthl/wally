@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ENGINE_CONFIG, THRESHOLD_REFS, validateEngineConfig, type EngineConfig } from "../src/config";
 
-describe("@laisee/core/config", () => {
+describe("@wally/core/config", () => {
   it("pins every threshold, window and limit to its facts-register row", () => {
     expect(ENGINE_CONFIG.rail).toEqual({ ceiling_minor: 200_000, max_active_cards: 2 }); // F1
     expect(ENGINE_CONFIG.card.ttl_ms).toBe(30 * 60 * 1000); // F30

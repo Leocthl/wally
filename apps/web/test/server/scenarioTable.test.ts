@@ -2,8 +2,8 @@
 // data/scenarios/booth.json and the SIMULATED catalogue: every ScenarioId has an entry, listings resolve, derived
 // listings validate, the overflow listing tips over what is left from any start, and captures keep their age.
 import { join } from "node:path";
-import { validateListingRecord } from "@laisee/core/schema";
-import { FakeClock } from "@laisee/core/testing";
+import { validateListingRecord } from "@wally/core/schema";
+import { FakeClock } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { listingsFor, loadCatalogue, overflowListing, scameterLookup, visitorListing } from "../../server/booth/catalogue";
 import { loadScenarioTable, parseScenarioTable, ScenarioTableError } from "../../server/booth/scenarioTable";

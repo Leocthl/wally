@@ -1,7 +1,7 @@
 // Mounts the Wally screen alone (no app shell) on an instant MockApiClient with a FakeClock, the way the shell will:
 // inside BoothProvider and LocaleProvider. `inject` plays hand-written TraceEvents (no proposal, errors, core-engine
 // shaped decisions) through the same subscription the client uses.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { act, render, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { expect } from "vitest";

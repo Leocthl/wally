@@ -2,13 +2,13 @@
 // child (Mei), and Mei gives Wally a share of it. Caps compose: the child's budget is sealed only inside the parent's.
 // Mum's credential is verified at seal time and is not in the child's log; the log verifies offline as it always does.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createSigner, sha256Bytes } from "@laisee/core/crypto";
-import { createAllocationLedger, parentLinkOf, type AllocationLedger } from "@laisee/core/family";
-import type { CompiledRules, MandateCredential } from "@laisee/core/generated";
-import type { DecidedResult } from "@laisee/core/orchestrator";
-import type { Signer } from "@laisee/core/ports";
-import { loadFixture } from "@laisee/core/testing/fixtures";
-import { signMandateCredential, type UnsignedMandateCredential } from "@laisee/core/vc";
+import { createSigner, sha256Bytes } from "@wally/core/crypto";
+import { createAllocationLedger, parentLinkOf, type AllocationLedger } from "@wally/core/family";
+import type { CompiledRules, MandateCredential } from "@wally/core/generated";
+import type { DecidedResult } from "@wally/core/orchestrator";
+import type { Signer } from "@wally/core/ports";
+import { loadFixture } from "@wally/core/testing/fixtures";
+import { signMandateCredential, type UnsignedMandateCredential } from "@wally/core/vc";
 import { P_A1, SEAL_AT, TEE, integration, keys, type Integration, type Keys } from "./orchestrator-helpers";
 
 vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded

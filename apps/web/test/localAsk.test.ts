@@ -1,8 +1,8 @@
 // Ask Wally on the device (lane e-ask): the real stack runs in this process with recorded planner and judge answers, so a
 // typed request is run only when it has a recording; anything else is an INFO run with a plain note and no verdict. "See
 // cheaper options" works where a recorded cheaper pick exists. The sentence reader is the fixed rules parser.
-import type { Decision } from "@laisee/core/generated";
-import { seededRandom } from "@laisee/rail-sim";
+import type { Decision } from "@wally/core/generated";
+import { seededRandom } from "@wally/rail-sim";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCAL_UNKNOWN_REQUEST_NOTE } from "../src/api/local/info";
 import { LocalApiClient } from "../src/api/local/LocalApiClient";

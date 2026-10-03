@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import { validateJudgeRecord } from "@wally/core/schema";
 import type { JudgeDiagnostic } from "../src/judge/diagnostics";
 import { MAX_RESPONSE_BYTES } from "../src/judge/config";
 import { planRows } from "../src/judge/plan";

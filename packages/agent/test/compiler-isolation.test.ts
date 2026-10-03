@@ -9,7 +9,7 @@ const FILES = readdirSync(DIR).filter((f) => f.endsWith(".ts"));
 const source = (file: string): string => readFileSync(`${DIR}${file}`, "utf8");
 const code = (file: string): string => source(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 const imports = (file: string): readonly string[] => [...source(file).matchAll(/(?:from|import)\s+"([^"]+)"/g)].map((m) => m[1] ?? "");
-const ALLOWED = /^(\.\/[a-z-]+|\.\.\/planner\/local|@laisee\/core\/(generated|schema|config))$/;
+const ALLOWED = /^(\.\/[a-z-]+|\.\.\/planner\/local|@wally\/core\/(generated|schema|config))$/;
 
 describe("compiler sources", () => {
   it("has the compiler files", () => {

@@ -1,7 +1,7 @@
 // The decision loop: (1) which item, (2) which variant, (3) next action, with code executing the action.
 // Hard facts (quantity, stated size and colour, budget) are computed in code; Laya answers the soft
 // questions. Any abstention or failure ends the loop with null so the app asks the shopper (I5).
-import type { ProposeCartInput } from "@laisee/core/ports";
+import type { ProposeCartInput } from "@wally/core/ports";
 import { groupFamilies, type PlannerCandidate } from "./candidates";
 import { decideAction, decideItem, decideVariant, type DecisionContext } from "./decisions";
 import { parseQuantity } from "./parse-request";

@@ -1,10 +1,10 @@
 // B1 and the path both baselines share (mint, checkout, R12, replay, revoke). B2 runs through the orchestrator and has its own
 // file (b2.test.ts); B1 runs through the harness's own small pipeline, so these tests are about that pipeline and its policy.
 import { describe, expect, it } from "vitest";
-import { engine } from "@laisee/core/engine";
-import { createExecutor } from "@laisee/core/executor";
-import { MintError, type RailPort } from "@laisee/core/ports";
-import { MerchantStub } from "@laisee/rail-sim";
+import { engine } from "@wally/core/engine";
+import { createExecutor } from "@wally/core/executor";
+import { MintError, type RailPort } from "@wally/core/ports";
+import { MerchantStub } from "@wally/rail-sim";
 import { createComponents } from "../src/factory";
 import { labelAgreement } from "../src/metrics/agreement";
 import { createB1Gate } from "../src/systems/b1";

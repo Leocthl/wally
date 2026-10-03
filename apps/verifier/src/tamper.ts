@@ -2,7 +2,7 @@
 // Order: a DECISION's approved limit, a CARD_MINTED limit, a CARD_EVENT amount, else the first entry's time.
 // Digits flip by XOR 0x01 (0<->1, 2<->3, ...) so the line stays canonical JSON and the chain, not the parser,
 // has to catch it. The original string is never changed; the caller keeps it for Restore.
-import { parseLogText } from "@laisee/core/verify";
+import { parseLogText } from "@wally/core/verify";
 import { isRecord, ownField, ownInteger, ownString } from "./entry-fields";
 
 export interface TamperChange {

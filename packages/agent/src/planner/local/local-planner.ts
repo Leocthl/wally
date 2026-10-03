@@ -3,9 +3,9 @@
 // everything after it: listing and titles from the records supplied, quantity bounds, stated English facts, the
 // budget after a stop. The model never gates a decision; its answer is untrusted input like any planner output.
 // PlannerPort: never throws, null on any failure (I5). No keys, no card material, no log, no rail (I4).
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, ProposeCartInput } from "@laisee/core/ports";
-import { validateListingRecord } from "@laisee/core/schema";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, ProposeCartInput } from "@wally/core/ports";
+import { validateListingRecord } from "@wally/core/schema";
 import { PlannerConfigError } from "../config";
 import { buildAnswerSchema, parseAnswer, toProposal, totalMinor, type PlanAnswer } from "./answer";
 import { createChatClient, type ChatClient, type ChatTimings, type ChatUsage } from "./client";

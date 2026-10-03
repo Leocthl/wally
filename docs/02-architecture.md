@@ -379,7 +379,7 @@ packages/agent      planners (rule, local, replay), compiler, judge adapters (Sy
 packages/harness    seeded replay scenarios, B0/B1/B2 metrics
 services/laya       local Laya server: setup.sh, serve.sh, stop.sh, smoke.mjs (Python venv and weights gitignored)
 services/qwen       local llama-server for Qwen3.5: setup.sh, serve.sh, stop.sh, smoke.mjs (weights gitignored)
-scripts/            keys-gen, verify-log, demo-reset, booth-check, gen-types, docs-check, trace-check, rename-scope (run once, last)
+scripts/            keys-gen, verify-log, demo-reset, booth-check, gen-types, docs-check, trace-check, pages-build
 schemas/            JSON Schema 2020-12, source of truth
 data/               fixtures (SIMULATED), captures (OBSERVED), results (MEASURED), public-keys.json
 docs/
@@ -415,7 +415,7 @@ pnpm demo:reset          new demo keys, empty logs, back to the sealed packet
 pnpm demo:lan            booth-check --lan, then the server with --lan: binds 0.0.0.0, LAN mode ON, pairing links and a QR code in About and Presenter
 pnpm keys:gen            pnpm verify-log <log> <public-keys> [checkpoint]      pnpm verifier (one-file offline page)      pnpm coverage
 pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]
-pnpm --filter @laisee/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
+pnpm --filter @wally/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
 services/{laya,qwen}/{setup,serve,stop}.sh
 GET  /api/health /info /snapshot /log /export /events (SSE) /family /lan
 POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only; LAN mode: the guards below)

@@ -1,5 +1,5 @@
 // The metrics of docs/05, each as k/n. Pure functions over (scenario, outcome) pairs; nothing here runs a system.
-import type { CompiledRules } from "@laisee/core/generated";
+import type { CompiledRules } from "@wally/core/generated";
 import { ratio, type Ratio } from "../ratio";
 import { summarize, type Summary } from "../stats";
 import type { RunOutcome } from "../systems/types";

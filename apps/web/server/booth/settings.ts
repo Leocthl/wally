@@ -9,9 +9,9 @@ import {
   localPlannerModelFromEnv,
   localPlannerUrlFromEnv,
   plannerProviderFromEnv,
-} from "@laisee/agent/planner";
-import type { JudgeEnv } from "@laisee/agent/judge";
-import type { PlannerProvider } from "@laisee/core/ports";
+} from "@wally/agent/planner";
+import type { JudgeEnv } from "@wally/agent/judge";
+import type { PlannerProvider } from "@wally/core/ports";
 
 export type Env = Readonly<Record<string, string | undefined>>;
 

@@ -1,8 +1,8 @@
 // JudgeRecord construction. Every record that leaves an adapter passes the schema validator; a record that
 // would not validate is replaced by a plain ERROR record (fail closed, I5).
-import type { JudgeAnswers, JudgeProvider } from "@laisee/core/generated";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import type { JudgeAnswers, JudgeProvider } from "@wally/core/generated";
+import type { JudgeRecord } from "@wally/core/ports";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { UNKNOWN_VERSION } from "./config";
 
 export interface RecordBase {

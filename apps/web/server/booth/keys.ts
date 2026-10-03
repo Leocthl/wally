@@ -3,8 +3,8 @@
 // the shopper's behalf. Key generation itself is portable (src/booth/backend/keys.ts). Never printed or logged (I8).
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseKeyFile } from "@laisee/core/crypto";
-import type { Signer } from "@laisee/core/ports";
+import { parseKeyFile } from "@wally/core/crypto";
+import type { Signer } from "@wally/core/ports";
 import { ephemeralKeys, type DemoKeys } from "../../src/booth/backend/keys";
 
 export { ephemeralKeys, throwawayAgentDid, type DemoKeys } from "../../src/booth/backend/keys";

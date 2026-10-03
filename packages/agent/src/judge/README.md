@@ -1,6 +1,6 @@
 # Judge adapters
 
-## Exports (`@laisee/agent/judge`)
+## Exports (`@wally/agent/judge`)
 - **SystemOneJudge**: `JudgePort` for `laya` (local, default [F11c]) and `jev` (hosted, optional [F11b]). Same typed wire protocol, `POST /v1/systemone`.
 - **ReplayJudge**: provider `replay`. Serves the recorded answers in `data/fixtures/judge`, keyed by the SHA-256 of the listing text. For CI and as a deliberate, labelled booth fallback. An unrecorded listing is an ERROR.
 - **ShadowJudge**: only with an explicit `JUDGE_MODE=shadow`. Runs the real judge and sets `shadow: true`. Nothing else changes.
@@ -32,7 +32,7 @@
 ## Tools
 - **Corpus**: `data/judge-corpus/` (SIMULATED, labelled, single annotator), split into tuning and held-out by a fixed hash rule (`fit/split.ts`, corpus README).
 - **Wording**: `questions?:` on `SystemOneJudge` sends another wording; the default is `JUDGE_QUESTION_DEFS`, which is word for word the variant named by `SHIPPED_WORDING_VARIANT` in `fit/variants.ts`. Labels never change.
-- **Tune** (B-19, B-20): `pnpm --filter @laisee/agent judge:tune` runs every wording variant on the tuning split, picks one and fits the thresholds there by the rules stated in `fit/select.ts` and `fit/joint.ts`, then judges the held-out split once. Writes `data/results/judge-fit-<date>.md` and `.json` and `data/results/judge-thresholds-proposal.json`. It never edits the register or core config. `--run-file` keeps the stage file outside the repo; `--render-only` rebuilds the outputs from it.
-- **Record** (B-10): `pnpm --filter @laisee/agent judge:record` re-records `data/fixtures/judge/*.json` from live Laya with the shipped wording; a failed call writes nothing.
-- **Fit**: `pnpm --filter @laisee/agent judge:fit` is the first-round tool (all cases, register thresholds, per-gate suggestions).
-- **Tests**: `pnpm --filter @laisee/agent test`. The live Laya tests skip themselves when `/health` does not answer.
+- **Tune** (B-19, B-20): `pnpm --filter @wally/agent judge:tune` runs every wording variant on the tuning split, picks one and fits the thresholds there by the rules stated in `fit/select.ts` and `fit/joint.ts`, then judges the held-out split once. Writes `data/results/judge-fit-<date>.md` and `.json` and `data/results/judge-thresholds-proposal.json`. It never edits the register or core config. `--run-file` keeps the stage file outside the repo; `--render-only` rebuilds the outputs from it.
+- **Record** (B-10): `pnpm --filter @wally/agent judge:record` re-records `data/fixtures/judge/*.json` from live Laya with the shipped wording; a failed call writes nothing.
+- **Fit**: `pnpm --filter @wally/agent judge:fit` is the first-round tool (all cases, register thresholds, per-gate suggestions).
+- **Tests**: `pnpm --filter @wally/agent test`. The live Laya tests skip themselves when `/health` does not answer.

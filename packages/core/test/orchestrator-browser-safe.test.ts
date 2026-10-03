@@ -1,7 +1,7 @@
 // Browser safety (Wally local mode runs the real stack in a phone browser): the import graphs of the core entry
-// points the browser needs, and of @laisee/rail-sim's main entry, must hold no Node built-in, no fs, path, crypto
+// points the browser needs, and of @wally/rail-sim's main entry, must hold no Node built-in, no fs, path, crypto
 // or os, no process, Buffer or require, and no top-level await. Explicitly Node-only subpaths stay out:
-// @laisee/core/log/file, @laisee/core/testing/fixtures, @laisee/rail-sim/node. The orchestrator owns no timer
+// @wally/core/log/file, @wally/core/testing/fixtures, @wally/rail-sim/node. The orchestrator owns no timer
 // loop either (the host calls tick), so it never uses setInterval. Static walk of the source, no bundler needed.
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -54,11 +54,11 @@ function resolveTs(fromFile: string, spec: string): string {
 function target(fromFile: string, spec: string): { readonly file?: string; readonly external?: string } {
   if (spec.endsWith(".json")) return {};
   if (spec.startsWith(".")) return { file: resolveTs(fromFile, spec) };
-  if (spec.startsWith("@laisee/core/")) {
-    const sub = `./${spec.slice("@laisee/core/".length)}`;
+  if (spec.startsWith("@wally/core/")) {
+    const sub = `./${spec.slice("@wally/core/".length)}`;
     if (NODE_ONLY_ENTRIES.has(sub)) return { external: `NODE-ONLY ${spec}` };
     const path = CORE_EXPORTS[sub];
-    if (path === undefined) throw new Error(`${spec} is not in @laisee/core exports`);
+    if (path === undefined) throw new Error(`${spec} is not in @wally/core exports`);
     return { file: join(CORE_SRC, "..", path) };
   }
   return { external: spec };
@@ -95,7 +95,7 @@ function walk(entry: string): Graph {
 const short = (file: string): string => file.replace(CORE_SRC, "core/").replace(RAIL_SRC, "rail-sim/");
 
 describe("browser-safe import graphs (Wally local mode)", () => {
-  it.each(BROWSER_ENTRIES)("@laisee/core/%s: no Node built-ins, process, Buffer, require or top-level await", (entry) => {
+  it.each(BROWSER_ENTRIES)("@wally/core/%s: no Node built-ins, process, Buffer, require or top-level await", (entry) => {
     const graph = walk(join(CORE_SRC, "..", CORE_EXPORTS[`./${entry}`] ?? "missing"));
     expect(graph.offenders.map(short)).toEqual([]);
   });
@@ -113,7 +113,7 @@ describe("browser-safe import graphs (Wally local mode)", () => {
     for (const file of orchestratorFiles) expect(code(file), short(file)).not.toMatch(/\bsetInterval\b/);
   });
 
-  it("@laisee/rail-sim main entry (not ./node) is browser-safe too (read-only check)", () => {
+  it("@wally/rail-sim main entry (not ./node) is browser-safe too (read-only check)", () => {
     const graph = walk(join(RAIL_SRC, "index.ts"));
     expect(graph.offenders.map(short)).toEqual([]);
     expect([...graph.files].map(short)).not.toContain("rail-sim/node.ts");

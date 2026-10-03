@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { FakePlanner } from "@laisee/core/testing";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import { FakePlanner } from "@wally/core/testing";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { JUDGE_PROVIDERS, JUDGE_QUESTIONS } from "../src/judge";
 import { DEFAULT_PLANNER_PROVIDER, PLANNER_PROVIDERS } from "../src/planner";
 
-describe("@laisee/agent scaffold", () => {
+describe("@wally/agent scaffold", () => {
   it("exposes the provider enums from the contract", () => {
     expect(JUDGE_PROVIDERS).toEqual(["laya", "jev", "replay"]);
     expect(JUDGE_QUESTIONS).toHaveLength(4);

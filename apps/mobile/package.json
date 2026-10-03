@@ -1,5 +1,5 @@
 {
-  "name": "@laisee/mobile",
+  "name": "@wally/mobile",
   "version": "0.0.0",
   "private": true,
   "description": "Wally native wrappers (Capacitor): iOS and Android shells around the apps/web build, on-device mode",

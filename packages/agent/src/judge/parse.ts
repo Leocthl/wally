@@ -1,6 +1,6 @@
 // Strict parser for a SystemOne (Laya or Jev) response. Anything unexpected is a failure, never a guess:
 // the adapter turns every failure into status ERROR, which R10 escalates (I5).
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import { MAX_NAME_CHARS, PROBABILITY_SUM_TOLERANCE } from "./config";
 import { averageDistributions, type Distribution } from "./average";
 import { isRecord } from "./guards";

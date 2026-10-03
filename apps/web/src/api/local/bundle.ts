@@ -1,9 +1,9 @@
 // Everything on-device mode replays, bundled at build time (no fs, no network): the booth scenario table, the
 // SIMULATED catalogue (listings, reference cart, Scameter captures), the planner replay records and the recorded judge
 // answers. Each file passes the same validation as on the server when the bundle loads; a bad file throws.
-import { parseReplayFile } from "@laisee/agent/planner";
-import type { ReplayRecording } from "@laisee/agent/judge";
-import type { PlannerReplayRecord } from "@laisee/core/generated";
+import { parseReplayFile } from "@wally/agent/planner";
+import type { ReplayRecording } from "@wally/agent/judge";
+import type { PlannerReplayRecord } from "@wally/core/generated";
 import referenceCart from "@fixtures/carts/attempt-1.json";
 import boothTable from "../../../../../data/scenarios/booth.json";
 import type { FixtureText } from "../../booth/backend/ask";

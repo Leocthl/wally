@@ -2,8 +2,8 @@
 // escalations. DEMO SHORTCUT: the backend holds the delegator's throwaway key and signs on the shopper's behalf; a
 // real deployment keeps that key on the shopper's device (src/api/local/KEYS.md). Portable: the Node server loads
 // key files from KEY_DIR (server/booth/keys.ts), the on-device client generates keys in memory. Never logged (I8).
-import { createSigner, didKeyFromPublicKey, generateKeyPair } from "@laisee/core/crypto";
-import type { Signer } from "@laisee/core/ports";
+import { createSigner, didKeyFromPublicKey, generateKeyPair } from "@wally/core/crypto";
+import type { Signer } from "@wally/core/ports";
 
 export interface DemoKeys {
   readonly engine: Signer;

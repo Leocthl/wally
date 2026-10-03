@@ -3,9 +3,9 @@
 // offline part always runs; the live part skips itself when /health does not answer.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ENGINE_CONFIG, type EngineConfig } from "@laisee/core/config";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { evaluateR10 } from "@laisee/core/rules";
+import { ENGINE_CONFIG, type EngineConfig } from "@wally/core/config";
+import type { JudgeRecord } from "@wally/core/ports";
+import { evaluateR10 } from "@wally/core/rules";
 import { DEFAULT_LAYA_BASE_URL, DEFAULT_LAYA_MODEL } from "../src/judge/config";
 import { loadReplayRecordings } from "../src/judge/replay-recordings";
 import { ReplayJudge } from "../src/judge/replay-judge";

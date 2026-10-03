@@ -1,5 +1,5 @@
 // The clock a scenario's world reads. Time moves only when the pipeline sets it, so results never depend on the wall clock.
-import type { Clock } from "@laisee/core/ports";
+import type { Clock } from "@wally/core/ports";
 
 export class ScenarioClock implements Clock {
   #at: Date;

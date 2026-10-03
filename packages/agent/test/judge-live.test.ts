@@ -2,7 +2,7 @@
 // reachable, so CI and the booth laptop without the service stay green. It asserts shape and fail-closed
 // behaviour, never exact probabilities (the model is probabilistic and the numbers belong in the fit report).
 import { describe, expect, it } from "vitest";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { DEFAULT_LAYA_BASE_URL, DEFAULT_LAYA_MODEL } from "../src/judge/config";
 import { JUDGE_QUESTIONS, QUESTION_OPTIONS } from "../src/judge/questions";
 import { loadCorpus } from "../src/judge/fit/corpus";

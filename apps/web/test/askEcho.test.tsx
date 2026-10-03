@@ -1,6 +1,6 @@
 // The Ask sheet hands the typed words to Wally's screen before the request goes out, so the working screen can show
 // what was asked. The run that follows claims them once (screens/run/askEcho.ts); nothing is stored or sent.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";

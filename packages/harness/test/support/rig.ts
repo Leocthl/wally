@@ -1,6 +1,6 @@
 // The fixed scenario set and the systems the pipeline tests run, built with the real engine, rail, merchant, executor and
 // orchestrator, and a keyword judge standing in for Laya.
-import type { JudgePort } from "@laisee/core/ports";
+import type { JudgePort } from "@wally/core/ports";
 import { SCENARIO_COUNT } from "../../src/config";
 import { createComponents } from "../../src/factory";
 import { generateScenarios } from "../../src/scenario/generate";

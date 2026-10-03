@@ -1,10 +1,10 @@
-// @laisee/core/engine (A-15): the policy engine. Browser-safe: SHA-256 for ids and config_sha256 via @noble/hashes.
+// @wally/core/engine (A-15): the policy engine. Browser-safe: SHA-256 for ids and config_sha256 via @noble/hashes.
 import { createEngine } from "./decide";
 
 /** Default engine bound to the register-pinned ENGINE_CONFIG. */
 export const engine = createEngine();
 
-export { createEngine, ENGINE_VERSION, EngineConfigError, type EngineOptions, type LaiseeEngine } from "./decide";
+export { createEngine, ENGINE_VERSION, EngineConfigError, type EngineOptions, type WallyEngine } from "./decide";
 export { type CheckoutInput } from "./checkout";
 export { canonicalJson, cartFingerprint, configSha256, sha256Hex } from "./hash";
 export { isDecisionId } from "./ids";

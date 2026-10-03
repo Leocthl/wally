@@ -1,8 +1,8 @@
 // RailSim: the SIMULATED rail. Single-use card semantics [F1] behind RailPort. No real card exists here:
 // a card is an opaque handle plus a random last4, every record and event says simulated (I8).
-import type { CardRecord, Decision } from "@laisee/core/generated";
-import { MintError, type AuthoriseRequest, type CardEvent, type Clock, type MintRequest, type RailPort } from "@laisee/core/ports";
-import { formatIssues, validateCardEvent, validateCardRecord } from "@laisee/core/schema";
+import type { CardRecord, Decision } from "@wally/core/generated";
+import { MintError, type AuthoriseRequest, type CardEvent, type Clock, type MintRequest, type RailPort } from "@wally/core/ports";
+import { formatIssues, validateCardEvent, validateCardRecord } from "@wally/core/schema";
 import { authorisedEvent, declinedEvent, evaluateAuthorise, lifecycleEvent, requestPrint } from "./authorise-rules";
 import { ID_COLLISION_RETRIES, RAIL_SIM_DEFAULTS, UNKNOWN_CARD_ID } from "./config";
 import { DEFAULT_DECLINE_TABLE, describeDecline, type DeclineCode, type DeclineInfo, type DeclineTable } from "./decline-table";

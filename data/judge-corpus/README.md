@@ -37,6 +37,6 @@
 - **Adding cases redraws the split**: a later addition needs a fresh held-out round, reported as such.
 
 ## Use
-- **Validate**: `pnpm --filter @laisee/agent test` (`judge-corpus.test.ts`, `judge-split.test.ts`).
-- **Tune and evaluate**: `pnpm --filter @laisee/agent judge:tune` runs every wording variant on the tuning split, fits the thresholds there, then judges the held-out split once; it writes `data/results/judge-fit-<date>.md` and `.json` and `data/results/judge-thresholds-proposal.json`.
+- **Validate**: `pnpm --filter @wally/agent test` (`judge-corpus.test.ts`, `judge-split.test.ts`).
+- **Tune and evaluate**: `pnpm --filter @wally/agent judge:tune` runs every wording variant on the tuning split, fits the thresholds there, then judges the held-out split once; it writes `data/results/judge-fit-<date>.md` and `.json` and `data/results/judge-thresholds-proposal.json`.
 - **Edit rule**: keep `text` at most 4,000 characters (listing record cap), no digit runs that look like card numbers (I8), and re-run after any change.

@@ -1,13 +1,13 @@
 // M-09 groundwork (KEYS.md): a delegator key that may sign LATER. A WebCrypto non-extractable Ed25519 key signs
 // asynchronously, and a confirmation screen or a platform authenticator waits for the shopper. The core Signer port
-// stays synchronous (the seal, revocation and escalation-answer signers in @laisee/core are unchanged), so
+// stays synchronous (the seal, revocation and escalation-answer signers in @wally/core are unchanged), so
 // signWithAsync bridges the two: a dry run with a placeholder signature captures the exact bytes the core signs, the
 // async signer signs those bytes, and a second run uses the real signatures, refusing any byte that changed. The dry
 // run's result is thrown away, so the placeholder never leaks out; an error the dry run raises after the capture (a
 // check that dislikes the placeholder) is ignored because the signing run repeats every check with the real signature.
 // Anything odd fails closed with AsyncSignError.
-import { bytesEqual, ED25519_SIGNATURE_BYTES } from "@laisee/core/crypto";
-import type { Signer } from "@laisee/core/ports";
+import { bytesEqual, ED25519_SIGNATURE_BYTES } from "@wally/core/crypto";
+import type { Signer } from "@wally/core/ports";
 
 /** The delegator's key behind an async boundary. `did` is public; the key itself never leaves the implementation. */
 export interface AsyncSigner {

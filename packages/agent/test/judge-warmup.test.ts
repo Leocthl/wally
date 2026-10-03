@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FakeJudge } from "@laisee/core/testing";
+import { FakeJudge } from "@wally/core/testing";
 import { ShadowJudge } from "../src/judge/shadow-judge";
 import { SystemOneJudge } from "../src/judge/system-one-judge";
 import { isWarmable } from "../src/judge/warm-up";

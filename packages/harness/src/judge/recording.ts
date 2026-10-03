@@ -3,7 +3,7 @@
 // Both are keyed by a hash of exactly what was asked and by how many times that request was already made, so identical
 // requests that got different answers live (a TIMEOUT under load, say) replay in the same order and the replay reproduces
 // the run. An input the recording has never seen returns ERROR (fail closed) and is counted, so an incomplete recording shows.
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
+import type { JudgeInput, JudgePort, JudgeRecord } from "@wally/core/ports";
 import { sha256Hex, stableStringify } from "../canonical";
 import type { AskOptions, ChoiceAnswer, ChoiceClient, ChoiceMeta, ChoiceRequest, ChoiceResult } from "./choice-client";
 

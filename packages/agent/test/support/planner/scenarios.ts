@@ -1,8 +1,8 @@
 // The recorded planner scenarios (data/fixtures/planner): inputs live here, outputs in the fixture files.
 // `recordScenario` runs the rule planner against the offline mock of Laya, so fixtures can be regenerated
 // (UPDATE_PLANNER_FIXTURES=1) and the golden test notices any drift. All SIMULATED.
-import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
-import type { PlannerStop, PlannerTraceStep } from "@laisee/core/ports";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
+import type { PlannerStop, PlannerTraceStep } from "@wally/core/ports";
 import { createRulePlanner } from "../../../src/planner/rule-planner";
 import { OPTS, R3_STOP, VARIANT_LISTING, ctxOf, fixtureListing } from "./data";
 

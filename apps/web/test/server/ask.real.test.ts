@@ -4,7 +4,7 @@
 // mock plays the model, so these runs are deterministic. Hard rules hold whatever the model says: an off-mandate pick is
 // stopped by R6, a repeat is not bought twice, a model that fails leaves the booth working, and the sentence reader falls
 // back to the fixed rules and says so.
-import type { Decision } from "@laisee/core/generated";
+import type { Decision } from "@wally/core/generated";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { startMockLlama, type ChatBody, type MockLlama } from "../../../../packages/agent/test/support/qwen/mock-llama";
 import type { Booth } from "../../server/compose";

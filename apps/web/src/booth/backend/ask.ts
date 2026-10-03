@@ -3,7 +3,7 @@
 //   recorded  the planner replays recordings (PLANNER_PROVIDER=replay, on-device mode): only the sample requests that
 //             have a recording can be run, and anything else is an INFO run saying so. No verdict is made up.
 // The shelf is the SIMULATED demo shops. Pure functions; the host reads the fixture files (Node: fs, browser: bundle).
-import type { ListingRecord } from "@laisee/core/generated";
+import type { ListingRecord } from "@wally/core/generated";
 import type { Catalogue } from "./catalogue";
 import type { ScenarioTable } from "./scenarioTable";
 import { normaliseText } from "./validate";

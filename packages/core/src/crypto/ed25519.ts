@@ -35,7 +35,7 @@ export function publicKeyFromSecret(secretKey: Uint8Array): Uint8Array {
   return ed25519.getPublicKey(secretKey);
 }
 
-/** Raw signing. Not exported from @laisee/core/crypto: callers sign through a Signer. */
+/** Raw signing. Not exported from @wally/core/crypto: callers sign through a Signer. */
 export function signEd25519(message: Uint8Array, secretKey: Uint8Array): Uint8Array {
   assertSecretKey(secretKey);
   return ed25519.sign(message, secretKey);

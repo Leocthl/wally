@@ -3,8 +3,8 @@
 // `recorded@...`, and a latency that is the lookup time, because a replay is not a measurement of the model.
 // A listing with no recording is an ERROR (R10 escalates it); nothing is ever guessed.
 import { createHash } from "node:crypto";
-import type { JudgeProvider } from "@laisee/core/generated";
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
+import type { JudgeProvider } from "@wally/core/generated";
+import type { JudgeInput, JudgePort, JudgeRecord } from "@wally/core/ports";
 import { emitDiagnostic, type DiagnosticSink } from "./diagnostics";
 import { errorMessage } from "./guards";
 import { failureRecord, okRecord } from "./record";

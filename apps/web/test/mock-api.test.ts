@@ -1,6 +1,6 @@
 // MockApiClient: the SIMULATED storyline (docs/01 Storyboard, docs/06 beats) as a judge would drive it.
-import { FakeClock } from "@laisee/core/testing";
-import { validateCardRecord, validateDecision, validateLogEntry, validatePacketState } from "@laisee/core/schema";
+import { FakeClock } from "@wally/core/testing";
+import { validateCardRecord, validateDecision, validateLogEntry, validatePacketState } from "@wally/core/schema";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0SealRequest } from "../src/api/mock/presets";

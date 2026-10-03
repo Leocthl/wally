@@ -1,8 +1,8 @@
 // The cart seam. Scenario carts are built by core's buildCart, the function the orchestrator calls, from the same
 // inputs: the recorded proposal, the listing record, the mandate, the decision time and the Scameter capture. B0 and B1
 // read these carts, and the orchestrator rebuilds them for B2; a test checks that the two agree.
-import { buildCart } from "@laisee/core/cart";
-import type { Cart, ListingRecord, Mandate, ProposeCartInput, ScameterCapture } from "@laisee/core/generated";
+import { buildCart } from "@wally/core/cart";
+import type { Cart, ListingRecord, Mandate, ProposeCartInput, ScameterCapture } from "@wally/core/generated";
 
 export interface CartInput {
   readonly cartId: string;

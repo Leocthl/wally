@@ -4,11 +4,11 @@
 // to the reference cart and is restamped against the clock: the booth behaves the same on any day, and the stale
 // capture stays older than the F52 limit. Portable: the host reads the fixture files (Node: server/booth/catalogue.ts;
 // browser: the bundled JSON) and hands the parsed envelopes to buildCatalogue.
-import type { ListingRecord, ScameterCapture } from "@laisee/core/generated";
-import type { ScameterLookup } from "@laisee/core/cart";
-import { ENGINE_CONFIG } from "@laisee/core/config";
-import type { Clock } from "@laisee/core/ports";
-import { formatIssues, validateCart, validateListingRecord, validateScameterCapture, type Validator } from "@laisee/core/schema";
+import type { ListingRecord, ScameterCapture } from "@wally/core/generated";
+import type { ScameterLookup } from "@wally/core/cart";
+import { ENGINE_CONFIG } from "@wally/core/config";
+import type { Clock } from "@wally/core/ports";
+import { formatIssues, validateCart, validateListingRecord, validateScameterCapture, type Validator } from "@wally/core/schema";
 import type { DerivedListing, ScenarioTable } from "./scenarioTable";
 
 export class CatalogueError extends Error {

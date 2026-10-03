@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { formatIssues, validateJudgeRecord, validateListingRecord } from "@laisee/core/schema";
+import type { JudgeRecord } from "@wally/core/ports";
+import { formatIssues, validateJudgeRecord, validateListingRecord } from "@wally/core/schema";
 import { isRecord } from "./guards";
 
 export const DEFAULT_FIXTURES_DIR = fileURLToPath(new URL("../../../../data/fixtures/", import.meta.url));

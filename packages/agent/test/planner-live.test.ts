@@ -1,8 +1,8 @@
 // Live test against the running Laya server (services/laya, 127.0.0.1:8808). Skips itself when the server
 // is not reachable, so CI and the booth laptop without the server stay green and offline.
 import { describe, expect, it } from "vitest";
-import type { PlannerTraceStep } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { PlannerTraceStep } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 import { DEFAULT_LAYA_URL } from "../src/planner/config";
 import { createRulePlanner } from "../src/planner/rule-planner";
 import { ALL_FIXTURE_LISTINGS, OPTS, R3_STOP, VARIANT_LISTING, ctxOf, fixtureListing } from "./support/planner/data";

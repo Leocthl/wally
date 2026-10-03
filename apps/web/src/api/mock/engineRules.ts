@@ -1,6 +1,6 @@
 // Mock policy rules R1-R12 (docs/02 section 7) as small pure functions returning schema-shaped RuleResults.
 // A stand-in for lane A's engine so the offline booth does real arithmetic: the same inputs give the same verdicts.
-import type { Cart, JudgeRecord, Mandate, PacketState, RuleResult } from "@laisee/core/generated";
+import type { Cart, JudgeRecord, Mandate, PacketState, RuleResult } from "@wally/core/generated";
 import { MOCK_CONFIG } from "./config";
 
 type Id = RuleResult["id"];

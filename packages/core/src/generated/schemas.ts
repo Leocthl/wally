@@ -205,7 +205,7 @@ export type ScameterState = "FLAGGED" | "NO_RECORD" | "NOT_CHECKED";
 /**
  * Synthetic root so every named type is emitted once.
  */
-export interface LaiseeSchemaIndex {
+export interface WallySchemaIndex {
   CardEvent?: CardEvent;
   CardId?: CardId;
   CardRecord?: CardRecord;

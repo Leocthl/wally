@@ -2,12 +2,12 @@
 // it, core's executor re-quotes (R12) and pays, and every decision, mint and rail event lands in a signed, hash-chained
 // log (I7) that verifyChain checks at the end. Implementations come in through GovernedParts (factory.ts chooses them);
 // the log, the keys and the credential are core's own code.
-import type { Executor, ExecutorDeps } from "@laisee/core/executor";
-import { appendEntry, headCheckpoint, logIdForMandate } from "@laisee/core/log";
-import type { CardEvent, LogStore, MerchantPort, RailPort, Signer } from "@laisee/core/ports";
-import { MemoryLogStore } from "@laisee/core/testing";
-import { foldPacket } from "@laisee/core/packet";
-import { verifyChain } from "@laisee/core/verify";
+import type { Executor, ExecutorDeps } from "@wally/core/executor";
+import { appendEntry, headCheckpoint, logIdForMandate } from "@wally/core/log";
+import type { CardEvent, LogStore, MerchantPort, RailPort, Signer } from "@wally/core/ports";
+import { MemoryLogStore } from "@wally/core/testing";
+import { foldPacket } from "@wally/core/packet";
+import { verifyChain } from "@wally/core/verify";
 import { RAIL } from "../config";
 import { delegatorSigner, engineSigner } from "../keys";
 import type { Scenario } from "../types";

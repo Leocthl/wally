@@ -1,7 +1,7 @@
 // Pure authorise semantics for the single-use card [F1]: which decline applies, and the events that result.
 // Precedence: used, voided, expired, merchant mismatch, over limit. A dead card says so before anything else.
-import type { CardRecord } from "@laisee/core/generated";
-import type { AuthoriseRequest, CardEvent } from "@laisee/core/ports";
+import type { CardRecord } from "@wally/core/generated";
+import type { AuthoriseRequest, CardEvent } from "@wally/core/ports";
 import type { DeclineCode } from "./decline-table";
 
 /**

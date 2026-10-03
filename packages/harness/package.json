@@ -1,5 +1,5 @@
 {
-  "name": "@laisee/harness",
+  "name": "@wally/harness",
   "version": "0.0.0",
   "private": true,
   "description": "Seeded replay harness, B0/B1/B2 metrics (lane D). Reuses core and rail-sim, never copies them",
@@ -14,9 +14,9 @@
     "harness": "tsx src/cli.ts"
   },
   "dependencies": {
-    "@laisee/agent": "workspace:*",
-    "@laisee/core": "workspace:*",
-    "@laisee/rail-sim": "workspace:*"
+    "@wally/agent": "workspace:*",
+    "@wally/core": "workspace:*",
+    "@wally/rail-sim": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.23.15"

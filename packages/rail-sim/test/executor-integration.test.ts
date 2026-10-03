@@ -1,9 +1,9 @@
 // Executor (core) + RailSim + MerchantStub together: the DM2 beat and the failure injections of F19, all SIMULATED.
-import { createExecutor } from "@laisee/core/executor";
-import type { CardRecord, Decision, LogEntry } from "@laisee/core/generated";
-import type { AppendEntry, CardEvent, Signer } from "@laisee/core/ports";
-import { FakeClock, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "@laisee/core/testing";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import { createExecutor } from "@wally/core/executor";
+import type { CardRecord, Decision, LogEntry } from "@wally/core/generated";
+import type { AppendEntry, CardEvent, Signer } from "@wally/core/ports";
+import { FakeClock, MemoryLogStore, PLACEHOLDER_ENGINE_DID, placeholderEntry } from "@wally/core/testing";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { MerchantStub, RailSim, SIMULATED_SURCHARGE_MINOR, seededRandom, type MerchantStubOptions } from "../src";

@@ -2,7 +2,7 @@
 // (all SIMULATED): HK$550 stopped by R3 at HK$541 left [F22]; a pick that fits is approved and paid; nothing fitting is
 // no_alternative; a planner that offers the over-budget item again is stopped again by R3. Every log verifies offline.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DecidedResult } from "@laisee/core/orchestrator";
+import type { DecidedResult } from "@wally/core/orchestrator";
 import { JACKET, P_A1, P_A3, P_A4, SOCKS, TEE, credential, flipOneByte, integration, type Integration } from "./orchestrator-helpers";
 
 vi.setConfig({ testTimeout: 60_000 }); // explicit: these runs sign, verify and append; slow when the machine is loaded

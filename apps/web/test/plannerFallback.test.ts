@@ -1,8 +1,8 @@
 // The fixed booth buttons must show the same stop every time: when the live planner (Qwen, Laya loop) makes no proposal for
 // a scenario's own listing set, the recorded planner output stands in. A free-text ask lists the whole shelf, so it never
 // falls back and "Wally could not tell which item you meant" stays true.
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerContext, PlannerPort } from "@laisee/core/ports";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerContext, PlannerPort } from "@wally/core/ports";
 import { describe, expect, it, vi } from "vitest";
 import { loadBundle } from "../src/api/local/bundle";
 import { replayPlannerFactory, withRecordedFallback } from "../src/booth/backend/planner";

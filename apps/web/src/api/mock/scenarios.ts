@@ -1,6 +1,6 @@
 // Scenario specs: which recorded listing, planner proposal, Scameter capture and judge answers each preset replays.
 // All SIMULATED fixtures [F59]; capture ages are restamped to "now" so a booth run on any day behaves the same.
-import type { Cart, ListingRecord, ProposeCartInput, ScameterCapture } from "@laisee/core/generated";
+import type { Cart, ListingRecord, ProposeCartInput, ScameterCapture } from "@wally/core/generated";
 import type { PlannerTraceInfo } from "../types";
 import { STORY_GAP } from "./config";
 import { JUDGE_RECORDS, LISTINGS, PLANNER_REPLAYS, REFERENCE_CART, SCAMETER } from "./fixtures";

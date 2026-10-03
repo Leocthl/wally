@@ -3,8 +3,8 @@
 // Loading is a start-up step, so a bad file is a PlannerConfigError and not a silent skip.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { PlannerReplayRecord } from "@laisee/core/generated";
-import { formatIssues, validatePlannerReplayRecord } from "@laisee/core/schema";
+import type { PlannerReplayRecord } from "@wally/core/generated";
+import { formatIssues, validatePlannerReplayRecord } from "@wally/core/schema";
 import { PlannerConfigError } from "./config";
 
 const ENVELOPE_KEYS = ["data", "fixture", "note", "provenance", "schema"];

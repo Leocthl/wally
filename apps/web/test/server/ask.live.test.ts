@@ -3,7 +3,7 @@
 // itself when the server does not answer, so CI and a laptop without the model stay green and offline. The model is not
 // asked to be right here (the exact item is not asserted, and a slow or undecided model is a valid INFO run): what must
 // hold is a well-formed answer, a decision that matches the log, a card only on APPROVE, and a log that still verifies.
-import type { Decision } from "@laisee/core/generated";
+import type { Decision } from "@wally/core/generated";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Booth } from "../../server/compose";
 import type { CompileResult, RunSummary } from "../../src/api/types";

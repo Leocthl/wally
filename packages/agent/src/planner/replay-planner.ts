@@ -2,9 +2,9 @@
 // A record is chosen by scenario id, or by the set of listing ids in the context. The proposal is re-checked
 // before it is returned (schema, listing url among those given, titles from the listing record), because a
 // recorded file is as untrusted as any other planner output. Never throws; null on any doubt (I5).
-import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
-import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, PlannerTraceStep, ProposeCartInput } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
+import type { PlannerContext, PlannerOptions, PlannerPort, PlannerStop, PlannerTraceStep, ProposeCartInput } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 
 export { loadReplayRecords } from "./replay-store";
 

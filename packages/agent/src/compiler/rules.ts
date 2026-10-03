@@ -2,7 +2,7 @@
 // code. Money becomes integer minor units, dates come from `now`, the budget is clamped to the rail ceiling
 // [F1.ceiling], unknown categories are dropped, and nothing may loosen a default: sellers stay verified unless
 // the shopper switches the chip off, and a velocity limit is kept only when it is at least as strict as F32.
-import type { CompiledRules } from "@laisee/core/generated";
+import type { CompiledRules } from "@wally/core/generated";
 import type { CompilerLimits } from "./config";
 import { capEnd, describeEndDate, resolveEndDate } from "./end-date";
 

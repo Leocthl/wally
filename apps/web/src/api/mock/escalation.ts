@@ -1,7 +1,7 @@
 // Escalation lifecycle for the mock (S5): OPEN until the delegator answers or the window ends (R11).
-import type { Decision, EscalationAnswer } from "@laisee/core/generated";
-import { cartSha256 } from "@laisee/core/log";
-import { PLACEHOLDER_SIGNATURE } from "@laisee/core/testing";
+import type { Decision, EscalationAnswer } from "@wally/core/generated";
+import { cartSha256 } from "@wally/core/log";
+import { PLACEHOLDER_SIGNATURE } from "@wally/core/testing";
 import { ruleIdOf } from "../../explain/renderStop";
 import type { EscalationView } from "../types";
 import { decideApproved, decideDenied, decideExpired } from "./engine";

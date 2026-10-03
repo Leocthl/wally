@@ -18,9 +18,9 @@ const source = (file: string): string => readFileSync(`${DIR}${file}`, "utf8");
 const code = (file: string): string => source(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 const imports = (file: string): readonly string[] => [...source(file).matchAll(/(?:from|import)\s+"([^"]+)"/g)].map((m) => m[1] ?? "");
 
-const ALLOWED = /^(\.\/[a-z-]+|@laisee\/core\/(ports|generated|schema)|node:fs|node:path)$/;
+const ALLOWED = /^(\.\/[a-z-]+|@wally\/core\/(ports|generated|schema)|node:fs|node:path)$/;
 /** Files in planner/local may also import planner files one level up (../http, ../candidates), still inside the planner. */
-const ALLOWED_LOCAL = /^(\.\/[a-z-]+|\.\.\/[a-z-]+|@laisee\/core\/(ports|generated|schema))$/;
+const ALLOWED_LOCAL = /^(\.\/[a-z-]+|\.\.\/[a-z-]+|@wally\/core\/(ports|generated|schema))$/;
 const allowedFor = (file: string): RegExp => (file.startsWith("local/") ? ALLOWED_LOCAL : ALLOWED);
 
 describe("planner sources (T-I4)", () => {
@@ -34,7 +34,7 @@ describe("planner sources (T-I4)", () => {
   });
 
   it.each(FILES)("%s never imports signing, log, orchestrator, rail, engine or fakes", (file) => {
-    expect(source(file)).not.toMatch(/@laisee\/(rail-sim|core\/(crypto|vc|log|orchestrator|verify|testing|executor|engine|rules|packet|explain))/);
+    expect(source(file)).not.toMatch(/@wally\/(rail-sim|core\/(crypto|vc|log|orchestrator|verify|testing|executor|engine|rules|packet|explain))/);
     expect(source(file)).not.toMatch(/node:(crypto|child_process|net|http|https|dns|vm|worker_threads)/);
   });
 

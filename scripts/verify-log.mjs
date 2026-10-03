@@ -3,7 +3,7 @@
 // Usage: node scripts/verify-log.mjs <log.jsonl> <public-keys.json> [checkpoint.json]
 // Prints PASS and the head, or FAIL with the first failing seq and reason. Exit 0 on PASS, 1 otherwise.
 // Files are decoded as strict UTF-8: invalid bytes exit 1 instead of being replaced.
-// Runs the TypeScript sources of @laisee/core through Node type stripping (Node 22.18+ or 23.6+).
+// Runs the TypeScript sources of @wally/core through Node type stripping (Node 22.18+ or 23.6+).
 import { readFile } from "node:fs/promises";
 import * as nodeModule from "node:module";
 import { dirname, join } from "node:path";

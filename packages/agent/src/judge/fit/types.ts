@@ -1,4 +1,4 @@
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import type { CorpusCategory, CorpusLabels } from "./corpus";
 import type { ScameterState } from "./inputs";
 

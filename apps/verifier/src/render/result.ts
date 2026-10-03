@@ -1,7 +1,7 @@
 // The verdict card, rendered fresh for each result (so the entrance replays on every Verify). PASS only for a clean
 // read AND an ok report; everything else is FAIL or NOT VERIFIED, by shield icon + text (never colour alone).
 // Numbers shown are computed in the page.
-import type { Checkpoint, VerifyReport } from "@laisee/core/verify";
+import type { Checkpoint, VerifyReport } from "@wally/core/verify";
 import { bi, el } from "../dom";
 import { icon, type IconName } from "../icons";
 import type { InputError } from "../inputs";

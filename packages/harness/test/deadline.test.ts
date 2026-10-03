@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
-import { CLEAN_ANSWERS } from "@laisee/core/testing";
+import type { JudgeInput, JudgePort, JudgeRecord } from "@wally/core/ports";
+import { CLEAN_ANSWERS } from "@wally/core/testing";
 import { withDeadline } from "../src/judge/deadline";
 import { generateScenarios } from "../src/scenario/generate";
 import { judgeInputOf } from "../src/systems/b2";

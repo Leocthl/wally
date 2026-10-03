@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { createComponents, createLiveJudgeSource, describeComponents } from "../src/factory";
 import { createRecordedSource } from "../src/judge/sources";
 import { parseRecording } from "../src/judge/recording";

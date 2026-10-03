@@ -1,6 +1,6 @@
 // Evaluation of the local Qwen planner against the running llama-server(s). Not a test: run it by hand.
 //
-//   pnpm --filter @laisee/agent exec tsx test/support/qwen/eval-planner.ts \
+//   pnpm --filter @wally/agent exec tsx test/support/qwen/eval-planner.ts \
 //     --models 9b=http://127.0.0.1:8809,4b=http://127.0.0.1:8810 --hijack --out ../../data/results/qwen-planner-2026-10-02
 //
 // Scenario-major loop: each scenario runs on every model back to back, so both models see similar machine load.
@@ -9,8 +9,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { parseArgs } from "node:util";
-import type { ListingRecord } from "@laisee/core/generated";
-import type { PlannerOptions } from "@laisee/core/ports";
+import type { ListingRecord } from "@wally/core/generated";
+import type { PlannerOptions } from "@wally/core/ports";
 import { createLocalPlanRunner, type LocalPlanResult } from "../../../src/planner/local/local-planner";
 import { ALL_FIXTURE_LISTINGS, GRAPHIC_TEE_LISTING, VARIANT_LISTING, ctxOf } from "../planner/data";
 import { renderMarkdown } from "./eval-report";

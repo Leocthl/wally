@@ -1,9 +1,9 @@
-// @laisee/agent/judge: JudgePort adapters. Owner: lane B.
+// @wally/agent/judge: JudgePort adapters. Owner: lane B.
 //   SystemOneJudge  laya (local, default) and jev (hosted, optional): one typed wire protocol
 //   ReplayJudge     recorded answers (CI and the booth fallback), clearly labelled
 //   ShadowJudge     JUDGE_MODE=shadow: record the verdict, change nothing
-// May import @laisee/core/ports, generated, schema and config only (lint enforces I4).
-import type { JudgeProvider } from "@laisee/core/generated";
+// May import @wally/core/ports, generated, schema and config only (lint enforces I4).
+import type { JudgeProvider } from "@wally/core/generated";
 
 export const JUDGE_PROVIDERS: readonly JudgeProvider[] = ["laya", "jev", "replay"];
 

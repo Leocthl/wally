@@ -1,6 +1,6 @@
 // Builds the fit report (JSON shape) from case results. Pure: no I/O, no clock, no network.
 // Every accuracy figure is MEASURED(n) on SIMULATED, single-annotator labels and is labelled that way.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import { JUDGE_QUESTIONS, QUESTION_OPTIONS } from "../questions";
 import { compareRuns, type QuestionComparison } from "./compare";
 import { CORPUS_CATEGORIES, type CorpusLabels } from "./corpus";

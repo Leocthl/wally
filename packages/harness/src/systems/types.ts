@@ -1,8 +1,8 @@
 // The record every system under test returns for one scenario, plus the ports the systems are built from.
-import type { CardRecord, Decision, EscalationAnswer, LogEntry, PacketState, Revocation, RuleId, TemplateId } from "@laisee/core/generated";
-import type { LaiseeEngine } from "@laisee/core/engine";
-import type { Orchestrator } from "@laisee/core/orchestrator";
-import type { CardEvent, JudgePort, MerchantQuote } from "@laisee/core/ports";
+import type { CardRecord, Decision, EscalationAnswer, LogEntry, PacketState, Revocation, RuleId, TemplateId } from "@wally/core/generated";
+import type { WallyEngine } from "@wally/core/engine";
+import type { Orchestrator } from "@wally/core/orchestrator";
+import type { CardEvent, JudgePort, MerchantQuote } from "@wally/core/ports";
 import type { Timer } from "../timer";
 import type { ChoiceClient } from "../judge/choice-client";
 import type { Baseline, DecisionOutcome, DeclineCode, Scenario } from "../types";
@@ -142,7 +142,7 @@ export interface OrchestratedWorld {
 
 /** Everything the factory supplies. Each member is a real implementation behind factory.ts. */
 export interface Components {
-  readonly engine: LaiseeEngine;
+  readonly engine: WallyEngine;
   /** B2: the real orchestrator. */
   readonly orchestrated: (scenario: Scenario, judge: JudgePort) => Promise<OrchestratedWorld>;
   /** B1 and B2: RailSim, MerchantStub, core's executor, a signed log. */

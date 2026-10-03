@@ -3,7 +3,7 @@
 // is still the contract stub. Hard rules hold with any model output; the judge can only tighten (I3), so the injected
 // listing is never approved. Laya is shared with other lanes, so these tests allow it time.
 import { join } from "node:path";
-import type { Decision } from "@laisee/core/generated";
+import type { Decision } from "@wally/core/generated";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Booth } from "../../server/compose";
 import { bootReal, layaUp, orchestratorIsReal } from "./support/realStack";

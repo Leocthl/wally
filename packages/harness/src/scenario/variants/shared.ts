@@ -1,5 +1,5 @@
 // Helpers every category module uses: money frames, label constructors, template picks.
-import type { RuleId, TemplateId } from "@laisee/core/generated";
+import type { RuleId, TemplateId } from "@wally/core/generated";
 import { EXAMPLE_MANDATE } from "../../config";
 import type { DecisionOutcome, PaymentExpectation, ScenarioLabel, StopId } from "../../types";
 import { cleanTemplates, type Template } from "../templates";

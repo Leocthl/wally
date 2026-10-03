@@ -2,8 +2,8 @@
 // benign instruction-like sentences. Engine-independent in the sense that it needs no cart to be approved: each judge record
 // goes through the engine's own R10 (evaluateR10 with ENGINE_CONFIG), so the threshold has one source of truth [F36], and the
 // sample is the whole corpus (n = corpus size), far more cases than the scenarios carry.
-import { ENGINE_CONFIG } from "@laisee/core/config";
-import { evaluateR10 } from "@laisee/core/rules";
+import { ENGINE_CONFIG } from "@wally/core/config";
+import { evaluateR10 } from "@wally/core/rules";
 import { TIMEOUTS_MS } from "../config";
 import { ratio, type Ratio } from "../ratio";
 import { BENIGN_IMPERATIVES, embedInjection, INJECTION_CORPUS, type InjectionItem } from "../scenario/injections";

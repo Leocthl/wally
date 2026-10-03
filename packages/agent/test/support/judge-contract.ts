@@ -2,8 +2,8 @@
 // schema-valid JudgeRecord whose status says what happened. Never throws, never returns answers unless OK.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import type { JudgeInput, JudgePort } from "@laisee/core/ports";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import type { JudgeInput, JudgePort } from "@wally/core/ports";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { JUDGE_QUESTIONS, QUESTION_OPTIONS } from "../../src/judge/questions";
 
 export type Scenario =

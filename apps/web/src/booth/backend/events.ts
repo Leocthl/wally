@@ -3,7 +3,7 @@
 // planner trace (last typed step + planner latency) on the cart event, and the run a resolution belongs to.
 // One booth run spans several orchestrator operations (submit, then checkouts), so the orchestrator's per-operation
 // run.started/run.finished are dropped: the runner emits one of each per booth run. Cards go out without the handle.
-import type { OrchestratorEvent } from "@laisee/core/orchestrator";
+import type { OrchestratorEvent } from "@wally/core/orchestrator";
 import type { CardBeat, CardRecord, PlannerTraceInfo, ScenarioId, TraceEvent } from "../../api/types";
 
 export type RunScenario = ScenarioId | "custom";

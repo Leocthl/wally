@@ -10,11 +10,11 @@
 
 | Command | Does |
 |---|---|
-| `pnpm --filter @laisee/mobile sync` | builds `apps/web` with `VITE_API=local` into `apps/mobile/www` (not `apps/web/dist`), adds the bridge script, copies it into both projects |
-| `pnpm --filter @laisee/mobile ios:sim` | unsigned Simulator build into `~/Library/Caches/wally-ios` (`WALLY_IOS_BUILD` to change), boots iPhone 17 (`IOS_SIM_NAME` to change), installs, launches |
-| `pnpm --filter @laisee/mobile android:apk` | `assembleDebug`; APK at `android/app/build/outputs/apk/debug/app-debug.apk` |
-| `pnpm --filter @laisee/mobile ios:open` / `android:open` | opens Xcode / Android Studio |
-| `pnpm --filter @laisee/mobile assets` | icon and splash sets from `apps/web/public/icons/icon.svg` (`assets/` masters, then `@capacitor/assets`) |
+| `pnpm --filter @wally/mobile sync` | builds `apps/web` with `VITE_API=local` into `apps/mobile/www` (not `apps/web/dist`), adds the bridge script, copies it into both projects |
+| `pnpm --filter @wally/mobile ios:sim` | unsigned Simulator build into `~/Library/Caches/wally-ios` (`WALLY_IOS_BUILD` to change), boots iPhone 17 (`IOS_SIM_NAME` to change), installs, launches |
+| `pnpm --filter @wally/mobile android:apk` | `assembleDebug`; APK at `android/app/build/outputs/apk/debug/app-debug.apk` |
+| `pnpm --filter @wally/mobile ios:open` / `android:open` | opens Xcode / Android Studio |
+| `pnpm --filter @wally/mobile assets` | icon and splash sets from `apps/web/public/icons/icon.svg` (`assets/` masters, then `@capacitor/assets`) |
 
 - **After a web change**: run `sync` again, then the platform command. `www/` and the web copies inside `ios/` and `android/` are gitignored.
 - **Stop**: `xcrun simctl shutdown all`; Gradle runs with no daemon.

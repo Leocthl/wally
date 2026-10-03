@@ -3,16 +3,16 @@
 // replaced for tests (clock, store, rail randomness, orchestrator, judge). Laya being down never stops the start: the
 // judge then answers ERROR and the engine escalates (R10.unavailable, I5), and /api/info says so.
 import { join } from "node:path";
-import { compileMandateText } from "@laisee/agent/compiler";
-import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@laisee/agent/judge";
-import { createChatClient, createPlanner, loadReplayRecords } from "@laisee/agent/planner";
-import { engine as defaultEngine } from "@laisee/core/engine";
-import type { PlannerReplayRecord } from "@laisee/core/generated";
-import { appendEntry } from "@laisee/core/log";
-import { FileLogStore } from "@laisee/core/log/file";
-import { createOrchestrator as realOrchestrator, type Orchestrator, type OrchestratorDeps, type PlannerFactory } from "@laisee/core/orchestrator";
-import type { Clock, JudgePort, LogStore } from "@laisee/core/ports";
-import { cryptoRandom, type RandomSource } from "@laisee/rail-sim";
+import { compileMandateText } from "@wally/agent/compiler";
+import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@wally/agent/judge";
+import { createChatClient, createPlanner, loadReplayRecords } from "@wally/agent/planner";
+import { engine as defaultEngine } from "@wally/core/engine";
+import type { PlannerReplayRecord } from "@wally/core/generated";
+import { appendEntry } from "@wally/core/log";
+import { FileLogStore } from "@wally/core/log/file";
+import { createOrchestrator as realOrchestrator, type Orchestrator, type OrchestratorDeps, type PlannerFactory } from "@wally/core/orchestrator";
+import type { Clock, JudgePort, LogStore } from "@wally/core/ports";
+import { cryptoRandom, type RandomSource } from "@wally/rail-sim";
 import type { Hono } from "hono";
 import { askShelf, recordedRequests, type AskSource } from "../src/booth/backend/ask";
 import { OrchestratorBackend } from "../src/booth/backend/backend";

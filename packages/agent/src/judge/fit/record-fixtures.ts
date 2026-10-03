@@ -4,7 +4,7 @@
 // is written, and any failed call writes nothing: a recording is always an OK answer.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { JudgeRecord } from "@laisee/core/ports";
+import type { JudgeRecord } from "@wally/core/ports";
 import { DEFAULT_FIXTURES_DIR } from "../replay-recordings";
 import { SystemOneJudge } from "../system-one-judge";
 import { loadAnchors } from "./anchors";

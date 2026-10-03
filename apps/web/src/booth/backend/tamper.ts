@@ -1,7 +1,7 @@
 // The Tamper demo (docs/06 DM7): a COPY of the log with one decimal digit of one amount changed ("one byte flipped").
 // The stored log is never touched; verifying the copy must fail at the changed entry. Shared by the booth backend and
 // the offline mock (src/api/mock/log.ts re-exports it).
-import type { LogEntry, LogEntryKind } from "@laisee/core/generated";
+import type { LogEntry, LogEntryKind } from "@wally/core/generated";
 
 export interface TamperedCopy {
   readonly entries: readonly LogEntry[];

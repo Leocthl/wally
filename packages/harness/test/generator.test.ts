@@ -9,7 +9,7 @@ import {
   validatePacketState,
   validatePlannerReplayRecord,
   validateScameterCapture,
-} from "@laisee/core/schema";
+} from "@wally/core/schema";
 import { CATEGORIES, JUDGE_DEPENDENT, SCENARIO_COUNT, SLOTS } from "../src/config";
 import { generateScenarios } from "../src/scenario/generate";
 import type { Scenario } from "../src/types";

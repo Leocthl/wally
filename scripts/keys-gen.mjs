@@ -4,7 +4,7 @@
 // The agent did:key is an identifier: its secret key is discarded at once (I4, the planner holds no key).
 // Never prints or logs a secret (I8).
 // Usage: node scripts/keys-gen.mjs [--force] [--key-dir <dir>] [--public <file>]
-// Runs the TypeScript sources of @laisee/core through Node type stripping (Node 22.18+ or 23.6+).
+// Runs the TypeScript sources of @wally/core through Node type stripping (Node 22.18+ or 23.6+).
 import { chmod, mkdir, rename, stat, writeFile } from "node:fs/promises";
 import * as nodeModule from "node:module";
 import { dirname, join, resolve } from "node:path";

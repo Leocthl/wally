@@ -1,4 +1,4 @@
-// Regenerates src/design/tokens-fallback.css from tokens.css. Run: pnpm --filter @laisee/web exec tsx scripts/gen-token-fallback.ts
+// Regenerates src/design/tokens-fallback.css from tokens.css. Run: pnpm --filter @wally/web exec tsx scripts/gen-token-fallback.ts
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

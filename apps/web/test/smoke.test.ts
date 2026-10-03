@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../server/app";
 import { RAIL_BADGE } from "../src/labels";
 
-describe("@laisee/web scaffold", () => {
+describe("@wally/web scaffold", () => {
   it("serves /api/health without a network socket", async () => {
     const res = await createApp().request("/api/health");
     expect(res.status).toBe(200);

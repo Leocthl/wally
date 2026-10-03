@@ -1,7 +1,7 @@
 // Immutable rail state. Every change returns a new RailState (copy on write); the rail swaps its reference.
 // Cards are small and few (F1 allows 2 active), so copying maps is cheaper than any shared-mutation bug.
-import type { CardRecord } from "@laisee/core/generated";
-import type { CardEvent } from "@laisee/core/ports";
+import type { CardRecord } from "@wally/core/generated";
+import type { CardEvent } from "@wally/core/ports";
 
 export interface KeyRecord {
   /** requestPrint of the first request that used the key. */

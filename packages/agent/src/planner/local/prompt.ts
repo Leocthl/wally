@@ -2,7 +2,7 @@
 // and the candidate listings as structured records (title, category, unit price, shipping, seller line), both
 // marked as untrusted data. Listing descriptions are left out unless includeListingText is on, which is for
 // measuring hijack rates only: the judge reads descriptions, the planner does not (docs/02 section 12).
-import type { ListingRecord } from "@laisee/core/generated";
+import type { ListingRecord } from "@wally/core/generated";
 import type { ChatMessage } from "./client";
 
 export const SYSTEM_PROMPT = [

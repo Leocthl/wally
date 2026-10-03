@@ -1,6 +1,6 @@
 // Mock engine: assembles RuleResults into a Decision exactly as docs/02 section 7 says. Outcome = any DENY, else any
 // ESCALATE, else APPROVE (I3: the judge enters only through R10). The only producer of a Decision in the mock (D3).
-import type { Cart, Decision, EscalationAnswer, JudgeRecord, Mandate, PacketState, RuleResult } from "@laisee/core/generated";
+import type { Cart, Decision, EscalationAnswer, JudgeRecord, Mandate, PacketState, RuleResult } from "@wally/core/generated";
 import { renderStop } from "../../explain/renderStop";
 import { MOCK_CONFIG } from "./config";
 import { canonicalize, sha256Hex } from "./hash";

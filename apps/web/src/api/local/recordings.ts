@@ -1,11 +1,11 @@
 // Recorded judge answers for on-device mode, from the bundled fixture files (no fs). Same checks and the same result
-// as @laisee/agent's loadReplayRecordings on disk (a test compares them): judge/<name>.json must be an OK record with
+// as @wally/agent's loadReplayRecordings on disk (a test compares them): judge/<name>.json must be an OK record with
 // answers, paired with listings/<name>.json, keyed by the SHA-256 of that listing's text, version labelled recorded@.
 // Any bad file is a load error: the page fails loudly instead of replaying a wrong answer.
-import type { ReplayRecording } from "@laisee/agent/judge";
-import { sha256Hex } from "@laisee/core/crypto";
-import type { JudgeRecord } from "@laisee/core/ports";
-import { formatIssues, validateJudgeRecord, validateListingRecord } from "@laisee/core/schema";
+import type { ReplayRecording } from "@wally/agent/judge";
+import { sha256Hex } from "@wally/core/crypto";
+import type { JudgeRecord } from "@wally/core/ports";
+import { formatIssues, validateJudgeRecord, validateListingRecord } from "@wally/core/schema";
 
 export class RecordingLoadError extends Error {
   constructor(message: string) {

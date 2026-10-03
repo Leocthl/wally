@@ -1,7 +1,7 @@
 // Pipeline stages for the mock (docs/00 Pipeline contract v0): propose -> assess -> decide -> record -> mint -> checkout.
 // Each stage emits trace events with a short pause so the Run screen shows a live trace. Everything here is SIMULATED.
-import type { CardRecord, Cart, Decision, JudgeRecord, ListingRecord, ProposeCartInput } from "@laisee/core/generated";
-import type { CardEvent } from "@laisee/core/ports";
+import type { CardRecord, Cart, Decision, JudgeRecord, ListingRecord, ProposeCartInput } from "@wally/core/generated";
+import type { CardEvent } from "@wally/core/ports";
 import type { CardBeat, PlannerTraceInfo, RunOutcome } from "../types";
 import { buildCart } from "./cartBuilder";
 import { DISPLAY_PACING_MS, MOCK_CONFIG, STORY_GAP } from "./config";

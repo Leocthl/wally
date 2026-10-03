@@ -5,7 +5,7 @@
 //   2. the offline verifier page, built straight into dist-pages/verifier/
 //   3. an empty .nojekyll
 // apps/web/dist (the booth build) and apps/verifier/dist are never written. No network is used.
-// Prove it from a sub-path in a real browser: pnpm --filter @laisee/web e2e:pages
+// Prove it from a sub-path in a real browser: pnpm --filter @wally/web e2e:pages
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -51,13 +51,13 @@ function checkLayout() {
 }
 
 function main() {
-  run("web app (on-device, relative URLs)", ["--filter", "@laisee/web", "exec", "vite", "build", "--config", "vite.pages.config.ts", "--logLevel", "warn"], { VITE_API: "local" });
-  run("offline verifier page", ["--filter", "@laisee/verifier", "exec", "vite", "build", "--outDir", VERIFIER_OUT, "--emptyOutDir", "--logLevel", "warn"]);
+  run("web app (on-device, relative URLs)", ["--filter", "@wally/web", "exec", "vite", "build", "--config", "vite.pages.config.ts", "--logLevel", "warn"], { VITE_API: "local" });
+  run("offline verifier page", ["--filter", "@wally/verifier", "exec", "vite", "build", "--outDir", VERIFIER_OUT, "--emptyOutDir", "--logLevel", "warn"]);
   writeFileSync(join(OUT, ".nojekyll"), "");
   checkLayout();
   for (const r of results) process.stdout.write(`${r.level.padEnd(4)}  ${r.what.padEnd(14)} ${r.detail}\n`);
   const failed = results.some((r) => r.level === "FAIL");
-  process.stdout.write(failed ? "pages:build: FAIL\n" : "pages:build: ok. Serve apps/web/dist-pages from any path, or run pnpm --filter @laisee/web e2e:pages\n");
+  process.stdout.write(failed ? "pages:build: FAIL\n" : "pages:build: ok. Serve apps/web/dist-pages from any path, or run pnpm --filter @wally/web e2e:pages\n");
   process.exit(failed ? 1 : 0);
 }
 

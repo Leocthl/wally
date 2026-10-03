@@ -1,4 +1,4 @@
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { apiClientContract } from "./apiClientContract";
 

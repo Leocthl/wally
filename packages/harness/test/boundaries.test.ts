@@ -9,13 +9,13 @@
 // a consistent pair: a helper that changes the budget changes it in both, and `decide` refuses an inconsistent fixture with
 // a plain message instead of letting R1 deny it and hide the rule under test. The R1 rows build inconsistent ones on purpose.
 import { describe, expect, it } from "vitest";
-import { ENGINE_CONFIG } from "@laisee/core/config";
-import { engine } from "@laisee/core/engine";
-import type { Cart, Decision, Mandate, PacketState } from "@laisee/core/generated";
-import { MintError, type JudgeRecord } from "@laisee/core/ports";
-import { evaluateR2 } from "@laisee/core/rules";
-import { CLEAN_ANSWERS } from "@laisee/core/testing";
-import { RailSim, seededRandom } from "@laisee/rail-sim";
+import { ENGINE_CONFIG } from "@wally/core/config";
+import { engine } from "@wally/core/engine";
+import type { Cart, Decision, Mandate, PacketState } from "@wally/core/generated";
+import { MintError, type JudgeRecord } from "@wally/core/ports";
+import { evaluateR2 } from "@wally/core/rules";
+import { CLEAN_ANSWERS } from "@wally/core/testing";
+import { RailSim, seededRandom } from "@wally/rail-sim";
 import { RAIL, SELLER_CHECK, VELOCITY } from "../src/config";
 import { generateScenarios } from "../src/scenario/generate";
 

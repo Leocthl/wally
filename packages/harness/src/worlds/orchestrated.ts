@@ -1,12 +1,12 @@
 // B2's world: a real orchestrator over a real signed log. The mandate is sealed as a signed credential, the scenario's
 // history is written into the log, and the orchestrator folds the packet from it. Implementations come in through
 // OrchestratedParts (factory.ts chooses them); the log, the keys and the credential are core's own code.
-import type { Engine, JudgePort, LogStore, MerchantPort, PlannerPort, RailPort } from "@laisee/core/ports";
-import type { ListingRecord } from "@laisee/core/generated";
-import { appendEntry, headCheckpoint, logIdForMandate, signEscalationAnswer, signRevocation } from "@laisee/core/log";
-import type { Orchestrator, OrchestratorDeps, PlannerFactory } from "@laisee/core/orchestrator";
-import { MemoryLogStore } from "@laisee/core/testing";
-import { verifyChain } from "@laisee/core/verify";
+import type { Engine, JudgePort, LogStore, MerchantPort, PlannerPort, RailPort } from "@wally/core/ports";
+import type { ListingRecord } from "@wally/core/generated";
+import { appendEntry, headCheckpoint, logIdForMandate, signEscalationAnswer, signRevocation } from "@wally/core/log";
+import type { Orchestrator, OrchestratorDeps, PlannerFactory } from "@wally/core/orchestrator";
+import { MemoryLogStore } from "@wally/core/testing";
+import { verifyChain } from "@wally/core/verify";
 import { DELEGATOR_DID, delegatorSigner, engineSigner } from "../keys";
 import { SEAL_AGO_S } from "../scenario/history";
 import { cartIdFor, scameterLookup } from "../scenario/cart";

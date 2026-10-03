@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FIXTURES_DIR } from "@laisee/core/testing/fixtures";
+import { FIXTURES_DIR } from "@wally/core/testing/fixtures";
 import { recordFixtures } from "../src/judge/fit/record-fixtures";
 import { variantById } from "../src/judge/fit/variants";
 import { loadReplayRecordings } from "../src/judge/replay-recordings";

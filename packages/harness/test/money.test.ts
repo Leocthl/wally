@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildScenarioCart, scameterLookup } from "../src/scenario/cart";
 import { formatHkd } from "../src/scenario/money";
-import { loadFixture } from "@laisee/core/testing/fixtures";
-import { mandateFromCredential } from "@laisee/core/vc";
+import { loadFixture } from "@wally/core/testing/fixtures";
+import { mandateFromCredential } from "@wally/core/vc";
 
 describe("money display (integer minor units)", () => {
   it("formats HKD whole dollars without decimals and cents with two", () => {

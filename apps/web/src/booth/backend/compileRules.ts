@@ -1,9 +1,9 @@
 // Sentence to rule chips for the Seal screen (POST /api/compile, compileRules). Two readers, one result shape:
-//   model  the local Qwen reads the sentence (@laisee/agent/compiler); code does the money, the dates, the clamps, the labels
+//   model  the local Qwen reads the sentence (@wally/agent/compiler); code does the money, the dates, the clamps, the labels
 //   rules  the fixed rules parser of the Seal screen (booth/compile.ts), no model
 // The model path is used only when the host gives one. If it fails, the rules answer and the notes say why: the model never
 // stops the Seal screen from working. Nothing here seals anything; confirmRequired is always true.
-import { DEFAULT_CATEGORIES, labelsFor, type Clamp, type CompileOutcome, type Note } from "@laisee/agent/compiler";
+import { DEFAULT_CATEGORIES, labelsFor, type Clamp, type CompileOutcome, type Note } from "@wally/agent/compiler";
 import type { AskLocale, CompileLabel, CompileResult, CompileRulesRequest } from "../../api/types";
 import { chipsToRules, compileMandate, expiryClamps, validUntilFor } from "../compile";
 import { BoothError } from "./errors";

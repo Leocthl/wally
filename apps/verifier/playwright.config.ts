@@ -1,4 +1,4 @@
-// File-URL check of the built verifier (pnpm --filter @laisee/verifier e2e builds first). No web server: the page
+// File-URL check of the built verifier (pnpm --filter @wally/verifier e2e builds first). No web server: the page
 // is opened from disk with the browser offline. Chromium comes from the local Playwright cache; nothing downloads.
 import { defineConfig, devices } from "@playwright/test";
 

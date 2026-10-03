@@ -1,7 +1,7 @@
 // TEST DOUBLE for the judge model: a keyword oracle over the harness's own injection corpus and listing prose.
 // It stands in for Laya so pipeline tests are deterministic and offline. It says nothing about how Laya behaves.
-import type { JudgeInput } from "@laisee/core/ports";
-import { FakeJudge, type FakeJudgeResponse } from "@laisee/core/testing";
+import type { JudgeInput } from "@wally/core/ports";
+import { FakeJudge, type FakeJudgeResponse } from "@wally/core/testing";
 import { INJECTION_CORPUS } from "../../src/scenario/injections";
 
 /** Longest text the fake judge reads before it reports truncation, standing in for the real context limit [F26]. */

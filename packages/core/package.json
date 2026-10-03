@@ -1,5 +1,5 @@
 {
-  "name": "@laisee/core",
+  "name": "@wally/core",
   "version": "0.0.0",
   "private": true,
   "description": "Ports, generated types, validators, policy engine, crypto, log and verifier (lane A)",

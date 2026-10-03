@@ -6,7 +6,7 @@ import type { ChoiceClient, ChoiceRequest, ChoiceResult } from "../src/judge/cho
 import { generateScenarios } from "../src/scenario/generate";
 import { judgeInputOf } from "../src/systems/b2";
 import { biasedResponder, startMockLaya, type MockLaya, type Responder } from "./support/mock-laya";
-import type { JudgePort, JudgeRecord } from "@laisee/core/ports";
+import type { JudgePort, JudgeRecord } from "@wally/core/ports";
 
 let tick = 0;
 const timer = (): number => (tick += 5);

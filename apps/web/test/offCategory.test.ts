@@ -1,6 +1,6 @@
 // Off-category item [F29] in the offline mock and Try asking: earbuds HK$399 from a clothes mandate stop at R6
 // and the card never exists.
-import { FakeClock } from "@laisee/core/testing";
+import { FakeClock } from "@wally/core/testing";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0SealRequest } from "../src/api/mock/presets";

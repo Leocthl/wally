@@ -1,5 +1,5 @@
 // T-R1 (F1 parity for void and expiry): void acts on ACTIVE cards only [F2]; expireDue(now).
-import { validateCardEvent } from "@laisee/core/schema";
+import { validateCardEvent } from "@wally/core/schema";
 import { describe, expect, it } from "vitest";
 import type { RailSim } from "../src";
 import { MINUTE_MS, NOW, CARD_TTL_MS, approvedDecision, decisionId, makeRail, mintCard, pay } from "./helpers";

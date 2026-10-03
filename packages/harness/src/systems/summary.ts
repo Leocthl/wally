@@ -1,6 +1,6 @@
 // Turns engine Decisions, judge records and rail events into the plain summaries RunOutcome carries.
-import type { Decision, RuleId, RuleResult, TemplateId } from "@laisee/core/generated";
-import type { CardEvent, JudgeRecord } from "@laisee/core/ports";
+import type { Decision, RuleId, RuleResult, TemplateId } from "@wally/core/generated";
+import type { CardEvent, JudgeRecord } from "@wally/core/ports";
 import type { DecisionOutcome } from "../types";
 import type { EventSummary, JudgeSummary } from "./types";
 

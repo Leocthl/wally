@@ -1,8 +1,8 @@
 // Real-stack helpers: the composed booth on the real orchestrator with an in-memory log, a seeded SIMULATED rail and
-// ephemeral keys. Tests skip themselves while @laisee/core/orchestrator is still the contract stub (lane e-orch).
-import { createOrchestrator } from "@laisee/core/orchestrator";
-import { MemoryLogStore } from "@laisee/core/testing";
-import { seededRandom } from "@laisee/rail-sim";
+// ephemeral keys. Tests skip themselves while @wally/core/orchestrator is still the contract stub (lane e-orch).
+import { createOrchestrator } from "@wally/core/orchestrator";
+import { MemoryLogStore } from "@wally/core/testing";
+import { seededRandom } from "@wally/rail-sim";
 import { ephemeralKeys } from "../../../server/booth/keys";
 import { composeBooth, type Booth } from "../../../server/compose";
 

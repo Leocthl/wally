@@ -1,5 +1,5 @@
 // Opaque ids and the wall clock for the booth backend. Web Crypto only (Node 22 and every browser have it).
-import type { Clock } from "@laisee/core/ports";
+import type { Clock } from "@wally/core/ports";
 
 const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 

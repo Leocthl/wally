@@ -1,8 +1,8 @@
 // PLANNER_PROVIDER selects the backend: rule (default, Laya typed choices), replay (recorded outputs) or local
 // (one grammar-constrained answer from the local Qwen server, lane m-qwen). A claude backend is not built, so
 // asking for it is a start-up error, not a silent fallback.
-import type { ListingRecord, PlannerReplayRecord } from "@laisee/core/generated";
-import type { PlannerPort, PlannerProvider } from "@laisee/core/ports";
+import type { ListingRecord, PlannerReplayRecord } from "@wally/core/generated";
+import type { PlannerPort, PlannerProvider } from "@wally/core/ports";
 import { DEFAULT_LAYA_URL, PlannerConfigError, type PlannerConfig } from "./config";
 import { createLocalPlanner, DEFAULT_LOCAL_MODEL, DEFAULT_LOCAL_PLANNER_URL, type LocalPlannerConfig } from "./local";
 import { createReplayPlanner } from "./replay-planner";

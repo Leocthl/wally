@@ -1,7 +1,7 @@
 // Runs the corpus (and any extra listings) through a JudgePort, one call at a time: the Laya server has one
 // inference worker, so parallel calls would only queue. Measures; never fabricates.
-import type { Mandate } from "@laisee/core/generated";
-import type { JudgeInput, JudgePort } from "@laisee/core/ports";
+import type { Mandate } from "@wally/core/generated";
+import type { JudgeInput, JudgePort } from "@wally/core/ports";
 import type { CorpusCase } from "./corpus";
 import { judgeInputFromListing } from "./inputs";
 import type { CaseResult } from "./types";

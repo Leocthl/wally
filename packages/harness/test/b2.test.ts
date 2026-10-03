@@ -2,12 +2,12 @@
 // over a signed log, with the scenario's history written into that log. A keyword judge answers as the labels assume, so
 // these tests are about the wiring, the labels and the product's behaviour, not about how well Laya reads a listing.
 import { describe, expect, it } from "vitest";
-import { createReplayPlanner } from "@laisee/agent/planner";
-import { engine } from "@laisee/core/engine";
-import { createOrchestrator } from "@laisee/core/orchestrator";
-import { MintError, type JudgePort, type RailPort } from "@laisee/core/ports";
-import { FakeJudge, FakePlanner } from "@laisee/core/testing";
-import { MerchantStub, RailSim, seededRandom } from "@laisee/rail-sim";
+import { createReplayPlanner } from "@wally/agent/planner";
+import { engine } from "@wally/core/engine";
+import { createOrchestrator } from "@wally/core/orchestrator";
+import { MintError, type JudgePort, type RailPort } from "@wally/core/ports";
+import { FakeJudge, FakePlanner } from "@wally/core/testing";
+import { MerchantStub, RailSim, seededRandom } from "@wally/rail-sim";
 import { createComponents } from "../src/factory";
 import { labelAgreement } from "../src/metrics/agreement";
 import { CATEGORY_VARIANTS, generateScenarios } from "../src/scenario/generate";

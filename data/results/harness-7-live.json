@@ -28,42 +28,42 @@
   },
   "components": {
     "engine": {
-      "name": "@laisee/core/engine",
+      "name": "@wally/core/engine",
       "real": true,
       "note": "core@0.0.0"
     },
     "orchestrator": {
-      "name": "createOrchestrator (@laisee/core/orchestrator)",
+      "name": "createOrchestrator (@wally/core/orchestrator)",
       "real": true,
       "note": "B2 runs through it: seal, submit, answer, checkout, revoke over a signed log; B0 and B1 do not use it by definition"
     },
     "planner": {
-      "name": "createReplayPlanner (@laisee/agent/planner)",
+      "name": "createReplayPlanner (@wally/agent/planner)",
       "real": true,
       "note": "replays the scenario's recorded proposal (docs/05: one recorded planner output feeds all three baselines)"
     },
     "cartBuilder": {
-      "name": "buildCart (@laisee/core/cart)",
+      "name": "buildCart (@wally/core/cart)",
       "real": true,
       "note": "prices from the listing record in HKD; used for every baseline, so all three read the same cart"
     },
     "rail": {
-      "name": "RailSim (@laisee/rail-sim)",
+      "name": "RailSim (@wally/rail-sim)",
       "real": true,
       "note": "SIMULATED single-use cards, F1 semantics"
     },
     "merchant": {
-      "name": "MerchantStub (@laisee/rail-sim)",
+      "name": "MerchantStub (@wally/rail-sim)",
       "real": true,
       "note": "SIMULATED shop with honest, overshoot, drift, preauth, timeout and wrong_merchant modes"
     },
     "executor": {
-      "name": "createExecutor (@laisee/core/executor)",
+      "name": "createExecutor (@wally/core/executor)",
       "real": true,
       "note": "re-quote, idempotent charge, CARD_EVENT appended to the signed log"
     },
     "judge": {
-      "name": "SystemOneJudge (@laisee/agent/judge) on Laya typed-decisions",
+      "name": "SystemOneJudge (@wally/agent/judge) on Laya typed-decisions",
       "real": true,
       "note": "live: the product adapter; recorded: its answers replayed"
     }

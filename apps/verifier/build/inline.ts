@@ -20,7 +20,7 @@ export function assertInlineStyle(css: string): string {
 
 /**
  * default-src 'none' blocks fetch, XHR, WebSocket, images, fonts, frames and form posts; only the hashed inline code
- * runs. No 'unsafe-eval': the schema validators inside @laisee/core/verify are compiled ahead of time (ajv standalone),
+ * runs. No 'unsafe-eval': the schema validators inside @wally/core/verify are compiled ahead of time (ajv standalone),
  * so nothing calls eval or new Function.
  */
 export function contentSecurityPolicy(script: string, style: string): string {

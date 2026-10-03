@@ -6,14 +6,14 @@
 ## Build and open
 | Step | Command |
 |---|---|
-| Build the one file | `pnpm verifier` (or `pnpm --filter @laisee/verifier build`) |
+| Build the one file | `pnpm verifier` (or `pnpm --filter @wally/verifier build`) |
 | Open | `apps/verifier/dist/index.html` straight from disk (double-click; `file://` works) |
-| Browser check | `pnpm --filter @laisee/verifier e2e` (builds, then opens the file offline in headless Chromium from the local Playwright cache) |
-| Dev server | `pnpm --filter @laisee/verifier dev` (module scripts, no CSP; not the booth page) |
+| Browser check | `pnpm --filter @wally/verifier e2e` (builds, then opens the file offline in headless Chromium from the local Playwright cache) |
+| Dev server | `pnpm --filter @wally/verifier dev` (module scripts, no CSP; not the booth page) |
 
 - `dist/index.html` is self-contained: one classic inline script, one inline style, no external file, font or image.
 - **CSP** in the page: `default-src 'none'`, `connect-src 'none'`, scripts and styles only by SHA-256 hash.
-- No `'unsafe-eval'`: the schema validators in `@laisee/core` are compiled ahead of time (`pnpm gen:types`, ajv standalone), so the page never calls `eval` or `new Function`; `test/build.test.ts` fails if it does.
+- No `'unsafe-eval'`: the schema validators in `@wally/core` are compiled ahead of time (`pnpm gen:types`, ajv standalone), so the page never calls `eval` or `new Function`; `test/build.test.ts` fails if it does.
 - The build fails if the page contains `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, a module script, `<link>`, `<img>`, CSS `url()` and similar (`build/scan.ts`).
 
 ## Use

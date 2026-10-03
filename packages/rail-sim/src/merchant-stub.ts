@@ -1,9 +1,9 @@
 // MerchantStub: the SIMULATED shop. It quotes a cart and charges through RailPort.authorise itself.
 // Modes script the failures the demo and harness need: honest, overshoot (S1 rail decline), drift (R12),
 // preauth (a hold above the quote [F2]), timeout (lost response, retry with the same key), wrong_merchant.
-import { SimulatedTimeoutError } from "@laisee/core/executor";
-import type { Cart } from "@laisee/core/generated";
-import type { CardEvent, MerchantPort, MerchantQuote, RailPort } from "@laisee/core/ports";
+import { SimulatedTimeoutError } from "@wally/core/executor";
+import type { Cart } from "@wally/core/generated";
+import type { CardEvent, MerchantPort, MerchantQuote, RailPort } from "@wally/core/ports";
 import { SIMULATED_SURCHARGE_MINOR, WRONG_MERCHANT_DOMAIN } from "./config";
 import { RailSimError } from "./errors";
 

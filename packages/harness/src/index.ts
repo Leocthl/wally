@@ -1,4 +1,4 @@
-// @laisee/harness: seeded replay scenarios, B0/B1/B2 systems, metrics and the result file. Owner: lane D.
+// @wally/harness: seeded replay scenarios, B0/B1/B2 systems, metrics and the result file. Owner: lane D.
 // Engine, rail, executor and judge come from the packages through factory.ts; nothing here copies them (lint enforces it).
 export { BASELINES, type Baseline, type Category, type Scenario, type ScenarioLabel } from "./types";
 export { ACCEPTANCE, CATEGORIES, SCENARIO_COUNT } from "./config";

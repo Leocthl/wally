@@ -5,7 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FIXTURES_DIR, loadFixture } from "@laisee/core/testing/fixtures";
+import { FIXTURES_DIR, loadFixture } from "@wally/core/testing/fixtures";
 import { loadReplayRecords } from "../src/planner/replay-planner";
 import { FIXTURED_SCENARIOS, QWEN_SCENARIOS, expectedFixtureText, expectedRecord } from "./support/qwen/scenarios";
 

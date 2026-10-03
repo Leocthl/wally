@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Renders the icon and splash masters from apps/web/public/icons/icon.svg into apps/mobile/assets, then runs
 // @capacitor/assets to write the iOS and Android icon sets and splash screens into the native projects.
-// Needs the platforms added (cap add ios, cap add android). Run: pnpm --filter @laisee/mobile assets
+// Needs the platforms added (cap add ios, cap add android). Run: pnpm --filter @wally/mobile assets
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";

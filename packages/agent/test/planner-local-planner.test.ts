@@ -2,8 +2,8 @@
 // untrusted: enums come from the supplied records, code re-checks titles, quantities and stated English facts,
 // and every failure is null (I5). All listings SIMULATED.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { PlannerTraceStep } from "@laisee/core/ports";
-import { validateProposeCartInput } from "@laisee/core/schema";
+import type { PlannerTraceStep } from "@wally/core/ports";
+import { validateProposeCartInput } from "@wally/core/schema";
 import { createLocalPlanner, createLocalPlanRunner } from "../src/planner/local/local-planner";
 import type { ChatClient } from "../src/planner/local/client";
 import { ALL_FIXTURE_LISTINGS, OPTS, VARIANT_LISTING, ctxOf, fixtureListing } from "./support/planner/data";

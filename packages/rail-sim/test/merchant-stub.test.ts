@@ -1,6 +1,6 @@
 // A-22 merchant stub (SIMULATED): honest, overshoot, drift, preauth, timeout, wrong_merchant.
-import { SimulatedTimeoutError } from "@laisee/core/executor";
-import type { Cart } from "@laisee/core/generated";
+import { SimulatedTimeoutError } from "@wally/core/executor";
+import type { Cart } from "@wally/core/generated";
 import { describe, expect, it } from "vitest";
 import { MERCHANT_MODES, MerchantStub, RailSimError, SIMULATED_SURCHARGE_MINOR, type MerchantStubOptions } from "../src";
 import { MERCHANT, NOW, cartWithTotal, mintCard, type MintedCard } from "./helpers";

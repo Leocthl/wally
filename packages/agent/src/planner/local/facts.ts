@@ -2,7 +2,7 @@
 // model's choice, the same parsers the rule planner uses. A disagreement means no proposal, so the app asks the
 // shopper. The parsers read English only, so a Chinese or Cantonese request is left to the model's reading,
 // and the engine, the rail limit and the judge still decide (I5).
-import type { ListingRecord } from "@laisee/core/generated";
+import type { ListingRecord } from "@wally/core/generated";
 import { candidatesFromListing, groupFamilies, type PlannerCandidate } from "../candidates";
 import { parseQuantity } from "../parse-request";
 import { matchingVariants } from "../variants";

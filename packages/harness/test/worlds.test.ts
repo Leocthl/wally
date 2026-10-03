@@ -1,10 +1,10 @@
 // The two worlds the baselines pay in, tested without a baseline on top: the governed world (RailSim, MerchantStub, core's
 // executor, a signed log that verifyChain checks) and the ungoverned world (B0's card on file).
 import { describe, expect, it } from "vitest";
-import { engine } from "@laisee/core/engine";
-import type { Decision } from "@laisee/core/generated";
-import { MintError } from "@laisee/core/ports";
-import { CLEAN_ANSWERS } from "@laisee/core/testing";
+import { engine } from "@wally/core/engine";
+import type { Decision } from "@wally/core/generated";
+import { MintError } from "@wally/core/ports";
+import { CLEAN_ANSWERS } from "@wally/core/testing";
 import { createComponents } from "../src/factory";
 import { AGENT_DID, DELEGATOR_DID } from "../src/keys";
 import { generateScenarios } from "../src/scenario/generate";

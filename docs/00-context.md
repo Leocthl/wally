@@ -143,7 +143,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 - **Judge starts as soon as the cart is built**, in parallel with the fold. The engine is the only producer of a Decision.
 
 ### Packages and lanes
-| Lane | Scope | Paths (npm scope `@laisee/*`) |
+| Lane | Scope | Paths (npm scope `@wally/*`) |
 |---|---|---|
 | A | policy + rail | `packages/core` (schemas→types, packet math, R1-R12, engine, crypto, log, orchestrator), `packages/rail-sim` |
 | B | agent + judge | `packages/agent` (planner `rule`/`local`/`replay`, sentence compiler, judge adapters laya/jev + replay, shadow mode), `services/laya` (local judge), `services/qwen` (local planner model) |

@@ -4,9 +4,9 @@
 // orchestrator seals Mei's budget only when it is inside Mum's rules (core/family). Mum's credential is checked at seal
 // time and is not in Mei's log, so the offline verifier page checks Mei's budget only and cannot check this chain; the
 // credential is exported next to the log (parent-credential.json) for inspection.
-import { createAllocationLedger, hkd, summarizeParent, type AllocationLedger } from "@laisee/core/family";
-import type { CompiledRules, MandateCredential } from "@laisee/core/generated";
-import { credentialIdForMandate, mandateFromCredential, signMandateCredential, type UnsignedMandateCredential } from "@laisee/core/vc";
+import { createAllocationLedger, hkd, summarizeParent, type AllocationLedger } from "@wally/core/family";
+import type { CompiledRules, MandateCredential } from "@wally/core/generated";
+import { credentialIdForMandate, mandateFromCredential, signMandateCredential, type UnsignedMandateCredential } from "@wally/core/vc";
 import type { FamilySummary, SealRequest } from "../../api/types";
 import type { BoothError } from "./errors";
 import { ephemeralSigner } from "./keys";

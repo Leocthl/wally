@@ -1,7 +1,7 @@
 // Live Laya on http://127.0.0.1:8808. Skips itself when /health is unreachable. Never starts, stops or changes the server.
 import { describe, expect, it } from "vitest";
-import { FakeClock } from "@laisee/core/testing";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import { FakeClock } from "@wally/core/testing";
+import { validateJudgeRecord } from "@wally/core/schema";
 import { PADDING_CHARS, TIMEOUTS_MS } from "../src/config";
 import { createLayaClient } from "../src/judge/laya-client";
 import { JUDGE_QUESTIONS, BUDGET_FIT_QUESTION } from "../src/judge/questions";

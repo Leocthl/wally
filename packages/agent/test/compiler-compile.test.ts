@@ -2,9 +2,9 @@
 // code, clamps and defaults never loosen anything, labels come from code, and every failure is { ok: false }
 // so the Seal screen falls back to the rule-based compile. Mandate M0, M1, M2 sentences: docs/01, compile.test.ts.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { CompiledRules } from "@laisee/core/generated";
-import { validateMandate } from "@laisee/core/schema";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { CompiledRules } from "@wally/core/generated";
+import { validateMandate } from "@wally/core/schema";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { compileMandateText, type CompileOutcome } from "../src/compiler";
 import { createChatClient, type ChatClient } from "../src/planner/local";
 import { startMockLlama, userMessage, type MockLlama } from "./support/qwen/mock-llama";

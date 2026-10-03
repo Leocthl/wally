@@ -1,9 +1,9 @@
 // The ungoverned world: B0's card on file. A model approved the purchase and the merchant charges it; nothing re-quotes,
 // nothing limits the amount, nothing logs, nothing voids a card when the delegator revokes. The retry budget after a lost
 // response is the executor's own default, so the only differences from B1/B2 are the ones the baseline is defined by.
-import type { CardRecord, Decision } from "@laisee/core/generated";
-import { EXECUTOR_DEFAULTS } from "@laisee/core/executor";
-import type { MerchantPort } from "@laisee/core/ports";
+import type { CardRecord, Decision } from "@wally/core/generated";
+import { EXECUTOR_DEFAULTS } from "@wally/core/executor";
+import type { MerchantPort } from "@wally/core/ports";
 import type { Scenario } from "../types";
 import type { CheckoutReport, World } from "../systems/types";
 import { ScenarioClock } from "./clock";

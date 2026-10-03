@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import type { JudgeInput } from "@laisee/core/ports";
-import { loadFixture } from "@laisee/core/testing/fixtures";
+import type { JudgeInput } from "@wally/core/ports";
+import { loadFixture } from "@wally/core/testing/fixtures";
 import { buildJudgeState, cleanInline, formatMoney, stripControls } from "../src/judge/state";
 
 const mandate = loadFixture("mandate/m0.json", "mandate");

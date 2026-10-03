@@ -1,7 +1,7 @@
 // Throwaway demo identities for the harness, derived from public labels. They are SIMULATED keys that sign only the
 // harness's own in-memory logs and credentials; they protect nothing and are not secrets (CLAUDE.md: demo keys are throwaway).
-import { createSigner, didKeyFromPublicKey, keyPairFromSeed, sha256Bytes, utf8 } from "@laisee/core/crypto";
-import type { Signer } from "@laisee/core/ports";
+import { createSigner, didKeyFromPublicKey, keyPairFromSeed, sha256Bytes, utf8 } from "@wally/core/crypto";
+import type { Signer } from "@wally/core/ports";
 
 const seedOf = (label: string): Uint8Array => sha256Bytes(utf8(`harness-demo-key/${label}`));
 

@@ -1,5 +1,5 @@
 // Builders for fit tests: JudgeAnswers from a few probabilities, and CaseResult rows.
-import type { JudgeAnswers } from "@laisee/core/generated";
+import type { JudgeAnswers } from "@wally/core/generated";
 import type { CorpusLabels } from "../../src/judge/fit/corpus";
 import type { CaseResult } from "../../src/judge/fit/types";
 

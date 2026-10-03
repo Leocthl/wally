@@ -1,4 +1,4 @@
-// Node-only fixture loader for data/fixtures (@laisee/core/testing/fixtures).
+// Node-only fixture loader for data/fixtures (@wally/core/testing/fixtures).
 // Every fixture file is an envelope: { fixture, provenance: "SIMULATED", schema, note, data }.
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";

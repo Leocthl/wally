@@ -1,6 +1,6 @@
 // Runs the harness: generate, warm up, run B0, B1 and B2 on every scenario, build the result. All dependencies are injected;
 // factory.ts chooses the real or stand-in implementations and cli.ts chooses the clock, the files and the judge source.
-import type { Clock } from "@laisee/core/ports";
+import type { Clock } from "@wally/core/ports";
 import type { ComponentReport } from "./factory";
 import type { JudgeSource } from "./judge/sources";
 import type { Recording, RecordingSource } from "./judge/recording";

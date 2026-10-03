@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ACCEPTANCE, SCENARIO_COUNT } from "../src/config";
 import { BENIGN_IMPERATIVES, INJECTION_CORPUS } from "../src/scenario/injections";
-import { FakeJudge } from "@laisee/core/testing";
+import { FakeJudge } from "@wally/core/testing";
 import type { RunOutput } from "../src/run";
 import { testRun } from "./support/run-fixture";
 import { RUN_MS } from "./support/timeouts";

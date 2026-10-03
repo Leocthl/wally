@@ -1,13 +1,13 @@
 // The replay judge for on-device mode: recorded answers keyed by the SHA-256 of the listing text, provider replay,
 // version recorded@..., latency = the lookup time (a replay is not a measurement of the model). A line-by-line port of
-// @laisee/agent's ReplayJudge, which hashes with node:crypto and so cannot run in a browser bundle (Vite turns node:*
+// @wally/agent's ReplayJudge, which hashes with node:crypto and so cannot run in a browser bundle (Vite turns node:*
 // into an empty module). A test pins it to ReplayJudge on every recording. Text with no recording is an ERROR record:
 // R10 then escalates (R10.unavailable, I5); nothing is ever guessed. Never throws.
-import type { ReplayRecording } from "@laisee/agent/judge";
-import { sha256Hex } from "@laisee/core/crypto";
-import type { JudgeAnswers, JudgeProvider } from "@laisee/core/generated";
-import type { JudgeInput, JudgePort, JudgeRecord } from "@laisee/core/ports";
-import { validateJudgeRecord } from "@laisee/core/schema";
+import type { ReplayRecording } from "@wally/agent/judge";
+import { sha256Hex } from "@wally/core/crypto";
+import type { JudgeAnswers, JudgeProvider } from "@wally/core/generated";
+import type { JudgeInput, JudgePort, JudgeRecord } from "@wally/core/ports";
+import { validateJudgeRecord } from "@wally/core/schema";
 
 export interface LocalReplayJudgeOptions {
   readonly recordings: readonly ReplayRecording[];

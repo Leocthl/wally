@@ -1,8 +1,8 @@
 // Family budget on the on-device stack (the real orchestrator, engine, signed log and SIMULATED rail, in process): Mum
 // seals a ceiling of HK$1,000 for clothes, Mei gives Wally a share. Caps compose: a budget over what Mum allows is refused
 // as EXCEEDS_PARENT and changes nothing. Mum's credential is not in the log; the offline verifier checks Mei's budget only.
-import { verifyLogText } from "@laisee/core/verify";
-import { seededRandom } from "@laisee/rail-sim";
+import { verifyLogText } from "@wally/core/verify";
+import { seededRandom } from "@wally/rail-sim";
 import { afterEach, describe, expect, it } from "vitest";
 import { LocalApiClient } from "../src/api/local/LocalApiClient";
 import { m0SealRequest } from "../src/api/mock/presets";

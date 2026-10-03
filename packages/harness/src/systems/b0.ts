@@ -4,7 +4,7 @@
 // lock, no expiry, only an idempotency key. Nothing re-quotes at checkout, collapses a repeated cart or voids a card on revoke,
 // and there is no log. The retry budget after a lost response is the executor's own default. Each of these choices is listed
 // under "definitions" in the result file, so a reader can see what the baseline is.
-import type { Decision } from "@laisee/core/generated";
+import type { Decision } from "@wally/core/generated";
 import { TIMEOUTS_MS } from "../config";
 import { argmax, type ChoiceAnswer, type ChoiceClient, type ChoiceRequest } from "../judge/choice-client";
 import { BUDGET_FIT_QUESTION, JUDGE_QUESTIONS, PROCEED_CHOICE } from "../judge/questions";

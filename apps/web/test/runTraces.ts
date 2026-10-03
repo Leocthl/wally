@@ -1,7 +1,7 @@
 // Recorded TraceEvent sequences for the Wally screen tests: the offline MockApiClient (instant, FakeClock) plays a
 // booth scenario and every event it emits is kept, so tests fold the same stream the screen folds.
-import { FakeClock } from "@laisee/core/testing";
-import { render as coreRender } from "@laisee/core/explain";
+import { FakeClock } from "@wally/core/testing";
+import { render as coreRender } from "@wally/core/explain";
 import type { Decision, RunOutcome, ScenarioId, TraceEvent } from "../src/api/types";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0Request } from "../src/booth/compile";
