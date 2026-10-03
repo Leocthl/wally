@@ -138,6 +138,16 @@ test("a Try asking card runs a purchase on-device and shows the one-off card", a
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
 });
 
+test("a reload under /wally/ keeps the session: the budget and the card are still there, kept in this page's own storage", async () => {
+  await page.reload();
+  await expect(onDeviceNote(page)).toContainText("On-device mode: recorded answers, nothing leaves your phone");
+  await expect(onDeviceNote(page)).not.toContainText("session ended");
+  await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
+  await expect(page.locator('[data-card-state="USED"]')).toHaveCount(1);
+  expect(await page.evaluate(() => window.localStorage.getItem("wally:session:v1"))).not.toBeNull();
+  expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
+});
+
 test("every screen opens from the mount: the lazy chunks of Wally, Receipts, Proof, Evidence, Seal and Presenter load", async () => {
   // Hash routes only: the document stays /wally/, so each screen's chunk is the proof that relative dynamic imports resolve.
   for (const route of ["wally", "receipts", "proof", "evidence", "seal", "presenter", "budget"]) {
