@@ -309,6 +309,46 @@ describe("timers and close", () => {
     registry.close();
   });
 
+  it("logs a wallet whose tick failed and keeps ticking the others", async () => {
+    vi.useFakeTimers();
+    const errors: string[] = [];
+    const made: Fake[] = [];
+    const ctx = setup({
+      tickMs: 1_000,
+      logger: { info: () => undefined, error: (m) => void errors.push(m) },
+      create: async () => {
+        const visitor = fakeVisitor();
+        made.push(visitor);
+        return made.length === 1 ? { ...visitor, tick: () => Promise.reject(new Error("orchestrator broke")) } : visitor;
+      },
+    });
+    await idOf(ctx.registry);
+    await idOf(ctx.registry);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(made[1]?.ticks()).toBe(1);
+    expect(errors.join("\n")).toContain("tick failed: orchestrator broke");
+    ctx.registry.close();
+  });
+
+  it("turns an unexpected error in its own upkeep into a log line, not an unhandled rejection that ends the process", async () => {
+    vi.useFakeTimers();
+    const errors: string[] = [];
+    const ctx = setup({
+      tickMs: 1_000,
+      logger: {
+        info: (m) => {
+          if (m.includes("dropped")) throw new Error("log sink broke");
+        },
+        error: (m) => void errors.push(m),
+      },
+    });
+    await idOf(ctx.registry);
+    ctx.advance(SESSION_IDLE_TTL_MS);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(errors.join("\n")).toContain("upkeep failed: log sink broke");
+    ctx.registry.close();
+  });
+
   it("clears its timer on close and leaves none behind", async () => {
     vi.useFakeTimers();
     const before = vi.getTimerCount();

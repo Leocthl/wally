@@ -119,7 +119,8 @@ export class SessionRegistry {
     this.#log = opts.logger ?? SILENT_LOGGER;
     const every = opts.tickMs === undefined ? SESSION_TICK_MS : opts.tickMs;
     if (every !== null) {
-      this.#timer = setInterval(() => void this.maintain(), every);
+      // A bug in a timer callback must not become an unhandled rejection, which ends the process mid-demo.
+      this.#timer = setInterval(() => void this.maintain().catch((err: unknown) => this.#log.error(`practice wallets: upkeep failed: ${reason(err)}`)), every);
       this.#timer.unref?.();
     }
   }

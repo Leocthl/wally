@@ -52,7 +52,7 @@ function PracticeCopy({ url, qrSvg, id }: { readonly url: string; readonly qrSvg
     <div className="lan-phone__public" role="group" aria-labelledby={id}>
       <h4 id={id} className="lan-phone__subtitle">{t(UI.lan.publicTitle)}</h4>
       <div className="lan-phone__public-body">
-        <img className="lan-phone__qr lan-phone__qr--small" src={svgDataUrl(qrSvg)} alt={t(UI.lan.publicQrAlt)} width={120} height={120} />
+        <img className="lan-phone__qr lan-phone__qr--small" src={svgDataUrl(qrSvg)} alt={t(UI.lan.publicQrAlt)} width={144} height={144} />
         <div className="lan-phone__text">
           <p className="lan-phone__note">{t(UI.lan.publicNote)}</p>
           <a className="lan-phone__url" href={url} target="_blank" rel="noopener noreferrer">{url}</a>
