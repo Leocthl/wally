@@ -132,7 +132,9 @@ describe("plain is the default", () => {
     expect(text(card(c, "hero"))).toContain("Rules and the card limit already keep spending under the limit. The listing check is what stops trick listings that rules alone let through.");
     const key = card(c, "layers");
     expect([...key.querySelectorAll("dt")].map(text)).toEqual(["Rules only", "Wally", "AI alone"]);
-    expect(text(key)).toContain("Your rules and the one-off card limit, but nobody reads the listing.");
+    // Rules only is the hard rules R1-R8 and R12 with the card limit: no seller check (R9), no listing check (R10).
+    expect(text(key)).toContain("Your budget, what it can buy, the dates and the one-off card limit. No seller check, and nobody reads the listing.");
+    expect(text(key)).toContain("The same, plus a seller check and a check that reads each listing.");
     expect(text(key)).toContain("For reference: an AI model decides");
   });
 

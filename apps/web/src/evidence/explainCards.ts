@@ -1,5 +1,5 @@
-// The sentences under each plain card, from the counts of what each layer did: rules only (the rules and the card limit,
-// no listing check) and Wally (the same plus the listing check). Templates only, EN and zh-HK (drafts for the native
+// The sentences under each plain card, from the counts of what each layer did: rules only (the hard rules R1-R8 and R12
+// with the card limit: no seller check, no listing check) and Wally (the same plus the seller check and the listing check). Templates only, EN and zh-HK (drafts for the native
 // read). A sentence says what the counts say and no more: a zero is always followed by the limit it could still hide, the
 // listing check is credited only where the counts show it adds something, and its cost is said as plainly as its gain.
 import { label, type LabelPair } from "../i18n/label";

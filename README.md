@@ -51,7 +51,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 | `python3 scripts/docs-check.py` | doc caps, F-IDs, style |
 
 ## Honest status
-- **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); what each layer adds: AI alone (our B0 baseline) let 43 of 84 stop cases through, rules only 28, rules plus judge 0 (an upper bound of about 4 in 100 [F96]), at the price of 5 of 66 honest buys blocked against 3; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
+- **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); what each layer adds: AI alone (our B0 baseline) let 43 of 84 stop cases through, rules only (no seller check, no judge) 28, Wally (all rules plus the judge) 0 (an upper bound of about 4 in 100 [F96]), at the price of 5 of 66 honest buys blocked against 3; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
 - **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
 - **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68]. **Photo reader**: right kind of garment in 25 of 29 retailer photos [F68a].
 - **Tests**: over 4,000 automated tests; core line coverage above 95%; exact numbers and the last green CI commit in [F91].

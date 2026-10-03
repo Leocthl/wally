@@ -1,6 +1,6 @@
 // What the plain Evidence cards show, read from one loaded run: a handful of counts for each layer, every one with the
-// chip of the file it came from. The three layers are an AI on its own (B0 in the file), rules only (B1: the rules and
-// the card limit, no listing check) and Wally (B2: the same plus the listing check). Nothing is written here; a count the
+// chip of the file it came from. The three layers are an AI on its own (B0 in the file), rules only (B1: the hard rules R1-R8 and
+// R12 with the card limit, no seller check and no listing check) and Wally (B2: the same plus both). Nothing is written here; a count the
 // file does not carry is absent and its row, sentence or card is left out (fail closed: no chip or no k/n means no
 // figure). The same loaded data feeds the developer view, so the two views never differ.
 import { chipSampleSize, type FileChip } from "./chip";
