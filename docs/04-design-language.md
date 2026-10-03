@@ -3,7 +3,7 @@
 ## Look
 - **Cool wallet** (D14): light fintech UI, blue primary, teal accent, a wallet character. Red and orange mean stop or error only; amber means Needs your OK only. Colour never works alone: icon and words too.
 - **Guards**: no HKT, Tap & Go or Mastercard logos or lookalikes; one gradient, on the budget card and the one-off card; no glass (`backdrop-filter`); no emoji. About carries "Prototype. Not affiliated with HKT, Tap & Go or Mastercard."
-- **Warm palette**: `data-palette="warm"` swaps blue for orange to compare with local wallet apps. Not shipped.
+- **Warm palette** (`data-palette="warm"`, orange for blue): not shipped.
 
 ## Where it lives
 | What | Path under `apps/web/src/` |
@@ -46,9 +46,9 @@
 ## Components
 - **Primitives** (`ui/`): Button, Tag, Card, List, ProgressBar, Ring, TextField, Switch, TopBar, BottomTabBar with a raised Ask button, Segmented, Sheet (follows the finger), Dialog, Steps, Toast, RollingMoney (NumberFlow, budget amount only).
 - **Figures** go through `Num` with a provenance chip; no bare numbers, tests count them.
-- **Ask sheet**: a typed field, "Try to trick Wally" (listing text, read as data), Try asking shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
+- **Ask sheet**: a typed field, "Try to trick Wally" (listing text, read as data), scenario shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
 - **Libraries**: NumberFlow rolls the budget amount only. motion, base-ui and Sonner were rejected: CSS covers every motion and the primitives already trap focus.
-- **Screens**: Budget (hero, rule tags, one-off cards, Recent, Try asking, Manage this budget); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
+- **Screens**: Budget (hero with rule tags, What do you need?, Ideas for you, one-off cards, Recent, Demo scenarios (for judges), Manage this budget); First run (Hello, Your taste, Your first budget, a tour; once per browser, `?booth=1` skips it); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
 
 ## Vocabulary
 | Engine | The app says | zh-HK (draft) |
@@ -71,7 +71,7 @@
 - **Touch**: targets at least 44 px; focus ring 3 px `--c-focus`; text inputs 16 px; stop banners `role="alert"`; countdown announced at start and end.
 
 ## Display modes
-- **Plain** is the default on every host: reasons in words, no ids, hashes, intervals or codes. **Developer mode** shows rule ids, hashes, intervals and raw codes.
+- **Plain** is the default on every host: reasons in words. **Developer mode** shows rule ids, hashes, intervals and raw codes.
 - **Switch**: About > "Show technical details", kept as `wally:mode`. `?dev=1` or `?dev=0` forces one load and stores nothing. The offline checker page reads the same key.
 
 ## Variants
@@ -81,4 +81,4 @@
 - zh-HK lines, the plain views included, are drafts marked NEEDS-REVIEW; no native read yet (C-12, C-19).
 - Noto Sans HK is not bundled. No Tap & Go reference screenshots were supplied; the palette comparison with sponsor pages is owed before the freeze [F41].
 - Not run on a physical phone. Voice needs the browser's online speech service, so it is outside the offline claim.
-- Legacy token aliases (`--paper`, `--vermilion`) remain for old stylesheets.
+- Legacy aliases `--paper`, `--vermilion` remain.

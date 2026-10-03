@@ -6,7 +6,7 @@
 - **Rota**: one person at the booth throughout [F14].
 
 ## Booth: 3-minute script [F45]
-| Time [F45] | Driver (Budget, Try asking) | Talker (words in 07) | Moment |
+| Time [F45] | Driver (Budget, Demo scenarios) | Talker (words in 07) | Moment |
 |---|---|---|---|
 | 0:00-0:25 | Budget open, "Hi, I'm Wally" | Hook; rail SIMULATED | none |
 | 0:25-1:05 | Shop charges more (one tap) | Rules signed, R1 verified. Wally picks, logged. One-off card for HK$259, HK$541 left [F21]. Overshoot declined, exact charge authorised, replay declined | DM1, DM2 |
@@ -15,18 +15,18 @@
 | 2:40-3:00 | About | Limits and the ask | DM9 |
 
 - **Said aloud**: Laya judges, Qwen plans; neither reads raw pages or does arithmetic; the rules and the rail limit use no model.
-- **Plain words** are the default; About > "Show technical details" or `?dev=1` shows ids and hashes. A changed copy of the receipts shows a banner on every load until Put it back.
+- **Plain words** by default; `?dev=1` shows ids and hashes. A changed receipt copy shows a banner until Put it back.
 
 ## Hands-on station
-- **After 3:00** [F45] the judge drives; the Driver points, the Talker answers.
-- **Try asking**: every scenario is one tap and buys what it needs first.
+- **After 3:00** [F45] the judge drives; the Talker answers.
+- **Demo scenarios** (Budget, for judges): every scenario is one tap and buys what it needs first.
 - **Ask Wally**: type or speak a request (English, Chinese, Cantonese); the rules decide; a repeat buys nothing.
 - **Try to trick Wally**: text reaches the judge only; expect Stopped before paying (`R10.injection`); padded or Chinese text escalates [F26, F104].
-- **See cheaper options** after the shipping stop: Wally replans, the new cart meets the judge and rules again.
+- **See cheaper options** after the shipping stop: Wally replans and the new cart is checked again.
 - **Needs your OK** (a seller Wally cannot verify): Approve mints; No thanks or 60 s of silence [F31] stops it (DMR2); a fixed rule never yields.
 - **Cancel this budget** (DMR1): Manage this budget, hold, confirm. Unused cards stop; receipts stay.
-- **Mum's budget**: Try asking, or Seal then Whose money. Her HK$1,000 caps a HK$800 budget; HK$1,500 is refused `EXCEEDS_PARENT` [F93].
-- **Phones**: `pnpm demo:lan`; About or Presenter shows a QR [F92].
+- **Mum's budget**: Demo scenarios, or Seal then Whose money. Her HK$1,000 caps a HK$800 budget; HK$1,500 is refused `EXCEEDS_PARENT` [F93].
+- **Phones**: About or Presenter shows a QR [F92].
 - **Fail closed**: the worst case is Stopped or Needs your OK. **Reset** after every judge.
 
 ## Finalist run (top 8): 5 + 2 min [F14, F42]
@@ -47,10 +47,10 @@
 
 ## Pre-demo checklist
 - [ ] `services/laya/serve.sh`, `services/qwen/serve.sh`, one warm-up each (slow first call [F26])
-- [ ] `pnpm demo` (`pnpm demo:lan` for phones); About names the planner.
+- [ ] `pnpm demo`, open `/?booth=1` (no first run; a fresh phone taps Skip, Skip tour). About names the planner.
 - [ ] `pnpm demo:reset`: HK$800 [F20], no cards, SIMULATED note on every screen
 - [ ] Network off: the booth runs. Stop Laya once, see Needs your OK (`R10.unavailable`), restart, warm up
-- [ ] LAN: phones reach the Mac (else a hotspot); firewall Allow once
+- [ ] LAN (`pnpm demo:lan`): phones reach the Mac (else a hotspot); firewall Allow once
 - [ ] On power; notifications off; mirrored
 - [ ] Video on laptop and phone; `?api=local` page ready; four rehearsals [F41]; submit before Sun 13:00 HKT [F16, F18]
 
@@ -63,5 +63,5 @@
 | Server or UI bug | Reset; else the on-device page; else the video | Here is the recorded run. |
 
 ## Reset
-- `pnpm demo:reset` or About, Start the demo over: HK$800 [F20], no cards, new keys, step 0.
+- `pnpm demo:reset` or About, Start the demo over: HK$800 [F20], no cards, new keys, step 0; the profile is cleared.
 - **REAL** (Presenter) replays the one OBSERVED decline [F40], read-only; disabled until `data/real-card-test.md` holds one. If H12 fires [F41], say "sim only".
