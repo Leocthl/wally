@@ -109,6 +109,58 @@ describe("Skip on Check and lock in", () => {
   });
 });
 
+describe("a typed amount above what one card can hold", () => {
+  const typeAmount = async (user: Awaited<ReturnType<typeof toBudget>>["user"], text: string) => {
+    await user.click(await screen.findByRole("radio", { name: "Custom" }));
+    const field = await screen.findByRole("textbox", { name: /^Amount/ });
+    await user.type(field, text);
+    return field;
+  };
+
+  it("is cut to HK$2,000 with a note, then locked in at that, instead of the page falling over", async () => {
+    const { api, user } = await toBudget();
+    await typeAmount(user, "9007199254740993");
+    expect(document.querySelector("[data-amount-cut]")?.textContent).toMatch(/A budget can be HK\$2,000 at most, the limit of one card, so the amount is set to that\./);
+    await user.click(screen.getByRole("button", { name: "Review budget" }));
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
+    expect(document.querySelector(".seal-summary")).toHaveTextContent("HK$2,000");
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
+    expect((await api.snapshot()).packet?.budget_minor).toBe(200_000);
+  });
+
+  it("says nothing at HK$2,000 and below, and the note goes when the number comes back down", async () => {
+    const { user } = await toBudget();
+    const field = await typeAmount(user, "2000");
+    expect(document.querySelector("[data-amount-cut]")).toBeNull();
+    await user.type(field, "1");
+    expect(document.querySelector("[data-amount-cut]")).not.toBeNull();
+    await user.type(field, "{Backspace}");
+    expect(document.querySelector("[data-amount-cut]")).toBeNull();
+  });
+
+  it("still names a typo as one", async () => {
+    const { user } = await toBudget();
+    await typeAmount(user, "12abc");
+    await user.click(screen.getByRole("button", { name: "Review budget" }));
+    expect(await screen.findByText("Use digits only, with up to two decimals.")).toBeInTheDocument();
+    expect(document.querySelector("[data-amount-cut]")).toBeNull();
+  });
+
+  it("is worded in 繁體 too", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(screen.getByRole("radio", { name: "繁體中文" }));
+    await user.click(await screen.findByRole("button", { name: "下一步" }));
+    await screen.findByRole("heading", { level: 1, name: "你鍾意咩風格？" });
+    await user.click(screen.getByRole("button", { name: "下一步" }));
+    await screen.findByRole("heading", { level: 1, name: "你的第一個預算" });
+    await user.click(await screen.findByRole("radio", { name: "自訂" }));
+    await user.type(await screen.findByRole("textbox", { name: /^金額/ }), "5000");
+    expect(document.querySelector("[data-amount-cut]")?.textContent).toMatch(/一個預算最多 HK\$2,000，即一張卡嘅上限，所以金額已設為上限。/);
+  });
+});
+
 describe("while the booth is still answering", () => {
   it("the budget step shows Back, so the person is not stuck on a skeleton", async () => {
     class NeverAnswers extends MockApiClient {

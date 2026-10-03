@@ -385,6 +385,7 @@ const SHELL = {
   "seal.share": label("Most per buy, share of what's left", "每次最多佔剩餘的百分比"), // NEEDS-REVIEW
   "seal.errAmount": label("Enter an amount above zero.", "請輸入大於零的金額。"), // NEEDS-REVIEW
   "seal.errFormat": label("Use digits only, with up to two decimals.", "只可輸入數字，最多兩個小數位。"), // NEEDS-REVIEW
+  "seal.errTooBig": label("That amount is too large.", "金額太大。"), // NEEDS-REVIEW
   "seal.errPercent": label("Enter a whole percent between one and a hundred.", "請輸入一至一百之間的整數百分比。"), // NEEDS-REVIEW
   "seal.errCategory": label("Pick at least one thing Wally can buy.", "請最少揀一樣 Wally 可以買的東西。"), // NEEDS-REVIEW
   "seal.errUntil": label("Pick today or a later date.", "請揀今日或之後的日期。"), // NEEDS-REVIEW

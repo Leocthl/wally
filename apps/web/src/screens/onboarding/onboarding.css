@@ -19,8 +19,10 @@
   .onb { border-inline: 1px solid var(--c-line); box-shadow: var(--shadow-2); }
 }
 
-/* Top: where we are, and the way out. */
+/* Top: where we are, and the way out. It is after the step in the page (so Skip is not the last stop when the title has focus,
+   and not the first either) and first on the screen. */
 .onb-top {
+  order: -2;
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
@@ -37,7 +39,7 @@
 .onb-skip { flex: none; margin-right: calc(-1 * var(--sp-2)); }
 /* Under the Skip link while Skip would seal the ready-made budget: what it does, said before the tap. In the flow, not sticky, so
    it costs the short phones nothing once the person has scrolled on. */
-.onb-skiphint { margin: 0; padding: 0 max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left)); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: right; }
+.onb-skiphint { order: -2; margin: 0; padding: 0 max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left)); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: right; }
 .onb-skiphint .fig-chip { margin-inline-start: var(--sp-2); vertical-align: middle; }
 
 /* Main column. */

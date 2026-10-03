@@ -35,7 +35,7 @@ export interface RulesForm {
 }
 
 /** Keys of i18n/ui.ts; the form screen shows UI[key]. */
-export type ErrorKey = "seal.errAmount" | "seal.errFormat" | "seal.errPercent" | "seal.errCategory" | "seal.errUntil" | "seal.errDate";
+export type ErrorKey = "seal.errAmount" | "seal.errFormat" | "seal.errTooBig" | "seal.errPercent" | "seal.errCategory" | "seal.errUntil" | "seal.errDate";
 export type FieldName = "amount" | "categories" | "until" | "askAbove" | "cap" | "share";
 export type FormErrors = Partial<Record<FieldName, ErrorKey>>;
 
@@ -50,7 +50,7 @@ export function endOfHkDay(day: string): string {
   return new Date(start + DAY_MS - 1000).toISOString().replace(".000Z", "Z");
 }
 
-function cleanMoney(text: string): string {
+export function cleanMoney(text: string): string {
   return text.replace(/[\s,]/g, "").replace(/^HK\$/i, "");
 }
 
@@ -120,10 +120,15 @@ export function formFromRules(rules: CompiledRules, validUntil: string): RulesFo
   };
 }
 
+/** Digits with up to two decimals: an amount in shape, whatever its size. */
+const AMOUNT_SHAPE = /^\d+(\.\d{1,2})?$/;
+
 function amountError(text: string): ErrorKey | undefined {
-  if (cleanMoney(text) === "") return "seal.errAmount";
+  const clean = cleanMoney(text);
+  if (clean === "") return "seal.errAmount";
   const minor = moneyOf(text);
-  if (minor === null) return "seal.errFormat";
+  // Null for text in the shape of an amount is an amount too large to hold, not a typo.
+  if (minor === null) return AMOUNT_SHAPE.test(clean) ? "seal.errTooBig" : "seal.errFormat";
   return minor > 0 ? undefined : "seal.errAmount";
 }
 

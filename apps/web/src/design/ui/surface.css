@@ -80,9 +80,9 @@ a.w-row__hit:active, button.w-row__hit:active { background: var(--c-surface-sunk
 .w-row__leading--stop { background: var(--c-stop-tint); color: var(--c-stop-ink); }
 .w-row__leading--warn { background: var(--c-warn-tint); color: var(--c-warn-ink); }
 .w-row__leading--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
-.w-row__text { display: grid; flex: 1; min-width: 0; gap: 0.125rem; }
+.w-row__text { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; gap: 0.125rem; }
 .w-row__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
-.w-row__subtitle { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.w-row__subtitle { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); overflow-wrap: anywhere; }
 .w-row__trailing { flex: none; text-align: right; font-variant-numeric: var(--num); font-weight: var(--weight-semibold); }
 .w-row__chevron { flex: none; color: var(--c-ink-muted); }
 

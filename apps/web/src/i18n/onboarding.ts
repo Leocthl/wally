@@ -66,6 +66,7 @@ export const OB = {
     pickDate: label("Pick a date", "揀日期"), // NEEDS-REVIEW
     ends: label("Ends {until}", "{until} 結束"), // NEEDS-REVIEW
     cutShort: label("A budget can run for a month at most, so the date is set to the latest day.", "一個預算最長維持一個月，所以日期已設為最遲可揀嘅一日。"), // NEEDS-REVIEW
+    cutShortAmount: label("A budget can be {max} at most, the limit of one card, so the amount is set to that.", "一個預算最多 {max}，即一張卡嘅上限，所以金額已設為上限。"), // NEEDS-REVIEW
     review: label("Review budget", "檢查預算"), // NEEDS-REVIEW
     loading: label("Getting your budget ready", "正在準備你的預算"), // NEEDS-REVIEW
     readyTitle: label("Your budget is ready", "你的預算準備好了"), // NEEDS-REVIEW

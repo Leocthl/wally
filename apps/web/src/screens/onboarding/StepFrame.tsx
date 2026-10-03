@@ -86,13 +86,6 @@ export function StepFrame({ step, wally, big = false, title, dir, skip, children
   }, []);
   return (
     <div className={cx("onb", className)} lang={locale} data-onboarding data-step={step} data-dir={dir}>
-      <header className="onb-top">
-        <Progress at={STEP_ORDER.indexOf(step) + 1} />
-        <Button variant="ghost" size="sm" className="onb-skip" loading={skip.busy} onClick={skip.onSkip} aria-describedby={skip.readyMade ? NOTE_ID : undefined} data-skip>
-          {t(OB.skip)}
-        </Button>
-      </header>
-      {skip.readyMade ? <SkipNote id={NOTE_ID} /> : null}
       <ConnectionBanners />
       <main className="onb-main">
         <div className="onb-hero" data-big={big || undefined}>
@@ -101,6 +94,15 @@ export function StepFrame({ step, wally, big = false, title, dir, skip, children
         </div>
         {children}
       </main>
+      {/* The progress bar and Skip are the top bar on the screen (CSS order), but come after the step's own controls in the page:
+          the title takes focus on arrival, so Tab goes through the step first, then Skip, then Back and Next. */}
+      <header className="onb-top">
+        <Progress at={STEP_ORDER.indexOf(step) + 1} />
+        <Button variant="ghost" size="sm" className="onb-skip" loading={skip.busy} onClick={skip.onSkip} aria-describedby={skip.readyMade ? NOTE_ID : undefined} data-skip>
+          {t(OB.skip)}
+        </Button>
+      </header>
+      {skip.readyMade ? <SkipNote id={NOTE_ID} /> : null}
       <div className="onb-actions">{actions}</div>
     </div>
   );
