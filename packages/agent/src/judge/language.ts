@@ -3,8 +3,9 @@
 // [F36], so every one of them was stopped as "the listing tries to give orders": a false accusation of the seller.
 // A listing whose letters are at least CJK_SHARE_PERCENT CJK is therefore not sent to the model at all. The adapter
 // answers ERROR with the language marker (@wally/core/ports), R10 escalates it (R10.unavailable, I5) and the
-// explanation says the checker reads English best. That can only turn an approval into a question for the shopper
-// (I3); it never approves anything.
+// explanation says the checker reads English best. It never approves anything (I3): it turns an approval, or a judge
+// DENY that no answer could override, into a question the shopper must answer with a signed APPROVE. A listing's author
+// can therefore choose "ask" over "deny" by adding enough CJK letters; the shopper still decides.
 //
 // What counts as CJK: Han, Hiragana, Katakana, Hangul and Bopomofo, by Script_Extensions so that the kana prolonged
 // sound mark and the like count with their script. Other non-Latin scripts (Cyrillic, Arabic, Thai) are NOT covered:
