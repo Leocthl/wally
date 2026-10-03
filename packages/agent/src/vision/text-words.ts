@@ -13,21 +13,22 @@ export interface Term<T> {
 }
 
 export const KIND_TERMS: readonly Term<Kind>[] = [
-  { value: "tee", words: ["t-shirt", "t shirt", "tshirt", "tee shirt", "tee", "t恤", "tee恤", "短袖", "tank top", "singlet", "背心"] },
+  { value: "tee", words: ["t-shirt", "t shirt", "tshirt", "tee shirt", "tee", "t恤", "tee恤", "t裇", "tee裇", "體恤", "短袖", "tank top", "singlet", "背心"] },
   { value: "tee", words: ["top", "衫"], weak: true },
-  { value: "shirt", words: ["shirt", "blouse", "button-up", "button up", "button-down", "dress shirt", "恤衫", "襯衫", "衬衫", "襯衣"] },
-  { value: "polo", words: ["polo", "polo衫"] },
-  { value: "sweater", words: ["sweater", "jumper", "pullover", "cardigan", "knitwear", "knit", "sweatshirt", "crewneck", "針織", "針織衫", "冷衫", "毛衣", "毛衫", "開衫"] },
-  { value: "hoodie", words: ["hoodie", "hoody", "hooded", "hooded sweatshirt", "衛衣", "卫衣", "帽衫", "連帽", "連帽衛衣"] },
-  { value: "jacket", words: ["jacket", "coat", "blazer", "windbreaker", "bomber", "parka", "outerwear", "外套", "夾克", "夹克", "褸", "大褸", "風褸", "西裝褸", "西裝外套"] },
+  { value: "shirt", words: ["shirt", "blouse", "button-up", "button up", "button-down", "dress shirt", "恤衫", "裇衫", "襯衫", "衬衫", "襯衣"] },
+  { value: "shirt", words: ["裇"], weak: true },
+  { value: "polo", words: ["polo", "polo shirt", "polo衫", "polo 衫", "polo裇", "polo 裇"] },
+  { value: "sweater", words: ["sweater", "jumper", "pullover", "cardigan", "knitwear", "knit", "sweatshirt", "sweat shirt", "crewneck", "針織", "針織衫", "冷衫", "毛衣", "毛衫", "開衫"] },
+  { value: "hoodie", words: ["hoodie", "hoody", "hoddie", "hodie", "hooded", "hooded sweatshirt", "衛衣", "卫衣", "帽衫", "連帽", "連帽衛衣"] },
+  { value: "jacket", words: ["jacket", "jeans jacket", "coat", "blazer", "windbreaker", "bomber", "parka", "puffer", "puffa", "anorak", "raincoat", "overcoat", "outerwear", "外套", "夾克", "夹克", "褸", "大褸", "風褸", "西裝褸", "西裝外套"] },
   { value: "jeans", words: ["jeans", "denim pants", "denim trousers", "牛仔褲", "牛仔裤", "丹寧褲"] },
-  { value: "trousers", words: ["trousers", "pants", "chinos", "slacks", "dress pants", "sweatpants", "sweat pants", "joggers", "cargo pants", "cargos", "長褲", "长裤", "西褲", "西裤", "運動褲", "休閒褲"] },
+  { value: "trousers", words: ["trousers", "trouser", "pants", "pant", "chinos", "slacks", "dress pants", "sweatpants", "sweat pants", "joggers", "jogger", "cargo pants", "cargos", "長褲", "长裤", "西褲", "西裤", "運動褲", "休閒褲"] },
   { value: "trousers", words: ["褲"], weak: true },
   { value: "shorts", words: ["shorts", "短褲", "短裤", "熱褲", "五分褲"] },
   { value: "dress", words: ["dress", "gown", "連身裙", "連衣裙", "连衣裙", "洋裝", "件裙"] },
   { value: "dress", words: ["裙"], weak: true },
   { value: "skirt", words: ["skirt", "半身裙", "短裙", "長裙", "百褶裙", "條裙"] },
-  { value: "sneakers", words: ["sneakers", "sneaker", "trainers", "kicks", "runners", "running shoes", "sports shoes", "dress shoes", "shoes", "shoe", "波鞋", "運動鞋", "运动鞋", "球鞋", "布鞋", "皮鞋", "鞋仔"] },
+  { value: "sneakers", words: ["sneakers", "sneaker", "sneekers", "snekers", "trainers", "trainer", "kicks", "runners", "runner", "footwear", "running shoes", "sports shoes", "dress shoes", "shoes", "shoe", "波鞋", "運動鞋", "运动鞋", "球鞋", "布鞋", "皮鞋", "鞋仔"] },
   { value: "sneakers", words: ["鞋"], weak: true },
   { value: "boots", words: ["boots", "boot", "chelsea boots", "靴", "長靴", "短靴", "馬丁靴"] },
   { value: "socks", words: ["socks", "sock", "ankle socks", "crew socks", "襪", "襪子", "短襪", "長襪", "袜", "袜子"] },
@@ -41,7 +42,7 @@ export const COLOR_TERMS: readonly Term<Color>[] = [
   { value: "grey", words: ["grey", "gray", "charcoal", "silver", "灰色", "灰", "銀灰", "銀色"] },
   { value: "navy", words: ["navy blue", "navy", "dark blue", "midnight blue", "深藍", "深藍色", "藏青", "藏藍", "海軍藍", "海軍"] },
   { value: "blue", words: ["blue", "藍色", "蓝色", "藍", "蓝"] },
-  { value: "light_blue", words: ["light blue", "sky blue", "baby blue", "pale blue", "淺藍", "淺藍色", "天藍", "水藍"] },
+  { value: "light_blue", words: ["light blue", "sky blue", "baby blue", "pale blue", "淺藍", "淺藍色", "天藍", "水藍", "粉藍", "粉藍色"] },
   { value: "green", words: ["green", "綠色", "绿色", "綠", "绿"] },
   { value: "olive", words: ["olive", "army green", "橄欖綠", "橄欖", "軍綠"] },
   { value: "red", words: ["red", "maroon", "burgundy", "wine red", "紅色", "红色", "酒紅", "紅", "红"] },
@@ -52,7 +53,7 @@ export const COLOR_TERMS: readonly Term<Color>[] = [
   { value: "brown", words: ["brown", "啡色", "啡", "棕色", "棕", "咖啡色"] },
   { value: "beige", words: ["beige", "khaki", "tan", "camel", "米色", "卡其", "卡其色", "杏色"] },
   { value: "cream", words: ["cream", "off-white", "off white", "ivory", "奶白", "奶白色", "米白", "米白色", "象牙白"] },
-  { value: "denim", words: ["denim", "牛仔藍"] },
+  { value: "denim", words: ["denim", "jean", "牛仔藍", "牛仔"] },
 ];
 
 export const PATTERN_TERMS: readonly Term<Pattern>[] = [
@@ -85,6 +86,8 @@ export const UNSOLD_WORDS: readonly string[] = [
   "watch", "手錶", "手表", "sunglasses", "太陽眼鏡", "wallet", "necklace", "bracelet", "ring", "手鏈", "頸鏈",
   "hat", "cap", "beanie", "scarf", "gloves", "belt", "tie", "圍巾", "围巾", "手套", "皮帶", "帽",
   "underwear", "boxers", "bra", "pyjamas", "pajamas", "swimsuit", "bikini", "內褲", "内裤", "泳衣", "睡衣",
-  "sandals", "slippers", "heels", "loafers", "flip flops", "涼鞋", "拖鞋", "高跟鞋",
+  "sandals", "slippers", "heels", "loafers", "flip flops", "flip-flops", "涼鞋", "拖鞋", "高跟鞋",
+  "leggings", "tights", "swimming trunks", "swim trunks", "trunks", "tracksuit", "suit", "tuxedo", "西裝",
+  "pizza", "food", "coffee", "perfume", "makeup", "umbrella", "ps5", "playstation", "xbox", "nintendo", "bitcoin", "crypto", "咖啡", "top up", "top-up",
   "gift card", "giftcard", "voucher", "coupon", "禮品卡", "礼品卡", "現金券", "優惠券",
 ];

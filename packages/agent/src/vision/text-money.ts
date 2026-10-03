@@ -41,9 +41,9 @@ export function parseChineseNumber(text: string): number | null {
 const NUMBER = String.raw`(?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)(?!\d|\.\d|e[+-]?\d)`;
 const AMOUNT = String.raw`(${NUMBER}|[零〇一二兩两三四五六七八九十百千]+)\s*(k(?![a-z]))?`;
 const MONEY_MARK = String.raw`(?:hk\s*\$|hkd|\$|港幣|港元)`;
-const BEFORE_EN = String.raw`(?:under|below|beneath|less than|lower than|up to|upto|at most|maximum|max|within|no more than|not more than|cheaper than|budget(?: of| is| around)?|around|about)`;
-const BEFORE_ZH = "(?:預算|最多|至多|不超過|唔超過|唔好貴過|唔好超過|不要超過|低於|少於|少過|不多於|上限|限額)";
-const AFTER = String.raw`(?:or less|or under|or below|and under|and below|max|tops|以下|以內|之內|或以下|或以內|封頂|為限|內)`;
+const BEFORE_EN = String.raw`(?:under|below|beneath|less than|lower than|up to|upto|at most|maximum|max|within|no more than|not more than|not over|nothing over|not above|nothing above|cheaper than|budget(?: of| is| around)?|around|about)`;
+const BEFORE_ZH = "(?:預算|最多|至多|不超過|唔超過|唔好貴過|唔好超過|唔好over|唔好多過|唔好高過|唔好過|平過|不要超過|低於|少於|少過|不多於|上限|限額)";
+const AFTER = String.raw`(?:or less|or under|or below|or lower|or cheaper|and under|and below|and lower|at most|max|tops|以下|以內|之內|或以下|或以內|封頂|為限|內)`;
 
 /** The limit word first: "under 400", "under HK$150", "預算一百五十", "≤ 300". */
 const LIMIT_FIRST = new RegExp(String.raw`(?:(?:^|[^a-z])${BEFORE_EN}|${BEFORE_ZH}|<=|<|≤)\s*${MONEY_MARK}?\s*${AMOUNT}`, "u");
@@ -51,7 +51,7 @@ const LIMIT_FIRST = new RegExp(String.raw`(?:(?:^|[^a-z])${BEFORE_EN}|${BEFORE_Z
 const LIMIT_AFTER = new RegExp(String.raw`${MONEY_MARK}?\s*${AMOUNT}\s*(?:${MONEY_MARK}|蚊|元|塊|dollars?|bucks)?\s*${AFTER}`, "u");
 /** An amount with a currency mark and nothing else: "tee $120", "HK$99", "250蚊". */
 const BARE_MARKED = new RegExp(String.raw`${MONEY_MARK}\s*${AMOUNT}`, "u");
-const BARE_AFTER_MARK = new RegExp(String.raw`${AMOUNT}\s*(?:${MONEY_MARK}|蚊|元|塊|dollars?|bucks)`, "u");
+const BARE_AFTER_MARK = new RegExp(String.raw`${AMOUNT}\s*(?:${MONEY_MARK}|蚊|元|塊|hk dollars?|hong kong dollars?|dollars?|bucks)`, "u");
 
 /** Whole dollars from the captured number and its optional k, or null when it is not a usable amount. */
 function dollars(raw: string | undefined, kilo: string | undefined): number | null {
