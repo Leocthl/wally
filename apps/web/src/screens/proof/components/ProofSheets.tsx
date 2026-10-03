@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import type { ApiClient } from "../../../api/types";
 import { UI } from "../../../i18n/ui";
+import { isNative } from "../../../pwa/native";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
 import { Sheet } from "../../../ui/Overlay";
@@ -11,8 +12,18 @@ import { PLAIN } from "../plainStrings";
 const P = UI.proof;
 export const VERIFIER_HREF = "/verifier/";
 
+/**
+ * Where "Open the offline checker" goes, or undefined when there is no such page. The booth server and the static site
+ * serve the checker; the iOS and Android shells do not bundle it, and a link there opens a blank page with no way back.
+ * Inside a shell the screen already checks the receipts on the phone, so the link is left out.
+ */
+export function verifierHref(): string | undefined {
+  return isNative() ? undefined : VERIFIER_HREF;
+}
+
 export function HowSheet({ open, onClose }: { readonly open: boolean; readonly onClose: () => void }): ReactElement {
   const { t } = useLocale();
+  const checker = verifierHref();
   const parts = [
     [P.howChainTitle, P.howChainBody, "list"],
     [P.howSignTitle, P.howSignBody, "shieldCheck"],
@@ -32,11 +43,15 @@ export function HowSheet({ open, onClose }: { readonly open: boolean; readonly o
             </div>
           </section>
         ))}
-        <p className="pf-how__yourself">{t(P.howYourself)}</p>
-        <a className="w-btn w-btn--secondary w-btn--md w-btn--block" href={VERIFIER_HREF}>
-          <span className="w-btn__icon"><Icon name="shieldCheck" size={20} /></span>
-          <span className="w-btn__label">{t(P.openVerifier)}</span>
-        </a>
+        {checker === undefined ? null : (
+          <>
+            <p className="pf-how__yourself">{t(P.howYourself)}</p>
+            <a className="w-btn w-btn--secondary w-btn--md w-btn--block" href={checker}>
+              <span className="w-btn__icon"><Icon name="shieldCheck" size={20} /></span>
+              <span className="w-btn__label">{t(P.openVerifier)}</span>
+            </a>
+          </>
+        )}
       </div>
     </Sheet>
   );

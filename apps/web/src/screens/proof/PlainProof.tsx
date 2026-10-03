@@ -17,7 +17,7 @@ import { PlainHowSheet } from "./components/PlainSheets";
 import { PlainStatusCard } from "./components/PlainStatusCard";
 import { PlainTimeline } from "./components/PlainTimeline";
 import { ProofFooter, demoShortcut } from "./components/ProofFooter";
-import { ExportSheet, exporterOf, VERIFIER_HREF } from "./components/ProofSheets";
+import { ExportSheet, exporterOf, verifierHref } from "./components/ProofSheets";
 import { TamperedBanner } from "./components/TamperedBanner";
 import { PLAIN } from "./plainStrings";
 import { useProofCheck } from "./useProofCheck";
@@ -34,6 +34,7 @@ export function PlainProof(): ReactElement {
   const [how, setHow] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const exporter = useMemo(() => exporterOf(api), [api]);
+  const checker = verifierHref();
   const log = state.log;
 
   return (
@@ -52,7 +53,7 @@ export function PlainProof(): ReactElement {
       )}
       <List inset className="pf-links" label={t(P.title)}>
         <ListRow leading={<Icon name="info" />} title={t(P.how)} chevron onClick={() => setHow(true)} />
-        <ListRow leading={<Icon name="shieldCheck" />} title={t(PLAIN.openChecker)} chevron href={VERIFIER_HREF} />
+        {checker === undefined ? null : <ListRow leading={<Icon name="shieldCheck" />} title={t(PLAIN.openChecker)} chevron href={checker} />}
         {exporter ? <ListRow leading={<Icon name="download" />} title={t(PLAIN.saveCopy)} chevron onClick={() => setExportOpen(true)} /> : null}
         <ListRow leading={<Icon name="sparkle" />} title={t(P.whyTrust)} chevron href="#/evidence" />
       </List>

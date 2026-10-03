@@ -13,7 +13,7 @@ import { useLocale } from "../../ui/locale";
 import { TopBar } from "../../ui/Nav";
 import { Card, List, ListRow } from "../../ui/Surface";
 import { ProofFooter, demoShortcut } from "./components/ProofFooter";
-import { ExportSheet, exporterOf, HowSheet, VERIFIER_HREF } from "./components/ProofSheets";
+import { ExportSheet, exporterOf, HowSheet, verifierHref } from "./components/ProofSheets";
 import { TamperedBanner } from "./components/TamperedBanner";
 import { VerifyCard, type ProofStatus } from "./components/VerifyCard";
 import "./proof.css";
@@ -31,6 +31,7 @@ export function DeveloperProof(): ReactElement {
   const [how, setHow] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const exporter = useMemo(() => exporterOf(api), [api]);
+  const checker = verifierHref();
   const log = state.log;
   const tampered = log.tampered;
 
@@ -90,7 +91,7 @@ export function DeveloperProof(): ReactElement {
       )}
       <List inset className="pf-links" label={t(P.title)}>
         <ListRow leading={<Icon name="info" />} title={t(P.how)} chevron onClick={() => setHow(true)} />
-        <ListRow leading={<Icon name="shieldCheck" />} title={t(P.openVerifier)} chevron href={VERIFIER_HREF} />
+        {checker === undefined ? null : <ListRow leading={<Icon name="shieldCheck" />} title={t(P.openVerifier)} chevron href={checker} />}
         {exporter ? <ListRow leading={<Icon name="download" />} title={t(P.exportReceipts)} chevron onClick={() => setExportOpen(true)} /> : null}
         <ListRow leading={<Icon name="sparkle" />} title={t(P.whyTrust)} chevron href="#/evidence" />
       </List>

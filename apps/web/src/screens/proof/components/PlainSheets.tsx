@@ -7,12 +7,13 @@ import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
 import { Sheet } from "../../../ui/Overlay";
 import { PLAIN } from "../plainStrings";
-import { VERIFIER_HREF } from "./ProofSheets";
+import { verifierHref } from "./ProofSheets";
 
 const P = UI.proof;
 
 export function PlainHowSheet({ open, onClose }: { readonly open: boolean; readonly onClose: () => void }): ReactElement {
   const { t } = useLocale();
+  const checker = verifierHref();
   const parts = [
     [PLAIN.how.lockTitle, PLAIN.how.lockBody, "list"],
     [PLAIN.how.signTitle, PLAIN.how.signBody, "shieldCheck"],
@@ -31,11 +32,15 @@ export function PlainHowSheet({ open, onClose }: { readonly open: boolean; reado
             </div>
           </section>
         ))}
-        <p className="pf-how__yourself">{t(PLAIN.how.yourself)}</p>
-        <a className="w-btn w-btn--secondary w-btn--md w-btn--block" href={VERIFIER_HREF}>
-          <span className="w-btn__icon"><Icon name="shieldCheck" size={20} /></span>
-          <span className="w-btn__label">{t(PLAIN.openChecker)}</span>
-        </a>
+        {checker === undefined ? null : (
+          <>
+            <p className="pf-how__yourself">{t(PLAIN.how.yourself)}</p>
+            <a className="w-btn w-btn--secondary w-btn--md w-btn--block" href={checker}>
+              <span className="w-btn__icon"><Icon name="shieldCheck" size={20} /></span>
+              <span className="w-btn__label">{t(PLAIN.openChecker)}</span>
+            </a>
+          </>
+        )}
       </div>
     </Sheet>
   );

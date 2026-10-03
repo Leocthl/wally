@@ -68,6 +68,7 @@ xcodebuild -exportArchive -archivePath <dir>/Wally.xcarchive -exportPath <dir>/e
 - **Service worker and install prompt**: off. The install row reads "installed".
 - **Android back**: previous hash route; at the home route (`""`, `budget`, `booth`; list in `native.ts`) it exits the app.
 - **Haptics**: the Capacitor Haptics plugin; `navigator.vibrate` in a browser. Off under reduced motion.
+- **Offline checker**: the page is not bundled in the shells (the booth and the static site serve it), so Proof leaves its links out there; the receipts are still checked on the phone. A link would open a blank page with no way back.
 
 ## Known limits
 - **Recorded answers unless connected**: on-device mode has no Laya and no live judge; connecting to the booth Mac (same Wi-Fi) gives both.
