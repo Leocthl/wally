@@ -2,14 +2,17 @@
 // engine side and the reducer starts over with it (state/booth.ts), so everything in the state is the current budget's.
 import type { CardRecord, Decision, EscalationView, LogEntry } from "../../api/types";
 import type { BoothState } from "../../state/booth";
+import { groupPurchases, itemsNewestFirst, type PurchaseState } from "../proof/purchases";
+import { toReceipts } from "../proof/receipts";
 import { plainName } from "../run/model/item";
 
-export type DecisionOutcome = Decision["outcome"];
-
-export interface DecisionRow {
+/** One purchase in Recent: the same grouping and words as the Receipts list, so Home and Receipts say the same about it. */
+export interface RecentRow {
+  /** The decision the purchase started with; Wally's screen pins the whole purchase by it. */
   readonly id: string;
+  /** The receipt number's source: the log sequence number of that decision. */
   readonly seq: number;
-  readonly outcome: DecisionOutcome;
+  readonly state: PurchaseState;
   readonly title: string;
   readonly merchant: string;
   readonly totalMinor: number;
@@ -27,30 +30,28 @@ function decisionOf(entry: LogEntry): Decision | null {
   return typeof payload.id === "string" && payload.cart !== undefined && typeof payload.outcome === "string" ? (payload as Decision) : null;
 }
 
-function rowOf(entry: LogEntry, d: Decision): DecisionRow {
-  return {
-    id: d.id,
-    seq: entry.seq,
-    outcome: d.outcome,
-    title: plainName(d.cart.items[0]?.title ?? d.cart.merchant.name),
-    merchant: plainName(d.cart.merchant.name),
-    totalMinor: d.cart.total_minor,
-    at: d.decided_at,
-  };
-}
-
-/** Newest first. A decision closed by a later one (an answered or expired escalation, a voided approval) shows once,
- *  as its final state, so a purchase is one row. */
-export function recentDecisions(state: BoothState, limit = 3): readonly DecisionRow[] {
-  const decided = currentEntries(state).flatMap((e) => {
-    const d = decisionOf(e);
-    return d ? [{ entry: e, decision: d }] : [];
-  });
-  const closed = new Set(decided.flatMap(({ decision }) => (decision.resolves ? [decision.resolves] : [])));
-  return decided
-    .filter(({ decision }) => !closed.has(decision.id))
-    .map(({ entry, decision }) => rowOf(entry, decision))
-    .sort((a, b) => b.seq - a.seq)
+/**
+ * Newest first, one row per purchase: the decision, its one-off card, the charge and any answer to a question are one row,
+ * worded by where the purchase ended up (paid, stopped, waiting for your OK).
+ */
+export function recentPurchases(state: BoothState, limit = 3): readonly RecentRow[] {
+  const items = itemsNewestFirst(groupPurchases(toReceipts(currentEntries(state))));
+  return items
+    .flatMap((item): readonly RecentRow[] => {
+      if (item.kind !== "purchase") return [];
+      const { purchase } = item;
+      return [
+        {
+          id: purchase.id,
+          seq: purchase.lead.seq,
+          state: purchase.state,
+          title: plainName(purchase.lead.item ?? purchase.lead.merchant ?? ""),
+          merchant: plainName(purchase.lead.merchant ?? ""),
+          totalMinor: purchase.amountMinor ?? 0,
+          at: item.ts,
+        },
+      ];
+    })
     .slice(0, limit);
 }
 

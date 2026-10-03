@@ -1,23 +1,34 @@
-// Recent: the last three decisions of this budget. Each row says what happened in words beside an icon, carries its
-// receipt number and amount, and opens that result on Wally's screen.
+// Recent: the last three purchases of this budget, one row each. A row says what happened in words beside an icon (paid, stopped
+// before paying, waiting for your OK...), carries its receipt number, the same one the Receipts list and Proof use, and the
+// amount, and opens that purchase on Wally's screen.
 import type { ReactElement } from "react";
 import { SIMULATED } from "../../domain/provenance";
 import { PARAM, routeHref } from "../../hooks/useRoute";
+import type { LabelPair } from "../../i18n/label";
 import { UI } from "../../i18n/ui";
+import { useIsDeveloper } from "../../state/displayMode";
 import { Icon, type IconName } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { List, ListRow } from "../../ui/Surface";
-import { Money } from "../../shell/figures";
-import type { DecisionOutcome, DecisionRow } from "./selectors";
+import { Fill, Money } from "../../shell/figures";
+import type { PurchaseState } from "../proof/purchases";
+import { receiptNumber, RECEIPT_NO } from "../proof/receiptNo";
+import type { RecentRow } from "./selectors";
 
-const LOOK: Readonly<Record<DecisionOutcome, { readonly icon: IconName; readonly tone: "ok" | "stop" | "warn" }>> = {
-  APPROVE: { icon: "checkCircle", tone: "ok" },
-  DENY: { icon: "hand", tone: "stop" },
-  ESCALATE: { icon: "clock", tone: "warn" },
+const R = UI.receipts;
+
+const LOOK: Readonly<Record<PurchaseState, { readonly icon: IconName; readonly tone: "ok" | "stop" | "warn" | "neutral"; readonly label: LabelPair }>> = {
+  paid: { icon: "checkCircle", tone: "ok", label: R.statePaid },
+  approved: { icon: "checkCircle", tone: "ok", label: R.stateApproved },
+  stopped: { icon: "hand", tone: "stop", label: R.stateStopped },
+  needsOk: { icon: "clock", tone: "warn", label: R.stateNeedsOk },
+  voided: { icon: "card", tone: "neutral", label: R.stateVoided },
+  cardExpired: { icon: "clock", tone: "neutral", label: R.stateCardExpired },
 };
 
-export function RecentSection({ rows }: { readonly rows: readonly DecisionRow[] }): ReactElement {
+export function RecentSection({ rows }: { readonly rows: readonly RecentRow[] }): ReactElement {
   const { t } = useLocale();
+  const developer = useIsDeveloper();
   // Nothing yet: one quiet line that points at Try asking, not a heading and a link to an empty list.
   if (rows.length === 0) return <p className="home-section__hint" data-recent-empty>{t(UI["home.recentEmpty"])}</p>;
   return (
@@ -30,10 +41,14 @@ export function RecentSection({ rows }: { readonly rows: readonly DecisionRow[] 
             key={r.id}
             className="home-recent"
             href={routeHref("wally", { [PARAM.decision]: r.id })}
-            leading={<Icon name={LOOK[r.outcome].icon} />}
-            tone={LOOK[r.outcome].tone}
+            leading={<Icon name={LOOK[r.state].icon} />}
+            tone={LOOK[r.state].tone}
             title={<span data-ident>{r.title}</span>}
-            subtitle={<span data-outcome={r.outcome}>{t(UI[`home.outcome.${r.outcome}`])} · <span data-ident>#{r.seq}</span></span>}
+            subtitle={
+              <span data-state={r.state}>
+                {t(LOOK[r.state].label)} · {developer ? <span data-ident>#{r.seq}</span> : <Fill text={t(RECEIPT_NO)} slots={{ n: <span data-ident>{receiptNumber(r.seq)}</span> }} />}
+              </span>
+            }
             trailing={<Money minor={r.totalMinor} prov={SIMULATED} />}
             chevron
           />

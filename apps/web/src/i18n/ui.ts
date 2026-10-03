@@ -490,6 +490,9 @@ export const UI = {
     bodyCardExpired: label("The card was not used in time, so it expired. Its money is back in your budget.", "此卡未在時限內使用，已過期，款項已回到你的預算。"), // NEEDS-REVIEW
     bodyRevoked: label("Your rules no longer let Wally buy anything. Unused cards were cancelled.", "你的規則已不再容許 Wally 購物，未用的卡已取消。"), // NEEDS-REVIEW
     bodyExpired: label("Your budget reached its end date. Wally cannot buy with it any more.", "你的預算已到期，Wally 不能再用它購物。"), // NEEDS-REVIEW
+    // One purchase is one row; its receipts are the steps under it.
+    steps: label("{n} steps", "{n} 個步驟"), // NEEDS-REVIEW
+    stepsList: label("The steps of this purchase", "這次購買的步驟"), // NEEDS-REVIEW
     resolves: label("This closes an earlier receipt.", "這張收據了結了較早的一張。"), // NEEDS-REVIEW
     seeEarlier: label("See the earlier receipt", "查看較早的收據"), // NEEDS-REVIEW
     moneyTitle: label("Money", "金額"), // NEEDS-REVIEW

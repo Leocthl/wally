@@ -27,7 +27,7 @@ import { useFamilyRunner } from "./familyRun";
 import { Ideas } from "./IdeasSection";
 import type { Idea } from "./ideas";
 import { RecentSection } from "./RecentSection";
-import { cardGroups, decisionTitle, hasCompletedPurchase, openEscalations, recentDecisions } from "./selectors";
+import { cardGroups, decisionTitle, hasCompletedPurchase, openEscalations, recentPurchases } from "./selectors";
 import { PhotoCardSlot } from "./slots";
 import { TRY_ITEMS } from "./tryCatalog";
 import { rankTryItems } from "./tryRank";
@@ -146,7 +146,7 @@ export function BudgetScreen(): ReactElement {
       </BudgetHero>
       {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
       <CardsSection active={cards.active} past={cards.past} />
-      <RecentSection rows={recentDecisions(state)} />
+      <RecentSection rows={recentPurchases(state)} />
       {/* Add to Home Screen waits for a first purchase or a second visit, and sits below the purchases, never above the greeting. */}
       <IosInstallHint ready={installReady} />
       {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}

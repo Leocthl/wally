@@ -4,74 +4,14 @@
 // that shows no code. Explanations stay rule templates; nothing is written by a model.
 import type { VerifyResult } from "@wally/core/ports";
 import type { LabelPair } from "../../i18n/label";
+import { asRecord, eventKey, own } from "./eventKey";
 import { PLAIN } from "./plainStrings";
 
-export type EventKey = keyof typeof PLAIN.events;
+export { eventKey, type EventKey } from "./eventKey";
+
 export type RowStatus = "idle" | "ok" | "changed" | "after";
 
-type Loose = Readonly<Record<string, unknown>>;
-
-const asRecord = (value: unknown): Loose | null => (value !== null && typeof value === "object" ? (value as Loose) : null);
-const isText = (value: unknown): value is string => typeof value === "string" && value !== "";
-
-function own<T>(table: Readonly<Record<string, T>>, key: string): T | null {
-  return Object.prototype.hasOwnProperty.call(table, key) ? (table[key] ?? null) : null;
-}
-
-/** Plain receipts are numbered from 1: receipt 1 is the sealed budget. */
-export function receiptNumber(seq: number): number {
-  return seq + 1;
-}
-
-const CARD_EVENT_KEY: Readonly<Record<string, EventKey>> = { AUTHORISED: "charged", DECLINED: "declined", VOIDED: "voided", EXPIRED: "cardExpired" };
-
-/** A stop that closes an earlier decision is told apart by what the person did, then by the rule that fired. */
-function stopKey(payload: Loose): EventKey {
-  if (!isText(payload["resolves"])) return "stopped";
-  const state = asRecord(payload["escalation"])?.["state"];
-  const template = asRecord(payload["explanation"])?.["template_id"];
-  // Your own no also cites R11, so the answer is read before the template.
-  if (state === "DENIED") return "youSaidNo";
-  if (state === "EXPIRED" || template === "R11.expired") return "noAnswer";
-  if (template === "R12.price_drift") return "priceChanged";
-  return "stopped";
-}
-
-function decisionKey(payload: Loose | null): EventKey {
-  if (payload === null) return "other";
-  switch (payload["outcome"]) {
-    case "APPROVE":
-      return isText(payload["resolves"]) ? "youSaidYes" : "approved";
-    case "ESCALATE":
-      return "asked";
-    case "DENY":
-      return stopKey(payload);
-    default:
-      return "other";
-  }
-}
-
-/** Which of the 15 plain labels (or "other") a log entry gets. Reads the entry as data; never throws. */
-export function eventKey(entry: unknown): EventKey {
-  const e = asRecord(entry);
-  const payload = asRecord(e?.["payload"] ?? null);
-  switch (e?.["kind"]) {
-    case "MANDATE_SEALED":
-      return "sealed";
-    case "DECISION":
-      return decisionKey(payload);
-    case "CARD_MINTED":
-      return "cardMade";
-    case "CARD_EVENT":
-      return own(CARD_EVENT_KEY, String(payload?.["event"])) ?? "other";
-    case "MANDATE_REVOKED":
-      return "revoked";
-    case "PACKET_EXPIRED":
-      return "ended";
-    default:
-      return "other";
-  }
-}
+export { receiptNumber } from "./receiptNo";
 
 export function eventWords(entry: unknown): LabelPair {
   return PLAIN.events[eventKey(entry)];

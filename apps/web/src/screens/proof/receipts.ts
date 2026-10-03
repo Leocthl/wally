@@ -2,6 +2,7 @@
 // fields into words in the current language. Amounts stay integer minor units; times stay ISO strings.
 import type { LogEntry } from "../../api/types";
 import { decisionIdFromHash } from "../../hooks/useRoute";
+import { eventKey, type EventKey } from "./eventKey";
 
 export type ReceiptState =
   | "sealed"
@@ -23,6 +24,8 @@ export interface Receipt {
   readonly seq: number;
   readonly kind: LogEntry["kind"];
   readonly state: ReceiptState;
+  /** What happened, in the plain words Proof's timeline uses: a stop you answered "no" to is told apart from a rule's stop. */
+  readonly event: EventKey;
   readonly ts: string;
   readonly hash: string;
   /** The DECISION this entry belongs to: its own id, a card's decision, or a card event's card's decision. */
@@ -65,7 +68,7 @@ function merchantOf(link: Links, decisionId: string | null): string | null {
   return decisionId === null ? null : (link.decisions.get(decisionId)?.cart.merchant.name ?? null);
 }
 
-function fields(entry: LogEntry, link: Links): Omit<Receipt, "seq" | "kind" | "ts" | "hash"> {
+function fields(entry: LogEntry, link: Links): Omit<Receipt, "seq" | "kind" | "ts" | "hash" | "event"> {
   switch (entry.kind) {
     case "MANDATE_SEALED":
       return { ...BASE, state: "sealed", amountMinor: entry.payload.credentialSubject.rules.budget.amount_minor };
@@ -112,7 +115,7 @@ function fields(entry: LogEntry, link: Links): Omit<Receipt, "seq" | "kind" | "t
 /** Log order (seq ascending). Unknown shapes never throw: the log was validated by the engine that wrote it. */
 export function toReceipts(entries: readonly LogEntry[]): readonly Receipt[] {
   const link = links(entries);
-  return entries.map((entry) => ({ seq: entry.seq, kind: entry.kind, ts: entry.ts, hash: entry.entry_hash, ...fields(entry, link) }));
+  return entries.map((entry) => ({ seq: entry.seq, kind: entry.kind, ts: entry.ts, hash: entry.entry_hash, event: eventKey(entry), ...fields(entry, link) }));
 }
 
 export function newestFirst(receipts: readonly Receipt[]): readonly Receipt[] {
@@ -160,16 +163,21 @@ export interface DayGroup {
   readonly receipts: readonly Receipt[];
 }
 
-/** Consecutive receipts on the same Hong Kong day share a group; the input order is kept. */
-export function groupByDay(receipts: readonly Receipt[]): readonly DayGroup[] {
-  const groups: DayGroup[] = [];
-  for (const r of receipts) {
-    const key = hkDayKey(r.ts);
+/** Consecutive things on the same Hong Kong day share a group; the input order is kept. */
+export function groupConsecutiveByDay<T extends { readonly ts: string }>(list: readonly T[]): readonly { readonly key: string; readonly list: readonly T[] }[] {
+  const groups: { readonly key: string; readonly list: readonly T[] }[] = [];
+  for (const item of list) {
+    const key = hkDayKey(item.ts);
     const last = groups.at(-1);
-    if (last && last.key === key) groups[groups.length - 1] = { key, receipts: [...last.receipts, r] };
-    else groups.push({ key, receipts: [r] });
+    if (last && last.key === key) groups[groups.length - 1] = { key, list: [...last.list, item] };
+    else groups.push({ key, list: [item] });
   }
   return groups;
+}
+
+/** Consecutive receipts on the same Hong Kong day share a group; the input order is kept. */
+export function groupByDay(receipts: readonly Receipt[]): readonly DayGroup[] {
+  return groupConsecutiveByDay(receipts).map((g) => ({ key: g.key, receipts: g.list }));
 }
 
 export type DayLabel = { readonly kind: "today" | "yesterday" } | { readonly kind: "date"; readonly date: Date } | { readonly kind: "unknown" };
