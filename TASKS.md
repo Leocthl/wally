@@ -145,6 +145,7 @@
 | M-13 | Store builds: a signed Android bundle (`android:aab`, key outside the repo) for Google Play internal testing and an iOS archive for TestFlight, both the on-device build, no review; build 1 uploaded 2026-10-03; steps in `apps/mobile/README.md` | [TEAM] | 2h | M-11 | M5 | [x] |
 | M-14 | Teammates on the store builds: Apple invitations accepted, then added to the TestFlight group; Play testers added; build 2 with the QA fixes (a new build number each upload). Human check: install and run on a real iPhone and Android phone | [TEAM] | 1h | M-13 | M5 | [ ] |
 | M-15 | Laptop layout (D19): top navigation with Ask Wally, Budget in three columns on one screen (Manage under the budget card, the Demo scenarios as an open panel of tabs), sheets as drawers; the sparkle icon and the hero circles retired; Playwright project `laptop` (1440 x 900) | [TEAM] | 4h | M-11 | M5 | [x] |
+| M-16 | Horizontal honesty (D19): the first run asks what Wally can buy (a budget naming none reads Any category); groceries and food words read as goods the demo shop does not sell; an idea outside the budget says Outside your budget; the Demo scenarios line says the rules may stop the cards on a budget that leaves clothes out | [TEAM] | 2h | M-15 | M5 | [x] |
 
 ### Lane D: evidence + pitch
 | ID | Task | Owner | Est | Deps | Milestone | Done |

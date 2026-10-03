@@ -176,6 +176,33 @@ describe("Ideas for you", () => {
     expect((await h.api.snapshot()).packet?.spent_minor).toBeGreaterThanOrEqual(0);
   });
 
+  it("says Outside your budget on every idea a groceries-only budget leaves out, and the card still opens (the rules then stop it)", async () => {
+    render(<Ideas onAsk={() => undefined} busy={false} categories={["groceries"]} />);
+    const cards = [...document.querySelectorAll<HTMLElement>("[data-idea]")];
+    expect(cards).toHaveLength(4);
+    for (const c of cards) {
+      expect(c).toHaveAttribute("data-outside", "true");
+      expect(c).toHaveTextContent("Outside your budget");
+      expect(c).toBeEnabled();
+    }
+  });
+
+  it("says nothing of the kind when the budget names the idea's category, or when no budget is given", () => {
+    const { rerender } = render(<Ideas onAsk={() => undefined} busy={false} categories={["apparel", "groceries"]} />);
+    expect(document.querySelectorAll("[data-outside]")).toHaveLength(0);
+    expect(document.body).not.toHaveTextContent("Outside your budget");
+    rerender(<Ideas onAsk={() => undefined} busy={false} />);
+    expect(document.querySelectorAll("[data-outside]")).toHaveLength(0);
+  });
+
+  it("marks only the idea the clothes budget leaves out: the earbuds, for someone who shops for electronics", async () => {
+    await bootApp("#/budget", profile({ shopFor: ["electronics"] }));
+    expect(ideaIds()).toEqual(["earbuds", "tee", "socks", "jacket"]);
+    expect(document.querySelector('main [data-idea="earbuds"]')).toHaveAttribute("data-outside", "true");
+    expect(document.querySelector('main [data-idea="earbuds"]')).toHaveTextContent("Outside your budget");
+    expect(document.querySelector('main [data-idea="tee"]')).not.toHaveAttribute("data-outside");
+  });
+
   it("holds the cards while a run is in flight, so nothing is sent twice", () => {
     const { rerender } = render(<Ideas onAsk={() => undefined} busy={false} />);
     for (const b of document.querySelectorAll<HTMLButtonElement>("[data-idea]")) expect(b).toBeEnabled();

@@ -104,6 +104,7 @@
 .home-idea[data-idea-reason] { border-color: var(--c-primary); }
 .home-idea[data-idea-reason] .home-idea__why { color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
 .home-idea__price { margin-top: var(--sp-1); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
+.home-idea__outside { align-self: flex-start; margin-top: var(--sp-1); }
 
 /* Demo scenarios (for judges): the booth's scenario cards in a disclosure at the bottom. */
 .home-demo { border-radius: var(--r-lg); background: var(--c-surface-sunken); }

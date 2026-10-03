@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ideaListing, readIdeaListing } from "../src/screens/home/ideaListings";
+import { ideaCategory, ideaListing, readIdeaListing } from "../src/screens/home/ideaListings";
 import { IDEAS, type IdeaId } from "../src/screens/home/ideas";
 
 const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), "../../../data/fixtures");
@@ -61,6 +61,17 @@ describe("the listing behind each idea", () => {
   it("shows the shop without the (SIMULATED) tag the fixtures carry", () => {
     expect(ideaListing("tee")?.shop).toBe("Demo Apparel");
     expect(ideaListing("jacket")?.shop).toBe("Demo Streetwear");
+  });
+});
+
+describe("the category behind each idea", () => {
+  it("is the category of the listing file's first item, which is what the budget's categories are checked against", () => {
+    for (const idea of IDEAS) {
+      const first = (read(LISTING_FILE[idea.id]).data as { items: { category: string }[] }).items[0]!.category;
+      expect(ideaCategory(idea.id), idea.id).toBe(first);
+    }
+    expect(ideaCategory("earbuds")).toBe("electronics");
+    expect(ideaCategory("tee")).toBe("apparel");
   });
 });
 

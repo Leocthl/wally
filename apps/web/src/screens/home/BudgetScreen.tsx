@@ -5,7 +5,6 @@
 import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
 import { navigate, PARAM, routeHref, useRouteParam } from "../../hooks/useRoute";
-import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
 import { IosInstallHint } from "../../pwa/InstallUi";
 import { countThisVisit } from "../../pwa/visits";
@@ -23,6 +22,7 @@ import { EscalationBanner } from "../console/EscalationBanner";
 import { BudgetHero } from "./BudgetHero";
 import { Composer } from "./Composer";
 import { DemoScenarios } from "./DemoScenarios";
+import { demoLeadFor } from "./demoLead";
 import { useFamilyRunner } from "./familyRun";
 import { Ideas } from "./IdeasSection";
 import type { Idea } from "./ideas";
@@ -154,7 +154,7 @@ export function BudgetScreen(): ReactElement {
         {desktop ? manage : null}
       </div>
       <div className="home-col home-col--shelf">
-        {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
+        {closed ? null : <Ideas onAsk={askIdea} busy={busy} categories={mandate.rules.categories} />}
         <CardsSection active={cards.active} past={cards.past} />
         <RecentSection rows={recentPurchases(state)} />
         {/* Add to Home Screen waits for a first purchase or a second visit, and sits below the purchases, never above the greeting. */}
@@ -162,7 +162,7 @@ export function BudgetScreen(): ReactElement {
       </div>
       <div className="home-col home-col--test">
         {/* On a phone Manage this budget is the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
-        <DemoScenarios panel={desktop} lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
+        <DemoScenarios panel={desktop} lead={t(demoLeadFor(mandate.rules.categories, personal))}>
           <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} variant={desktop ? "tabs" : "cards"} budgetCategories={mandate.rules.categories} />
           <div className="home-block__foot"><ResetDemo /></div>
         </DemoScenarios>

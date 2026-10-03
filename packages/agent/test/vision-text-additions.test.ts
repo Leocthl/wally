@@ -67,6 +67,39 @@ describe("additions: price limits", () => {
   });
 });
 
+describe("additions: groceries and food are goods the shop does not sell", () => {
+  it.each([
+    "weekly groceries",
+    "Order my weekly groceries: milk, eggs and rice, under HK$300",
+    "milk",
+    "a loaf of bread",
+    "fresh vegetables",
+    "some fruit",
+    "chicken and noodles",
+    "snacks for the week",
+    "lunch",
+    "supermarket run",
+    "買餸",
+    "牛奶",
+    "雞蛋",
+    "雜貨",
+    "超市",
+    "水果",
+  ])("%s", (text) => {
+    const out = read(text);
+    expect(out.kind).toBeNull();
+    expect(out.unsold).toBe(true);
+  });
+  it("does not read a food word inside another word, and leaves clothing alone", () => {
+    expect(read("a tee under the price of 300").unsold).toBe(false);
+    expect(read("a tee under the price of 300").kind).toBe("tee");
+    expect(read("米色 hoodie").colors).toEqual(["beige"]);
+    expect(read("米色 hoodie").unsold).toBe(false);
+    expect(read("butter yellow hoodie").kind).toBe("hoodie");
+    expect(read("rice").unsold).toBe(true);
+  });
+});
+
 describe("additions: products the shop does not sell", () => {
   it.each(["top up my budget", "pizza", "swimming trunks", "leggings", "tracksuit", "a suit", "coffee", "咖啡", "西裝", "PS5"])("%s", (text) => {
     const out = read(text);

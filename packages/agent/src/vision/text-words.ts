@@ -90,4 +90,9 @@ export const UNSOLD_WORDS: readonly string[] = [
   "leggings", "tights", "swimming trunks", "swim trunks", "trunks", "tracksuit", "suit", "tuxedo", "西裝",
   "pizza", "food", "coffee", "perfume", "makeup", "umbrella", "ps5", "playstation", "xbox", "nintendo", "bitcoin", "crypto", "咖啡", "top up", "top-up",
   "gift card", "giftcard", "voucher", "coupon", "禮品卡", "礼品卡", "現金券", "優惠券",
+  // Groceries and food: a budget can name them, but the demo shop sells none, so the answer says so.
+  "groceries", "grocery", "supermarket", "milk", "egg", "bread", "rice", "vegetable", "veggie", "fruit", "meat", "chicken", "beef", "pork", "fish",
+  "noodle", "pasta", "cereal", "yogurt", "cheese", "snack", "juice", "beer", "wine", "chocolate", "candy", "cake", "burger", "sushi",
+  "lunch", "dinner", "breakfast", "takeaway",
+  "買餸", "买菜", "雜貨", "杂货", "超市", "牛奶", "雞蛋", "鸡蛋", "麵包", "面包", "蔬菜", "水果", "豬肉", "猪肉", "牛肉", "雞肉", "鸡肉", "零食", "外賣", "外卖", "午餐", "晚餐", "早餐",
 ];

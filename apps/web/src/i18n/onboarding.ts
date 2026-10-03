@@ -114,10 +114,12 @@ export const OB = {
     // On a friend's phone the same cards are just a demo: no word about judges (the booth, ?booth=1 and presenter mode keep the long label).
     demoPlain: label("Demo scenarios", "示範情境"), // NEEDS-REVIEW
     demoLead: label("Each one runs the real rules on a simulated shop.", "每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
+    demoLeadOutside: label("These use the demo shop's clothes, which your budget leaves out, so the rules may stop them. They still run the real rules.", "呢啲用示範商店嘅衣物，而你嘅預算冇包括衣物，所以規則可能會攔截。佢哋仍然用真規則運行。"), // NEEDS-REVIEW
   },
 
   ideas: {
     title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW
+    outside: label("Outside your budget", "喺你嘅預算以外"), // NEEDS-REVIEW
     // The preview sheet an idea opens before anything is bought. Figures arrive formatted, so no digit lives here.
     from: label("From the demo shop", "來自示範商店"), // NEEDS-REVIEW
     buy: label("Ask Wally to buy this", "叫 Wally 買呢件"), // NEEDS-REVIEW

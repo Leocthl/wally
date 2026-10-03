@@ -49,3 +49,24 @@ const LISTINGS: Readonly<Record<IdeaId, IdeaListing | null>> = {
 export function ideaListing(id: IdeaId): IdeaListing | null {
   return LISTINGS[id];
 }
+
+/** The category of a listing file's first item (apparel, electronics...): the one a budget's categories are checked against. Null when the file does not say. */
+export function readIdeaCategory(file: unknown): string | null {
+  if (!isRecord(file) || !isRecord(file["data"])) return null;
+  const { items } = file["data"];
+  const first = Array.isArray(items) ? (items[0] as unknown) : undefined;
+  return isRecord(first) && typeof first["category"] === "string" ? first["category"] : null;
+}
+
+const CATEGORIES: Readonly<Record<IdeaId, string | null>> = {
+  tee: readIdeaCategory(FILES.tee),
+  socks: readIdeaCategory(FILES.socks),
+  jacket: readIdeaCategory(FILES.jacket),
+  hoodie: readIdeaCategory(FILES.hoodie),
+  graphic: readIdeaCategory(FILES.graphic),
+  earbuds: readIdeaCategory(FILES.earbuds),
+};
+
+export function ideaCategory(id: IdeaId): string | null {
+  return CATEGORIES[id];
+}
