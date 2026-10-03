@@ -33,6 +33,12 @@ export interface StepFrameProps {
   readonly skip: SkipControl;
   readonly children: ReactNode;
   readonly actions: ReactNode;
+  /**
+   * The actions stay pinned to the bottom of the screen (Back and Next). False for a step whose own primary button is the pinned
+   * control (Check and seal, whose Seal button sticks by itself): the actions are then a plain note at the end of the page, so
+   * two bars never stack on top of each other and cover the button.
+   */
+  readonly pinned?: boolean;
   readonly className?: string;
 }
 
@@ -55,7 +61,7 @@ function Progress({ at }: { readonly at: number }): ReactElement {
   );
 }
 
-export function StepFrame({ step, wally, big = false, title, dir, skip, children, actions, className }: StepFrameProps): ReactElement {
+export function StepFrame({ step, wally, big = false, title, dir, skip, children, actions, pinned = true, className }: StepFrameProps): ReactElement {
   const { t, locale } = useLocale();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -79,7 +85,7 @@ export function StepFrame({ step, wally, big = false, title, dir, skip, children
         </div>
         {children}
       </main>
-      <div className="onb-actions">{actions}</div>
+      <div className="onb-actions" data-pinned={pinned}>{actions}</div>
     </div>
   );
 }

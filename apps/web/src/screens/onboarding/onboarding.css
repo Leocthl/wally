@@ -131,6 +131,10 @@
 /* The actions stay in reach at the bottom of the screen. */
 .onb-actions { position: sticky; bottom: 0; z-index: var(--z-raised); display: grid; gap: var(--sp-2); padding: var(--sp-3) max(var(--gutter), var(--safe-right)) max(var(--sp-3), var(--safe-bottom)) max(var(--gutter), var(--safe-left)); background: var(--c-bg); }
 .onb-actions:empty { display: none; }
+/* Check and seal: the Seal button is the one pinned control (the Seal screen's own sticky bar), so the skip note under it is plain
+   text at the end of the page. Two sticky bars stacked at the bottom hid most of the button on a short phone. */
+.onb-actions[data-pinned="false"] { position: static; padding-top: var(--sp-1); }
+.onb-actions[data-pinned="false"]::before { content: none; }
 /* Scroll edge: content fades out above the bar instead of being cut by a hard line (no blur: the branding guard bans glass). */
 .onb-actions::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sp-5); background: linear-gradient(to top, var(--c-bg), transparent); pointer-events: none; }
 .onb-actions__row { display: flex; gap: var(--sp-2); }

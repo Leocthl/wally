@@ -145,7 +145,7 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
 
   if (view === "review") {
     return (
-      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={skipNote}>
+      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={skipNote} pinned={false}>
         <ReviewStep form={form} sealing={false} replacing={replacing} onEdit={() => setView("pick")} onSeal={() => void seal()} />
       </StepFrame>
     );

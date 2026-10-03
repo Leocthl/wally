@@ -146,6 +146,51 @@ test.describe("the four steps", () => {
   });
 });
 
+/** How much of the Seal button a thumb can reach: the share of points over the button whose top element is the button itself. */
+async function sealButtonReach(page: Page): Promise<{ readonly reach: number; readonly inside: boolean; readonly bottom: number; readonly viewport: number }> {
+  return page.evaluate(() => {
+    const button = document.querySelector<HTMLElement>("[data-seal-button]");
+    if (!button) return { reach: 0, inside: false, bottom: 0, viewport: window.innerHeight };
+    const r = button.getBoundingClientRect();
+    // Points well inside the button, away from the rounded ends: a cover sitting over any part of it shows here.
+    const xs = [0.2, 0.35, 0.5, 0.65, 0.8].map((f) => r.left + r.width * f);
+    const ys = [0.25, 0.5, 0.75].map((f) => r.top + r.height * f);
+    const hits = xs.flatMap((x) => ys.map((y) => document.elementFromPoint(x, y))).filter((el) => el !== null && button.contains(el));
+    return { reach: hits.length / (xs.length * ys.length), inside: r.top >= 0 && r.bottom <= window.innerHeight, bottom: r.bottom, viewport: window.innerHeight };
+  });
+}
+
+test.describe("Check and seal on a short phone", () => {
+  // The Seal button is the one pinned control: the skip note under it is plain text, not a second bar stacked over it.
+  for (const viewport of [{ width: 360, height: 740 }, { width: 390, height: 664 }, { width: 390, height: 844 }, { width: 430, height: 932 }] as const) {
+    test(`Seal budget is fully tappable at ${viewport.width}x${viewport.height}, at the top of the page and at the bottom`, async ({ page }) => {
+      test.skip(test.info().project.name !== "phone", "the sizes are set inside the test");
+      await page.setViewportSize(viewport);
+      // The page as the public link serves it: on the phone itself, with the strip about that on top (it takes room too).
+      await page.goto("/");
+      await toTaste(page);
+      await next(page).click();
+      await expect(page.getByRole("heading", { level: 1, name: "Your first budget" })).toBeVisible();
+      await page.getByRole("button", { name: "Review budget" }).click();
+      await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
+      await settled(page);
+      const button = page.getByRole("button", { name: /Seal budget/ });
+      await expect(button).toBeVisible();
+      const top = await sealButtonReach(page);
+      expect(top, "before any scrolling").toMatchObject({ reach: 1, inside: true });
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(250);
+      const end = await sealButtonReach(page);
+      expect(end, "scrolled to the end").toMatchObject({ reach: 1, inside: true });
+      // The note under the button is still there, reached by scrolling.
+      await expect(page.getByText(/^Or skip/)).toBeVisible();
+      // And the tap goes through: the budget is sealed.
+      await button.click();
+      await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+    });
+  }
+});
+
 test.describe("About: the tour again, and forget my profile", () => {
   test("the tour again replays the flow with what was told; forgetting removes it and leaves the budget", async ({ page }) => {
     await page.goto("/?api=mock");
