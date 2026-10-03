@@ -1,7 +1,8 @@
 // Step two: the budget in a sentence (with example chips), then the rules as rows. The sentence fills the rows through
-// the deterministic compile as it is typed; "Read my sentence" asks the booth's reader (suggestRules) and shows what it
-// read above the rows. When the reader is absent or fails, the rows keep what the deterministic compile filled. Nothing
-// seals here.
+// the deterministic compile as it is typed (an end date fills Until; one further off than a budget may run is cut, with a
+// note that goes when the row is changed by hand); "Read my sentence" asks the booth's reader (suggestRules) and shows
+// what it read above the rows. When the reader is absent or fails, the rows keep what the deterministic compile filled.
+// Nothing seals here.
 import { useState, type FormEvent, type ReactElement } from "react";
 import type { CompileResult } from "../../api/types";
 import { UI } from "../../i18n/ui";
@@ -38,15 +39,19 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
   const [reading, setReading] = useState(false);
   const [readFailed, setReadFailed] = useState(false);
   const [read, setRead] = useState<CompileResult | null>(null);
+  // The day the typed sentence's date was cut to. The note shows only while Until still holds it.
+  const [cappedTo, setCappedTo] = useState<string | null>(null);
 
   const pickExample = (ex: SealExample): void => {
     const picked = applySentence(EMPTY_FORM(now), ex.sentence.en, now);
     setRead(null);
+    setCappedTo(picked.cappedTo);
     onSentence(t(ex.sentence), picked.form, picked.complete);
   };
   const type = (text: string): void => {
     const typed = applySentence(form, text, now);
     setRead(null); // what the reader found was about the earlier words
+    setCappedTo(typed.cappedTo);
     onSentence(text, typed.form, typed.complete);
   };
   const readWithModel = async (): Promise<void> => {
@@ -57,6 +62,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
       const result = await suggestRules(sentence, locale);
       if (result) {
         onForm(formFromRules(result.rules, result.validUntil));
+        setCappedTo(null); // the reader's own clamps are listed in what it read
         setRead(result);
       } else {
         setRead(null);
@@ -93,7 +99,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
           </Button>
         ) : null}
         <p className="seal-note" role="status">
-          {readFailed ? t(UI["seal.readFailed"]) : incomplete ? t(UI["seal.notFound"]) : ""}
+          {readFailed ? t(UI["seal.readFailed"]) : [cappedTo !== null && cappedTo === form.until ? t(UI["seal.untilCapped"]) : "", incomplete ? t(UI["seal.notFound"]) : ""].filter(Boolean).join(" ")}
         </p>
       </div>
       {read ? <ReadResult result={read} /> : null}

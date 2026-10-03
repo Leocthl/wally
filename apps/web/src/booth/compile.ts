@@ -1,20 +1,30 @@
 // Mandate sentence -> compiled rule chips -> rules (docs/01 Example mandates, C-03). A small deterministic parser:
 // no model, no network. The chips are the enforced rules; the sentence is display only (docs/06 DM1 talker line).
+// The budget's end is this month's end unless the sentence gives a length ("14 days") or a date (endDate.ts); a date is
+// resolved and capped by the same code the model compiler uses (@laisee/agent/compiler), so both end a budget alike.
+import { capEnd, DEFAULT_COMPILER_LIMITS, describeEndDate, monthEndHk, periodClamp, resolveEndDate, toTimestamp, type Clamp } from "@laisee/agent/compiler";
 import type { CompiledRules } from "@laisee/core/generated";
 import type { SealRequest } from "../api/types";
 import { dollarsToMinor } from "../domain/money";
 import { type Prov, SIMULATED } from "../domain/provenance";
 import { addMs } from "../domain/time";
 import { label, type LabelPair } from "../i18n/label";
+import { readEndDate } from "./endDate";
 
 export const M0_SENTENCE = "HK$800 this month for clothes, verified sellers only";
 
 export type ChipKind = "budget" | "expiry" | "category" | "sellers" | "share" | "cap" | "askAbove";
 export type RuleRef = "R2" | "R3" | "R4" | "R6" | "R9";
 
+/** How long the budget runs: to this month's end, N days from the seal, or to a date the sentence names (a Hong Kong day, as written: `asked`). */
+export type ExpiryValue =
+  | { readonly kind: "expiry"; readonly mode: "month_end" }
+  | { readonly kind: "expiry"; readonly mode: "days"; readonly days: number }
+  | { readonly kind: "expiry"; readonly mode: "date"; readonly day: string; readonly asked: string };
+
 export type ChipValue =
   | { readonly kind: "budget"; readonly amountMinor: number | null }
-  | { readonly kind: "expiry"; readonly mode: "month_end" | "days"; readonly days: number }
+  | ExpiryValue
   | { readonly kind: "category"; readonly slugs: readonly string[] }
   | { readonly kind: "sellers"; readonly verifiedOnly: boolean }
   | { readonly kind: "share"; readonly bp: number }
@@ -40,6 +50,8 @@ export interface CompileResult {
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const HKT_OFFSET_MS = 8 * HOUR_MS;
+/** The longest a sentence may make a budget run [ASSUMED, compiler config]. */
+const MAX_PERIOD_DAYS = DEFAULT_COMPILER_LIMITS.maxPeriodDays;
 const BP_PER_WHOLE = 10_000;
 /** Whole-packet share written as "half". */
 const HALF_BP = 5_000;
@@ -74,12 +86,27 @@ function budgetChip(sentence: string): RuleChip {
   };
 }
 
-function expiryChip(sentence: string): RuleChip {
+const expiry = (value: ExpiryValue, valid = true): RuleChip => ({
+  kind: "expiry", rule: "R2", label: label("Expires", "到期"), value, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.daysBad }),
+});
+
+/** The date the sentence names, unless "this month" in the same sentence ends the budget sooner. */
+function statedDate(sentence: string, now: Date): { readonly endMs: number; readonly value: ExpiryValue } | null {
+  const end = readEndDate(sentence);
+  const resolved = end === null ? null : resolveEndDate(end, now);
+  if (end === null || resolved === null) return null;
+  if (/\bthis\s+month\b/i.test(sentence) && resolved.endMs > Date.parse(monthEndHk(now))) return null;
+  return { endMs: resolved.endMs, value: { kind: "expiry", mode: "date", day: resolved.hkDay, asked: describeEndDate(end) } };
+}
+
+/** Of a length and a date in one sentence the earlier end wins, so a sentence never lengthens a budget. */
+function expiryChip(sentence: string, now: Date): RuleChip {
   const m = sentence.match(/(\d+)\s+days?/i);
   const days = m?.[1] ? Number.parseInt(m[1], 10) : 0;
-  const mode = m ? "days" : "month_end";
-  const valid = mode === "month_end" || days >= 1;
-  return { kind: "expiry", rule: "R2", label: label("Expires", "到期"), value: { kind: "expiry", mode, days }, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.daysBad }) };
+  if (m && days < 1) return expiry({ kind: "expiry", mode: "days", days }, false);
+  const date = statedDate(sentence, now);
+  if (date !== null && (!m || date.endMs < now.getTime() + days * DAY_MS)) return expiry(date.value);
+  return expiry(m ? { kind: "expiry", mode: "days", days } : { kind: "expiry", mode: "month_end" });
 }
 
 function categoryChip(sentence: string): RuleChip {
@@ -108,8 +135,8 @@ function optionalChips(sentence: string): RuleChip[] {
   return chips;
 }
 
-export function compileMandate(sentence: string, _now: Date): CompileResult {
-  const chips = [budgetChip(sentence), expiryChip(sentence), categoryChip(sentence), sellersChip(sentence), ...optionalChips(sentence)];
+export function compileMandate(sentence: string, now: Date): CompileResult {
+  const chips = [budgetChip(sentence), expiryChip(sentence, now), categoryChip(sentence), sellersChip(sentence), ...optionalChips(sentence)];
   return { chips, issues: chips.flatMap((c) => (c.error ? [c.error] : [])) };
 }
 
@@ -141,13 +168,29 @@ export function chipsToRules(chips: readonly RuleChip[]): CompiledRules {
   };
 }
 
-/** Month end in Hong Kong as RFC 3339 UTC, or N days after the seal moment. */
+/** 23:59:59 Hong Kong time on a Hong Kong day (YYYY-MM-DD), as epoch milliseconds. */
+const endOfHkDayMs = (day: string): number => Date.parse(`${day}T00:00:00Z`) + DAY_MS - HKT_OFFSET_MS - 1000;
+const cappedDate = (day: string, now: Date) => capEnd(endOfHkDayMs(day), now, MAX_PERIOD_DAYS);
+
+/** Month end in Hong Kong as RFC 3339 UTC, N days after the seal moment, or the named date (cut to the longest a budget may run). */
 export function validUntilFor(chips: readonly RuleChip[], now: Date): string {
-  const expiry = chipOf(chips, "expiry");
-  if (expiry?.mode === "days") return addMs(now.toISOString(), expiry.days * DAY_MS).replace(".000Z", "Z");
-  const hk = new Date(now.getTime() + HKT_OFFSET_MS);
-  const nextMonthStartHk = Date.UTC(hk.getUTCFullYear(), hk.getUTCMonth() + 1, 1);
-  return new Date(nextMonthStartHk - HKT_OFFSET_MS - 1000).toISOString().replace(".000Z", "Z");
+  const end = chipOf(chips, "expiry");
+  if (end?.mode === "days") return addMs(now.toISOString(), end.days * DAY_MS).replace(".000Z", "Z");
+  if (end?.mode === "date") return toTimestamp(cappedDate(end.day, now).endMs);
+  return monthEndHk(now);
+}
+
+/** The clamp for a named date that is further off than a budget may run, worded as the model compiler's. */
+export function expiryClamps(chips: readonly RuleChip[], now: Date): readonly Clamp[] {
+  const end = chipOf(chips, "expiry");
+  return end?.mode === "date" && cappedDate(end.day, now).capped ? [periodClamp(end.asked, MAX_PERIOD_DAYS)] : [];
+}
+
+/** The Hong Kong day the sentence itself ends the budget on (a length or a date), or null when it names none. */
+export function statedUntilDay(chips: readonly RuleChip[], now: Date): string | null {
+  const first = chips.find((c) => c.kind === "expiry");
+  if (!first?.valid || first.value.kind !== "expiry" || first.value.mode === "month_end") return null;
+  return new Date(Date.parse(validUntilFor(chips, now)) + HKT_OFFSET_MS).toISOString().slice(0, 10);
 }
 
 export function sealRequestFrom(sentence: string, chips: readonly RuleChip[], now: Date): SealRequest {

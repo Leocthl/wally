@@ -1,7 +1,7 @@
 // Seal flow (lane b-shell): Meet Wally, Describe your budget, Check and seal, Sealed. Rows validate with words; example
 // chips fill sentence and rows; Top up and Change the rules start prefilled; a failed seal stays put; the model slot
 // (api.compileRules, or suggestRules from <App>) fills rows, says what it read and never seals by itself.
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -116,6 +116,98 @@ describe("Top up and Change the rules", () => {
     const h = await bootApp("#/seal?mode=topup");
     await h.user.click(screen.getByRole("button", { name: "Back" }));
     await waitFor(() => expect(window.location.hash).toBe("#/budget"));
+  });
+});
+
+describe("a date in the sentence", () => {
+  const until = () => screen.getByLabelText(/^Until/) as HTMLInputElement;
+  const sentence = () => screen.getByRole("textbox", { name: /Your budget in a sentence/ });
+
+  async function typeSentence(user: ReturnType<typeof userEvent.setup>, text: string): Promise<void> {
+    await user.click(await screen.findByRole("button", { name: /^Start/ }));
+    await user.clear(sentence());
+    await user.type(sentence(), text);
+  }
+
+  it("fills the Until row with the date, keeps it editable, and Check and seal shows the same day", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
+    try {
+      const { user } = firstRun();
+      await typeSentence(user, "HK$800 for clothes until 20 Oct");
+      expect(until()).toHaveValue("2026-10-20");
+      expect(screen.queryByText(/too far away for one budget/)).toBeNull();
+      fireEvent.change(until(), { target: { value: "2026-10-25" } });
+      expect(until()).toHaveValue("2026-10-25");
+      await user.click(next());
+      expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+      expect(document.querySelector(".seal-summary")).toHaveTextContent(/25 Oct 2026/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reads the Chinese forms and the end of a month the same way", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
+    try {
+      const { user } = firstRun();
+      await typeSentence(user, "HK$800 for clothes, 10月20日前");
+      expect(until()).toHaveValue("2026-10-20");
+      await user.clear(sentence());
+      await user.type(sentence(), "HK$800 for clothes, 十月底前");
+      expect(until()).toHaveValue("2026-10-31");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("cuts a date further off than a budget may run, says so once, and stops saying so when the row is changed by hand", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
+    try {
+      const { user } = firstRun();
+      await typeSentence(user, "HK$800 for clothes until 31 Dec");
+      expect(until()).toHaveValue("2026-11-03");
+      const note = screen.getByText("That date is too far away for one budget, so Until is set to the latest day a budget can run to.");
+      expect(note).toBeInTheDocument();
+      expect(note).toHaveAttribute("role", "status");
+      fireEvent.change(until(), { target: { value: "2026-12-31" } });
+      expect(until()).toHaveValue("2026-12-31");
+      expect(screen.queryByText(/too far away for one budget/)).toBeNull();
+      await user.click(next());
+      expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("says the same in 繁", async () => {
+    window.localStorage.setItem("wally:lang", "zh-HK");
+    window.location.hash = "#/budget";
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
+    try {
+      const user = userEvent.setup();
+      render(<App api={new FirstSealFails()} /> as ReactElement);
+      await user.click(await screen.findByRole("button", { name: /^開始/ }));
+      const box = screen.getByRole("textbox", { name: /用一句話講你的預算/ });
+      await user.clear(box);
+      await user.type(box, "HK$800 for clothes until 31 Dec");
+      expect(screen.getByLabelText(/^有效至/)).toHaveValue("2026-11-03");
+      expect(screen.getByText("個日期太遠，一個預算去唔到咁耐，「有效至」已經設為最遲可揀嘅一日。")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+      window.localStorage.clear();
+    }
+  });
+
+  it("a sentence with no date, or one that only mentions a date, leaves the row alone", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
+    try {
+      const { user } = firstRun();
+      await typeSentence(user, "HK$800 for clothes 20 Oct");
+      expect(until()).toHaveValue("2026-10-31");
+      expect(screen.queryByText(/too far away for one budget/)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

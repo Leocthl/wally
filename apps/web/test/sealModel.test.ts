@@ -55,6 +55,61 @@ describe("a sentence fills the rows", () => {
   });
 });
 
+describe("a date in the sentence fills the Until row", () => {
+  const read = (sentence: string, start: RulesForm = EMPTY_FORM(NOW)) => applySentence(start, sentence, NOW);
+
+  it.each([
+    ["HK$800 for clothes until 20 Oct", "2026-10-20"],
+    ["HK$800 for clothes by 2026-10-20", "2026-10-20"],
+    ["HK$800 for clothes before Oct 20", "2026-10-20"],
+    ["HK$800 for clothes until the end of October", "2026-10-31"],
+    ["HK$800 for clothes, 10月20日前", "2026-10-20"],
+    ["HK$800 for clothes, 十月底前", "2026-10-31"],
+  ])("%s", (sentence, until) => {
+    const result = read(sentence);
+    expect(result.form.until).toBe(until);
+    expect(result.cappedTo).toBeNull();
+    expect(validate(result.form, NOW).until).toBeUndefined();
+  });
+
+  it("cuts a date more than 31 days away to the latest day a budget can run to, and says it did", () => {
+    const result = read("HK$800 for clothes until 31 Dec");
+    expect(result.form.until).toBe("2026-11-03");
+    expect(result.cappedTo).toBe("2026-11-03");
+    expect(read("HK$800 for clothes until the end of November").cappedTo).toBe("2026-11-03");
+    expect(read("HK$800 for clothes until 20 Oct").cappedTo).toBeNull();
+  });
+
+  it("the row stays editable: a date typed by hand is kept as typed", () => {
+    const typed = { ...read("HK$800 for clothes until 31 Dec").form, until: "2026-12-31" };
+    expect(validate(typed, NOW).until).toBeUndefined();
+    expect(toSealRequest("x", { ...typed, categories: ["apparel"] }, NOW).validUntil).toBe("2026-12-31T15:59:59Z");
+  });
+
+  it("a date that is not on the calendar leaves the row as it was", () => {
+    const start = base({ until: "2026-10-25" });
+    expect(read("HK$800 for clothes until 31 Feb", start).form.until).toBe("2026-10-25");
+  });
+
+  it("a sentence that names no date leaves the row as it was; this month still means the month's end", () => {
+    const start = base({ until: "2026-10-25" });
+    expect(read("HK$650 for clothes", start).form.until).toBe("2026-10-25");
+    expect(read("HK$650 for clothes this month", start).form.until).toBe("2026-10-31");
+  });
+
+  it("days still count from now, and the earlier of a length and a date wins", () => {
+    expect(read("HK$500 for shoes over the next 14 days").form.until).toBe("2026-10-17");
+    expect(read("HK$500 for shoes for 14 days, until 10 Oct").form.until).toBe("2026-10-10");
+    expect(read("HK$500 for shoes for 7 days, until 31 Oct").form.until).toBe("2026-10-10");
+    expect(read("HK$500 for shoes this month until 3 Nov").form.until).toBe("2026-10-31");
+  });
+
+  it("seals the date it read, to the last second of that Hong Kong day", () => {
+    const form = read("HK$800 for clothes until 20 Oct").form;
+    expect(toSealRequest("HK$800 for clothes until 20 Oct", form, NOW).validUntil).toBe("2026-10-20T15:59:59Z");
+  });
+});
+
 describe("validation", () => {
   it("accepts the preset rows", () => {
     expect(validate(base(), NOW)).toEqual({});

@@ -1,9 +1,9 @@
 // Seal form model (pure): the sentence is for reading, the rows are the rules that get signed. The deterministic compile
-// in booth/compile.ts reads a sentence into rows as it is typed; suggestRules (the booth's reader) does the same job on
-// request and says what it read. Nothing
-// here seals: toSealRequest only builds the request after validate() finds nothing wrong.
+// in booth/compile.ts reads a sentence into rows as it is typed (an end date included: the Until row shows the day it
+// reads, cut to the longest a budget may run); suggestRules (the booth's reader) does the same job on request and says
+// what it read. Nothing here seals: toSealRequest only builds the request after validate() finds nothing wrong.
 import type { AskLocale, CompileResult, CompiledRules, SealRequest } from "../../api/types";
-import { compileMandate } from "../../booth/compile";
+import { compileMandate, expiryClamps, statedUntilDay } from "../../booth/compile";
 import { dollarsToMinor, minorToDollarsText } from "../../domain/money";
 
 /**
@@ -71,6 +71,8 @@ export interface SentenceRead {
   readonly form: RulesForm;
   /** True when the sentence named an amount and at least one known category. */
   readonly complete: boolean;
+  /** The day Until was cut to when the sentence named a date further off than a budget may run; otherwise null. */
+  readonly cappedTo: string | null;
 }
 
 /** Reads a sentence into the rows. Rows the sentence says nothing about keep their current value. */
@@ -79,10 +81,9 @@ export function applySentence(form: RulesForm, sentence: string, now: Date): Sen
   const chip = <K extends string>(kind: K) => chips.find((c) => c.kind === kind);
   const budget = chip("budget");
   const category = chip("category");
-  const expiry = chip("expiry");
   const amountMinor = budget?.valid && budget.value.kind === "budget" ? budget.value.amountMinor : null;
   const slugs = category?.valid && category.value.kind === "category" ? category.value.slugs : null;
-  const days = expiry?.valid && expiry.value.kind === "expiry" && expiry.value.mode === "days" ? expiry.value.days : null;
+  const stated = statedUntilDay(chips, now); // a length or a date the sentence names, in Hong Kong days
   const anySeller = /\b(any|unverified)\s+sellers?\b/i.test(sentence);
   const verified = /\bverified\b/i.test(sentence) && !anySeller;
   const extra = (kind: "askAbove" | "cap"): string | null => {
@@ -95,12 +96,13 @@ export function applySentence(form: RulesForm, sentence: string, now: Date): Sen
     amount: amountMinor === null ? form.amount : minorToDollarsText(amountMinor),
     categories: slugs ?? form.categories,
     verifiedOnly: anySeller ? false : verified ? true : form.verifiedOnly,
-    until: days !== null ? hkDay(new Date(now.getTime() + days * DAY_MS).toISOString()) : /\bmonth\b/i.test(sentence) ? monthEndDay(now) : form.until,
+    until: stated ?? (/\bmonth\b/i.test(sentence) ? monthEndDay(now) : form.until),
     askAbove: extra("askAbove") ?? form.askAbove,
     cap: extra("cap") ?? form.cap,
     share: share ?? form.share,
   };
-  return { form: next, complete: amountMinor !== null && slugs !== null };
+  const capped = stated !== null && expiryClamps(chips, now).length > 0;
+  return { form: next, complete: amountMinor !== null && slugs !== null, cappedTo: capped ? stated : null };
 }
 
 /** The rows for rules that are already signed (Top up, Change the rules) or that a model suggested. */
