@@ -142,6 +142,8 @@
 | M-10 | LAN mode: server `--lan` (`pnpm demo:lan`) with a pairing token, Host and Origin checks and a QR in About and Presenter so phones drive the Mac, plus "Connect to the booth Mac" in the native shells (that link is untested in both) | [TEAM] | 2h | e-server merged | M4 | [x] |
 | M-11 | Device pass: iOS Simulator Safari checks, safe areas, install flow, Android emulation; Capacitor wrappers built (`apps/mobile`); checked on the iPhone 17 Simulator and an Android API 36 emulator, not on a physical device | [TEAM] | 2h | M-07 | M4 | [x] |
 | M-12 | Voice input in the Ask sheet: the browser's speech recogniser, a mic inside the field only where one exists and never in the native shells, a first-press note that audio may leave the device, nothing sent until Send. Merged to `main`  | [TEAM] | 1.5h | M-07 | M4 | [x] |
+| M-13 | Store builds: a signed Android bundle (`android:aab`, key outside the repo) for Google Play internal testing and an iOS archive for TestFlight, both the on-device build, no review; build 1 uploaded 2026-10-03; steps in `apps/mobile/README.md` | [TEAM] | 2h | M-11 | M5 | [x] |
+| M-14 | Teammates on the store builds: Apple invitations accepted, then added to the TestFlight group; Play testers added; build 2 with the QA fixes (a new build number each upload). Human check: install and run on a real iPhone and Android phone | [TEAM] | 1h | M-13 | M5 | [ ] |
 
 ### Lane D: evidence + pitch
 | ID | Task | Owner | Est | Deps | Milestone | Done |
