@@ -52,11 +52,13 @@ export function resetPressTracking(): void {
 interface Opening {
   readonly at: number;
   readonly pointers: ReadonlySet<number>;
-  /** Keys held when it opened and not yet pressed afresh inside. Mutated as keys come up. */
-  readonly keys: Set<string>;
+  /** Keys held when it opened and not yet released or pressed afresh inside. */
+  readonly keys: ReadonlySet<string>;
   /** A press began inside after it opened: from then on every click is the person's. */
-  own: boolean;
+  readonly own: boolean;
 }
+
+const without = (keys: ReadonlySet<string>, code: string): ReadonlySet<string> => new Set([...keys].filter((k) => k !== code));
 
 /** True while a pointer that was down at the opening has not been up for longer than the tail. */
 function pointerClickBelongsToOpening(o: Opening): boolean {
@@ -87,7 +89,7 @@ export function usePressGuard(open: boolean): PressGuard {
 
   return {
     onPointerDownCapture: () => {
-      if (opening.current) opening.current.own = true;
+      if (opening.current) opening.current = { ...opening.current, own: true };
     },
     onClickCapture: (e) => {
       const o = opening.current;
@@ -103,13 +105,13 @@ export function usePressGuard(open: boolean): PressGuard {
         e.stopPropagation();
         e.preventDefault();
       } else {
-        o.keys.delete(e.code); // pressed afresh: the person's own key
+        opening.current = { ...o, keys: without(o.keys, e.code) }; // pressed afresh: the person's own key
       }
     },
     onKeyUpCapture: (e) => {
       const o = opening.current;
       if (o === null || !o.keys.has(e.code)) return;
-      o.keys.delete(e.code);
+      opening.current = { ...o, keys: without(o.keys, e.code) };
       e.stopPropagation();
       e.preventDefault(); // Space would click the focused button on release
     },

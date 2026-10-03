@@ -54,37 +54,41 @@ function sellersDate(before: string): boolean {
   return all.slice(-2).some((w) => LISTING_WORD.test(w));
 }
 
+/** Each English form with how to take its month and day out of a match. */
+const EN_FORMS: readonly (readonly [RegExp, (m: RegExpMatchArray) => readonly [string | undefined, string | undefined]])[] = [
+  [EN_DAY_MONTH, (m) => [m[2], m[1]]],
+  [EN_MONTH_DAY, (m) => [m[1], m[2]]],
+  [EN_ISO, (m) => [m[2], m[3]]],
+  [EN_END_OF, (m) => [m[1], undefined]],
+];
+
 function englishDates(text: string): EndDate[] {
-  const out: EndDate[] = [];
-  const add = (m: RegExpMatchArray, month: string | undefined, day: string | undefined): void => {
-    if (sellersDate(text.slice(0, m.index ?? 0))) return;
-    out.push({ month: MONTHS[(month ?? "").toLowerCase()] ?? Number(month), day: day === undefined ? null : Number.parseInt(day, 10) });
-  };
-  for (const m of text.matchAll(EN_DAY_MONTH)) add(m, m[2], m[1]);
-  for (const m of text.matchAll(EN_MONTH_DAY)) add(m, m[1], m[2]);
-  for (const m of text.matchAll(EN_ISO)) add(m, m[2], m[3]);
-  for (const m of text.matchAll(EN_END_OF)) add(m, m[1], undefined);
-  return out;
+  return EN_FORMS.flatMap(([form, parts]) =>
+    [...text.matchAll(form)].flatMap((m) => {
+      if (sellersDate(text.slice(0, m.index ?? 0))) return [];
+      const [month, day] = parts(m);
+      return [{ month: MONTHS[(month ?? "").toLowerCase()] ?? Number(month), day: day === undefined ? null : Number.parseInt(day, 10) }];
+    }),
+  );
 }
 
 function chineseDates(text: string): EndDate[] {
-  const out: EndDate[] = [];
   const sellers = (m: RegExpMatchArray): boolean => {
     const start = m.index ?? 0;
     return ZH_LISTING.test(text.slice(Math.max(0, start - ZH_WINDOW), start) + text.slice(start + m[0].length, start + m[0].length + ZH_WINDOW));
   };
-  for (const m of text.matchAll(ZH_DATE)) {
+  const named = [...text.matchAll(ZH_DATE)].flatMap((m) => {
     const start = m.index ?? 0;
     const marked = ZH_BEFORE.test(text.slice(0, start)) || ZH_AFTER.test(text.slice(start + m[0].length));
     const month = zhNumber(m[1] ?? "");
     const day = zhNumber(m[2] ?? "");
-    if (marked && !sellers(m) && month !== null && day !== null) out.push({ month, day });
-  }
-  for (const m of text.matchAll(ZH_MONTH_END)) {
+    return marked && !sellers(m) && month !== null && day !== null ? [{ month, day }] : [];
+  });
+  const monthEnds = [...text.matchAll(ZH_MONTH_END)].flatMap((m) => {
     const month = zhNumber(m[1] ?? "");
-    if (!sellers(m) && month !== null) out.push({ month, day: null });
-  }
-  return out;
+    return !sellers(m) && month !== null ? [{ month, day: null }] : [];
+  });
+  return [...named, ...monthEnds];
 }
 
 /**

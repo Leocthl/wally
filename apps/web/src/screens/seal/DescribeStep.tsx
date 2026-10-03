@@ -80,6 +80,8 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
     e.preventDefault();
     onNext();
   };
+  const cut = cappedTo !== null && cappedTo === form.until;
+  const status = readFailed ? t(UI["seal.readFailed"]) : [cut ? t(UI["seal.untilCapped"]) : "", incomplete ? t(UI["seal.notFound"]) : ""].filter(Boolean).join(" ");
 
   return (
     <form className="seal-step" onSubmit={submit} noValidate aria-labelledby="seal-describe-title">
@@ -98,9 +100,7 @@ export function DescribeStep(props: DescribeStepProps): ReactElement {
             {t(UI["seal.readSentence"])}
           </Button>
         ) : null}
-        <p className="seal-note" role="status">
-          {readFailed ? t(UI["seal.readFailed"]) : [cappedTo !== null && cappedTo === form.until ? t(UI["seal.untilCapped"]) : "", incomplete ? t(UI["seal.notFound"]) : ""].filter(Boolean).join(" ")}
-        </p>
+        <p className="seal-note" role="status">{status}</p>
       </div>
       {read ? <ReadResult result={read} /> : null}
       <section className="seal-rules-block" aria-labelledby="seal-rules-title">
