@@ -1,0 +1,394 @@
+// @vitest-environment node
+// The registry of private practice wallets (server/sessions.ts): who gets the shared booth wallet, who gets a wallet of
+// their own, how many there can be, when one is dropped. No HTTP here: a fake clock, fake wallets, fake timers.
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { BoothBackend } from "../../server/backend";
+import { BoothError } from "../../server/http/errors";
+import { SseHub } from "../../server/http/sse";
+import {
+  MAX_VISITOR_SESSIONS,
+  newSessionId,
+  REPLACEMENT_WINDOW_MS,
+  SESSION_ID_RE,
+  SESSION_IDLE_TTL_MS,
+  SessionRegistry,
+  sessionsModeFromEnv,
+  type SessionRegistryOptions,
+  type SessionScope,
+  type VisitorSession,
+} from "../../server/sessions";
+
+const MINUTE = 60_000;
+const hubs: SseHub[] = [];
+
+function hub(): SseHub {
+  const made = new SseHub({ keepAliveMs: 60_000, maxQueuedChunks: 8 });
+  hubs.push(made);
+  return made;
+}
+
+interface Fake extends VisitorSession {
+  readonly closed: () => number;
+  readonly ticks: () => number;
+}
+
+function fakeVisitor(): Fake {
+  const own = hub();
+  let closed = 0;
+  let ticks = 0;
+  return {
+    backend: {} as BoothBackend,
+    hub: own,
+    tick: async () => {
+      ticks += 1;
+    },
+    close: () => {
+      closed += 1;
+      own.close(); // the real wallet closes its event hub too
+    },
+    closed: () => closed,
+    ticks: () => ticks,
+  };
+}
+
+const BOOTH: SessionScope = { backend: {} as BoothBackend, hub: hub() };
+
+/** A registry on a clock the test moves by hand; every wallet it makes is kept so the test can look at it. */
+function setup(over: Partial<SessionRegistryOptions> = {}) {
+  let now = 1_000_000;
+  let counter = 0;
+  const made: Fake[] = [];
+  const registry = new SessionRegistry({
+    booth: BOOTH,
+    create: async () => {
+      const visitor = fakeVisitor();
+      made.push(visitor);
+      return visitor;
+    },
+    now: () => now,
+    newId: () => {
+      counter += 1;
+      return counter.toString(16).padStart(32, "0");
+    },
+    tickMs: null,
+    ...over,
+  });
+  return { registry, made, advance: (ms: number) => void (now += ms), clock: () => now };
+}
+
+const phone = (presented: string | null = null) => ({ booth: false, presented });
+const idOf = async (registry: SessionRegistry, presented: string | null = null): Promise<string> => {
+  const found = await registry.resolve(phone(presented));
+  if (found.kind !== "visitor") throw new Error("expected a visitor wallet");
+  return found.id;
+};
+
+afterEach(() => {
+  vi.useRealTimers();
+  for (const h of hubs.splice(0)) h.close();
+});
+
+describe("who gets which wallet", () => {
+  it("gives the booth Mac the shared wallet, whatever id it carries, and never makes a wallet for it", async () => {
+    const create = vi.fn(async () => fakeVisitor());
+    const { registry } = setup({ create });
+    for (const presented of [null, "f".repeat(32), "not an id"]) {
+      const found = await registry.resolve({ booth: true, presented });
+      expect(found).toEqual({ kind: "booth", scope: BOOTH });
+    }
+    expect(create).not.toHaveBeenCalled();
+    expect(registry.size).toBe(0);
+  });
+
+  it("makes a wallet on a visitor's first request and gives the same one back for its id", async () => {
+    const { registry, made } = setup();
+    const first = await registry.resolve(phone());
+    expect(first.kind).toBe("visitor");
+    const id = first.kind === "visitor" ? first.id : "";
+    expect(id).toMatch(SESSION_ID_RE);
+    const again = await registry.resolve(phone(id));
+    expect(again).toMatchObject({ kind: "visitor", id });
+    expect(again.scope).toBe(first.scope);
+    expect(made).toHaveLength(1);
+    expect(registry.size).toBe(1);
+  });
+
+  it("gives two visitors with no id two wallets with two ids", async () => {
+    const { registry, made } = setup();
+    const a = await idOf(registry);
+    const b = await idOf(registry);
+    expect(a).not.toBe(b);
+    expect(made).toHaveLength(2);
+    expect(registry.size).toBe(2);
+  });
+
+  it("gives an id it does not know a fresh wallet under a new id, never an error and never the id it was handed", async () => {
+    const { registry } = setup();
+    const stranger = "a".repeat(32);
+    const id = await idOf(registry, stranger);
+    expect(id).not.toBe(stranger);
+    expect(registry.has(stranger)).toBe(false);
+    expect(registry.size).toBe(1);
+  });
+
+  it("treats an id of the wrong shape like no id", async () => {
+    const { registry } = setup();
+    for (const odd of ["", "../../etc", "g".repeat(32), "A".repeat(32), "a".repeat(31), "a".repeat(33)]) {
+      expect(await idOf(registry, odd)).toMatch(SESSION_ID_RE);
+    }
+    expect(registry.size).toBe(6);
+  });
+});
+
+describe("limits", () => {
+  it("allows 12 visitor wallets by default and 45 minutes idle", () => {
+    expect(MAX_VISITOR_SESSIONS).toBe(12);
+    expect(SESSION_IDLE_TTL_MS).toBe(45 * MINUTE);
+  });
+
+  it("drops the least recently used wallet to make room, and closes it", async () => {
+    const { registry, made, advance } = setup({ maxVisitors: 3 });
+    const a = await idOf(registry);
+    advance(1_000);
+    const b = await idOf(registry);
+    advance(1_000);
+    const c = await idOf(registry);
+    advance(1_000);
+    await registry.resolve(phone(a)); // a is used again: b is now the one nobody has touched longest
+    advance(1_000);
+    const d = await idOf(registry);
+    expect(registry.size).toBe(3);
+    expect(registry.has(b)).toBe(false);
+    expect([a, c, d].every((id) => registry.has(id))).toBe(true);
+    expect(made[1]?.closed()).toBe(1);
+    expect(made.filter((m) => m.closed() > 0)).toHaveLength(1);
+    expect(registry.stats().evicted).toBe(1);
+    // the dropped wallet's id now meets a fresh one: the visitor loses the old wallet, not the service
+    const back = await idOf(registry, b);
+    expect(back).not.toBe(b);
+  });
+
+  it("never lets the number of wallets pass the cap, however many visitors come", async () => {
+    const { registry, made } = setup({ maxVisitors: 4 });
+    for (let i = 0; i < 20; i += 1) await idOf(registry);
+    expect(registry.size).toBe(4);
+    expect(made.filter((m) => m.closed() === 0)).toHaveLength(4);
+  });
+
+  it("drops a wallet 45 minutes after its last use, not before", async () => {
+    const { registry, made, advance } = setup();
+    const id = await idOf(registry);
+    advance(SESSION_IDLE_TTL_MS - 1);
+    expect(registry.sweep()).toBe(0);
+    expect(registry.has(id)).toBe(true);
+    advance(1);
+    expect(registry.sweep()).toBe(1);
+    expect(registry.has(id)).toBe(false);
+    expect(made[0]?.closed()).toBe(1);
+    expect(registry.stats().expired).toBe(1);
+  });
+
+  it("counts the idle time from the last request, so a wallet in use stays", async () => {
+    const { registry, advance } = setup();
+    const id = await idOf(registry);
+    for (let i = 0; i < 5; i += 1) {
+      advance(SESSION_IDLE_TTL_MS - MINUTE);
+      await registry.resolve(phone(id));
+      expect(registry.sweep()).toBe(0);
+    }
+    expect(registry.has(id)).toBe(true);
+  });
+
+  it("gives a visitor who comes back with an expired id a fresh wallet at once, even before the sweep ran", async () => {
+    const { registry, made, advance } = setup();
+    const old = await idOf(registry);
+    advance(SESSION_IDLE_TTL_MS + MINUTE);
+    const fresh = await idOf(registry, old);
+    expect(fresh).not.toBe(old);
+    expect(registry.has(old)).toBe(false);
+    expect(made[0]?.closed()).toBe(1);
+    expect(registry.size).toBe(1);
+  });
+
+  it("does not expire a wallet while a page still has its event stream open, and does once the page is gone", async () => {
+    const { registry, made, advance } = setup();
+    const id = await idOf(registry);
+    const stream = made[0]?.hub.connect();
+    advance(SESSION_IDLE_TTL_MS * 3);
+    expect(registry.sweep()).toBe(0);
+    expect(registry.has(id)).toBe(true);
+    await stream?.body?.cancel();
+    expect(registry.sweep()).toBe(1);
+    expect(registry.has(id)).toBe(false);
+  });
+});
+
+describe("parallel requests from one page", () => {
+  it("makes one wallet for requests that all carry the same id nobody knows (a page that woke up after its wallet was dropped)", async () => {
+    const { registry, made } = setup();
+    const stale = "b".repeat(32);
+    const [x, y, z] = await Promise.all([idOf(registry, stale), idOf(registry, stale), idOf(registry, stale)]);
+    expect(new Set([x, y, z]).size).toBe(1);
+    expect(made).toHaveLength(1);
+  });
+
+  it("keeps handing that wallet to late requests that still carry the old id, for a short while only", async () => {
+    const { registry, made, advance } = setup();
+    const stale = "c".repeat(32);
+    const first = await idOf(registry, stale);
+    advance(REPLACEMENT_WINDOW_MS - 1);
+    expect(await idOf(registry, stale)).toBe(first);
+    expect(made).toHaveLength(1);
+    advance(2);
+    const later = await idOf(registry, stale);
+    expect(later).not.toBe(first);
+    expect(made).toHaveLength(2);
+  });
+
+  it("makes a wallet for each request that carries no id (it cannot tell two phones from one page)", async () => {
+    const { registry, made } = setup();
+    await Promise.all([idOf(registry), idOf(registry), idOf(registry)]);
+    expect(made).toHaveLength(3);
+  });
+
+  it("does not hand a dropped wallet's replacement to a request for a different old id", async () => {
+    const { registry } = setup();
+    const a = await idOf(registry, "d".repeat(32));
+    const b = await idOf(registry, "e".repeat(32));
+    expect(a).not.toBe(b);
+  });
+});
+
+describe("a wallet that cannot be made", () => {
+  it("answers 503 with a plain message, logs the cause, and keeps nothing half made", async () => {
+    const errors: string[] = [];
+    let failing = true;
+    const { registry } = setup({
+      create: async () => {
+        if (failing) throw new Error("keys unreadable: /Users/x/.keys");
+        return fakeVisitor();
+      },
+      logger: { info: () => undefined, error: (m) => void errors.push(m) },
+    });
+    const failure = await registry.resolve(phone()).catch((err: unknown) => err);
+    expect(failure).toBeInstanceOf(BoothError);
+    expect(failure).toMatchObject({ status: 503, code: "SESSION_UNAVAILABLE" });
+    expect(String((failure as Error).message)).not.toMatch(/keys|Users/); // nothing internal reaches the visitor
+    expect(errors.join("\n")).toContain("keys unreadable");
+    expect(registry.size).toBe(0);
+    failing = false;
+    expect(await idOf(registry)).toMatch(SESSION_ID_RE); // the next visitor is served
+  });
+
+  it("lets a second try with the same old id make a wallet after the first try failed", async () => {
+    let failing = true;
+    const { registry } = setup({
+      create: async () => {
+        if (failing) throw new Error("boom");
+        return fakeVisitor();
+      },
+    });
+    const stale = "9".repeat(32);
+    await expect(registry.resolve(phone(stale))).rejects.toMatchObject({ status: 503 });
+    failing = false;
+    expect(await idOf(registry, stale)).toMatch(SESSION_ID_RE);
+  });
+});
+
+describe("timers and close", () => {
+  it("ticks every visitor wallet on the interval, never the booth, and drops idle ones", async () => {
+    vi.useFakeTimers();
+    const { registry, made, advance } = setup({ tickMs: 1_000 });
+    await idOf(registry);
+    await idOf(registry);
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(made.map((m) => m.ticks())).toEqual([3, 3]);
+    advance(SESSION_IDLE_TTL_MS);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(registry.size).toBe(0);
+    registry.close();
+  });
+
+  it("clears its timer on close and leaves none behind", async () => {
+    vi.useFakeTimers();
+    const before = vi.getTimerCount();
+    const { registry, made } = setup({ tickMs: 1_000 });
+    expect(vi.getTimerCount()).toBe(before + 1);
+    await idOf(registry);
+    registry.close();
+    expect(vi.getTimerCount()).toBe(before);
+    expect(made[0]?.closed()).toBe(1);
+    expect(registry.size).toBe(0);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(made[0]?.ticks()).toBe(0);
+    registry.close(); // a second close does nothing
+  });
+
+  it("refuses new visitors after close (503) but still serves the booth", async () => {
+    const { registry } = setup();
+    registry.close();
+    await expect(registry.resolve(phone())).rejects.toMatchObject({ status: 503, code: "SESSION_UNAVAILABLE" });
+    expect(await registry.resolve({ booth: true, presented: null })).toEqual({ kind: "booth", scope: BOOTH });
+  });
+
+  it("closes a wallet that finished being made after close ran, and answers that visitor 503", async () => {
+    let release: (v: VisitorSession) => void = () => undefined;
+    const slow = fakeVisitor();
+    const { registry } = setup({ create: () => new Promise<VisitorSession>((resolve) => (release = resolve)) });
+    const pending = registry.resolve(phone()).catch((err: unknown) => err);
+    registry.close();
+    release(slow);
+    expect(await pending).toMatchObject({ status: 503 });
+    expect(slow.closed()).toBe(1);
+  });
+});
+
+describe("measuring", () => {
+  it("records how long the last and the slowest wallet took to make", async () => {
+    const timings = [40, 90, 20];
+    const ctx = setup({
+      create: async () => {
+        ctx.advance(timings.shift() ?? 0);
+        return fakeVisitor();
+      },
+    });
+    for (let i = 0; i < 3; i += 1) await idOf(ctx.registry);
+    expect(ctx.registry.stats()).toMatchObject({ live: 3, created: 3, lastCreateMs: 20, maxCreateMs: 90 });
+  });
+
+  it("has nothing to report before the first wallet", () => {
+    expect(setup().registry.stats()).toEqual({ live: 0, created: 0, evicted: 0, expired: 0, lastCreateMs: null, maxCreateMs: null });
+  });
+});
+
+describe("ids", () => {
+  it("are 128 random bits as 32 lower-case hex characters, new each time", () => {
+    const a = newSessionId();
+    expect(a).toMatch(SESSION_ID_RE);
+    expect(newSessionId()).not.toBe(a);
+    expect(newSessionId((bytes) => bytes.fill(255))).toBe("ff".repeat(16));
+  });
+});
+
+describe("WALLY_SESSIONS", () => {
+  it.each([
+    [{}, true, "on"],
+    [{}, false, "off"],
+    [{ WALLY_SESSIONS: "" }, true, "on"],
+    [{ WALLY_SESSIONS: "   " }, false, "off"],
+    [{ WALLY_SESSIONS: "on" }, true, "on"],
+    [{ WALLY_SESSIONS: "on" }, false, "on"],
+    [{ WALLY_SESSIONS: "off" }, true, "off"],
+    [{ WALLY_SESSIONS: " ON " }, false, "on"],
+    [{ WALLY_SESSIONS: "Off" }, true, "off"],
+  ] as const)("%j with LAN mode %s is %s", (env, lan, mode) => {
+    expect(sessionsModeFromEnv(env, lan)).toEqual({ mode, note: null });
+  });
+
+  it.each(["true", "1", "yes", "enabled", "maybe", "on off", "0"])("an unknown value (%s) fails closed to off and says so", (value) => {
+    const found = sessionsModeFromEnv({ WALLY_SESSIONS: value }, true);
+    expect(found.mode).toBe("off");
+    expect(found.note).toContain("WALLY_SESSIONS");
+    expect(found.note).toContain(value);
+  });
+});
