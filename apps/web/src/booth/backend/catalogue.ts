@@ -111,7 +111,7 @@ function checkShopApart(catalogue: Catalogue): void {
 }
 
 function checkTable(catalogue: Catalogue, table: ScenarioTable): void {
-  const wanted = [...Object.values(table.scenarios).flatMap((s) => s.listings), ...table.custom.listings];
+  const wanted = [...Object.values(table.scenarios).flatMap((s) => [...s.listings, ...(s.cheaper?.listings ?? [])]), ...table.custom.listings];
   const missing = wanted.filter((id) => !catalogue.listings.has(id));
   if (missing.length > 0) throw new CatalogueError(`booth.json names unknown listing(s): ${[...new Set(missing)].join(", ")}`);
 }

@@ -2,6 +2,7 @@
 // in booth/compile.ts reads a sentence into rows as it is typed (an end date included: the Until row shows the day it
 // reads, cut to the longest a budget may run); suggestRules (the booth's reader) does the same job on request and says
 // what it read. Nothing here seals: toSealRequest only builds the request after validate() finds nothing wrong.
+import { DEFAULT_COMPILER_LIMITS } from "@wally/agent/compiler";
 import type { AskLocale, CompileResult, CompiledRules, SealRequest } from "../../api/types";
 import { compileMandate, expiryClamps, mentionsMonth, sellerWords, statedUntilDay } from "../../booth/compile";
 import { dollarsToMinor, minorToDollarsText } from "../../domain/money";
@@ -14,6 +15,8 @@ export type SuggestRules = (text: string, locale: AskLocale) => Promise<CompileR
 
 export const CATEGORY_SLUGS = ["apparel", "footwear", "electronics", "groceries"] as const;
 
+/** The most a budget may be, in minor units: one card's limit [F1], the compiler's ceiling (the booth refuses a seal above it). */
+const BUDGET_MAX_MINOR = DEFAULT_COMPILER_LIMITS.ceilingMinor;
 const HKT_OFFSET_MS = 8 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const BP_PER_PERCENT = 100;
@@ -123,12 +126,13 @@ export function formFromRules(rules: CompiledRules, validUntil: string): RulesFo
 /** Digits with up to two decimals: an amount in shape, whatever its size. */
 const AMOUNT_SHAPE = /^\d+(\.\d{1,2})?$/;
 
-function amountError(text: string): ErrorKey | undefined {
+function amountError(text: string, maxMinor: number = Number.MAX_SAFE_INTEGER): ErrorKey | undefined {
   const clean = cleanMoney(text);
   if (clean === "") return "seal.errAmount";
   const minor = moneyOf(text);
   // Null for text in the shape of an amount is an amount too large to hold, not a typo.
   if (minor === null) return AMOUNT_SHAPE.test(clean) ? "seal.errTooBig" : "seal.errFormat";
+  if (minor > maxMinor) return "seal.errTooBig";
   return minor > 0 ? undefined : "seal.errAmount";
 }
 
@@ -140,7 +144,7 @@ function percentError(text: string): ErrorKey | undefined {
 export function validate(form: RulesForm, now: Date): FormErrors {
   const untilOk = /^\d{4}-\d{2}-\d{2}$/.test(form.until) && !Number.isNaN(Date.parse(`${form.until}T00:00:00Z`));
   const errors: Readonly<Record<FieldName, ErrorKey | undefined>> = {
-    amount: amountError(form.amount),
+    amount: amountError(form.amount, BUDGET_MAX_MINOR),
     categories: form.categories.length === 0 ? "seal.errCategory" : undefined,
     until: !untilOk ? "seal.errDate" : Date.parse(endOfHkDay(form.until)) <= now.getTime() ? "seal.errUntil" : undefined,
     askAbove: form.askAbove === null ? undefined : amountError(form.askAbove),

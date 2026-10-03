@@ -10,7 +10,7 @@ import type { RunSummary, TraceEvent } from "../../api/types";
 import { requestKey, type AskSource } from "./ask";
 import { listingsFor, overflowListing, visitorListing, type Catalogue } from "./catalogue";
 import type { RunScenario, RunTracker } from "./events";
-import { BEAT_MODES, cardBeatOf, type ScenarioBeat, type ScenarioEntry, type ScenarioTable } from "./scenarioTable";
+import { BEAT_MODES, cardBeatOf, type ScenarioBeat, type ScenarioCheaper, type ScenarioEntry, type ScenarioTable } from "./scenarioTable";
 import { askStep, checkoutStep, submitStep, type Bought, type Step } from "./step";
 
 export interface RunnerDeps {
@@ -128,12 +128,24 @@ export class ScenarioRunner {
     });
   }
 
-  /** "See cheaper options" after a budget stop: the planner replans over the same request and listings. */
-  alternatives(decisionId: string): Promise<RunSummary> {
+  /**
+   * "See cheaper options" after a budget stop: the planner replans over the same request and listings. After a stop from a
+   * booth button that names a cheaper set (`from`), it replans over that set with that request instead: the button's own
+   * listing has nothing cheaper to offer. The pick is a proposal like any other (cart builder, judge, rules, one-off card).
+   */
+  alternatives(decisionId: string, from?: ScenarioEntry): Promise<RunSummary> {
     return this.run("custom", async (runId) => {
       this.#d.merchant.setMode("honest");
-      return askStep(await this.#d.orchestrator.suggestAlternatives({ decisionId, checkout: "auto", runId }));
+      const replan = from === undefined || from.cheaper === null ? {} : await this.#cheaperSet(from, from.cheaper);
+      return askStep(await this.#d.orchestrator.suggestAlternatives({ decisionId, checkout: "auto", runId, ...replan }));
     });
+  }
+
+  /** The listings of a cheaper set, with the button's own priced as it was when it was stopped (the shipping overflow of the moment). */
+  async #cheaperSet(entry: ScenarioEntry, cheaper: ScenarioCheaper): Promise<{ readonly requestText: string; readonly listings: readonly ListingRecord[] }> {
+    const packet = (await this.#d.orchestrator.snapshot()).packet;
+    const own = (l: ListingRecord): ListingRecord => (entry.overflow && packet !== null && entry.listings.includes(l.id) ? overflowListing(l, packet.remaining_minor) : l);
+    return { requestText: cheaper.request, listings: listingsFor(this.#d.catalogue, cheaper.listings).map(own) };
   }
 
   async #listings(entry: ScenarioEntry): Promise<readonly ListingRecord[]> {

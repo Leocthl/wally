@@ -17,7 +17,8 @@
 .photo-looking__detail { color: var(--c-ink-muted); font-size: var(--text-sm); }
 
 /* The result */
-.photo { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
+/* One column that can shrink: a wide row wraps inside it instead of widening the whole sheet. */
+.photo { container: photo / inline-size; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); padding-bottom: var(--sp-2); }
 .photo-seen { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: start; }
 .photo-seen__img { display: block; width: 5.5rem; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-sunken); }
 .photo-seen__text { display: grid; gap: var(--sp-2); min-width: 0; }
@@ -64,22 +65,40 @@
 .photo-matches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); transition: opacity var(--dur-fast) var(--ease-out); }
 /* While the list is looked up again it stays as it is (full contrast, still tappable); aria-busy tells assistive technology. */
 .photo-matches[data-refreshing] { cursor: progress; }
-.photo-card { position: relative; min-width: 0; display: grid; align-content: start; gap: var(--sp-2); width: 100%; padding: var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.photo-card { position: relative; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--sp-2); width: 100%; padding: var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
 .photo-card:active { transform: scale(0.98); }
 .photo-card[aria-checked="true"] { border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-primary); }
 .photo-card__art { display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--r-md); background: var(--c-surface-sunken); color: var(--c-ink); }
 .photo-card__art svg { width: 78%; height: auto; }
 .photo-card__name { padding: 0 var(--sp-1); font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
-.photo-card__more { display: grid; gap: var(--sp-1); padding: 0 var(--sp-1) var(--sp-1); justify-items: start; }
+.photo-card__more { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); padding: 0 var(--sp-1) var(--sp-1); justify-items: start; }
+/* A tag longer than the card wraps inside it, instead of pushing the card's content out past its border. */
+.photo-card .w-tag { white-space: normal; }
 .photo-card__shop, .photo-card__reason, .photo-card__ship { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .photo-card__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); }
 .photo-card__amount { font-weight: var(--weight-bold); font-variant-numeric: var(--num); }
 .photo-card__picked { position: absolute; top: var(--sp-3); right: var(--sp-3); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); box-shadow: var(--shadow-1); }
 
-/* The buy bar (the sheet's footer) */
-.photo-buy { display: grid; gap: var(--sp-2); }
+/* The buy bar (the sheet's footer). The bar never takes more than 45% of the screen, and 32% once the text is large (em follows the
+   text size, a rem media query does not: see shell/simulatedTip.css): the words then scroll in their own region, and the Buy button
+   under them stays where a thumb can reach it. Less side padding on the button lets its label take fewer lines at large text; at
+   normal size the label is centred and fits, so nothing moves. */
+.photo-buy { container: buy / inline-size; }
+.photo-buy__stack { display: flex; flex-direction: column; gap: var(--sp-2); max-height: 45dvh; }
+@container buy (max-width: 12em) { .photo-buy__stack { max-height: 32dvh; } }
+.photo-buy__text { display: grid; gap: var(--sp-2); min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* While the words scroll, a shade at an edge says there is more past it; the covers hide the shade at the end that has been reached. */
+.photo-buy__text[data-scrolls] {
+  background:
+    linear-gradient(var(--c-surface-raised) 30%, transparent) top / 100% 1.5rem no-repeat local,
+    linear-gradient(transparent, var(--c-surface-raised) 70%) bottom / 100% 1.5rem no-repeat local,
+    radial-gradient(farthest-side at 50% 0, var(--c-line-strong), transparent) top / 100% 0.25rem no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, var(--c-line-strong), transparent) bottom / 100% 0.25rem no-repeat scroll;
+}
+.photo-buy .w-btn { flex: none; padding-inline: var(--sp-3); }
 .photo-buy__line { font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
 .photo-buy__shop { color: var(--c-ink-muted); font-weight: var(--weight-regular); }
+.photo-buy__note { overflow-wrap: anywhere; }
 .photo-buy__note, .photo-buy__hint { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .photo-buy__hint { text-align: center; }
 
@@ -95,5 +114,10 @@
 .photo-seen--bare { grid-template-columns: minmax(0, 1fr); }
 
 /* The price limit the words named, with a way to lift it. */
-.photo-limit { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); }
+.photo-limit { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); }
 .photo-limit__text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); min-width: 0; font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+
+/* When the text is large the sheet is narrow for what it holds (em follows the text size, a rem media query does not: see
+   shell/simulatedTip.css). The cards go one to a row, and the picture sits above its words, so nothing is pushed out of its box. */
+@container photo (max-width: 15em) { .photo-matches { grid-template-columns: minmax(0, 1fr); } }
+@container photo (max-width: 12em) { .photo-seen { grid-template-columns: minmax(0, 1fr); } }

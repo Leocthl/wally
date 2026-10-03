@@ -1,6 +1,6 @@
-// One purchase in the Receipts list: the item and shop, the amount, where it ended up in words and its receipt number, and
-// "3 steps" that opens the receipts behind it (the decision, the one-off card, the charge...). A purchase is one row, so it is not
-// read as three charges; each step still opens its own receipt. Memoised like ReceiptRow.
+// One purchase in the Receipts list: the item and shop, the amount, where it ended up in words and the number of the receipt that
+// says so (the one the row opens), and "3 steps" that opens the receipts behind it (the decision, the one-off card, the charge...).
+// A purchase is one row, so it is not read as three charges; each step still opens its own receipt. Memoised like ReceiptRow.
 import { memo, useId, useState, type ReactElement } from "react";
 import { Num, NumText } from "../../../components/Num";
 import { SIMULATED } from "../../../domain/provenance";
@@ -68,7 +68,8 @@ function PurchaseRowBase({ purchase, ts, onOpen, changedSeq }: PurchaseRowProps)
   const { t } = useLocale();
   const meta = STATE_META[purchase.state];
   const flagged = changedSeq !== null && purchase.steps.some((s) => s.seq === changedSeq);
-  // The row opens the receipt that tells how the purchase ended, or, while the tamper demo's changed copy is up, the changed one.
+  // The row opens the receipt that tells how the purchase ended, or, while the tamper demo's changed copy is up, the changed one;
+  // the number it shows is that receipt's, the same "Receipt N" its sheet shows (the steps under it show their own).
   const opens = flagged && changedSeq !== null ? changedSeq : purchase.headline.seq;
   const amountClass = NOT_MOVED.has(purchase.state) ? "rc-row__amount rc-row__amount--void" : "rc-row__amount";
   return (
@@ -81,7 +82,7 @@ function PurchaseRowBase({ purchase, ts, onOpen, changedSeq }: PurchaseRowProps)
         <span className="rc-row__meta" data-state={purchase.state} data-seq={opens} data-purchase={purchase.id}>
           <span className="rc-row__state">{t(meta.label)}</span>
           {" · "}
-          <Fill text={t(PLAIN.receiptNo)} slots={{ n: <span data-ident>{receiptNumber(purchase.lead.seq)}</span> }} />
+          <Fill text={t(PLAIN.receiptNo)} slots={{ n: <span data-ident>{receiptNumber(opens)}</span> }} />
           {flagged ? <>{" · "}<span className="rc-row__changed">{t(PLAIN.changed)}</span></> : null}
         </span>
       }

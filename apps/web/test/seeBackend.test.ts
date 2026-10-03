@@ -232,11 +232,23 @@ describe("typed words (the whole typed Ask where no live planner runs)", () => {
   });
 
   it("applies the price limit in the words, and says which limit it applied", async () => {
+    const out = await typed("black jeans under 360");
+    expect(out.maxPriceMinor).toBe(36_000);
+    expect(out.matches[0]?.listingId).toBe("lst_photoJeansBlack"); // HK$329 plus HK$30 shipping: HK$359, under the limit
+    expect(out.matches.map((m) => m.listingId)).toContain("lst_photoJeansDenim"); // HK$349, free shipping
+    expect(out.matches.every((m) => m.totalMinor <= 36_000)).toBe(true);
+  });
+
+  it("counts shipping against the limit: HK$329 black jeans plus HK$30 shipping are over HK$340", async () => {
     const out = await typed("black jeans under 340");
     expect(out.maxPriceMinor).toBe(34_000);
-    expect(out.matches[0]?.listingId).toBe("lst_photoJeansBlack"); // HK$329
-    expect(out.matches.map((m) => m.listingId)).not.toContain("lst_photoJeansDenim"); // HK$349 is over the limit
-    expect(out.matches.every((m) => m.priceMinor <= 34_000)).toBe(true);
+    const ids = out.matches.map((m) => m.listingId);
+    expect(ids).not.toContain("lst_photoJeansBlack"); // priced HK$329, but the card is for HK$359
+    expect(ids).not.toContain("lst_photoJeansDenim"); // HK$349
+    expect(out.matches.every((m) => m.totalMinor <= 34_000)).toBe(true);
+    const white = await typed("white tee under 120"); // the HK$99 white tee ships for HK$30: HK$129
+    expect(white.matches.map((m) => m.listingId)).not.toContain("lst_photoTeeWhite");
+    expect((await typed("white tee under 129")).matches.map((m) => m.listingId)).toContain("lst_photoTeeWhite");
   });
 
   it("says so when everything of that kind costs more than the limit", async () => {
@@ -288,10 +300,10 @@ describe("typed words (the whole typed Ask where no live planner runs)", () => {
     expect(out.matches).toEqual([]);
   });
 
-  it("chips sent with a limit keep the limit", async () => {
-    const out = await see(parseSeeRequest({ attributes: { kind: "tee" }, maxPriceMinor: 12_000 }), { shop, reader: null, logger: SILENT_BACKEND_LOGGER });
-    expect(out.maxPriceMinor).toBe(12_000);
-    expect(out.matches.every((m) => m.priceMinor <= 12_000)).toBe(true);
+  it("chips sent with a limit keep the limit, and the limit counts shipping", async () => {
+    const out = await see(parseSeeRequest({ attributes: { kind: "tee" }, maxPriceMinor: 14_000 }), { shop, reader: null, logger: SILENT_BACKEND_LOGGER });
+    expect(out.maxPriceMinor).toBe(14_000);
+    expect(out.matches.every((m) => m.totalMinor <= 14_000)).toBe(true);
     expect(out.matches.length).toBeGreaterThan(0);
   });
 });

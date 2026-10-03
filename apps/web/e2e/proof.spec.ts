@@ -31,7 +31,7 @@ test("Receipts: rows by day, filters, a sheet, and the deep link", async ({ page
   // One purchase is one row: the item, where it ended up, its receipt number, and its steps behind a toggle.
   const bought = page.locator('.rc-row__meta[data-state="paid"]').first();
   await expect(bought).toBeVisible();
-  await expect(bought).toContainText("Paid · Receipt 2");
+  await expect(bought).toContainText("Paid · Receipt 4"); // the receipt the row opens: the charge
   await expect(page.locator(".rc-purchase")).toHaveCount(1);
   await expect(page.locator(".rc-purchase [data-steps-toggle]")).toContainText("3 steps");
   await bought.click();

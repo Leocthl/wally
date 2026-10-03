@@ -37,7 +37,7 @@ test("runs Normal purchase from Try asking and shows it in Recent and on the bud
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED");
   const first = page.getByRole("list", { name: "Recent" }).getByRole("link").first();
-  await expect(first).toContainText("Paid · Receipt 2");
+  await expect(first).toContainText("Paid · Receipt 4"); // the charge: the receipt that says it was paid
   await expect(first).toContainText("HK$259");
   await first.click();
   await expect(page).toHaveURL(/#\/wally\?d=dec_/);

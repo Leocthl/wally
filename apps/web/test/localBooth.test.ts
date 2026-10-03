@@ -10,6 +10,7 @@ import { LocalApiClient } from "../src/api/local/LocalApiClient";
 import { loadBundle } from "../src/api/local/bundle";
 import { m0SealRequest } from "../src/api/mock/presets";
 import { SCENARIO_IDS, type ScenarioId, type TraceEvent } from "../src/api/types";
+import { LISTING_TEXT_HARD_CAP } from "../src/booth/scenarios";
 
 const BUNDLE = loadBundle();
 const open: LocalApiClient[] = [];
@@ -112,10 +113,19 @@ describe("on-device booth on the real stack", () => {
     expect((await decisionOf(client, run.decisionId))?.explanation?.template_id).toBe("R10.injection");
   });
 
+  it("takes a typed listing up to the listing record's own limit and refuses one character more, before any run starts", async () => {
+    const { client } = await sealed();
+    expect(LISTING_TEXT_HARD_CAP).toBe(4_000);
+    await expect(client.propose({ listingText: "x".repeat(LISTING_TEXT_HARD_CAP) })).resolves.toMatchObject({ scenario: "custom" });
+    const logged = (await client.snapshot()).log.entries.length;
+    await expect(client.propose({ listingText: "x".repeat(LISTING_TEXT_HARD_CAP + 1) })).rejects.toMatchObject({ code: "TEXT_TOO_LONG" });
+    expect((await client.snapshot()).log.entries).toHaveLength(logged);
+  });
+
   it("validates every call at the boundary like the HTTP routes (fail closed, nothing logged)", async () => {
     const { client } = await sealed();
     await expect(client.propose({ listingText: "   " })).rejects.toMatchObject({ code: "INVALID_FIELD" });
-    await expect(client.propose({ listingText: "x".repeat(20_001) })).rejects.toMatchObject({ code: "TEXT_TOO_LONG" });
+    await expect(client.propose({ listingText: "x".repeat(LISTING_TEXT_HARD_CAP + 1) })).rejects.toMatchObject({ code: "TEXT_TOO_LONG" });
     await expect(client.runScenario("nope" as ScenarioId)).rejects.toMatchObject({ code: "UNKNOWN_SCENARIO" });
     await expect(client.answerEscalation({ decisionId: "not-a-decision", choice: "APPROVE" })).rejects.toMatchObject({ code: "INVALID_FIELD" });
     expect((await client.snapshot()).log.entries).toHaveLength(1);

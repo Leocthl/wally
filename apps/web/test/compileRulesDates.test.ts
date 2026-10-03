@@ -26,12 +26,23 @@ describe("the fixed rules parser reads a stated end date", () => {
     expect(result.confirmRequired).toBe(true);
   });
 
-  it("a date further off than a budget may run is cut to 31 days, and the clamp reads as the model compiler's does", async () => {
+  it("a date further off than a budget may run is cut to 31 days, and the clamp is said in plain words", async () => {
     const result = await read("HK$800 for clothes until 31 Dec");
     expect(result.validUntil).toBe("2026-11-03T02:00:00Z");
     expect(expiryLabel(result)).toMatchObject({ en: "Until 3 Nov", zhHK: "至11月3日" });
-    expect(result.clamped).toEqual(["valid_until: asked 31 Dec, applied 31 days. a budget runs at most 31 days"]);
+    expect(result.clamped).toEqual(["The end date is cut to 31 days from now, the longest a budget can run."]);
     expect(result.notes).toEqual(["Read by the fixed rules parser, not a model."]);
+  });
+
+  it("the clamp is never the developer line (field names, asked and applied), in either language, from either reader", async () => {
+    const zh = await read("HK$800 for clothes, 至2026年12月31日", "zh-HK");
+    expect(zh.clamped).toEqual(["結束日期已縮短至由今日起 31 日，這是一個預算最長可維持的日數。"]);
+    const model = await compileRules(
+      { text: "HK$800 for clothes until 31 Dec", locale: "en" },
+      { now: NOW, model: async () => ({ ok: true, rules: { budget: { amount_minor: 80_000, currency: "HKD" }, categories: ["apparel"], merchants: { allow: null, deny: [] }, seller_check: { require_capture: true } }, validUntil: "2026-11-03T02:00:00Z", labels: [], notes: [], clamped: [{ field: "budget.amount_minor", asked: "HK$5000", applied: "HK$2000", why: "one card's limit ceiling [F1]" }, { field: "valid_until", asked: "31 Dec", applied: "31 days", why: "a budget runs at most 31 days" }], confirmRequired: true, source: "generative", model: "m", latencyMs: 1 }) },
+    );
+    expect(model.clamped).toEqual(["You asked for HK$5000; Wally used HK$2000 instead (one card's limit ceiling).", "The end date is cut to 31 days from now, the longest a budget can run."]);
+    for (const line of [...zh.clamped, ...model.clamped]) expect(line).not.toMatch(/valid_until|amount_minor|asked \w+, applied|\[F\d+/);
   });
 
   it("a date that is not on the calendar, or no date at all, is the end of this month", async () => {

@@ -33,6 +33,7 @@ import type {
   VerifyOutcome,
 } from "../../api/types";
 import type { AskSource } from "./ask";
+import { withAskLimit } from "./askLimit";
 import type { Catalogue } from "./catalogue";
 import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
@@ -78,6 +79,9 @@ const CLOSED_ESCALATION_CODES: readonly string[] = ["UNKNOWN_ESCALATION", "INVAL
 
 const CLOSED_ESCALATION_MESSAGE = "This escalation is no longer open (answered, or stopped by R11).";
 
+/** Memory bound only, like the orchestrator's own (MAX_REMEMBERED_STOPS): how many button stops are kept for "See cheaper options". */
+const MAX_BUTTON_STOPS = 32;
+
 /** Before the first successful seal: nothing sealed, so the UI seals the preset itself. */
 const EMPTY_SNAPSHOT: BoothSnapshot = { mandate: null, intentText: null, packet: null, cards: [], log: { entries: [], head: null, tampered: null }, escalations: [] };
 
@@ -92,6 +96,8 @@ export class OrchestratorBackend implements BoothBackend {
   #family: FamilyKit | null = null;
   #queue: Promise<unknown> = Promise.resolve();
   #busy = 0;
+  /** Stops of booth buttons that name a cheaper set (ScenarioEntry.cheaper), by decision id; the newest MAX_BUTTON_STOPS, dropped with the session. */
+  #buttonStops: ReadonlyMap<string, ScenarioEntry> = new Map();
 
   constructor(deps: BackendDeps) {
     this.#d = deps;
@@ -202,7 +208,8 @@ export class OrchestratorBackend implements BoothBackend {
     const restore = this.#holdOut(old, kit);
     let session: Session;
     try {
-      session = await openSession({ ...deps, planner: withPhotoPicks(deps.planner, this.#d.catalogue.shop) }, req, kit);
+      // The planner each session asks: a photo pick is fixed by code, and a typed ask over the whole shelf is kept to the price limit it names.
+      session = await openSession({ ...deps, planner: withAskLimit(withPhotoPicks(deps.planner, this.#d.catalogue.shop), this.#d.ask) }, req, kit);
     } catch (err) {
       restore();
       throw err;
@@ -210,6 +217,7 @@ export class OrchestratorBackend implements BoothBackend {
     this.#deps = deps;
     this.#session = session;
     this.#tamper = null;
+    this.#buttonStops = new Map();
     old?.close();
     old?.familyKit?.ledger.release(old.familyKit.parentId, old.mandateId); // the replaced budget no longer holds Mum's money
     this.#tracker.clear();
@@ -248,8 +256,16 @@ export class OrchestratorBackend implements BoothBackend {
 
   runScenario(id: ScenarioId): Promise<RunSummary> {
     const entry = this.#d.table.scenarios[id];
-    if (entry.family !== null) return this.#enqueue(() => this.#familyScenario(entry, entry.family?.sealMinor ?? 0));
-    return this.#op((session) => this.#runner(session).scenario(entry));
+    const run = entry.family !== null ? this.#enqueue(() => this.#familyScenario(entry, entry.family?.sealMinor ?? 0)) : this.#op((session) => this.#runner(session).scenario(entry));
+    return run.then((summary) => this.#rememberButtonStop(entry, summary));
+  }
+
+  /** A button that names a cheaper set and was stopped by the budget (a DENY): "See cheaper options" replans over that set. */
+  #rememberButtonStop(entry: ScenarioEntry, summary: RunSummary): RunSummary {
+    if (entry.cheaper !== null && summary.outcome === "DENY" && summary.decisionId !== undefined) {
+      this.#buttonStops = new Map([...this.#buttonStops, [summary.decisionId, entry] as const].slice(-MAX_BUTTON_STOPS));
+    }
+    return summary;
   }
 
   /**
@@ -315,7 +331,7 @@ export class OrchestratorBackend implements BoothBackend {
   suggestAlternatives(req: AlternativesRequest): Promise<RunSummary> {
     return this.#op(async (session) => {
       await this.#requireBudgetStop(session, req.decisionId);
-      return this.#runner(session).alternatives(req.decisionId);
+      return this.#runner(session).alternatives(req.decisionId, this.#buttonStops.get(req.decisionId));
     });
   }
 

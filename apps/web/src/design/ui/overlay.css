@@ -43,6 +43,10 @@
 .w-sheet__title { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 .w-sheet__desc { color: var(--c-ink-muted); margin-top: var(--sp-1); }
 .w-sheet__body { flex: 1; min-height: 0; margin-top: var(--sp-4); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+/* Sheet scrollDescription: the description is the first line of the body. The body starts where the description did and the gap
+   under it moves in too, so the sheet looks the same until it is scrolled. */
+.w-sheet__body--desc { margin-top: 0; }
+.w-sheet__body--desc > .w-sheet__desc { margin-bottom: var(--sp-4); }
 .w-sheet__footer { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); }
 
 .w-dialog {

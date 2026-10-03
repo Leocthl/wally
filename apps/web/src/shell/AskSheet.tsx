@@ -25,6 +25,7 @@ import { noteAsk } from "../screens/run/askEcho";
 import { TRICK_EXAMPLES } from "../booth/trickExamples";
 import { useProposer, useScenarioRunner } from "./actions";
 import { useVoiceInput } from "./voice/useVoiceInput";
+import { TrickCount } from "./TrickCount";
 import { VoiceButton, VoiceStatusLine } from "./voice/VoiceButton";
 
 /** The planner's request cap [F56]. The server checks it again after NFKC; the field just stops typing there. */
@@ -36,7 +37,8 @@ export type AskWally = (request: string) => Promise<void> | void;
 /**
  * "Try to trick Wally": the text becomes the description of a listing that only the judge reads. A host with no live judge (the
  * on-device page, GitHub Pages, the native shells, a booth on the recorded judge) cannot judge text it never saw, so the box
- * is switched off there, says so in one line, and offers three recorded examples to run instead.
+ * is switched off there, says so in one line, and offers three recorded examples to run instead. The box stops at the listing
+ * record's own text limit (LISTING_TEXT_HARD_CAP), and a counter shows how much room is left once the text nears it.
  */
 function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; readonly busy: boolean }): ReactElement {
   const { t, locale } = useLocale();
@@ -68,6 +70,7 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
         disabled={recordedOnly}
         onChange={(e) => setText(e.target.value)}
       />
+      {recordedOnly ? null : <TrickCount length={text.length} max={LISTING_TEXT_HARD_CAP} />}
       {recordedOnly ? (
         <div className="shell-trick__examples" role="group" aria-labelledby={examplesId}>
           <p id={examplesId} className="shell-trick__examples-title">{t(UI["shell.trickExamplesTitle"])}</p>

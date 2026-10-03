@@ -52,7 +52,8 @@ describe("Receipts (plain): the list", () => {
     expect(rows).toHaveLength(2); // the budget sealed, and the purchase
     const purchase = rows.find((r) => r.classList.contains("rc-purchase"))!;
     expect(purchase).toHaveTextContent("Cotton tee");
-    expect(purchase.querySelector(".rc-row__meta")).toHaveTextContent("Paid · Receipt 2");
+    // The row says the number of the receipt it opens (the charge, receipt 4); its steps below keep their own (2, 3, 4).
+    expect(purchase.querySelector(".rc-row__meta")).toHaveTextContent("Paid · Receipt 4");
     // HK$259 is on the list once (the HK$800 is the budget sealed).
     expect([...document.querySelectorAll(".rc-row__amount")].map((a) => a.textContent)).toEqual(["HK$259", "HK$800"]);
     expect([...purchase.querySelectorAll(".rc-row__amount")].map((a) => a.textContent)).toEqual(["HK$259"]);
@@ -85,12 +86,15 @@ describe("Receipts (plain): the list", () => {
     expect(numsWithoutChip(document.body)).toEqual([]);
   });
 
-  it("numbers a purchase by its decision, the number Home's Recent shows for it", async () => {
+  it("numbers a purchase by the receipt its row opens, the number Home's Recent shows for it", async () => {
     const { entries } = await seeded(["flagged", "normal"]);
-    const decisions = entries.filter((e) => e.kind === "DECISION");
+    const stop = entries.find((e) => e.kind === "DECISION")!;
+    const charge = entries.find((e) => e.kind === "CARD_EVENT")!;
     const metas = [...document.querySelectorAll<HTMLElement>(".rc-row__meta")].filter((m) => m.dataset["purchase"] !== undefined);
-    // Newest first: the bought item (its decision is the second decision), then the stop.
-    expect(metas.map((m) => m.textContent)).toEqual([`Paid · Receipt ${decisions[1]!.seq + 1}`, `Stopped before paying · Receipt ${decisions[0]!.seq + 1}`]);
+    // Newest first: the bought item (the charge is the receipt that says it was paid, and the one the row opens), then the stop
+    // (its decision is its only receipt).
+    expect(metas.map((m) => m.textContent)).toEqual([`Paid · Receipt ${charge.seq + 1}`, `Stopped before paying · Receipt ${stop.seq + 1}`]);
+    expect(metas.map((m) => m.dataset["seq"])).toEqual([String(charge.seq), String(stop.seq)]);
   });
 
   it("keeps the filters, the counts and the newest-first order, counting purchases", async () => {

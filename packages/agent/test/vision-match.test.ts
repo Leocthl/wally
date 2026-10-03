@@ -151,9 +151,11 @@ describe("the shopper's own price limit (a filter, unlike the budget badge)", ()
     expect(matchShelf(query({ maxPriceMinor: 14_899 }), shelf).map((m) => m.item.id)).toEqual([cheap.id]);
   });
 
-  it("compares the item's price, not what shipping adds", () => {
+  it("counts the whole order: an item of HK$99 plus HK$30 shipping is HK$129 against the limit", () => {
     const shipped = item({ priceMinor: 9_900, shippingMinor: 3_000 });
-    expect(matchShelf(query({ maxPriceMinor: 9_900 }), [shipped]).map((m) => m.item.id)).toEqual([shipped.id]);
+    expect(matchShelf(query({ maxPriceMinor: 9_900 }), [shipped])).toEqual([]);
+    expect(matchShelf(query({ maxPriceMinor: 12_899 }), [shipped])).toEqual([]);
+    expect(matchShelf(query({ maxPriceMinor: 12_900 }), [shipped]).map((m) => m.item.id)).toEqual([shipped.id]);
   });
 
   it("is no limit when it is null or not given", () => {

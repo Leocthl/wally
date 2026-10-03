@@ -27,7 +27,20 @@ const WHY_FALLBACK: Readonly<Record<AskLocale, (reason: string) => string>> = {
 };
 
 const noteText = (note: Note, locale: AskLocale): string => (locale === "zh-HK" ? note.zhHK : note.en);
-const clampText = (c: Clamp): string => `${c.field}: asked ${c.asked}, applied ${c.applied}. ${c.why}`;
+/** The compiler's own words for a bracketed register id ("one card's limit ceiling [F1]") are for the team, not the shopper. */
+const withoutIds = (why: string): string => why.replace(/\s*\[F\d+[^\]]*\]/g, "");
+
+/**
+ * What the suggestion left out, in the shopper's words and language: never the field names, "asked ... applied ..." or register
+ * ids that the compiler keeps for the team. The end date, the case a shopper meets, has its own sentence.
+ */
+function clampText(c: Clamp, locale: AskLocale): string {
+  const days = /^(\d+) days$/.exec(c.applied)?.[1];
+  if (c.field === "valid_until" && days !== undefined) {
+    return locale === "zh-HK" ? `結束日期已縮短至由今日起 ${days} 日，這是一個預算最長可維持的日數。` : `The end date is cut to ${days} days from now, the longest a budget can run.`; // NEEDS-REVIEW (zh-HK)
+  }
+  return locale === "zh-HK" ? `你要求的「${c.asked}」已改為「${c.applied}」。` : `You asked for ${c.asked}; Wally used ${c.applied} instead (${withoutIds(c.why)}).`; // NEEDS-REVIEW (zh-HK)
+}
 
 function fromModel(out: Extract<CompileOutcome, { ok: true }>, locale: AskLocale): CompileResult {
   return {
@@ -36,7 +49,7 @@ function fromModel(out: Extract<CompileOutcome, { ok: true }>, locale: AskLocale
     validUntil: out.validUntil,
     labels: out.labels,
     notes: out.notes.map((n) => noteText(n, locale)),
-    clamped: out.clamped.map(clampText),
+    clamped: out.clamped.map((c) => clampText(c, locale)),
     confirmRequired: true,
   };
 }
@@ -51,7 +64,7 @@ function fromRules(req: CompileRulesRequest, now: Date, why: readonly string[]):
   const rules = chipsToRules(compiled.chips);
   const validUntil = validUntilFor(compiled.chips, now);
   const labels: readonly CompileLabel[] = labelsFor(rules, validUntil, DEFAULT_CATEGORIES);
-  const clamped = expiryClamps(compiled.chips, now).map(clampText);
+  const clamped = expiryClamps(compiled.chips, now).map((c) => clampText(c, req.locale));
   return { source: "rules", rules, validUntil, labels, notes: [...why, NO_MODEL_NOTE[req.locale]], clamped, confirmRequired: true };
 }
 

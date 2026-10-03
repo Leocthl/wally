@@ -5,16 +5,14 @@
 // paying). A picture stays on this page and is never saved. Loaded as its own chunk the first time it is needed.
 import { useEffect, useId, useMemo, useRef, useState, type ReactElement, type RefObject } from "react";
 import { colorSwatch } from "@wally/agent/vision";
-import { Num } from "../../components/Num";
-import { SIMULATED } from "../../domain/provenance";
 import { useBoothContext } from "../../hooks/useBooth";
-import { COLOR_WORDS, FIT_WORDS, itemName, KIND_WORDS, PATTERN_WORDS, PHOTO, seesPhrase, STYLE_WORDS } from "../../i18n/photo";
-import { Button } from "../../ui/Button";
+import { COLOR_WORDS, FIT_WORDS, KIND_WORDS, PATTERN_WORDS, PHOTO, seesPhrase, STYLE_WORDS } from "../../i18n/photo";
 import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { Sheet } from "../../ui/Overlay";
-import { MatchCards, shopName } from "./MatchCards";
+import { BuyBar } from "./BuyBar";
+import { MatchCards } from "./MatchCards";
 import { ChipGroup, PaletteDots } from "./PhotoChips";
 import { Announce, LimitRow, Looking, LookupFailed, Notice, Problem, useAfter, type Flow } from "./PhotoStates";
 import { chosenKind, COLOR_CHOICES, FIT_CHOICES, KIND_CHOICES, PATTERN_CHOICES, STYLE_CHOICES } from "./photoModel";
@@ -128,7 +126,7 @@ function useKeepFocus(phaseName: string): RefObject<HTMLDivElement | null> {
 }
 
 export default function PhotoSheet({ source, onClose, onPickFile }: PhotoSheetProps): ReactElement {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { api, info, state, busy } = useBoothContext();
   const flow = usePhotoFlow(source, { api, mode: info?.features?.see === "model" ? "model" : "palette" });
   const buy = usePhotoBuy();
@@ -142,32 +140,20 @@ export default function PhotoSheet({ source, onClose, onPickFile }: PhotoSheetPr
   const lead = !words && flow.mode === "palette" ? PHOTO.leadPlates : words ? PHOTO.wordsLead : PHOTO.lead;
   const footer =
     phase.name === "ready" && picked !== null ? (
-      <div className="photo-buy" data-slot="photo-buy">
-        <p className="photo-buy__line">
-          {t(PHOTO.buyNamed(itemName(locale, picked)))} <span className="photo-buy__shop">{shopName(picked.merchantName)}</span>
-        </p>
-        <p className="photo-buy__note">
-          {t(PHOTO.cardFor)} <Num kind="money" value={picked.totalMinor} prov={SIMULATED} /> {t(PHOTO.buyNote)}
-        </p>
-        <Button
-          size="lg"
-          block
-          icon={<Icon name="sparkle" size={20} />}
-          disabled={busy}
-          data-slot="photo-buy-button"
-          onClick={() => {
-            onClose();
-            buy(picked);
-          }}
-        >
-          {t(PHOTO.buy)}
-        </Button>
-      </div>
+      <BuyBar
+        match={picked}
+        busy={busy}
+        onBuy={() => {
+          onClose();
+          buy(picked);
+        }}
+      />
     ) : phase.name === "ready" && flow.matches.length > 0 ? (
       <p className="photo-buy__hint" data-slot="photo-hint">{t(PHOTO.pickPrompt)}</p>
     ) : null;
+  // The lead sentence scrolls with the body: fixed above it, with the buy bar below, it left no room for the cards at large text.
   return (
-    <Sheet open={source !== null} onClose={onClose} title={t(words ? PHOTO.wordsTitle : PHOTO.title)} description={phase.name === "ready" ? t(lead) : undefined} footer={footer}>
+    <Sheet open={source !== null} onClose={onClose} title={t(words ? PHOTO.wordsTitle : PHOTO.title)} description={phase.name === "ready" ? t(lead) : undefined} footer={footer} scrollDescription>
       <Announce flow={flow} />
       <div ref={body} tabIndex={-1} className="photo-body" data-slot="photo-body">
         {showLooking ? <Looking flow={flow} onCancel={onClose} /> : null}

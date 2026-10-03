@@ -98,6 +98,7 @@
       "run": "buy",
       "beats": [],
       "overflow": true,
+      "cheaper": { "request": "something cheaper, like ankle socks", "listings": ["lst_demoJacket", "lst_demoTee", "lst_demoSocks"] },
       "expect": { "outcome": "DENY", "templateId": "R3.over_remaining", "events": [] }
     },
     "injected": {

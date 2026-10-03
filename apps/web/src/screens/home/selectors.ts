@@ -10,7 +10,7 @@ import { plainName } from "../run/model/item";
 export interface RecentRow {
   /** The decision the purchase started with; Wally's screen pins the whole purchase by it. */
   readonly id: string;
-  /** The receipt number's source: the log sequence number of that decision. */
+  /** The receipt number's source: the log sequence number of the receipt that tells how the purchase ended (what its Receipts row opens). */
   readonly seq: number;
   readonly state: PurchaseState;
   readonly title: string;
@@ -43,7 +43,7 @@ export function recentPurchases(state: BoothState, limit = 3): readonly RecentRo
       return [
         {
           id: purchase.id,
-          seq: purchase.lead.seq,
+          seq: purchase.headline.seq,
           state: purchase.state,
           title: plainName(purchase.lead.item ?? purchase.lead.merchant ?? ""),
           merchant: plainName(purchase.lead.merchant ?? ""),

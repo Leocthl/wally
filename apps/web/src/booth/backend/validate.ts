@@ -2,6 +2,7 @@
 // routes run them on parsed JSON bodies; the on-device client runs them on every call from the UI. Unknown keys are
 // refused so a typo never turns into a silent default. Deep rule checks happen when the credential is built and
 // validated against mandate-credential.schema.json.
+import { DEFAULT_COMPILER_LIMITS } from "@wally/agent/compiler";
 import { DEFAULT_PLANNER_CONFIG } from "@wally/agent/planner";
 import { checkImage, fromBase64, isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_IMAGE_BYTES, MAX_LIMIT_DOLLARS, MAX_STYLES, type Color, type Fit, type ImageMime, type PaletteEntry, type Style } from "@wally/agent/vision";
 import type { CompiledRules } from "@wally/core/generated";
@@ -23,6 +24,8 @@ import { badRequest, BoothError } from "./errors";
 /** A parsed JSON object (an HTTP body, or the request object the UI passes in). */
 export type JsonObject = Readonly<Record<string, unknown>>;
 
+const isObject = (value: unknown): value is JsonObject => value !== null && typeof value === "object" && !Array.isArray(value);
+
 /** mandate.schema.json IntentText maxLength. */
 export const MAX_INTENT_CHARS = 280;
 /** Longest typed request, measured after NFKC normalisation: the planner's request cap [F56]. */
@@ -31,6 +34,8 @@ export const MAX_REQUEST_CHARS = DEFAULT_PLANNER_CONFIG.maxRequestChars;
 const RAW_FACTOR = 4;
 /** mandate.schema.json Revocation.reason maxLength. */
 export const MAX_REVOKE_REASON_CHARS = 200;
+/** The most a budget may be, in minor units: the compiler's ceiling [F1], the figure the first run caps a typed amount to. A seal above it is a typo or an attack, not a budget. */
+export const MAX_SEAL_BUDGET_MINOR = DEFAULT_COMPILER_LIMITS.ceilingMinor;
 /** mandate.schema.json DecisionId. */
 const DECISION_ID_RE = /^dec_[A-Za-z0-9]{6,40}$/;
 /** RFC 3339 UTC with a Z suffix and optional fraction (mandate.schema.json Timestamp). */
@@ -58,11 +63,22 @@ function parseFamily(value: unknown): FamilySeal | undefined {
   return { parent: "mum" };
 }
 
+/** A budget object with an amount outside 1..MAX_SEAL_BUDGET_MINOR (or not a whole number) is refused here; one with no budget object is left to the credential's schema check. */
+function checkBudgetAmount(rules: object): void {
+  const budget = (rules as JsonObject)["budget"];
+  if (!isObject(budget)) return;
+  const amount = budget["amount_minor"];
+  if (typeof amount !== "number" || !Number.isSafeInteger(amount) || amount < 1 || amount > MAX_SEAL_BUDGET_MINOR) {
+    throw badRequest("INVALID_FIELD", `rules.budget.amount_minor must be a whole number of minor units from 1 to ${MAX_SEAL_BUDGET_MINOR}`);
+  }
+}
+
 export function parseSealRequest(body: JsonObject): SealRequest {
   onlyKeys(body, ["intentText", "rules", "validUntil", "family"]);
   const intentText = text(body, "intentText", 1, MAX_INTENT_CHARS);
   const rules = body["rules"];
   if (rules === null || typeof rules !== "object" || Array.isArray(rules)) throw badRequest("INVALID_FIELD", "rules must be an object");
+  checkBudgetAmount(rules);
   const validUntil = text(body, "validUntil", 1, 40);
   if (!TIMESTAMP_RE.test(validUntil) || Number.isNaN(Date.parse(validUntil))) throw badRequest("INVALID_FIELD", "validUntil must be RFC 3339 UTC");
   const family = parseFamily(body["family"]);
@@ -132,8 +148,6 @@ export interface SeeInput {
 
 /** The most a price limit may be, in minor units: HK$99,999 [F105], the same bound the words are read with. */
 const MAX_LIMIT_MINOR = MAX_LIMIT_DOLLARS * 100;
-
-const isObject = (value: unknown): value is JsonObject => value !== null && typeof value === "object" && !Array.isArray(value);
 
 function parseImage(value: unknown): NonNullable<SeeInput["image"]> {
   if (!isObject(value)) throw badRequest("INVALID_FIELD", "image must be an object");
