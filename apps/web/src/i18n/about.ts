@@ -12,7 +12,7 @@ export const ABOUT = {
     laya: label("A checker on this laptop", "呢部手提電腦上的檢查器"), // NEEDS-REVIEW
     replay: label("Recorded answers", "錄製答案"), // NEEDS-REVIEW
   } satisfies Readonly<Record<string, LabelPair>>,
-  remembers: label("This demo remembers your session on this phone until you start it over.", "呢個示範會喺呢部手機記住你嘅操作，直至你重新開始。"), // NEEDS-REVIEW
+  remembers: label("This demo remembers your session on this device until you start it over.", "呢個示範會喺呢部裝置記住你嘅操作，直至你重新開始。"), // NEEDS-REVIEW
   notes: label("Technical notes", "技術備註"), // NEEDS-REVIEW
   notesLead: label("What the booth says about itself, in English.", "展位自述，英文原文。"), // NEEDS-REVIEW
   // Said once, only on a phone that has a practice wallet of its own on the booth Mac (info.sessions is "private").

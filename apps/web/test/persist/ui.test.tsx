@@ -71,7 +71,7 @@ describe("the app on a restored session", () => {
 });
 
 describe("About says the demo remembers, only while it does", () => {
-  const LINE = "This demo remembers your session on this phone until you start it over.";
+  const LINE = "This demo remembers your session on this device until you start it over.";
 
   async function aboutOf(storage: MemoryStorage) {
     current = rig(storage);
@@ -94,7 +94,7 @@ describe("About says the demo remembers, only while it does", () => {
     const { user, sheet } = await aboutOf(new MemoryStorage());
     await user.click(within(sheet).getAllByRole("radio", { name: "繁體中文" })[0]!);
     const zh = await screen.findByRole("dialog", { name: "關於 Wally" });
-    expect(within(zh).getByText("呢個示範會喺呢部手機記住你嘅操作，直至你重新開始。")).toBeInTheDocument();
+    expect(within(zh).getByText("呢個示範會喺呢部裝置記住你嘅操作，直至你重新開始。")).toBeInTheDocument();
   });
 
   it("is not there when the browser will not keep anything", async () => {

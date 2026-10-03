@@ -68,7 +68,7 @@ describe("what the page says about its keys", () => {
     const client = await boot();
     await client.seal(sealRequest(clock, 300));
     expect(((await client.info()) as { keys?: string }).keys).toMatch(/kept in this browser until the demo is started over/);
-    expect((await client.exportLog()).publicKeys.note).toMatch(/kept on this phone until the demo is started over/);
+    expect((await client.exportLog()).publicKeys.note).toMatch(/kept on this device until the demo is started over/);
   });
 
   it("keeps the old wording (new every time the page loads) when nothing is kept", async () => {

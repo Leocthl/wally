@@ -39,7 +39,7 @@ export interface PersistOptions {
 
 /** What info() says about the keys while the session is kept (the base says they are new on every load). */
 const KEPT_KEYS_NOTE = "Throwaway demo keys, kept in this browser until the demo is started over.";
-const KEPT_PUBLIC_KEYS_NOTE = "Throwaway demo keys this page signs with, kept on this phone until the demo is started over (rail SIMULATED). Public keys only.";
+const KEPT_PUBLIC_KEYS_NOTE = "Throwaway demo keys this page signs with, kept on this device until the demo is started over (rail SIMULATED). Public keys only.";
 
 /**
  * Why something went wrong, in words that cannot hold a key: the refusals this lane writes (the rail could not be rebuilt,

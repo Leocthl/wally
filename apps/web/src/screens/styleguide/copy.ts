@@ -73,7 +73,7 @@ export const C = {
 
   proof: label("Proof", "證明"), // NEEDS-REVIEW
   verifiedCount: (n: string): LabelPair => label(`All ${n} receipts check out`, `${n} 張收據全部核實`), // NEEDS-REVIEW
-  verifiedHere: label("Verified on this phone. Nothing was sent anywhere.", "已在這部手機核實，沒有傳送任何資料。"), // NEEDS-REVIEW
+  verifiedHere: label("Verified on this device. Nothing was sent anywhere.", "已在這部裝置核實，沒有傳送任何資料。"), // NEEDS-REVIEW
   brokenAt: (n: string): LabelPair => label(`Broken at receipt ${n}`, `第 ${n} 張收據出錯`), // NEEDS-REVIEW
   brokenBody: label("Someone changed a receipt after it was signed. The proof catches it.", "有人在簽署後改動了收據，證明即時發現。"), // NEEDS-REVIEW
   tamper: label("Try to tamper", "試吓竄改"), // NEEDS-REVIEW

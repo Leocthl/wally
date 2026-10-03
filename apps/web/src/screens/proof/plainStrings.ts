@@ -14,7 +14,7 @@ export const PLAIN = {
   passTitleOne: label("Your receipt is untouched", "你的收據完好無缺"), // NEEDS-REVIEW
   passBody: label("Nothing was changed, removed or moved since Wally wrote them.", "自 Wally 寫下後，沒有任何收據被改動、刪走或調動。"), // NEEDS-REVIEW
   passBodyOne: label("Nothing was changed or removed since Wally wrote it.", "自 Wally 寫下後，這張收據沒有被改動或刪走。"), // NEEDS-REVIEW
-  wherePhone: label("Checked on this phone just now.", "剛剛已在這部手機檢查。"), // NEEDS-REVIEW
+  wherePhone: label("Checked on this device just now.", "剛剛已在這部裝置檢查。"), // NEEDS-REVIEW
   whereBooth: label("Checked by the booth laptop just now.", "剛剛由展位電腦檢查。"), // NEEDS-REVIEW
   skipSignatures: label("This demo mode does not check the signatures.", "此示範模式不檢查簽署。"), // NEEDS-REVIEW
   skipOther: label("Some checks do not run in this demo mode.", "此示範模式有些檢查不會執行。"), // NEEDS-REVIEW

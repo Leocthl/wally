@@ -63,7 +63,7 @@ describe("Proof (plain): the automatic check", () => {
     const { verify } = await proof();
     expect(card()).toHaveTextContent("All 4 receipts are untouched");
     expect(card()).toHaveTextContent("Nothing was changed, removed or moved since Wally wrote them.");
-    expect(card().querySelector(".pf-card__where")).toHaveTextContent("Checked on this phone just now.");
+    expect(card().querySelector(".pf-card__where")).toHaveTextContent("Checked on this device just now.");
     expect(verify).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[data-screen="proof"]')).toHaveAttribute("data-mode", "plain");
   });
@@ -456,7 +456,7 @@ describe("Proof (plain): around the card", () => {
     const { user } = await proof({ locale: "zh-HK" });
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("證明");
     expect(card()).toHaveTextContent("全部 4 張收據都完好無缺");
-    expect(card()).toHaveTextContent("剛剛已在這部手機檢查。");
+    expect(card()).toHaveTextContent("剛剛已在這部裝置檢查。");
     expect(rows()[1]).toHaveTextContent("第 2 張收據");
     expect(rows()[1]).toHaveTextContent("完好");
     expect(document.querySelector('[data-screen="proof"]')).toHaveAttribute("lang", "zh-HK");

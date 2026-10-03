@@ -460,7 +460,7 @@ export const UI = {
   updateReady: label("New version ready", "有新版本"), // NEEDS-REVIEW
   updateReload: label("Reload", "重新載入"), // NEEDS-REVIEW
   offlineTitle: label("You're offline", "你已離線"), // NEEDS-REVIEW
-  offlineBody: label("Wally still works on this phone. Nothing leaves it.", "Wally 仍可在這部手機使用，任何內容都不會離開手機。"), // NEEDS-REVIEW
+  offlineBody: label("Wally still works on this device. Nothing leaves it.", "Wally 仍可在這部裝置使用，任何內容都不會離開裝置。"), // NEEDS-REVIEW
 
   // Lane b-proof: #/receipts. Placeholders in braces are filled with figure elements ({shop} stays text).
   receipts: {

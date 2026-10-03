@@ -7,7 +7,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 const KEY = "wally:session:v1";
-const REMEMBERS = "This demo remembers your session on this phone until you start it over.";
+const REMEMBERS = "This demo remembers your session on this device until you start it over.";
 const ENDED = "Your last demo session ended, so Wally started a new one";
 const DAMAGED = '{"v":1,"savedAt":"2026-10-03T02:00:00.000Z","log":"not a log\\n"}';
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
