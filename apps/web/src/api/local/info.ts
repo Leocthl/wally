@@ -26,7 +26,7 @@ export interface LocalInfo extends ApiInfo {
 }
 
 /** `hasAlternativeRecords`: the bundle holds a recorded cheaper option (an `-alternative` planner record). */
-export function localInfo(hasAlternativeRecords: boolean): LocalInfo {
+export function localInfo(hasAlternativeRecords: boolean, hasShelf = true): LocalInfo {
   return {
     kind: "local",
     judge: {
@@ -34,7 +34,7 @@ export function localInfo(hasAlternativeRecords: boolean): LocalInfo {
       note: `Recorded judge answers (SIMULATED), replayed on this device. No judge model runs here, so typed text with no recording escalates (R10.unavailable).`,
     },
     planner: { provider: "replay", note: "Recorded planner proposals (SIMULATED), replayed on this device. The planner holds no key (I4)." },
-    features: featuresFor("replay", hasAlternativeRecords),
+    features: featuresFor("replay", hasAlternativeRecords, hasShelf ? "palette" : undefined), // no model on the device: the colour plates and the chips
     replayed: true,
     realCapture: null,
     product: BRAND.name,

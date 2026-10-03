@@ -4,8 +4,9 @@
 // judge then answers ERROR and the engine escalates (R10.unavailable, I5), and /api/info says so.
 import { join } from "node:path";
 import { compileMandateText } from "@wally/agent/compiler";
-import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@wally/agent/judge";
+import { createJudgeFromEnv, isWarmable, JudgeConfigError, loadReplayRecordings, parseJudgeEnv, type ReplayRecording } from "@wally/agent/judge";
 import { createChatClient, createPlanner, loadReplayRecords } from "@wally/agent/planner";
+import { describeImage } from "@wally/agent/vision";
 import { engine as defaultEngine } from "@wally/core/engine";
 import type { PlannerReplayRecord } from "@wally/core/generated";
 import { appendEntry } from "@wally/core/log";
@@ -22,15 +23,17 @@ import { randomId, SYSTEM_CLOCK } from "../src/booth/backend/ids";
 import { buildInfo, featuresFor, type JudgeHealth, type PlannerChoice } from "../src/booth/backend/info";
 import { replayPlannerFactory, withRecordedFallback } from "../src/booth/backend/planner";
 import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
+import { oneAtATime, type PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
-import { loadCatalogue } from "./booth/catalogue";
+import { loadCatalogue, loadShopRecordings, loadTrickRecordings } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
 import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
+import type { SeeMode } from "./booth/visionProbe";
 import type { LanOptions } from "./http/lan";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
@@ -66,6 +69,8 @@ export interface ComposeOptions {
   readonly planner?: PlannerChoice;
   /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
   readonly lan?: LanOptions;
+  /** Show Wally a photo: "model" when the local model reads pictures (server/booth/visionProbe.ts, asked once at start). Default "palette". */
+  readonly see?: SeeMode;
 }
 
 export interface Booth {
@@ -113,10 +118,28 @@ function compileModel(settings: BoothSettings, choice: PlannerChoice): ModelComp
   return ({ text, locale, now }) => compileMandateText({ text, locale, now, client, model: settings.plannerModel });
 }
 
-function makeJudge(opts: ComposeOptions, settings: BoothSettings): JudgePort {
+/**
+ * Reads one picture into typed words on the local Qwen server (describeImage); only when the start-up probe found vision.
+ * One picture at a time, and never a remote server: PLANNER_ALLOW_REMOTE may let a typed request leave this Mac, a shopper's
+ * picture never leaves it (the probe already answered "palette" for a non-loopback server).
+ */
+function pictureReader(settings: BoothSettings, see: SeeMode): PictureReader | null {
+  if (see !== "model") return null;
+  const client = createChatClient({ baseUrl: settings.plannerUrl, allowRemote: false });
+  return oneAtATime((bytes) => describeImage(bytes, { client, model: settings.plannerModel }));
+}
+
+/** The replay judge serves the fixture recordings, the photo shelf's recorded answers and the "Try to trick Wally" examples'. Other providers load nothing. */
+function replayRecordings(settings: BoothSettings, catalogue: Catalogue): { readonly recordings: readonly ReplayRecording[] } | undefined {
+  const parsed = parseJudgeEnv(settings.judgeEnv);
+  if (!parsed.ok || parsed.settings.provider !== "replay") return undefined;
+  return { recordings: [...loadReplayRecordings(), ...loadShopRecordings(settings.fixturesDir, catalogue), ...loadTrickRecordings(settings.fixturesDir)] };
+}
+
+function makeJudge(opts: ComposeOptions, settings: BoothSettings, catalogue: Catalogue): JudgePort {
   if (opts.judge !== undefined) return opts.judge;
   try {
-    return createJudgeFromEnv(settings.judgeEnv);
+    return createJudgeFromEnv(settings.judgeEnv, replayRecordings(settings, catalogue));
   } catch (err) {
     if (err instanceof JudgeConfigError) throw new Error(`judge configuration: ${err.message}`, { cause: err });
     throw err;
@@ -129,12 +152,14 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const clock = opts.clock ?? SYSTEM_CLOCK;
   const table = loadScenarioTable(join(settings.scenariosDir, "booth.json"));
   const catalogue = loadCatalogue(settings.fixturesDir, table);
-  const judge = makeJudge(opts, settings);
+  const judge = makeJudge(opts, settings, catalogue);
   const choice = opts.planner ?? settledChoice(settings);
   const recorded = replayRecords(settings); // the live planners fall back to these for the fixed booth buttons
   const records = choice.provider === "replay" ? recorded : [];
   const planner = plannerFactory(settings, choice, table, recorded);
-  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")));
+  const see = opts.see ?? "palette";
+  // Show Wally a photo is offered only with a photo shelf to look through.
+  const features = featuresFor(choice.provider, records.some((r) => r.scenario.endsWith("-alternative")), catalogue.shop.size > 0 ? see : undefined);
   const store = opts.store ?? new FileLogStore(settings.logDir);
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
   let keys = loadKeys();
@@ -167,6 +192,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     plannerProvider: choice.provider,
     ask: askSource(settings, choice, catalogue, table),
     compileModel: compileModel(settings, choice),
+    pictureReader: pictureReader(settings, see),
     info: () => buildInfo({ settings, judgeProvider: judge.provider, health, keySource: keys.source, planner: choice, features }),
     presetSeal: (now) => m0Request(now),
     logger,

@@ -7,6 +7,7 @@ import { BoothError, errorBody } from "./http/errors";
 import { registerLan, type LanOptions } from "./http/lan";
 import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
+import { MAX_SEE_BODY_BYTES } from "./http/validate";
 
 /**
  * ASSUMED: request body cap. The largest real body is a visitor listing of MAX_LISTING_TEXT_CHARS characters; JSON
@@ -25,6 +26,8 @@ export interface HttpAppOptions {
   readonly hub: SseHub;
   readonly logger?: Logger;
   readonly maxBodyBytes?: number;
+  /** Default MAX_SEE_BODY_BYTES: the base64 of a 6 MB picture and a little more. */
+  readonly maxSeeBodyBytes?: number;
   readonly maxListingTextChars?: number;
   /** Which Host names the API answers. Default: loopback only; LAN mode widens it to this machine's addresses and names. */
   readonly hostAllowed?: (hostname: string) => boolean;
@@ -44,6 +47,7 @@ export function createHttpApp(opts: HttpAppOptions): Hono {
     hub: opts.hub,
     logger,
     maxBodyBytes: opts.maxBodyBytes ?? MAX_BODY_BYTES,
+    maxSeeBodyBytes: opts.maxSeeBodyBytes ?? MAX_SEE_BODY_BYTES,
     maxListingTextChars: opts.maxListingTextChars ?? MAX_LISTING_TEXT_CHARS,
     ...(hostAllowed === undefined ? {} : { hostAllowed }),
     ...(opts.lan === undefined ? {} : { lan: opts.lan }),
@@ -68,6 +72,7 @@ export const NOT_COMPOSED_BACKEND: BoothBackend = {
   ask: notComposed,
   suggestAlternatives: notComposed,
   compileRules: notComposed,
+  see: notComposed,
   getLog: notComposed,
   verify: notComposed,
   tamper: notComposed,

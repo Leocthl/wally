@@ -4,6 +4,7 @@ export {
   MAX_INTENT_CHARS,
   MAX_REQUEST_CHARS,
   MAX_REVOKE_REASON_CHARS,
+  MAX_SEE_BODY_BYTES,
   parseAlternativesRequest,
   parseAnswerRequest,
   parseAskRequest,
@@ -13,4 +14,5 @@ export {
   parseRevokeRequest,
   parseScenarioId,
   parseSealRequest,
+  parseSeeRequest,
 } from "../../src/booth/backend/validate";

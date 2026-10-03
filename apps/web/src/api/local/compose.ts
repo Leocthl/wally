@@ -35,7 +35,7 @@ export interface LocalComposeOptions {
 export function composeLocalBackend(opts: LocalComposeOptions = {}): OrchestratorBackend {
   const bundle = loadBundle();
   const clock = opts.clock ?? SYSTEM_CLOCK;
-  const judge = new LocalReplayJudge({ recordings: bundle.judgeRecordings });
+  const judge = new LocalReplayJudge({ recordings: [...bundle.judgeRecordings, ...bundle.shopRecordings, ...bundle.trickRecordings] });
   const planner = replayPlannerFactory(bundle.plannerRecords, bundle.table);
   const makeKeys = opts.keys ?? ephemeralKeys;
   const sessionDeps = (): SessionDeps => {
@@ -64,7 +64,7 @@ export function composeLocalBackend(opts: LocalComposeOptions = {}): Orchestrato
     ask: { kind: "recorded", requests: recordedRequests(bundle.plannerTexts, bundle.catalogue, bundle.table), unknownNote: LOCAL_UNKNOWN_REQUEST_NOTE },
     compileModel: null, // no model runs on the device: sentences are read by the fixed rules parser
     info: () => {
-      const info = localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative")));
+      const info = localInfo(bundle.plannerRecords.some((r) => r.scenario.endsWith("-alternative")), bundle.catalogue.shop.size > 0);
       return opts.features === undefined ? info : { ...info, features: { ...info.features, ...opts.features } };
     },
     presetSeal: (now) => m0Request(now),

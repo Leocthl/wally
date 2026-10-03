@@ -17,9 +17,14 @@ export interface PlannerChoice {
 /** The switch for the family budget: false hides it everywhere (the screens read features.family) and the backend refuses it. */
 export const FAMILY_ENABLED = true;
 
-/** What the booth can do for a planner: ask always works (recorded planners know their sample requests only). */
-export function featuresFor(provider: PlannerProviderName, hasAlternativeRecords: boolean): ApiFeatures {
-  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules", family: FAMILY_ENABLED };
+/**
+ * What the booth can do for a planner: ask always works (recorded planners know their sample requests only). `see`: "model" when
+ * the local model reads pictures (checked once at start, see server/booth/visionProbe.ts), "palette" otherwise; the photo entry
+ * is offered either way; with no photo shelf (see undefined) it is not offered at all, and an older booth server that has
+ * no /api/see leaves the field out for the same reason: the page reads this flag, never the mere presence of see().
+ */
+export function featuresFor(provider: PlannerProviderName, hasAlternativeRecords: boolean, see?: NonNullable<ApiFeatures["see"]>): ApiFeatures {
+  return { ask: true, alternatives: provider !== "replay" || hasAlternativeRecords, compile: provider === "local" ? "model" : "rules", family: FAMILY_ENABLED, ...(see === undefined ? {} : { see }) };
 }
 
 /** The settings the info reads (server/booth/settings.ts BoothSettings has more). */

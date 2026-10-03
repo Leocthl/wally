@@ -7,11 +7,15 @@
  *   node smoke.mjs --runs 30 --warmup 3    latency sample size (defaults: 10 and 2)
  *   node smoke.mjs --json-out run.json     write everything as JSON
  *
+ * When the server reads pictures (/props modalities.vision) it also sends one generated plain-colour picture (nothing
+ * from disk, no real photo) and checks that the grammar-constrained answer names the colour.
+ *
  * The server must already be running (./serve.sh). Requests are sent one at a time. Load average is printed
  * with every latency figure because other processes share this machine.
  */
 import { writeFile } from 'node:fs/promises';
 import os from 'node:os';
+import { crc32, deflateSync } from 'node:zlib';
 import { performance } from 'node:perf_hooks';
 import { parseArgs } from 'node:util';
 
@@ -131,6 +135,52 @@ async function ask(request) {
   };
 }
 
+
+// ---------------------------------------------------------------- the picture check (only when the server can read one)
+
+/** A size x size PNG filled with one RGB colour, built here so the check needs no file. */
+function solidPng(size, [r, g, b]) {
+  const chunk = (type, data) => {
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const out = Buffer.alloc(8 + data.length + 4);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(crc32(body), 8 + data.length);
+    return out;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8; // bit depth
+  header[9] = 2; // truecolour
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array.from({ length: size }, () => [r, g, b]).flat())]);
+  const raw = Buffer.concat(Array.from({ length: size }, () => row));
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+}
+
+const COLOUR_SCHEMA = { type: 'object', additionalProperties: false, required: ['colour'], properties: { colour: { enum: ['red', 'green', 'blue', 'white', 'black'] } } };
+
+async function seeColour() {
+  const image = solidPng(96, [200, 30, 30]).toString('base64');
+  const res = await http('POST', '/v1/chat/completions', {
+    model: 'local',
+    temperature: 0,
+    seed: SEED,
+    max_tokens: 40,
+    chat_template_kwargs: { enable_thinking: false },
+    response_format: { type: 'json_schema', json_schema: { name: 'smoke_colour', strict: true, schema: COLOUR_SCHEMA } },
+    messages: [{ role: 'user', content: [{ type: 'image_url', image_url: { url: `data:image/png;base64,${image}` } }, { type: 'text', text: 'What colour is the whole picture? Answer with the JSON object only.' }] }],
+  });
+  if (!res.ok || !res.json?.choices?.[0]) throw new Error(`picture check -> HTTP ${res.status}: ${res.text.slice(0, 300)}`);
+  let answer = null;
+  try {
+    answer = JSON.parse(res.json.choices[0].message?.content ?? '');
+  } catch {
+    answer = null;
+  }
+  return { wallMs: res.wallMs, answer, usage: res.json.usage };
+}
+
 async function main() {
   const hostname = new URL(baseUrl).hostname;
   if (!LOOPBACK_HOSTS.has(hostname)) throw new Error(`refusing non-loopback host "${hostname}"; this smoke test targets the local server only`);
@@ -161,6 +211,17 @@ async function main() {
     report.cases.push({ request, expected: { title, qty }, ok, ...r });
   }
 
+  const vision = props.json?.modalities?.vision === true;
+  if (vision) {
+    const seen = await seeColour();
+    const ok = seen.answer?.colour === 'red';
+    console.log(`\npicture check: ${JSON.stringify(seen.answer)} ${ok ? 'as expected' : 'EXPECTED red'}; ${round(seen.wallMs)} ms wall; ${seen.usage?.prompt_tokens} prompt tokens`);
+    report.vision = { on: true, ok, ...seen };
+  } else {
+    console.log('\npicture check: skipped, this server does not read pictures (QWEN_VISION=off, the 4b model, or no projector)');
+    report.vision = { on: false };
+  }
+
   for (let i = 0; i < WARMUP; i += 1) await ask(cases[i % cases.length][0]);
   const wall = [];
   const decode = [];
@@ -185,6 +246,7 @@ async function main() {
   }
   const failed = report.cases.filter((c) => c.answer === null || c.reasoning !== null);
   if (failed.length > 0) throw new Error(`${failed.length} answer(s) were not plain JSON or carried thinking text`);
+  if (report.vision.on && report.vision.answer === null) throw new Error('the picture check did not return plain JSON');
 }
 
 main().catch((err) => {

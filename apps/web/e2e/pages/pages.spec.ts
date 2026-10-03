@@ -8,6 +8,7 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { devices, expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { NAVY_PICTURE } from "../support/pictures";
 import { startPagesServer, type PagesServer } from "./staticServer";
 
 const MOUNT = "/wally/";
@@ -201,8 +202,54 @@ test("with the server gone, a reload still shows the app, from the service worke
   }
 });
 
+test("Show Wally a photo works from the mount with the server gone: the photo chunk comes from the worker and a pick buys on-device", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    // Nothing reads the picture on the device: the colour plates and the type chips do the work.
+    await page.locator('main input[data-slot="photo-file"]').setInputFiles({ name: "look.png", mimeType: "image/png", buffer: NAVY_PICTURE });
+    const sheet = page.getByRole("dialog", { name: "Show Wally a photo" });
+    await expect(sheet.locator('[data-slot="photo-sees"]')).toHaveText("Wally sees the colours. What is it?");
+    await sheet.getByRole("radio", { name: "hoodie" }).click();
+    const cards = sheet.getByRole("radiogroup", { name: "Similar in the shop" }).getByRole("radio");
+    await expect(cards).toHaveCount(4);
+    await cards.first().click();
+    await sheet.getByRole("button", { name: "Ask Wally to buy this" }).click();
+    await expect(page.locator('[data-screen="wally"]')).toContainText("Navy relaxed hoodie");
+    await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$379.");
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
+test("typed Ask works from the mount with the server gone: no ask is sent, the fixed reader finds the items in the demo shop", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    await nav(page).getByRole("button", { name: "Ask", exact: true }).click();
+    const ask = page.getByRole("dialog", { name: /What should Wally try/ });
+    await ask.getByRole("textbox", { name: /Tell Wally what you need/ }).fill("black jeans under 400");
+    await ask.getByRole("button", { name: "Send", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "What Wally found" });
+    await expect(sheet.getByText("Showing matches from the demo shop. You pick; the rules still decide.")).toBeVisible();
+    await expect(sheet.locator("[data-listing]").first()).toHaveAttribute("data-listing", "lst_photoJeansBlack");
+    await sheet.getByRole("button", { name: "Close" }).first().click();
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
 test("the whole run stayed inside /wally/: no /api, nothing at the origin root, no failed response, no script error", () => {
-  const outside = requested.filter((u) => u.origin !== server.origin || !u.pathname.startsWith(MOUNT));
+  // blob: is the shopper's picture preview, held in memory on the page; it is never a network request.
+  const outside = requested.filter((u) => u.protocol !== "blob:" && (u.origin !== server.origin || !u.pathname.startsWith(MOUNT)));
   expect(outside.map((u) => u.href)).toEqual([]);
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
   expect(server.seen.filter((p) => !p.startsWith(MOUNT))).toEqual([]);

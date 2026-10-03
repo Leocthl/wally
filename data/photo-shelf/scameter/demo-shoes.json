@@ -1,0 +1,17 @@
+{
+  "fixture": "shop/scameter-demo-shoes",
+  "provenance": "SIMULATED",
+  "schema": "scameter-capture",
+  "note": "SIMULATED Scameter capture (NO_RECORD) for the photo shelf's Demo Shoes. Time is a placeholder [F59].",
+  "data": {
+    "capture_ref": "SIM-scameter-demo-shoes",
+    "subject_domain": "demo-shoes.example",
+    "state": "NO_RECORD",
+    "captured_at": "2026-10-03T01:50:00Z",
+    "searched": [
+      "url"
+    ],
+    "provenance": "SIMULATED",
+    "note": "No record found. No record is not safe [F6]."
+  }
+}

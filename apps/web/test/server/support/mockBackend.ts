@@ -17,6 +17,7 @@ export function mockBackend(): { readonly backend: BoothBackend; readonly mock: 
     ask: () => Promise.reject(new Error("the mock does not ask")),
     suggestAlternatives: () => Promise.reject(new Error("the mock has no cheaper options")),
     compileRules: (req) => mock.compileRules(req),
+    see: () => Promise.reject(new Error("the mock does not see")),
     getLog: () => mock.getLog(),
     verify: () => mock.verify(),
     tamper: () => mock.tamper(),

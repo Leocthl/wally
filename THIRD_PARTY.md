@@ -10,6 +10,7 @@
 | ModernBERT-large, the encoder architecture inside that checkpoint [F11c] | Answer.AI and LightOn | Apache-2.0, verify when added | inside the checkpoint | in use |
 | Qwen3.5-9B (huggingface.co/Qwen/Qwen3.5-9B), as the GGUF Q4_K_M quant `Qwen_Qwen3.5-9B-Q4_K_M.gguf` from huggingface.co/bartowski/Qwen_Qwen3.5-9B-GGUF, commit 182be2fd6c7bc44887d88a91cb03ff009cc9f549 | Qwen team, Alibaba Cloud (quant: bartowski) | Apache-2.0 (model card and quant card) | Wally's local planner and sentence-to-rules compiler, on the demo laptop; never a judge | in use |
 | Qwen3.5-4B (huggingface.co/Qwen/Qwen3.5-4B), as `Qwen_Qwen3.5-4B-Q4_K_M.gguf` from huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF, commit 4168f45a16a1290d65a4ec0fa312ae917a4c15d6 | Qwen team, Alibaba Cloud (quant: bartowski) | Apache-2.0 (model card and quant card) | smaller, faster alternative for the same two jobs (`QWEN_MODEL=4b`) | in use |
+| Qwen3.5-9B vision projector (the multimodal encoder that lets the model read a picture), as `mmproj-Qwen_Qwen3.5-9B-f16.gguf` from huggingface.co/bartowski/Qwen_Qwen3.5-9B-GGUF, commit 182be2fd6c7bc44887d88a91cb03ff009cc9f549, sha256 97f420245a85ce129bb764e86a5e21e27d782fe6d6056c6839b9c5fdb8f38289 | Qwen team, Alibaba Cloud (quant: bartowski) | Apache-2.0 (model card and quant card) | the photo reader: a picture becomes typed attributes on the demo laptop, never stored, never a decision | in use |
 
 ## Laya server (`services/laya/`, Python venv not committed)
 | Package | Licence | Use |
