@@ -178,7 +178,7 @@ export function judgeMissSentence({ k, n }: Count): Sentence {
 /** The footnote under the cards. */
 export function practiceSentence(): Sentence {
   return sentence(label(
-    "All of this comes from our own test shoppers in a simulated shop, with simulated cards and no real money. Real shops can behave differently.",
-    "以上全部來自我們自己的測試購物者：模擬商店、模擬卡，沒有真錢。真實商店的表現可能不同。", // NEEDS-REVIEW zh-HK
+    "All of this comes from our own scripted test purchases in a simulated shop, with simulated cards and no real money. Real shops can behave differently.",
+    "以上全部來自我們自己的腳本測試購買：模擬商店、模擬卡，沒有真錢。真實商店的表現可能不同。", // NEEDS-REVIEW zh-HK
   ));
 }

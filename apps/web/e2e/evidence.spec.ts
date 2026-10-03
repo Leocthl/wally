@@ -43,7 +43,7 @@ test("a chip says where the numbers come from, and opens what that means", async
   await page.goto(PLAIN);
   await page.locator('details[data-fold="honest"] summary').click();
   const card = page.locator('[data-plain-card="honest"]');
-  const chip = card.getByRole("button", { name: /Measured on \d+ of our own test shoppers/ });
+  const chip = card.getByRole("button", { name: /Measured on \d+ scripted test purchases/ });
   await chip.scrollIntoViewIfNeeded();
   await expect(chip).toHaveAttribute("aria-expanded", "false");
   await chip.click();

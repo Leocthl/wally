@@ -161,15 +161,15 @@ describe("seconds a person can feel", () => {
   });
 });
 
-describe("the chip, in plain words: our own test shoppers, a simulated shop", () => {
+describe("the chip, in plain words: scripted test purchases, a simulated shop", () => {
   it("measured and replayed say how many shoppers and where", () => {
-    expect(chipLabel("MEASURED", 150).en).toBe("Measured on 150 of our own test shoppers, in a simulated shop");
-    expect(chipLabel("RECORDED", 150).en).toBe("Replayed from a recording of 150 of our own test shoppers, in a simulated shop");
-    expect(chipLabel("MEASURED", 150).zh).toBe("在模擬商店中，以我們自己的 150 位測試購物者量度");
+    expect(chipLabel("MEASURED", 150).en).toBe("Measured on 150 scripted test purchases, in a simulated shop");
+    expect(chipLabel("RECORDED", 150).en).toBe("Replayed from a recording of 150 scripted test purchases, in a simulated shop");
+    expect(chipLabel("MEASURED", 150).zh).toBe("在模擬商店中，以 150 宗腳本測試購買量度");
   });
 
   it("falls back to the kind alone when the sample size is unknown", () => {
-    expect(chipLabel("MEASURED", null).en).toBe("Measured on our own test shoppers, in a simulated shop");
+    expect(chipLabel("MEASURED", null).en).toBe("Measured on our own scripted test purchases, in a simulated shop");
     expect(chipLabel("ASSUMED", null).en).toBe("Assumed");
     expect(chipLabel("OBSERVED", null).en).toBe("Observed");
     expect(chipLabel("SIMULATED", null).en).toBe("Simulated");

@@ -6,12 +6,12 @@
 import { label } from "../i18n/label";
 
 export const P = {
-  lead: label("We tested Wally on our own test shoppers in a simulated shop. Here is what happened.", "我們在模擬商店用自己的測試購物者測試了 Wally，結果如下。"), // NEEDS-REVIEW zh-HK
+  lead: label("We tested Wally on our own scripted test purchases in a simulated shop. Here is what happened.", "我們在模擬商店用自己的腳本測試購買測試了 Wally，結果如下。"), // NEEDS-REVIEW zh-HK
   noResults: label("No test results could be read, so no numbers are shown.", "未能讀取任何測試結果，因此不顯示數字。"), // NEEDS-REVIEW zh-HK
   someUnreadable: label("A result file could not be read and was left out. The details are under How we know.", "有一個結果檔案無法讀取，已略去。詳情見「我們怎樣知道」。"), // NEEDS-REVIEW zh-HK
 
-  heroSplit: label("Tested on {n} purchases by our own test shoppers in a simulated shop: {risky} risky and {honest} honest. Nothing real was bought.", "在模擬商店，由我們自己的測試購物者進行 {n} 宗購買測試：{risky} 宗高風險，{honest} 宗正常。沒有買任何真實貨品。"), // NEEDS-REVIEW zh-HK
-  heroTotal: label("Tested on {n} purchases by our own test shoppers in a simulated shop. Nothing real was bought.", "在模擬商店，由我們自己的測試購物者進行 {n} 宗購買測試。沒有買任何真實貨品。"), // NEEDS-REVIEW zh-HK
+  heroSplit: label("Tested on {n} scripted purchases in a simulated shop: {risky} risky and {honest} honest. Nothing real was bought.", "在模擬商店，進行 {n} 宗腳本購買測試：{risky} 宗高風險，{honest} 宗正常。沒有買任何真實貨品。"), // NEEDS-REVIEW zh-HK
+  heroTotal: label("Tested on {n} scripted purchases in a simulated shop. Nothing real was bought.", "在模擬商店，進行 {n} 宗腳本購買測試。沒有買任何真實貨品。"), // NEEDS-REVIEW zh-HK
 
   layersTitle: label("What each layer adds", "每一層加了甚麼"), // NEEDS-REVIEW zh-HK
   rules: label("Rules only", "只用規則"), // NEEDS-REVIEW zh-HK

@@ -30,7 +30,7 @@ export type Speed =
 export interface PlainModel {
   /** Purchases in the run. */
   readonly total: number | null;
-  /** The n of the run's chip: how many test shoppers the label says. */
+  /** The n of the run's chip: how many test purchases the label says. */
   readonly sampleN: number | null;
   /** Purchases that went over the budget or the card limit (counts of the bad thing: lower is better). */
   readonly limit: Layered | null;

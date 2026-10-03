@@ -129,7 +129,7 @@ describe("where Wally still gets it wrong", () => {
   });
 
   it("practice only: always said, never a digit", () => {
-    expect(practiceSentence().text.en).toBe("All of this comes from our own test shoppers in a simulated shop, with simulated cards and no real money. Real shops can behave differently.");
+    expect(practiceSentence().text.en).toBe("All of this comes from our own scripted test purchases in a simulated shop, with simulated cards and no real money. Real shops can behave differently.");
     expect(practiceSentence().slots).toEqual({});
   });
 });

@@ -68,7 +68,7 @@ judge_down:        ERROR, then ESCALATE R10.unavailable (I5, F34)              #
 - **Targets** [F38]: T-H1, 0 over-limit mints in deterministic scenarios; T-H2, at least 90% of legitimate scenarios approved after the shopper's answer, without timeouts. Misses are reported, not retuned. T-H2 moves with host load [F34]: quote it from a quiet host. Final run (seed 7, da2c814): both met [F69].
 
 ## Evidence screen
-- **Plain view** (`#/evidence`, DM8): leads with rules only vs Wally (rules plus the listing check); AI alone is last and quiet. Every zero carries its Wilson upper bound [F96]; the 5 of 66 false alarms sit on the Approved card; the chip reads "Measured on N of our own test shoppers, in a simulated shop"; no test counts are printed.
+- **Plain view** (`#/evidence`, DM8): leads with rules only vs Wally (rules plus the listing check); AI alone is last and quiet. Every zero carries its Wilson upper bound [F96]; the 5 of 66 false alarms sit on the Approved card; the chip reads "Measured on N scripted test purchases, in a simulated shop"; no test counts are printed.
 
 ## Manual-route comparison
 - **Routes**: M, the holder by hand (read total incl. shipping, check the packet, make a Single Use Card [F1.issuance]); A, the agent flow.

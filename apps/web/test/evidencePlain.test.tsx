@@ -149,7 +149,7 @@ describe("plain is the default", () => {
 
   it("describes the run it came from: how many shoppers, how many risky and honest, nothing real bought", () => {
     const c = show(run(realistic()));
-    expect(text(card(c, "hero"))).toContain("Tested on 150 purchases by our own test shoppers in a simulated shop: 84 risky and 66 honest. Nothing real was bought.");
+    expect(text(card(c, "hero"))).toContain("Tested on 150 scripted purchases in a simulated shop: 84 risky and 66 honest. Nothing real was bought.");
   });
 });
 
@@ -208,7 +208,7 @@ describe("the cards read the loaded counts", () => {
       "Wally blocked 5 of 66 honest purchases by mistake.",
       "On its own, Wally's listing check missed 8 of 40 made-up trick listings. It is only one layer: the budget limit and the card limit do not depend on it.",
     ]);
-    expect(text(c.querySelector(".evp-foot"))).toBe("All of this comes from our own test shoppers in a simulated shop, with simulated cards and no real money. Real shops can behave differently.");
+    expect(text(c.querySelector(".evp-foot"))).toBe("All of this comes from our own scripted test purchases in a simulated shop, with simulated cards and no real money. Real shops can behave differently.");
   });
 
   it("draws every bar as a share of its own whole", () => {
@@ -233,7 +233,7 @@ describe("honesty", () => {
     const c = show(run(realistic()));
     const chips = c.querySelectorAll("[data-chip]");
     expect(chips.length).toBeGreaterThanOrEqual(7);
-    for (const chip of chips) expect(chip).toHaveTextContent("Measured on 150 of our own test shoppers, in a simulated shop");
+    for (const chip of chips) expect(chip).toHaveTextContent("Measured on 150 scripted test purchases, in a simulated shop");
     const limit = card(c, "limit");
     const button = within(limit).getByRole("button", { name: /Measured on 150/ });
     expect(button).toHaveAttribute("aria-expanded", "false");
@@ -253,7 +253,7 @@ describe("honesty", () => {
     const swap = (o: Json): Json => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === "object" && v !== null && "chip" in v ? { ...(v as Json), chip: rec } : v]));
     const notMeasured = { measured: false, note: "not measured: replayed", chip: rec };
     const c = show(run({ ...raw, baselines: Object.fromEntries(Object.entries(b).map(([k, v]) => [k, { ...swap(v), latency: notMeasured }])) }, "harness-7-recorded.json"));
-    expect(text(card(c, "limit"))).toContain("Replayed from a recording of 150 of our own test shoppers, in a simulated shop");
+    expect(text(card(c, "limit"))).toContain("Replayed from a recording of 150 scripted test purchases, in a simulated shop");
     expect(text(card(c, "speed"))).toContain("Speed was not measured in this run, so there is no number.");
     expect(card(c, "speed").querySelector("[data-num]")).toBeNull();
     expect(bareFigures(c)).toEqual([]);
@@ -335,7 +335,7 @@ describe("in 繁", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("為甚麼可以信任 Wally？");
     expect(text(card(c, "hero").querySelector("h2"))).toBe("在我們自己的測試中，Wally 攔截了每一宗高風險購買，並讓約九成正常購買順利完成。");
     expect(text(card(c, "limit"))).toContain("在我們自己的測試中沒有任何一宗超出上限，但真實比率仍可能高達約每一百宗有 2 宗。");
-    expect(card(c, "limit").querySelector("[data-chip]")).toHaveTextContent("在模擬商店中，以我們自己的 150 位測試購物者量度");
+    expect(card(c, "limit").querySelector("[data-chip]")).toHaveTextContent("在模擬商店中，以 150 宗腳本測試購買量度");
     const cjk = /[㐀-鿿]/;
     const bad: string[] = [];
     const walker = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);

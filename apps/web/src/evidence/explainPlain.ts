@@ -200,12 +200,12 @@ export function chipLabel(kind: ChipKind, n: number | null): LabelPair {
   switch (kind) {
     case "MEASURED":
       return n === null
-        ? label("Measured on our own test shoppers, in a simulated shop", "在模擬商店中，以我們自己的測試購物者量度") // NEEDS-REVIEW zh-HK
-        : label(`Measured on ${n} of our own test shoppers, in a simulated shop`, `在模擬商店中，以我們自己的 ${n} 位測試購物者量度`); // NEEDS-REVIEW zh-HK
+        ? label("Measured on our own scripted test purchases, in a simulated shop", "在模擬商店中，以我們自己的腳本測試購買量度") // NEEDS-REVIEW zh-HK
+        : label(`Measured on ${n} scripted test purchases, in a simulated shop`, `在模擬商店中，以 ${n} 宗腳本測試購買量度`); // NEEDS-REVIEW zh-HK
     case "RECORDED":
       return n === null
-        ? label("Replayed from a recording of our own test shoppers, in a simulated shop", "在模擬商店中，重播我們自己的測試購物者的錄製答案") // NEEDS-REVIEW zh-HK
-        : label(`Replayed from a recording of ${n} of our own test shoppers, in a simulated shop`, `在模擬商店中，重播我們自己的 ${n} 位測試購物者的錄製答案`); // NEEDS-REVIEW zh-HK
+        ? label("Replayed from a recording of our own scripted test purchases, in a simulated shop", "在模擬商店中，重播我們自己的腳本測試購買的錄製答案") // NEEDS-REVIEW zh-HK
+        : label(`Replayed from a recording of ${n} scripted test purchases, in a simulated shop`, `在模擬商店中，重播 ${n} 宗腳本測試購買的錄製答案`); // NEEDS-REVIEW zh-HK
     case "ASSUMED": return label("Assumed", "假設值"); // NEEDS-REVIEW zh-HK
     case "OBSERVED": return label("Observed", "實地觀察"); // NEEDS-REVIEW zh-HK
     case "SIMULATED": return label("Simulated", "模擬"); // NEEDS-REVIEW zh-HK
