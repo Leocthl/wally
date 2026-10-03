@@ -10,6 +10,10 @@ export const PROFILE_KEY = "wally:profile:v1";
 export const ONBOARDED_KEY = "wally:onboarded";
 /** A nickname is a name to greet, not a paragraph (counted in characters, so a Chinese name is not cut short). */
 export const MAX_NICKNAME = 24;
+/** Only the start of a longer value is read: more than this is not a nickname, and reading it all would cost for nothing. */
+const MAX_NICKNAME_READ = 256;
+/** A profile Wally wrote is a few hundred characters. Stored text far past this was put there by something else. */
+const MAX_STORED_PROFILE = 4096;
 
 export interface Sizes {
   readonly top: SizeLetter | null;
@@ -39,11 +43,17 @@ export function isEmptyProfile(p: Profile): boolean {
   return p.nickname === "" && p.styles.length === 0 && p.colours.length === 0 && p.shopFor.length === 0 && p.sizes.top === null && p.sizes.bottom === null && p.sizes.shoe === null;
 }
 
-/** NFKC, no control or invisible characters, single spaces, at most MAX_NICKNAME characters. Anything but text is "". */
+/** Control and format characters, and the fillers that draw nothing (Hangul fillers, the braille blank). */
+const INVISIBLE = /[\p{Cc}\p{Cf}\u115F\u1160\u2800]/gu;
+/** A letter, a number, punctuation or a symbol: something a person can see. Marks and spaces alone are not a name. */
+const VISIBLE = /[\p{L}\p{N}\p{P}\p{S}]/u;
+
+/** NFKC, no control or invisible characters, single spaces, at most MAX_NICKNAME characters. Anything but text, or text with nothing to see, is "". */
 export function normaliseNickname(value: unknown): string {
   if (typeof value !== "string") return "";
-  const plain = value.normalize("NFKC").replace(/[\p{Cc}\p{Cf}]/gu, " ").replace(/\s+/g, " ").trim();
-  return Array.from(plain).slice(0, MAX_NICKNAME).join("").trim();
+  const plain = value.slice(0, MAX_NICKNAME_READ).normalize("NFKC").replace(INVISIBLE, " ").replace(/\s+/g, " ").trim();
+  const name = Array.from(plain).slice(0, MAX_NICKNAME).join("").trim();
+  return VISIBLE.test(name) ? name : "";
 }
 
 /** The ids in `allowed` that the value lists, in `allowed` order: unknown ids, repeats and wrong types fall away. */
@@ -74,7 +84,7 @@ function cleaned(source: Readonly<Record<string, unknown>>): Profile {
 
 /** What is stored, read strictly: null for nothing, for broken text, for another version, and for a profile with nothing in it. */
 export function parseProfile(raw: string | null): Profile | null {
-  if (raw === null || raw === "") return null;
+  if (raw === null || raw === "" || raw.length > MAX_STORED_PROFILE) return null;
   let value: unknown;
   try {
     value = JSON.parse(raw);
@@ -111,10 +121,13 @@ export interface ProfileStorage {
 export interface ProfileStore {
   /** The same object until the profile changes, so React can compare it. */
   profile(): Profile | null;
-  /** null, or a profile with nothing in it, removes the stored profile. */
-  save(profile: Profile | null): void;
-  /** Removes the profile and nothing else (the first-run flag, language and theme stay). */
-  forget(): void;
+  /** null, or a profile with nothing in it, removes the stored profile. True when the browser took the write. */
+  save(profile: Profile | null): boolean;
+  /**
+   * Removes the profile and nothing else (the first-run flag, language and theme stay). True when the browser took the
+   * removal; false means this page hides the profile but it is still stored and comes back when the page is reloaded.
+   */
+  forget(): boolean;
   onboarded(): boolean;
   markOnboarded(): void;
   /** Drops the page's own copy of a write that failed and reads storage again (a tab changed it; a test starts clean). */
@@ -150,15 +163,18 @@ export function createProfileStore(getStorage: () => ProfileStorage | null): Pro
     }
   }
 
-  function writeRaw(raw: string | null): void {
+  /** Whether the browser took the write; when it did not, this page keeps its own copy. */
+  function writeRaw(raw: string | null): boolean {
     try {
       const target = storage();
       if (target === null) throw new Error("no storage");
       if (raw === null) target.removeItem(PROFILE_KEY);
       else target.setItem(PROFILE_KEY, raw);
       held = null;
+      return true;
     } catch {
       held = { raw };
+      return false;
     }
   }
 
@@ -177,12 +193,14 @@ export function createProfileStore(getStorage: () => ProfileStorage | null): Pro
       return profile;
     },
     save(next) {
-      writeRaw(next === null || isEmptyProfile(next) ? null : serialiseProfile(next));
+      const kept = writeRaw(next === null || isEmptyProfile(next) ? null : serialiseProfile(next));
       notify();
+      return kept;
     },
     forget() {
-      writeRaw(null);
+      const gone = writeRaw(null);
       notify();
+      return gone;
     },
     onboarded() {
       if (heldOnboarded) return true;

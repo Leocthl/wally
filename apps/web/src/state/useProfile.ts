@@ -9,10 +9,10 @@ import { SHOP_PICKS, STYLE_PICKS } from "./taste";
 
 export interface ProfileApi {
   readonly profile: Profile | null;
-  /** Lays the patch over the saved profile and keeps it. */
-  readonly save: (patch: ProfilePatch) => void;
-  /** Removes the profile from this device. */
-  readonly forget: () => void;
+  /** Lays the patch over the saved profile and keeps it. True when the browser took the write. */
+  readonly save: (patch: ProfilePatch) => boolean;
+  /** Removes the profile from this device. False when the browser would not remove it (it is hidden on this page only). */
+  readonly forget: () => boolean;
 }
 
 const subscribe = profileStore.subscribe;

@@ -120,6 +120,57 @@ describe("About", () => {
   });
 });
 
+describe("When the browser will not let the profile go", () => {
+  it("says it is hidden for now instead of saying it is forgotten", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: mei });
+    const refuse = vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new DOMException("denied", "SecurityError");
+    });
+    try {
+      await h.user.click(aboutButton());
+      const sheet = await screen.findByRole("dialog", { name: "About Wally" });
+      await h.user.click(within(sheet).getByRole("button", { name: /Forget my profile/ }));
+      await h.user.click(within(await screen.findByRole("alertdialog", { name: "Forget your profile?" })).getByRole("button", { name: "Forget" }));
+      expect(await screen.findByText("Hidden for now. This browser would not let Wally remove it, so it may come back.")).toBeInTheDocument();
+      expect(screen.queryByText("Profile forgotten.")).toBeNull();
+    } finally {
+      refuse.mockRestore();
+    }
+  });
+});
+
+describe("Start the demo over", () => {
+  const resetButton = () => screen.getByRole("button", { name: /Start the demo over/ });
+
+  it("also clears the profile on this device, and says so before it does", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: mei });
+    expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
+    await h.user.click(resetButton());
+    const dialog = await screen.findByRole("alertdialog", { name: "Start the demo over" });
+    expect(dialog).toHaveTextContent("Your name and taste on this device are cleared too.");
+    await h.user.click(within(dialog).getByRole("button", { name: /^Start over/ }));
+    await waitFor(() => expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull());
+    expect(await screen.findByText("Hi, I'm Wally.")).toBeInTheDocument();
+    // Only the profile goes: the first run is still counted as seen.
+    expect(window.localStorage.getItem(ONBOARDED_KEY)).toBe("1");
+  });
+
+  it("keeps the profile when the person says not now", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: mei });
+    await h.user.click(resetButton());
+    const dialog = await screen.findByRole("alertdialog", { name: "Start the demo over" });
+    await h.user.click(within(dialog).getByRole("button", { name: "Not now" }));
+    expect(window.localStorage.getItem(PROFILE_KEY)).not.toBeNull();
+  });
+
+  it("says nothing about a profile when Wally knows nothing", async () => {
+    const h = await bootApp("#/budget");
+    await h.user.click(resetButton());
+    const dialog = await screen.findByRole("alertdialog", { name: "Start the demo over" });
+    expect(dialog).not.toHaveTextContent("cleared too");
+  });
+});
+
 describe("Try asking in the person's order", () => {
   const inStops = () => [...document.querySelectorAll<HTMLElement>("main .home-try__group:nth-of-type(2) [data-scenario]")].map((b) => b.dataset["scenario"]);
 

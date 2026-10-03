@@ -30,8 +30,9 @@ export function AboutPersonal({ onClose }: AboutPersonalProps): ReactElement {
 
   const confirm = (): void => {
     setAsking(false);
-    forget();
-    toast.show({ message: t(OB.about.forgotten), tone: "ok" });
+    // A browser that refuses the removal still hides the profile on this page: say that, not that it is gone.
+    if (forget()) toast.show({ message: t(OB.about.forgotten), tone: "ok" });
+    else toast.show({ message: t(OB.about.forgottenHere), tone: "info" });
     // The row that opened the question is gone: put focus on the first row left, so the sheet still answers the keyboard.
     requestAnimationFrame(() => rows.current?.querySelector<HTMLElement>("button")?.focus());
   };

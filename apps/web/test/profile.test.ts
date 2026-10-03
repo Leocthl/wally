@@ -84,6 +84,21 @@ describe("normaliseNickname", () => {
     expect(normaliseNickname(42)).toBe("");
     expect(normaliseNickname("   ")).toBe("");
   });
+
+  it("is empty for a name that only looks blank: fillers, a braille blank, marks on their own", () => {
+    for (const blank of ["\u1160", "\u115F", "\u3164", "\uFFA0", "\u2800\u2800", "\u17B4", "\u034F", " \u200B ", "\u202E\u2066"]) {
+      expect(normaliseNickname(blank), JSON.stringify(blank)).toBe("");
+    }
+  });
+
+  it("turns a filler between letters into a space, and keeps an emoji name", () => {
+    expect(normaliseNickname("A\u1160B")).toBe("A B");
+    expect(normaliseNickname("\u{1F98A}")).toBe("\u{1F98A}");
+  });
+
+  it("reads only the start of what it is given, so a huge value costs no more than a short one", () => {
+    expect(normaliseNickname("x".repeat(5_000_000))).toBe("x".repeat(MAX_NICKNAME));
+  });
 });
 
 describe("parseProfile", () => {
@@ -129,6 +144,12 @@ describe("parseProfile", () => {
 
   it("is null when nothing usable is left", () => {
     expect(parseProfile(JSON.stringify({ v: 1, nickname: "  ", styles: ["punk"] }))).toBeNull();
+  });
+
+  it("is null for stored text far larger than any profile (it was not written by Wally)", () => {
+    const padded = JSON.stringify({ ...mei, padding: "x".repeat(10_000) });
+    expect(parseProfile(padded)).toBeNull();
+    expect(serialiseProfile(mei).length).toBeLessThan(500);
   });
 });
 
@@ -215,6 +236,19 @@ describe("profile store", () => {
     expect(store.profile()).toBeNull();
     expect(store.onboarded()).toBe(true);
     expect(storage.data.get("wally:lang")).toBe("zh-HK");
+  });
+
+  it("save and forget say whether the browser took the write", () => {
+    const store = createProfileStore(() => new FakeStorage());
+    expect(store.save(mei)).toBe(true);
+    expect(store.forget()).toBe(true);
+    const refused = createProfileStore(() => new ReadOnlyStorage({ [PROFILE_KEY]: serialiseProfile(mei) }));
+    expect(refused.save(mergeProfile(mei, { nickname: "Jo" }))).toBe(false);
+    expect(refused.profile()?.nickname).toBe("Jo");
+    expect(refused.forget()).toBe(false);
+    expect(refused.profile()).toBeNull();
+    refused.refresh();
+    expect(refused.profile()?.nickname).toBe("Mei");
   });
 
   it("marks onboarded with the exact flag value 1, and reads only that value", () => {

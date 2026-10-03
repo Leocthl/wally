@@ -67,7 +67,7 @@ export default function OnboardingFlow({ onRetry }: OnboardingFlowProps): ReactE
     setDir(STEP_ORDER.indexOf(to) >= STEP_ORDER.indexOf(step) ? "fwd" : "back");
     setStep(to);
   };
-  const keep = (): void => save(mergeProfile(taste, { nickname }));
+  const keep = (): void => void save(mergeProfile(taste, { nickname }));
 
   /**
    * Ends setup. With no budget yet the ready-made one is sealed first, so the tour has a real Budget screen to point at; if that

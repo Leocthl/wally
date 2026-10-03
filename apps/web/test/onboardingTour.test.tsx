@@ -1,10 +1,9 @@
 // The quick tour is modal: a tap on the dimmed page keeps focus on the card, Escape ends it wherever focus is, the page behind is
-// inert while it runs, Next keeps focus on Next (and later marks are announced), a replay from another screen lands on Budget
-// before the tour starts, and leaving Budget during the tour ends it.
+// inert while it runs, Next keeps focus on Next (and later marks are announced), and leaving Budget during the tour ends it.
+// (A replay from another screen lands on Budget first: test/onboardingPersonal.test.tsx.)
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { bootApp } from "./helpers/app";
-import { hello, openFirstRun, skipToTour, tourCard } from "./helpers/firstRun";
+import { hello, openFirstRun, skipToTour } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -60,18 +59,7 @@ describe("Next", () => {
   });
 });
 
-describe("where the tour starts and ends", () => {
-  it("a replay from another screen lands on Budget first, then shows the tour there", async () => {
-    const h = await bootApp("#/proof");
-    await h.user.click(screen.getByRole("button", { name: "About and settings" }));
-    await h.user.click(await screen.findByText("Take the tour again"));
-    await hello();
-    await h.user.click(screen.getByRole("button", { name: "Skip" }));
-    expect(await tourCard()).toBeInTheDocument();
-    expect(window.location.hash).toBe("#/budget");
-    expect(screen.getByRole("dialog", { name: "Ask Wally" })).toBeInTheDocument();
-  });
-
+describe("where the tour ends", () => {
   it("ends when the visitor leaves Budget, and does not start again on the way back", async () => {
     await startTour();
     window.location.hash = "#/receipts";
