@@ -7,11 +7,14 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PRESENTER_SCRIPT } from "../src/booth/presenterScript";
 import { Dm8View, Dm9Card } from "../src/evidence/components/PresenterBeats";
+import { DM9 } from "../src/evidence/dm9";
+import { DM9_PLAIN } from "../src/evidence/dm9Plain";
 import { parseHarnessFile } from "../src/evidence/harnessGuard";
 import { bootApp } from "./helpers/app";
 import { CLEAN, honestyProblems } from "./evidenceFigures";
 import { harnessFile } from "./evidenceFixtures";
 import { developerMode } from "./helpers/devMode";
+import { ENGINEERS, visibleText } from "./helpers/plainWords";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -41,7 +44,8 @@ describe("presenter DM8 and DM9", () => {
     expect(honestyProblems(view)).toEqual(CLEAN);
   });
 
-  it("DM9 shows where it breaks, who holds the loss and the path to HKT, citing register IDs", async () => {
+  it("DM9 shows where it breaks, who holds the loss and the path to HKT, citing register IDs (the developer view)", async () => {
+    developerMode();
     const h = await bootApp("#/presenter");
     await stepTo(h, "DM9");
     const view = (await screen.findByRole("region", { name: /Where it breaks/ })).closest('[data-beat="DM9"]')!;
@@ -64,10 +68,47 @@ describe("presenter DM8 and DM9", () => {
     expect(empty.container).toHaveTextContent("No harness result could be read");
   });
 
-  it("DM9 is static template text: no figure without a chip, and no product name or brand mark", () => {
-    const { container } = render(<Dm9Card />);
-    expect(honestyProblems(container)).toEqual(CLEAN);
-    expect(container.textContent).not.toMatch(/Mastercard|Tap & Go|lai see|red packet/i);
+  it("DM9 is static template text in both modes: no figure without a chip, and no product name or brand mark", () => {
+    for (const developer of [false, true]) {
+      if (developer) developerMode();
+      const { container, unmount } = render(<Dm9Card />);
+      expect(container.querySelector("[data-beat]")).toHaveAttribute("data-mode", developer ? "developer" : "plain");
+      expect(honestyProblems(container)).toEqual(CLEAN);
+      expect(container.textContent).not.toMatch(/Mastercard|Tap & Go|lai see|red packet/i);
+      unmount();
+    }
+  });
+});
+
+describe("presenter DM9 in plain words, the default", () => {
+  it("keeps the same three columns and one line for each line of the developer card, so no claim is added or dropped", () => {
+    expect(DM9_PLAIN.map((c) => c.id)).toEqual(DM9.map((c) => c.id));
+    expect(DM9_PLAIN.map((c) => c.lines.length)).toEqual(DM9.map((c) => c.lines.length));
+  });
+
+  it("says it without register IDs, rule IDs, model names or protocol words, and with no digit that would need a chip", async () => {
+    const h = await bootApp("#/presenter");
+    await stepTo(h, "DM9");
+    const view = (await screen.findByRole("region", { name: /Where it breaks/ })).closest('[data-beat="DM9"]') as HTMLElement;
+    expect(view).toHaveAttribute("data-mode", "plain");
+    expect(view.querySelectorAll("[data-dm9]")).toHaveLength(3);
+    expect(view).toHaveTextContent("Not found in public sources");
+    const text = visibleText(view);
+    expect(text).not.toMatch(ENGINEERS);
+    expect(text).not.toMatch(/\[|\]|\bF\d|\bI\d|Laya|Qwen|did:key|\brail\b|\bjudge\b|does not have/i);
+    expect(text).not.toMatch(/\bDIDs?\b|\bDENY\b|\bESCALATE\b|\bAPI\b|\bSIMULATED\b|\bASSUMED\b/); // the codes, not the plain words ("simulated")
+    expect(text).not.toMatch(/\d/);
+    expect(honestyProblems(view)).toEqual(CLEAN);
+  });
+
+  it("keeps the honest limits in words: simulated card, assumed settings, the wrong block, and what is not claimed", () => {
+    const all = DM9_PLAIN.flatMap((c) => [...c.lines, c.foot]).map((l) => l.en).join(" ");
+    expect(all).toContain("The card is simulated");
+    expect(all).toContain("settings are assumed");
+    expect(all).toContain("wrong block");
+    expect(all).toContain("We make no claim about that pilot's results");
+    expect(all).toContain("Not affiliated with HKT");
+    expect(all).toContain("can only make a decision stricter");
   });
 });
 

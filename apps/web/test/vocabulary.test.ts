@@ -5,6 +5,7 @@ import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@wally/agent
 import { describe, expect, it } from "vitest";
 import { compileMandate } from "../src/booth/compile";
 import { DM8, DM9 } from "../src/evidence/dm9";
+import { DM9_PLAIN } from "../src/evidence/dm9Plain";
 import { H } from "../src/evidence/humanStrings";
 import { J } from "../src/evidence/judgeStrings";
 import { METRICS } from "../src/evidence/metrics";
@@ -64,6 +65,7 @@ const TABLES: readonly (readonly [string, unknown])[] = [
   ["J (evidence/judgeStrings.ts)", J],
   ["H (evidence/humanStrings.ts)", H],
   ["DM8 and DM9 (evidence/dm9.ts)", [DM8, DM9]],
+  ["DM9 in plain words (evidence/dm9Plain.ts)", DM9_PLAIN],
   ["plain Evidence (evidence/plainStrings.ts)", PLAIN_EVIDENCE],
   ["plain Evidence sentences (evidence/explainPlain.ts, explainCards.ts)", plainEvidenceSentences],
   ["the display mode switch (i18n/mode.ts)", MODE],
