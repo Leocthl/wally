@@ -82,9 +82,14 @@ export interface SheetProps {
   readonly description?: ReactNode;
   readonly children: ReactNode;
   readonly footer?: ReactNode;
+  /**
+   * The description scrolls with the body instead of staying fixed above it, for a sheet with a long description and a footer:
+   * at large text the fixed lines would leave the body no room. It keeps its id, so the dialog is still described by it.
+   */
+  readonly scrollDescription?: boolean;
 }
 
-export function Sheet({ open, onClose, title, description, children, footer }: SheetProps): ReactElement | null {
+export function Sheet({ open, onClose, title, description, children, footer, scrollDescription = false }: SheetProps): ReactElement | null {
   const panel = useRef<HTMLDivElement>(null);
   const phase = useModal({ open, onClose, panel });
   const drag = useSheetDrag(panel, onClose);
@@ -96,6 +101,8 @@ export function Sheet({ open, onClose, title, description, children, footer }: S
     if (phase === "closing" && panel.current) clearDragStyles(panel.current);
   }, [phase]);
   if (phase === "closed") return null;
+  const desc = description ? <p id={`${id}-desc`} className="w-sheet__desc">{description}</p> : null;
+  const descInBody = scrollDescription && desc !== null;
   return createPortal(
     <div className="w-overlay w-overlay--sheet" data-phase={phase} {...guard}>
       <div className="w-scrim" onClick={onClose} aria-hidden="true" />
@@ -110,8 +117,11 @@ export function Sheet({ open, onClose, title, description, children, footer }: S
             <IconButton label={t(UI.close)} icon={<Icon name="close" />} onClick={onClose} />
           </div>
         </div>
-        {description ? <p id={`${id}-desc`} className="w-sheet__desc">{description}</p> : null}
-        <div className="w-sheet__body">{children}</div>
+        {descInBody ? null : desc}
+        <div className={cx("w-sheet__body", descInBody && "w-sheet__body--desc")}>
+          {descInBody ? desc : null}
+          {children}
+        </div>
         {footer ? <div className="w-sheet__footer">{footer}</div> : null}
       </div>
     </div>,
