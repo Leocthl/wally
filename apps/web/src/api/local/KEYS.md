@@ -1,10 +1,19 @@
 # Delegator key on the phone (M-09 design)
 
 ## Today (on-device mode, DEMO SHORTCUT)
-- **Every key in the page**: `LocalApiClient` makes throwaway engine and delegator keys in memory on each load and reset (`src/booth/backend/keys.ts`); the page signs the seal, revocations and escalation answers itself.
+- **Every key in the page**: the page makes throwaway engine and delegator keys (first load and every reset; `persist/keys.ts` when the session is kept, `src/booth/backend/keys.ts` otherwise) and signs the seal, revocations and escalation answers itself.
 - **Said plainly**: `ApiInfo.demoShortcut` and the info notes say the page holds every key and the answers are recorded.
-- **Nothing kept**: no key is stored; closing the tab ends the mandate.
-- **Mum (family budget)**: a SIMULATED parent key, made in memory the first time a family budget is used and dropped on reset; the page signs her ceiling credential. It is checked at seal time and is not in the child's log, so the offline verifier cannot check that link.
+- **Kept on this phone**: since the persist lane the two keys are also stored, with the log, so a reload carries on with the same keys (section below). They are SIMULATED demo keys, already readable by the page, worth nothing outside this demo. They sit in localStorage as plain key files, so any script on the origin, and anyone who can open this browser on the phone, can read them; Start the demo over deletes them.
+- **Mum (family budget)**: a SIMULATED parent key, made in memory the first time a family budget is used and dropped on reset; the page signs her ceiling credential. It is checked at seal time and is not in the child's log, so the offline verifier cannot check that link. It is never stored, so a family budget is never kept either.
+
+## Kept session (on-device mode)
+- **Where**: one localStorage record, `wally:session:v1` (`persist/record.ts`): `v` 1, `savedAt`, the two key files (`core/crypto` key-file shape), the log as JSONL, the head checkpoint. Nothing else: no cards, no rail state, no derived data.
+- **Why the log is enough**: the orchestrator folds everything from the log, and the SIMULATED rail is rebuilt from it (`persist/rail.ts`, played into a new RailSim and compared card by card).
+- **Save**: after any append to the log (a short pause first, so a burst is one write), and at once on `pagehide` and when the page is hidden. Never from a view, so the tamper demo's changed copy is never stored. A save that fails removes the record: a stale record would undo a purchase or a cancel.
+- **Restore** (`persist/plan.ts`, then `persist/resume.ts`): strict record shape and version, valid keys for their slots, the whole hash chain with the stored keys and head, a budget that has not ended, not a family budget; then the seal is made again with the stored credential at the stored time, so seq 0 comes out byte for byte as stored. Any failure removes the record, starts fresh and shows one calm line once.
+- **Start the demo over** deletes the record; the fresh budget it seals is not kept until something happens in it.
+- **Several tabs**: each tab writes its whole session, the last writer wins, a `storage` event from another tab is ignored (no live merging).
+- **Known limits**: "See cheaper options" for a stop made before the reload is not offered (the orchestrator remembers those in memory only); a session over 1.5 million characters is not kept; storage the browser clears (site data, low disk, long inactivity) ends the session; a did:key still cannot be rotated.
 
 ## Target split
 - **Engine key** stays with the operator (the Node server, or the page in on-device mode). It signs log entries only.

@@ -3,7 +3,7 @@
 // refused with a reason, never half-read (fail closed), and one that is too big is neither written nor read.
 import { describe, expect, it } from "vitest";
 import { newKeyMaterial } from "../../src/api/local/persist/keys";
-import { decodeRecord, encodeRecord, MAX_RECORD_CHARS, SESSION_KEY, SESSION_VERSION, type SessionRecord } from "../../src/api/local/persist/record";
+import { decodeRecord, encodeRecord, MAX_RECORD_CHARS, NOT_KEPT_MARKER, SESSION_KEY, SESSION_VERSION, type SessionRecord } from "../../src/api/local/persist/record";
 
 const HASH = "a".repeat(64);
 const HEAD = { log_id: "log_AbCdEfGhIjKlMnOp", seq: 2, entry_hash: HASH };
@@ -106,6 +106,18 @@ describe("a record it refuses", () => {
       keys.engine["secret_key"] = 12;
     });
     expect(decodeRecord(text)).toEqual({ ok: false, problem: "SHAPE" });
+  });
+});
+
+describe("the marker for a session that cannot be kept", () => {
+  it("is read as NOT_KEPT, so the next start says the last session ended", () => {
+    expect(decodeRecord(NOT_KEPT_MARKER)).toEqual({ ok: false, problem: "NOT_KEPT" });
+  });
+
+  it("is exactly the marker: another version or an added field is not it", () => {
+    expect(decodeRecord(JSON.stringify({ v: 2, kept: false }))).toEqual({ ok: false, problem: "VERSION" });
+    expect(decodeRecord(JSON.stringify({ v: 1, kept: false, extra: 1 }))).toEqual({ ok: false, problem: "SHAPE" });
+    expect(decodeRecord(JSON.stringify({ v: 1, kept: true }))).toEqual({ ok: false, problem: "SHAPE" });
   });
 });
 

@@ -7,7 +7,7 @@
 //   log      the log of the current budget as JSONL, one JCS line per entry (core toJsonl)
 //   head     the checkpoint of the last entry; the restore checks the stored log still ends there (truncation)
 // The reader is as strict as the writer is plain: exact field set, exact kinds, a size cap. Anything else is refused with a
-// reason and the page starts fresh (restore.ts); a record is never half-read.
+// reason and the page starts fresh (plan.ts); a record is never half-read.
 import { parseCheckpoint } from "@wally/core/log";
 import type { Checkpoint } from "@wally/core/ports";
 import type { KeyFileObject, KeyFiles } from "./keys";
@@ -29,11 +29,12 @@ export interface SessionRecord {
   readonly head: Checkpoint;
 }
 
-export type RecordProblem = "TOO_LARGE" | "NOT_JSON" | "VERSION" | "SHAPE";
+export type RecordProblem = "TOO_LARGE" | "NOT_JSON" | "VERSION" | "SHAPE" | "NOT_KEPT";
 export type Decoded = { readonly ok: true; readonly record: SessionRecord } | { readonly ok: false; readonly problem: RecordProblem };
 export type Encoded = { readonly ok: true; readonly text: string } | { readonly ok: false; readonly problem: "TOO_LARGE" };
 
 const RECORD_FIELDS = ["head", "keys", "log", "savedAt", "v"];
+const MARKER_FIELDS = ["kept", "v"];
 const KEY_SLOTS = ["delegator", "engine"];
 const KEY_FILE_FIELDS = ["did", "kind", "note", "role", "secret_key"];
 const SHAPE = { ok: false, problem: "SHAPE" } as const;
@@ -56,6 +57,13 @@ function keyFilesOf(value: unknown): KeyFiles | null {
 /** An ISO time exactly as `Date.toISOString` spells it. */
 const isIsoTime = (value: unknown): value is string => typeof value === "string" && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString() === value;
 
+/**
+ * Written in place of a session that cannot be kept (a family budget: Mum's key is never stored). It replaces the record of
+ * the budget before it, so that record cannot come back and undo what happened since, and the next start reads it as "the
+ * last session ended" (NOT_KEPT) instead of starting fresh in silence.
+ */
+export const NOT_KEPT_MARKER = JSON.stringify({ v: SESSION_VERSION, kept: false });
+
 /** The record as text, or TOO_LARGE. The same input always gives the same text. */
 export function encodeRecord(parts: { readonly savedAt: Date; readonly keys: KeyFiles; readonly log: string; readonly head: Checkpoint }): Encoded {
   const record: SessionRecord = { v: SESSION_VERSION, savedAt: parts.savedAt.toISOString(), keys: parts.keys, log: parts.log, head: parts.head };
@@ -74,6 +82,7 @@ export function decodeRecord(text: string): Decoded {
   }
   if (!isObject(raw)) return SHAPE;
   if (typeof raw["v"] === "number" && raw["v"] !== SESSION_VERSION) return { ok: false, problem: "VERSION" };
+  if (raw["v"] === SESSION_VERSION && raw["kept"] === false && sameFields(raw, MARKER_FIELDS)) return { ok: false, problem: "NOT_KEPT" };
   if (raw["v"] !== SESSION_VERSION || !sameFields(raw, RECORD_FIELDS)) return SHAPE;
   const { savedAt, log } = raw;
   const keys = keyFilesOf(raw["keys"]);

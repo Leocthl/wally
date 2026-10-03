@@ -7,7 +7,7 @@ import type { LogEntry } from "@wally/core/generated";
 import { beforeAll, describe, expect, it } from "vitest";
 import { newKeyMaterial, type KeyMaterial } from "../../src/api/local/persist/keys";
 import { credentialIsFamily, planRestore } from "../../src/api/local/persist/plan";
-import { decodeRecord, encodeRecord } from "../../src/api/local/persist/record";
+import { decodeRecord, encodeRecord, NOT_KEPT_MARKER } from "../../src/api/local/persist/record";
 import { recordText, sampleLog, sealRequest, START } from "./support";
 
 let entries: readonly LogEntry[] = [];
@@ -73,6 +73,7 @@ describe("a record it will not restore", () => {
     ["not JSON", "{oops", "NOT_JSON"],
     ["another version", JSON.stringify({ v: 2 }), "VERSION"],
     ["not a record", "[]", "SHAPE"],
+    ["a session that could not be kept", NOT_KEPT_MARKER, "NOT_KEPT"],
   ])("%s", (_name, bad, problem) => {
     expect(planRestore(bad, START)).toMatchObject({ kind: "ended", problem });
   });

@@ -3,7 +3,7 @@
 // removes what was stored, because a reload that restored an older state would quietly undo a purchase or a cancel.
 import type { LogEntry } from "@wally/core/generated";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { SESSION_KEY } from "../../src/api/local/persist/record";
+import { NOT_KEPT_MARKER, SESSION_KEY } from "../../src/api/local/persist/record";
 import { planRestore } from "../../src/api/local/persist/plan";
 import { SessionSaver, SAVE_DEBOUNCE_MS, type SaveSource } from "../../src/api/local/persist/saver";
 import { MemoryStorage } from "./memoryStorage";
@@ -208,13 +208,17 @@ describe("a save that cannot be made leaves nothing stale behind", () => {
     expect(storage.writes).toBe(0);
   });
 
-  it("a family budget: removed, not written (Mum's key is never kept)", () => {
+  it("a family budget: never written (Mum's key is never kept); the older record is replaced by the not-kept marker, and the next session overwrites that", () => {
     saver.changed(source);
     vi.advanceTimersByTime(SAVE_DEBOUNCE_MS);
-    expect(stored()).toBeDefined();
+    expect(stored()).toContain('"log"');
     saver.changed({ files: source.files, entries: () => familyEntries });
     vi.advanceTimersByTime(SAVE_DEBOUNCE_MS);
-    expect(stored()).toBeUndefined();
+    expect(stored()).toBe(NOT_KEPT_MARKER);
+    expect(stored()).not.toContain("secret_key");
+    saver.changed(source);
+    vi.advanceTimersByTime(SAVE_DEBOUNCE_MS);
+    expect(stored()).toContain('"log"');
   });
 
   it("an entries reader that throws: removed, nothing thrown", () => {

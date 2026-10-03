@@ -5,7 +5,8 @@
 //    changed copy is a view, so it can never be saved.
 //  - A save that cannot be made removes what was stored. A record that is out of date is worse than none: restoring it
 //    would quietly undo a purchase or a cancel. The page then starts fresh next time and says so.
-//  - A family budget is never saved (plan.ts says why), and the record of the budget before it is removed.
+//  - A family budget is never saved (plan.ts says why): the record of the budget before it is replaced by a marker, so the
+//    next start says the last session ended rather than starting fresh in silence.
 //  - A reset suspends it: the fresh budget the reset seals is not worth keeping, and the old record goes (client).
 // Several tabs: each tab writes its own whole session, the last writer wins, and a `storage` event from another tab is not
 // listened to (no live merging). Nothing here throws; a failed write is a removal, never an error for the shopper.
@@ -13,7 +14,7 @@ import { checkpointOf, toJsonl } from "@wally/core/log";
 import type { LogEntry } from "@wally/core/generated";
 import type { KeyFiles } from "./keys";
 import { credentialIsFamily } from "./plan";
-import { encodeRecord, SESSION_KEY } from "./record";
+import { encodeRecord, NOT_KEPT_MARKER, SESSION_KEY } from "./record";
 import { removeStored, writeStored, type StringStore } from "./storage";
 
 /** How long after a change the session is written ("about 300 ms"; UI only, ASSUMED: no register row). */
@@ -138,13 +139,14 @@ export class SessionSaver {
     this.#timer = null;
   }
 
-  /** The record's text, or null when this session is not to be kept (nothing to keep, a family budget, too long). */
+  /** The record's text, the not-kept marker for a family budget, or null when there is nothing to keep (empty, too long). */
   #text(source: SaveSource): string | null {
     try {
       const entries = source.entries();
       const first = entries[0];
       const last = entries.at(-1);
-      if (first === undefined || last === undefined || first.kind !== "MANDATE_SEALED" || credentialIsFamily(first.payload)) return null;
+      if (first === undefined || last === undefined || first.kind !== "MANDATE_SEALED") return null;
+      if (credentialIsFamily(first.payload)) return NOT_KEPT_MARKER;
       const result = encodeRecord({ savedAt: this.#now(), keys: source.files, log: toJsonl(entries), head: checkpointOf(last) });
       return result.ok ? result.text : null;
     } catch {
