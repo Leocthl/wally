@@ -14,7 +14,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const MIN_NODE = [22, 12];
+const MIN_NODE = [22, 18];
 const DEFAULT_PORT = 8787;
 const LAYA_TIMEOUT_MS = 10_000; // ASSUMED: first call after a Laya start took 2,568 ms [F26]; room for a busy server
 const env = process.env;

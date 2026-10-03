@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "pnpm@12.3.4",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
@@ -23,7 +23,8 @@
     "pages:build": "node scripts/pages-build.mjs",
     "demo:reset": "node scripts/demo-reset.mjs",
     "demo": "node scripts/booth-check.mjs --build-if-needed && pnpm --filter @wally/web api",
-    "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @wally/web api:lan"
+    "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @wally/web api:lan",
+    "invariants": "node scripts/invariants.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
