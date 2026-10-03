@@ -1,6 +1,6 @@
 // Step two, Your taste: style chips, colour swatches, usual sizes and what the person shops for. All optional. What they
-// shop for pre-fills the first budget's categories; the rest only changes what Wally shows first. Nothing here reaches the
-// rules or the planner.
+// shop for starts the first budget's form (categories and amount, which the person then reviews and signs); the rest only
+// changes what Wally shows first. Nothing here reaches the planner, the judge or the rules engine.
 import type { ReactElement } from "react";
 import { OB } from "../../i18n/onboarding";
 import { useBoothContext } from "../../hooks/useBooth";
@@ -77,6 +77,7 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
             onChange={(shopFor) => onTaste(mergeProfile(taste, { shopFor }))}
           />
         </div>
+        <p className="onb-privacy"><Icon name="lock" size={16} /> {t(OB.privacy)}</p>
       </div>
     </StepFrame>
   );

@@ -25,7 +25,7 @@ export const OB = {
 
   taste: {
     title: label("What's your style?", "你鍾意咩風格？"), // NEEDS-REVIEW
-    lead: label("Pick what fits. Wally shows these first. It never changes the rules.", "揀啱你的。Wally 會先顯示呢啲，但唔會改變規則。"), // NEEDS-REVIEW
+    lead: label("Pick what fits. Wally shows these first. Nothing here changes how Wally decides.", "揀啱你的。Wally 會先顯示呢啲。呢度嘅選擇唔會影響 Wally 點樣決定。"), // NEEDS-REVIEW
     styles: label("Your style", "你的風格"), // NEEDS-REVIEW
     colours: label("Colours you wear", "你常著的顏色"), // NEEDS-REVIEW
     sizes: label("Your usual sizes", "你常著的尺碼"), // NEEDS-REVIEW

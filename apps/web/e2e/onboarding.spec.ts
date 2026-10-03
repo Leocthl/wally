@@ -123,6 +123,19 @@ test.describe("the four steps", () => {
     await expect(page.locator(".seal-summary")).toContainText("HK$650");
   });
 
+  test("a tap on the dimmed page keeps focus on the card, and Escape still ends the tour", async ({ page }) => {
+    await page.goto("/?api=mock");
+    await page.getByRole("button", { name: "Skip", exact: true }).click();
+    const card = page.getByRole("dialog", { name: "Ask Wally" });
+    await expect(card).toBeFocused();
+    await page.mouse.click(20, 120);
+    await expect(card).toBeFocused();
+    expect(await page.evaluate(() => document.querySelectorAll("body > [inert]").length)).toBeGreaterThan(0);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(await page.evaluate(() => document.querySelectorAll("[inert]").length)).toBe(0);
+  });
+
   test("the tour's Escape ends it, and the page behind did not take the tap", async ({ page }) => {
     await page.goto("/?api=mock");
     await page.getByRole("button", { name: "Skip", exact: true }).click();

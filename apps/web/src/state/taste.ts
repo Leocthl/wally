@@ -1,6 +1,6 @@
 // What a person can tell Wally about their taste, as ids (the words live in i18n/onboarding.ts). Taste is a hint for the
-// screens: it re-orders and tags what is already on the shelf and pre-fills the budget form. It never reaches the
-// engine, the planner or the rules, and it never invents an item: the picks below name scenarios that exist
+// screens: it re-orders and tags what is already on the shelf and starts the first budget's form (which the person reviews
+// and signs). It never reaches the engine, the planner or the judge, and it never invents an item: the picks below name scenarios that exist
 // (data/scenarios/booth.json), each backed by an item in data/fixtures/listings.
 import type { ScenarioId } from "../api/types";
 
