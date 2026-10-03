@@ -1,5 +1,6 @@
 // Ports owned by core (docs/02 section 18, CONTRACT V2). agent and rail-sim implement them;
-// apps/web composes them. Types only, plus MintError, the one error a RailPort may throw.
+// apps/web composes them. Types only, plus MintError (the one error a RailPort may throw) and the marker a judge
+// adapter leaves when it did not ask its model (JUDGE_VERSION_UNSUPPORTED_LANGUAGE, judgeSkipReason).
 import type {
   CardRecord,
   Cart,
@@ -93,6 +94,29 @@ export interface JudgePort {
   readonly provider: JudgeProvider;
   /** Never throws: failures return status TIMEOUT or ERROR, which R10 turns into ESCALATE (I5). */
   assess(input: JudgeInput, opts: { timeoutMs: number; signal?: AbortSignal }): Promise<JudgeRecord>;
+}
+
+/** Why a judge adapter did not ask its model. The only reason today: the listing is in a language the model does not read. */
+export const JUDGE_REASON_UNSUPPORTED_LANGUAGE = "unsupported_language";
+export type JudgeSkipReason = typeof JUDGE_REASON_UNSUPPORTED_LANGUAGE;
+
+/**
+ * JudgeRecord has no field for a reason and the schema does not change for one. An adapter that chose not to ask its
+ * model returns status ERROR, no answers, and this string as `version`: a call that never reached the model has no
+ * model version to report. R10 reads it back (judgeSkipReason) into the recorded inputs of R10.unavailable, and the
+ * explanation template picks its sentence from there. It only ever adds a reason to a record that already escalates.
+ */
+export const JUDGE_VERSION_UNSUPPORTED_LANGUAGE = `skipped:${JUDGE_REASON_UNSUPPORTED_LANGUAGE}`;
+
+/**
+ * The reason an unusable judge record carries, or null. Only a record that says status ERROR counts: an answered
+ * record, a timeout or an unrelated version never has one, so a marker can tighten a decision and nothing else (I3).
+ * The record is not trusted to be well formed.
+ */
+export function judgeSkipReason(record: unknown): JudgeSkipReason | null {
+  if (record === null || typeof record !== "object" || Array.isArray(record)) return null;
+  const { status, version } = record as { readonly status?: unknown; readonly version?: unknown };
+  return status === "ERROR" && version === JUDGE_VERSION_UNSUPPORTED_LANGUAGE ? JUDGE_REASON_UNSUPPORTED_LANGUAGE : null;
 }
 
 // ---------- Rail (SIMULATED) ----------

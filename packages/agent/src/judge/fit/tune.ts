@@ -51,8 +51,9 @@ interface Ctx {
   readonly log: (line: string) => void;
 }
 
+// languageGate off: tuning measures the raw checkpoint on the whole corpus, zh-HK cases included (corpus README).
 const judgeFor = (ctx: Ctx, questions: QuestionDefs, windowing = false): SystemOneJudge =>
-  new SystemOneJudge({ provider: "laya", baseUrl: ctx.opts.baseUrl, model: ctx.opts.model, rotations: true, questions, windowing: windowing ? DEFAULT_WINDOWING : false });
+  new SystemOneJudge({ provider: "laya", baseUrl: ctx.opts.baseUrl, model: ctx.opts.model, rotations: true, questions, windowing: windowing ? DEFAULT_WINDOWING : false, languageGate: false });
 
 function save(path: string, run: TuneRun): TuneRun {
   writeFileSync(path, `${JSON.stringify(run, null, 2)}\n`);

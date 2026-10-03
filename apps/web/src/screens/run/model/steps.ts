@@ -1,5 +1,6 @@
 // The four steps of a run in plain words: Wally picks (planner), Wally reads the listing (judge), Rules check
 // (engine), One-off card (rail). Status comes from the trace stages and the engine's decision, never from a guess.
+import { judgeSkipReason } from "@wally/core/ports";
 import type { Stage } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import type { LabelPair } from "../../../i18n/label";
@@ -33,8 +34,9 @@ function pick(run: RunView): RunStep {
 
 function read(run: RunView): RunStep {
   const view = run.stages.judge;
-  const offline = run.judge !== undefined && run.judge.status !== "OK";
-  return { id: "judge", title: R.stepRead, detail: offline ? R.stepReadOffline : R.stepReadDetail, status: base(view), ...latency(view) };
+  const unanswered = run.judge !== undefined && run.judge.status !== "OK";
+  const detail = !unanswered ? R.stepReadDetail : judgeSkipReason(run.judge) === null ? R.stepReadOffline : R.stepReadLanguage;
+  return { id: "judge", title: R.stepRead, detail, status: base(view), ...latency(view) };
 }
 
 function rules(run: RunView): RunStep {

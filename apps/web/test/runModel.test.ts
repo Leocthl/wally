@@ -1,7 +1,7 @@
 // The Wally screen's model (pure): which state shows for recorded TraceEvent streams, plain reasons from the engine's
 // own template and inputs, the "Why?" checks, and the card story for the DM2 beats.
 import { describe, expect, it } from "vitest";
-import type { Decision, TraceEvent } from "../src/api/types";
+import type { Decision, Mandate, TraceEvent } from "../src/api/types";
 import { UI } from "../src/i18n/ui";
 import { initialState, reduce, type BoothState } from "../src/state/booth";
 import { chainOf, knownDecisions } from "../src/screens/run/model/chain";
@@ -10,7 +10,7 @@ import { plainName } from "../src/screens/run/model/item";
 import { engineLine, plainReason, ruleChip } from "../src/screens/run/model/reason";
 import { history, selectScreen, type Result } from "../src/screens/run/model/screen";
 import { stepsFor } from "../src/screens/run/model/steps";
-import { coreInjectionDecision, openEscalationId, play, recorder, undecidedRun } from "./runTraces";
+import { coreInjectionDecision, languageSkipRun, openEscalationId, play, recorder, undecidedRun } from "./runTraces";
 
 const R = UI.run;
 const noRender = (): string => "unused";
@@ -296,5 +296,61 @@ describe("display names", () => {
 
   it("chainOf returns undefined for an unknown id", async () => {
     expect(chainOf(knownDecisions((await recorder()).state()), "dec_x")).toBeUndefined();
+  });
+});
+
+describe("the listing checker could not read the language (R10.unavailable with reason unsupported_language)", () => {
+  async function skipped(): Promise<{ readonly state: BoothState; readonly result: Result; readonly decision: Decision }> {
+    const rec = await play("normal");
+    const base = knownDecisions(rec.state())[0] as Decision;
+    const mandate = (await rec.api.snapshot()).mandate as Mandate;
+    const state = fold(rec.state(), languageSkipRun(base, mandate));
+    const result = resultOf(state);
+    return { state, result, decision: result.chain?.current as Decision };
+  }
+
+  it("the real engine asks the shopper and records why, in the inputs the words come from", async () => {
+    const { result, decision } = await skipped();
+    expect(result.kind).toBe("needsOk");
+    expect(decision.explanation?.template_id).toBe("R10.unavailable");
+    expect(decision.explanation?.inputs).toMatchObject({ reason: "unsupported_language", status: "ERROR", verdict: "ESCALATE" });
+    expect(decision.judge.version).toBe("skipped:unsupported_language");
+  });
+
+  it("the plain reason says the listing checker reads English best, in both languages, and not that it is offline", async () => {
+    const { decision } = await skipped();
+    const reason = plainReason(decision);
+    expect(reason).toEqual(R.reasonR10Language);
+    expect(reason.en).toBe("Wally's listing checker reads English best and could not check this listing, so it asks you.");
+    expect(reason.zh).toBe("Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。");
+    expect(reason).not.toEqual(R.reasonR10Offline);
+  });
+
+  it("the engine's own line in the details uses the same idea, from core's template", async () => {
+    const { decision } = await skipped();
+    expect(engineLine(decision, "en", noRender)).toBe("Escalated by R10. Wally's listing checker reads English best and could not check this listing, so it asks you.");
+    expect(engineLine(decision, "zh-HK", noRender)).toBe("R10 已轉交你確認。Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。");
+  });
+
+  it("the Why sheet's listing row asks you and says the checker could not read it", async () => {
+    const { result } = await skipped();
+    const rows = checksFor(result.chain as NonNullable<Result["chain"]>);
+    expect(rows.find((c) => c.id === "listing")).toMatchObject({ status: "ask", line: R.listingLanguage });
+    expect(R.listingLanguage).not.toEqual(R.listingOffline);
+  });
+
+  it("the progress step says the same, not that the checker is offline", async () => {
+    const { result } = await skipped();
+    const steps = result.run ? stepsFor(result.run) : [];
+    expect(steps[1]?.detail).toEqual(R.stepReadLanguage);
+  });
+
+  it("a judge that was really unavailable keeps its offline words (same template, no reason)", async () => {
+    const { decision } = await skipped();
+    const { reason: _reason, ...rest } = decision.explanation?.inputs ?? {};
+    const offline = { ...decision, explanation: { ...(decision.explanation as NonNullable<Decision["explanation"]>), inputs: rest } };
+    expect(plainReason(offline)).toEqual(R.reasonR10Offline);
+    const cutOff = { ...decision, explanation: { ...(decision.explanation as NonNullable<Decision["explanation"]>), inputs: { ...rest, reason: "unsupported_language", input_truncated: true } } };
+    expect(plainReason(cutOff)).toEqual(R.reasonR10Offline);
   });
 });

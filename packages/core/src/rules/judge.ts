@@ -4,6 +4,7 @@
 // Each metric takes the tighter of P(x) and 1 - P(not x), which agree when options sum to 1 (F36 "i.e.").
 import { THRESHOLD_REFS, type EngineConfig } from "../config";
 import type { Mandate } from "../generated";
+import { judgeSkipReason, type JudgeSkipReason } from "../ports";
 import { failed, judged, skipped, type RuleResult } from "./result";
 
 const QUESTIONS = {
@@ -21,7 +22,15 @@ const KNOWN_STATUS: ReadonlySet<unknown> = new Set(["OK", "TIMEOUT", "ERROR"]);
 
 type Reading =
   | { readonly usable: true; readonly answers: Answers }
-  | { readonly usable: false; readonly problem: string; readonly status: string | null; readonly truncated: boolean; readonly provider: string | null };
+  | {
+      readonly usable: false;
+      readonly problem: string;
+      readonly status: string | null;
+      readonly truncated: boolean;
+      readonly provider: string | null;
+      /** Why an adapter did not ask its model, when the record says so (ports.ts judgeSkipReason); null otherwise. */
+      readonly reason: JudgeSkipReason | null;
+    };
 
 const isRecord = (v: unknown): v is Readonly<Record<string, unknown>> => v !== null && typeof v === "object" && !Array.isArray(v);
 const isProbability = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1;
@@ -43,7 +52,7 @@ function readJudge(judge: unknown): Reading {
   const provider = typeof rec["provider"] === "string" ? rec["provider"] : null;
   const flag = rec["input_truncated"];
   const truncated = flag === true;
-  const unusable = (problem: string): Reading => ({ usable: false, problem, status, truncated, provider });
+  const unusable = (problem: string): Reading => ({ usable: false, problem, status, truncated, provider, reason: judgeSkipReason(judge) });
   if (!isRecord(judge)) return unusable("not_a_record");
   if (flag !== undefined && typeof flag !== "boolean") return unusable("malformed_truncation_flag");
   if (!KNOWN_STATUS.has(status)) return unusable("unknown_status");
@@ -90,8 +99,15 @@ function escalateOrProceed(a: Answers, t: EngineConfig["judge"]): RuleResult {
   return judged(p < t.t_esc, spec, "ESCALATE", "R10.escalate");
 }
 
+/** The `reason` input exists only when the record carries one, so every other unusable record keeps the inputs it always had. */
 function unavailable(reading: Extract<Reading, { usable: false }>): RuleResult {
-  const inputs = { status: reading.status, input_truncated: reading.truncated, problem: reading.problem, provider: reading.provider };
+  const inputs = {
+    status: reading.status,
+    input_truncated: reading.truncated,
+    problem: reading.problem,
+    provider: reading.provider,
+    ...(reading.reason === null ? {} : { reason: reading.reason }),
+  };
   return failed({ id: "R10", check: "judge_status", inputs, comparator: "==" }, "ESCALATE", "R10.unavailable");
 }
 

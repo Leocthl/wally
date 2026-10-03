@@ -24,6 +24,7 @@ const RUN = {
   stepRead: label("Wally reads the listing", "Wally 閱讀商品資料"), // NEEDS-REVIEW
   stepReadDetail: label("Read as data, never as orders", "只當資料，唔當指令"), // NEEDS-REVIEW
   stepReadOffline: label("The checker is offline, so Wally will ask you", "檢查器離線，Wally 會先問你"), // NEEDS-REVIEW
+  stepReadLanguage: label("The checker reads English best, so Wally will ask you", "檢查器最啱讀英文，Wally 會先問你"), // NEEDS-REVIEW
   stepRules: label("Rules check", "規則檢查"), // NEEDS-REVIEW
   stepRulesDetail: label("Fixed rules decide, not the AI", "由固定規則決定，唔係 AI"), // NEEDS-REVIEW
   stepRulesPass: label("All your rules pass", "全部規則通過"), // NEEDS-REVIEW
@@ -109,6 +110,7 @@ const RUN = {
   reasonR10Scope: label("This might not fit your rules.", "呢件貨品可能唔符合你的規則。"), // NEEDS-REVIEW
   reasonR10Unsure: label("Wally isn't sure about this one.", "Wally 對呢件貨品冇把握。"), // NEEDS-REVIEW
   reasonR10Offline: label("Wally's checker is offline, so it asked you first.", "Wally 的檢查器離線，所以先問你。"), // NEEDS-REVIEW
+  reasonR10Language: label("Wally's listing checker reads English best and could not check this listing, so it asks you.", "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。"), // NEEDS-REVIEW
   reasonR12: label("The price changed at checkout, so Wally cancelled the card.", "結帳時價格有變，Wally 已取消張卡。"), // NEEDS-REVIEW
   reasonUnknown: label("A fixed rule stopped this.", "固定規則攔截咗。"), // NEEDS-REVIEW
 
@@ -154,6 +156,7 @@ const RUN = {
   listingScope: label("Might not fit your rules", "可能唔符合你的規則"), // NEEDS-REVIEW
   listingUnsure: label("Wally wasn't sure", "Wally 冇把握"), // NEEDS-REVIEW
   listingOffline: label("The checker was offline, so Wally asked you", "檢查器離線，Wally 先問你"), // NEEDS-REVIEW
+  listingLanguage: label("The checker reads English best and couldn't read this, so Wally asked you", "檢查器最啱讀英文，今次未能讀到，Wally 先問你"), // NEEDS-REVIEW
   cardPass: label("Within what a one-off card can hold", "喺一次性卡上限之內"), // NEEDS-REVIEW
   cardStop: label("More than a one-off card can hold", "超出一次性卡上限"), // NEEDS-REVIEW
   answerStop: label("No yes in time", "未有及時批准"), // NEEDS-REVIEW
