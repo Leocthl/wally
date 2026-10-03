@@ -264,10 +264,21 @@ async function main() {
   const boothBefore = await booth();
   const phones = Array.from({ length: PHONES }, (_, i) => new Phone(i, base, token));
 
-  // Each phone's first call makes its wallet; one at a time is what the app does (its start-up probe goes alone).
+  // Each phone's first call makes its wallet; one at a time is what the app does (its start-up probe goes alone). A booth that
+  // still holds the wallets of an earlier run answers 503 "every practice wallet is in use" until they are 5 s old (a wallet used
+  // just now is not dropped to make room): the phone asks again, as a person would.
   const first = [];
-  for (const p of phones) first.push((await p.call("first call (wallet made)", "GET", "/api/info")).ms);
-  say(`first call of each phone (wallet made): ${first.map((ms) => `${ms.toFixed(0)} ms`).join(", ")}`);
+  let turnedAway = 0;
+  for (const p of phones) {
+    let r = await p.call("first call (wallet made)", "GET", "/api/info");
+    for (let attempt = 0; r.status === 503 && attempt < 12; attempt += 1) {
+      turnedAway += 1;
+      await sleep(1_000);
+      r = await p.call("first call (wallet made)", "GET", "/api/info");
+    }
+    first.push(r.ms);
+  }
+  say(`first call of each phone (wallet made): ${first.map((ms) => `${ms.toFixed(0)} ms`).join(", ")}${turnedAway > 0 ? ` (turned away ${turnedAway} times first: the booth was full of the last run's wallets)` : ""}`);
   for (const p of phones) {
     if (!p.jar.has("wally_s")) fail(`phone ${p.index + 1}: no wally_s cookie after its first call`);
     await p.openStream();
