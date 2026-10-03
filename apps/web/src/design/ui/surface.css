@@ -95,10 +95,9 @@ a.w-row__hit:active, button.w-row__hit:active { background: var(--c-surface-sunk
   isolation: isolate;
   padding: max(var(--sp-4), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-6) max(var(--gutter), var(--safe-left));
   border-radius: 0 0 var(--r-xl) var(--r-xl);
-  background: linear-gradient(150deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
+  background: radial-gradient(120% 90% at 0% 0%, var(--c-hero-shine), transparent 55%), linear-gradient(150deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%);
   color: var(--c-on-hero);
 }
-.w-hero::before { content: ""; position: absolute; z-index: -1; width: 18rem; height: 18rem; right: -7rem; top: -8rem; border-radius: 50%; background: var(--c-hero-glow); pointer-events: none; }
 
 /* Card list: separate rounded cards with a gap (local wallet convention), chevrons on rows that navigate. */
 .w-list--cards { display: grid; gap: var(--sp-3); }

@@ -100,8 +100,7 @@
 
 /* Side: the budget hero and the cards */
 .pr-side { display: grid; gap: var(--sp-4); align-content: start; }
-.pr-budget { position: relative; overflow: hidden; isolation: isolate; padding: var(--sp-5); border-radius: var(--r-xl); background: linear-gradient(140deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%); color: var(--c-on-hero); box-shadow: var(--shadow-2); }
-.pr-budget::before { content: ""; position: absolute; z-index: -1; width: 14rem; height: 14rem; right: -5rem; top: -6rem; border-radius: 50%; background: var(--c-hero-glow); pointer-events: none; }
+.pr-budget { position: relative; overflow: hidden; isolation: isolate; padding: var(--sp-5); border-radius: var(--r-xl); background: radial-gradient(120% 90% at 0% 0%, var(--c-hero-shine), transparent 55%), linear-gradient(140deg, var(--c-hero-from) 0%, var(--c-hero-to) 100%); color: var(--c-on-hero); box-shadow: var(--shadow-2); }
 .pr-budget--empty { display: grid; place-items: center; min-height: 10rem; }
 .chip-scope.pr-budget__scope { display: grid; gap: var(--sp-2); }
 .pr-budget__scope > .pr-budget__chips { justify-content: flex-end; margin: 0 0 calc(-1 * var(--sp-4)); }

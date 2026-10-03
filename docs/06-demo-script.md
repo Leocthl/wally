@@ -9,8 +9,8 @@
 | Time [F45] | Driver (Budget, Demo scenarios) | Talker (words in 07) | Moment |
 |---|---|---|---|
 | 0:00-0:25 | Budget open, "Hi, I'm Wally" | Hook; rail SIMULATED | none |
-| 0:25-1:05 | Shop charges more (one tap) | Rules signed, R1 verified. Wally picks, logged. One-off card for HK$259, HK$541 left [F21]. Overshoot declined, exact charge authorised, replay declined | DM1, DM2 |
-| 1:05-2:10 | A seller with scam reports; Shipping tips it over; A listing that gives orders | R9: no card. HK$550 over HK$541 [F22]: R3. The judge scores the injection; R10 stops it | DM3, DM4, DM5 |
+| 0:25-1:05 | Card tab: Shop charges more | Rules signed, R1 verified. Wally picks, logged. One-off card for HK$259, HK$541 left [F21]. Overshoot declined, exact charge authorised, replay declined | DM1, DM2 |
+| 1:05-2:10 | Stops tab: A seller with scam reports; Shipping tips it over; A listing that gives orders | R9: no card. HK$550 over HK$541 [F22]: R3. The judge scores the injection; R10 stops it | DM3, DM4, DM5 |
 | 2:10-2:40 | Proof checks itself; Try changing one receipt; Put it back; Evidence | One signed receipt per decision; one changed receipt fails. Rules only vs Wally [F69] | DM7, DM8 |
 | 2:40-3:00 | About | Limits and the ask | DM9 |
 
