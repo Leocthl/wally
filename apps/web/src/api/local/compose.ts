@@ -25,7 +25,7 @@ export interface LocalComposeOptions {
   readonly clock?: Clock;
   /** SIMULATED rail randomness; tests pass seededRandom. */
   readonly railRandom?: () => RandomSource;
-  /** Demo keys; default: new ephemeral keys on every reset (nothing is kept between page loads). */
+  /** Demo keys; default: new ephemeral keys on every reset (nothing is kept between page loads, unless persist/ supplies and stores them). */
   readonly keys?: () => DemoKeys;
   readonly logger?: BackendLogger;
   /** Overrides for ApiInfo.features (a flag turned off hides the feature and the backend refuses it). */

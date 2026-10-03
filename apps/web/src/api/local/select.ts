@@ -82,7 +82,7 @@ export async function pickClient(): Promise<{ readonly api: ApiClient; readonly 
   const token = readToken(stores);
   const choice = await selectApi({ search: window.location.search, env: typeof env === "string" ? env : undefined, server, probe: (s) => probeInfo(s, token) });
   if (choice.kind !== "http") {
-    const api = await PersistentLocalApiClient.open();
+    const api = await PersistentLocalApiClient.open({ report: (line) => console.warn(line) }); // for whoever opens the inspector; the shopper gets the calm note
     return { api, onDevice: true, sessionEnded: api.sessionEnded };
   }
   return { api: new HttpApiClient({ ...(server === null ? {} : { baseUrl: server }), ...(token === null ? {} : { token }) }), onDevice: false };

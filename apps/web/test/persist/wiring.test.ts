@@ -103,6 +103,30 @@ describe("persistWiring sessions", () => {
     expect(await next.store.read(plan.head.log_id)).toEqual([]);
   });
 
+  it("a later seal under the same keys is plain: the resume happens once, whatever order the dependencies are asked for", () => {
+    const wiring = persistWiring({ plan, saver: new SessionSaver({ store: null, now: () => START }) });
+    const real = { seal: vi.fn() };
+    const base = baseDeps({ createOrchestrator: vi.fn(() => real) as never });
+    const next = wiring.wrapSession(base, wiring.keys());
+    const clock = new FakeClock(START);
+    const asked = { clock, rail: {} } as never;
+
+    const playback = next.random(); // openSession asks for the random source first, then builds the orchestrator
+    const first = next.createOrchestrator(asked);
+    expect(playback).toBeInstanceOf(PlaybackRandom);
+    expect(first).not.toBe(real); // the resuming orchestrator
+    expect(first.seal).not.toBe(real.seal);
+    expect(base.createOrchestrator).toHaveBeenLastCalledWith(expect.objectContaining({ clock: expect.any(FreezableClock) }));
+
+    const second = { clock: new FakeClock(START), rail: {} } as never;
+    const randomAfter = next.random();
+    const orchestratorAfter = next.createOrchestrator(second);
+    expect(randomAfter).not.toBeInstanceOf(PlaybackRandom);
+    expect(orchestratorAfter).toBe(real); // the real one, built from exactly what was asked
+    expect(base.createOrchestrator).toHaveBeenLastCalledWith(second);
+    expect(next.random()).not.toBeInstanceOf(PlaybackRandom);
+  });
+
   it("the second session is not a resume", () => {
     const wiring = persistWiring({ plan, saver: new SessionSaver({ store: null, now: () => START }) });
     wiring.wrapSession(baseDeps(), wiring.keys());

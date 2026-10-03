@@ -1,6 +1,6 @@
 // A reload at any moment, after any history the booth can make, brings back exactly what the screens read: the budget, the
 // cards in their states, the escalations, the whole log and its head. Random histories of booth buttons, typed text, answers,
-// cancels, the passing of time and the tamper demo, with a reload between any two steps; every reload has to restore (never
+// cancels, new budgets, starts over, the passing of time and the tamper demo, with a reload between any two steps; every reload has to restore (never
 // "ended"), and the page has to go on working after it. This is what keeps the rail rebuilt from the log honest for
 // histories nobody wrote a test for.
 import fc from "fast-check";
@@ -21,6 +21,8 @@ type Op =
   | { readonly t: "propose"; readonly text: string }
   | { readonly t: "answer"; readonly choice: "APPROVE" | "DENY" }
   | { readonly t: "cancel" }
+  | { readonly t: "seal"; readonly hkd: number }
+  | { readonly t: "reset" }
   | { readonly t: "advance"; readonly minutes: number }
   | { readonly t: "tamper" }
   | { readonly t: "reload" };
@@ -30,6 +32,8 @@ const opArb: fc.Arbitrary<Op> = fc.oneof(
   { weight: 1, arbitrary: fc.constantFrom(...TEXTS).map((text): Op => ({ t: "propose", text })) },
   { weight: 1, arbitrary: fc.constantFrom("APPROVE", "DENY").map((choice): Op => ({ t: "answer", choice })) },
   { weight: 1, arbitrary: fc.constant<Op>({ t: "cancel" }) },
+  { weight: 1, arbitrary: fc.constantFrom(300, 500, 800).map((hkd): Op => ({ t: "seal", hkd })) },
+  { weight: 1, arbitrary: fc.constant<Op>({ t: "reset" }) },
   { weight: 2, arbitrary: fc.constantFrom(1, 5, 29, 31, 90).map((minutes): Op => ({ t: "advance", minutes })) },
   { weight: 1, arbitrary: fc.constant<Op>({ t: "tamper" }) },
   { weight: 3, arbitrary: fc.constant<Op>({ t: "reload" }) },
@@ -50,8 +54,14 @@ async function step(client: PersistentLocalApiClient, clock: ReturnType<typeof c
     else if (op.t === "answer") {
       const open = (await client.snapshot()).escalations.find((e) => e.state === "OPEN");
       if (open !== undefined) await client.answerEscalation({ decisionId: open.decisionId, choice: op.choice });
-    } else if (op.t === "cancel") await client.revoke({});
-    else if (op.t === "advance") {
+    } else if (op.t === "cancel") {
+      await client.revoke({});
+    } else if (op.t === "seal") {
+      await client.seal(sealRequest(clock, op.hkd));
+    } else if (op.t === "reset") {
+      await client.reset();
+      await client.runScenario("normal"); // a fresh budget is kept from its first purchase, not before
+    } else if (op.t === "advance") {
       clock.advance(op.minutes * 60_000);
       await client.snapshot(); // every request ticks first
     } else if (op.t === "tamper") await client.tamper();

@@ -1,6 +1,7 @@
 // The edges of the kept session, with the real on-device client and a storage double: a stored session that cannot be
 // restored starts the page fresh and says so once; a browser that will not keep anything works as before; Start the demo over
 // forgets for good; what is never kept (the tamper demo's copy, a family budget); several tabs; the page going away.
+import { RailSim } from "@wally/rail-sim";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { newKeyMaterial } from "../../src/api/local/persist/keys";
 import { NOT_KEPT_MARKER, SESSION_KEY } from "../../src/api/local/persist/record";
@@ -59,14 +60,33 @@ describe("a stored session that cannot be restored starts the page fresh and say
     expect((await client.snapshot()).packet?.remaining_minor).toBe(50_000);
   });
 
-  it("says why to the logger, in a line with no key and no stored text", async () => {
+  it("a stored session the rail cannot be rebuilt from is refused at the seal: removed, a new page, and the page works", async () => {
+    const { storage, rig: r } = await stored();
+    const refuse = vi.spyOn(RailSim.prototype, "mint").mockRejectedValueOnce(new Error("the rail refused"));
+    const report = vi.fn();
+    try {
+      const client = await r.boot({ report });
+      expect(refuse).toHaveBeenCalledTimes(1);
+      expect(client.outcome).toBe("ended");
+      expect(client.sessionEnded).toBe(true);
+      expect((await client.snapshot()).mandate).toBeNull();
+      expect(storage.items.has(SESSION_KEY)).toBe(false);
+      await client.seal(sealRequest(r.clock, 500));
+      expect((await client.runScenario("small")).outcome).toBe("APPROVE");
+      expect(String(report.mock.calls[0]?.[0])).toMatch(/^session: not restored \(.*rail/);
+    } finally {
+      refuse.mockRestore();
+    }
+  });
+
+  it("says why to the report line, with no key and no stored text", async () => {
     const { storage, rig: r, text } = await stored();
     const record = JSON.parse(text) as { log: string };
     storage.items.set(SESSION_KEY, JSON.stringify({ ...record, log: record.log.replace(/"total_minor":(\d)/, (_m, d: string) => `"total_minor":${Number(d) === 9 ? 1 : Number(d) + 1}`) }));
-    const logger = { info: vi.fn(), error: vi.fn() };
-    await r.boot({ logger });
-    expect(logger.info).toHaveBeenCalledTimes(1);
-    const line = String(logger.info.mock.calls[0]?.[0]);
+    const report = vi.fn();
+    await r.boot({ report });
+    expect(report).toHaveBeenCalledTimes(1);
+    const line = String(report.mock.calls[0]?.[0]);
     expect(line).toMatch(/^session: not restored \(CHAIN: seq \d+: [A-Z_]+\)$/);
     expect(line).not.toContain("did:key");
     expect(line).not.toContain(JSON.parse(text).keys.engine.secret_key);
@@ -119,10 +139,10 @@ describe("a browser that will not keep it", () => {
     expect((await client.verify()).result.ok).toBe(true);
   });
 
-  it("anything unforeseen while starting leaves a plain page and one line for the logger, never a blank screen", async () => {
+  it("anything unforeseen while starting leaves a plain page and one line to report, never a blank screen", async () => {
     const storage = new MemoryStorage();
     storage.items.set(SESSION_KEY, '{"v":1}');
-    const logger = { info: vi.fn(), error: vi.fn() };
+    const report = vi.fn();
     const { boot } = start(storage);
     const client = await boot({
       clock: {
@@ -130,13 +150,13 @@ describe("a browser that will not keep it", () => {
           throw new Error("clock broke");
         },
       },
-      logger,
+      report,
     });
     expect(client.outcome).toBe("fresh");
     expect(client.sessionEnded).toBe(false);
     expect((await client.info()).remembers).toBe(false);
-    expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(String(logger.error.mock.calls[0]?.[0])).toContain("clock broke");
+    expect(report).toHaveBeenCalledTimes(1);
+    expect(String(report.mock.calls[0]?.[0])).toMatch(/kept sessions are off for this page \(Error\)/); // the type, never the message: it could echo anything
   });
 
   it("no storage object at all (null) is the same", async () => {
@@ -187,6 +207,38 @@ describe("start over", () => {
     expect((await reloaded.snapshot()).mandate).toBeNull();
   });
 
+  it("the stored session is gone the moment the reset starts, before it has finished", async () => {
+    const window = new EventTarget();
+    const { boot, clock, storage } = start();
+    const client = await boot({ page: { window, document: null } });
+    await client.seal(sealRequest(clock, 300));
+    await client.runScenario("small");
+    client.flush();
+    expect(storage.items.has(SESSION_KEY)).toBe(true);
+    const resetting = client.reset();
+    expect(storage.items.has(SESSION_KEY)).toBe(false);
+    window.dispatchEvent(new Event("pagehide")); // the page goes away mid-reset: nothing comes back
+    expect(storage.items.has(SESSION_KEY)).toBe(false);
+    await resetting;
+    expect(storage.items.has(SESSION_KEY)).toBe(false);
+  });
+
+  it("a reset that fails leaves the session going, and it is written again", async () => {
+    const { boot, clock, storage } = start();
+    const client = await boot();
+    await client.seal(sealRequest(clock, 300));
+    await client.runScenario("small");
+    client.flush();
+    const failing = vi.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(client)) as { reset(): Promise<void> }, "reset").mockRejectedValueOnce(new Error("reset refused"));
+    try {
+      await expect(client.reset()).rejects.toThrow("reset refused");
+    } finally {
+      failing.mockRestore();
+    }
+    client.flush();
+    expect(storage.items.get(SESSION_KEY)).toContain('"log"');
+  });
+
   it("the new budget is kept again from its first purchase, with the new keys", async () => {
     const { boot, clock, storage } = start();
     const client = await boot();
@@ -225,6 +277,84 @@ describe("start over on a page that was restored", () => {
     expect(snap.cards.map((c) => c.limit_minor)).toEqual([25_900]);
     expect(snap.log.entries.filter((e) => e.kind === "MANDATE_SEALED")).toHaveLength(1);
     expect((await again.verify()).result.ok).toBe(true);
+  });
+});
+
+describe("a restored page seals again like any other page", () => {
+  /** A page that kept HK$300 with a card in it, reloaded. */
+  async function restored(scenario: "mint" | "small" = "mint") {
+    const r = start();
+    const first = await r.boot();
+    await first.seal(sealRequest(r.clock, 300));
+    await first.runScenario(scenario);
+    first.flush();
+    const page = await r.boot();
+    expect(page.outcome).toBe("restored");
+    return { ...r, page };
+  }
+
+  it("a new budget (Top up, Change the rules) is sealed, replaces the restored one, and is kept", async () => {
+    const { page, clock, boot } = await restored();
+    await page.seal(sealRequest(clock, 500));
+    const snap = await page.snapshot();
+    expect(snap.packet?.remaining_minor).toBe(50_000);
+    expect(snap.cards).toEqual([]);
+    page.flush();
+    const again = await boot();
+    expect(again.outcome).toBe("restored");
+    const kept = await again.snapshot();
+    expect(kept.packet?.remaining_minor).toBe(50_000);
+    expect(kept.log.entries.filter((e) => e.kind === "MANDATE_SEALED")).toHaveLength(1);
+    expect((await again.verify()).result.ok).toBe(true);
+  });
+
+  it("Cancel, then a new budget, after a reload: the old card is voided, the new budget works and is kept", async () => {
+    const { page, clock, boot } = await restored();
+    await page.revoke({});
+    await page.seal(sealRequest(clock, 400));
+    expect((await page.runScenario("small")).outcome).toBe("APPROVE");
+    page.flush();
+    const again = await boot();
+    expect(again.outcome).toBe("restored");
+    const snap = await again.snapshot();
+    expect(snap.packet?.status).toBe("ACTIVE");
+    expect(snap.packet?.remaining_minor).toBe(28_000);
+    expect(snap.cards.map((c) => c.limit_minor)).toEqual([12_000]);
+  });
+
+  it("a new budget twice in a row, and a purchase on the second, after one reload", async () => {
+    const { page, clock, boot } = await restored();
+    await page.seal(sealRequest(clock, 500));
+    await page.seal(sealRequest(clock, 600));
+    await page.runScenario("normal");
+    page.flush();
+    const again = await boot();
+    expect(again.outcome).toBe("restored");
+    expect((await again.snapshot()).packet?.remaining_minor).toBe(60_000 - 25_900);
+  });
+
+  it("the Presenter's first step (the ready-made budget sealed again) works", async () => {
+    const { page, clock } = await restored();
+    await page.seal(sealRequest(clock, 800));
+    expect((await page.snapshot()).packet?.remaining_minor).toBe(80_000);
+  });
+
+  it("a family scenario works on a restored page: Mum's budget is made, the purchase is approved, and nothing of it is kept", async () => {
+    const { page, storage, boot } = await restored();
+    const run = await page.runScenario("family_ok");
+    expect(run.outcome).toBe("APPROVE");
+    page.flush();
+    expect(storage.items.get(SESSION_KEY)).toBe(NOT_KEPT_MARKER);
+    expect((await boot()).outcome).toBe("ended");
+  });
+
+  it("a session is restored only once: the card ids of the first session are not replayed into the next rail", async () => {
+    const { page, clock } = await restored("small");
+    await page.seal(sealRequest(clock, 800));
+    await page.runScenario("small");
+    const cards = (await page.snapshot()).cards;
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.state).toBe("USED");
   });
 });
 

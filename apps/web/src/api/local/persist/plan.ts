@@ -1,9 +1,12 @@
 // From stored text to a restore plan, or a reason not to restore. Pure and synchronous: nothing is built, signed or written
 // here. In order: the record (strict shape, this version, size), the two keys (valid for their slots, and two different
 // keys), the log (every line is JSON), the whole hash chain with the engine key and the delegator key the record names
-// (every signature, the seal by the pinned delegator, the stored head, so a tampered, reordered, cut or extended log
-// fails), a budget that is not a family budget (Mum's key is not kept, so her ceiling could not be checked again), and a
-// budget that has not ended. The first failure wins and the page starts fresh; a record is never half-trusted.
+// (every signature, the seal by the pinned delegator) ending exactly at the stored head, a budget that is not a family
+// budget (Mum's key is not kept, so her ceiling could not be checked again), and a budget that has not ended. The first
+// failure wins and the page starts fresh; a record is never half-trusted.
+// What this is and is not: it finds damage and stray edits (a log changed, reordered, cut or extended after it was signed).
+// It is not authentication. The keys are stored beside the log, so whoever can write this storage can write a log that
+// verifies, or cut entries and move the head with them; the demo keys are throwaway and SIMULATED (KEYS.md).
 import type { LogEntry, MandateCredential } from "@wally/core/generated";
 import type { Checkpoint } from "@wally/core/ports";
 import { mandateIdFromCredentialId } from "@wally/core/vc";
@@ -67,6 +70,7 @@ export function planRestore(text: string, now: Date): PlanResult {
   if (parsed === null) return ended("LOG", "a line of the stored log is empty or not JSON");
   const report = verifyChain(parsed, { engine: [keys.engine.did], delegator: keys.delegator.did }, record.head);
   if (!report.ok) return ended("CHAIN", `seq ${report.failedSeq}: ${report.reason}`);
+  if (report.head.seq !== record.head.seq || report.head.entry_hash !== record.head.entry_hash) return ended("CHAIN", "the stored log goes on past its stored head");
   const entries = parsed as LogEntry[]; // verifyChain checked every one against the log entry schema
   const first = entries[0];
   if (first?.kind !== "MANDATE_SEALED") return ended("LOG", "the stored log does not start with the seal");

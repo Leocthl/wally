@@ -138,6 +138,28 @@ describe("when the page goes away", () => {
 });
 
 describe("a reset in progress", () => {
+  it("takes the stored session out at once, so a page that goes away mid-reset cannot bring it back", () => {
+    saver.changed(source);
+    saver.flush();
+    expect(stored()).toBeDefined();
+    saver.suspend();
+    expect(stored()).toBeUndefined();
+  });
+
+  it("resume(true) writes the session again when the reset failed; resume(false) leaves it out", () => {
+    saver.changed(source);
+    saver.flush();
+    saver.suspend();
+    saver.resume(true);
+    vi.advanceTimersByTime(SAVE_DEBOUNCE_MS);
+    expect(stored()).toBeDefined();
+    saver.suspend();
+    expect(stored()).toBeUndefined();
+    saver.resume(false);
+    vi.advanceTimersByTime(SAVE_DEBOUNCE_MS * 2);
+    expect(stored()).toBeUndefined();
+  });
+
   it("changes made while suspended are not written, even at pagehide", () => {
     const events = { window: new EventTarget(), document: null };
     saver.listen(events);

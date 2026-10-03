@@ -2,7 +2,7 @@
 // well formed and of this version, the keys are valid keys for their slots, the log is the log those keys signed (the whole
 // hash chain, every signature, the seal by the pinned delegator, and the stored head), and the budget has not ended.
 // Any failure means "start fresh"; a record is never half-trusted.
-import { toJsonl } from "@wally/core/log";
+import { checkpointOf, toJsonl } from "@wally/core/log";
 import type { LogEntry } from "@wally/core/generated";
 import { beforeAll, describe, expect, it } from "vitest";
 import { newKeyMaterial, type KeyMaterial } from "../../src/api/local/persist/keys";
@@ -109,6 +109,15 @@ describe("a record it will not restore", () => {
 
   it("a log cut short while the stored head still names the last entry (truncation)", () => {
     expect(planRestore(withLines((all) => all.slice(0, -1)), START)).toMatchObject({ kind: "ended", problem: "CHAIN" });
+  });
+
+  it("a log that goes on past its stored head (the head was not moved with it)", () => {
+    const early = encodeRecord({ savedAt: START, keys: material.files, log: toJsonl(entries), head: checkpointOf(entries[entries.length - 3] as LogEntry) });
+    expect(early.ok).toBe(true);
+    if (!early.ok) return;
+    const result = planRestore(early.text, START);
+    expect(result).toMatchObject({ kind: "ended", problem: "CHAIN" });
+    expect((result as { detail?: string }).detail).toMatch(/past its stored head/);
   });
 
   it("a log with an entry added that the engine did not sign", () => {

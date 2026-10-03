@@ -73,19 +73,28 @@ export function resumingOrchestrator(real: Orchestrator, resuming: Resuming): Or
   };
 }
 
-/** The first session's dependencies, changed to resume `plan`: the stored mandate id, a rail whose ids can be played back, a sealing orchestrator that resumes. */
+/**
+ * Dependencies that resume `plan` on their first use and are the plain ones after it. The backend keeps one set of
+ * dependencies for every seal made under the same keys (a Top up, a new budget after Cancel, a family scenario), so what
+ * is special here must happen once: the first session built from them gets the stored mandate id, a rail whose ids are
+ * played back and the orchestrator whose seal is the stored seal; every later session gets exactly what the plain
+ * dependencies give. `openSession` asks for the random source before the orchestrator, so one flag turns both over.
+ */
 export function resumeDeps(deps: SessionDeps, plan: RestorePlan): SessionDeps {
   const playback = new PlaybackRandom(deps.random());
   let idGiven = false;
+  let resumed = false;
   return {
     ...deps,
-    random: () => playback,
+    random: () => (resumed ? deps.random() : playback),
     newId: (prefix) => {
       if (prefix !== "mnd" || idGiven) return deps.newId(prefix);
       idGiven = true;
       return plan.mandateId; // the log id comes from the mandate id: the stored log is log_<this>
     },
     createOrchestrator: (orchestratorDeps) => {
+      if (resumed) return deps.createOrchestrator(orchestratorDeps);
+      resumed = true;
       const clock = new FreezableClock(orchestratorDeps.clock);
       const real = deps.createOrchestrator({ ...orchestratorDeps, clock });
       return resumingOrchestrator(real, { rail: orchestratorDeps.rail, playback, clock, plan });

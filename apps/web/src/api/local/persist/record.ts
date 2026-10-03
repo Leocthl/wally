@@ -5,7 +5,8 @@
 //   savedAt  when it was written (ISO), for people reading storage; it decides nothing
 //   keys     the two throwaway demo keys that signed the log (keys.ts), SIMULATED, already held by the page today
 //   log      the log of the current budget as JSONL, one JCS line per entry (core toJsonl)
-//   head     the checkpoint of the last entry; the restore checks the stored log still ends there (truncation)
+//   head     the checkpoint of the last entry; the restore checks the stored log ends exactly there (a log cut or extended after
+//            the save; not one rewritten together with its head: the keys are stored beside the log, KEYS.md)
 // The reader is as strict as the writer is plain: exact field set, exact kinds, a size cap. Anything else is refused with a
 // reason and the page starts fresh (plan.ts); a record is never half-read.
 import { parseCheckpoint } from "@wally/core/log";

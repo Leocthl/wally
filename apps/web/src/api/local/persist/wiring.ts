@@ -15,7 +15,7 @@ export type PersistWiring = Required<Pick<LocalComposeOptions, "keys" | "wrapSes
 export function persistWiring(input: { readonly plan: RestorePlan | null; readonly saver: SessionSaver }): PersistWiring {
   const filesOf = new WeakMap<DemoKeys, KeyFiles>();
   const planOf = new WeakMap<DemoKeys, RestorePlan>();
-  let pending = input.plan; // the first session only: a reset or a later seal under new keys is a new session
+  let pending = input.plan; // the stored keys go to the first session only: a reset makes new keys (resumeDeps retires the resume itself for later seals under the same keys)
   return {
     keys: () => {
       if (pending !== null) {

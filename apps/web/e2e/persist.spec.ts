@@ -9,6 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 const KEY = "wally:session:v1";
 const REMEMBERS = "This demo remembers your session on this phone until you start it over.";
 const ENDED = "Your last demo session ended, so Wally started a new one";
+const DAMAGED = '{"v":1,"savedAt":"2026-10-03T02:00:00.000Z","log":"not a log\\n"}';
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
 // A visitor who has never been here: the first run shows (the config switches it off for every other spec).
@@ -109,17 +110,21 @@ test("Start the demo over forgets the session: nothing is stored, and a reload s
 });
 
 test("a damaged stored session starts a new page and says so once, calmly; the next load is quiet", async ({ page }) => {
-  await page.addInitScript((key) => {
-    if (window.sessionStorage.getItem("seeded") !== null) return;
-    window.sessionStorage.setItem("seeded", "1");
-    window.localStorage.setItem("wally:onboarded", "1");
-    window.localStorage.setItem(key, '{"v":1,"savedAt":"2026-10-03T02:00:00.000Z","log":"not a log\\n"}');
-  }, KEY);
+  await page.addInitScript(
+    ([key, damaged]) => {
+      if (window.sessionStorage.getItem("seeded") !== null) return;
+      window.sessionStorage.setItem("seeded", "1");
+      window.localStorage.setItem("wally:onboarded", "1");
+      window.localStorage.setItem(key as string, damaged as string);
+    },
+    [KEY, DAMAGED],
+  );
   await page.goto("/#/budget");
   const note = page.locator('[data-api-mode="local"]');
   await expect(note).toContainText(ENDED);
   await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
-  expect(await stored(page)).toBeNull();
+  // The damaged text is gone. (The ready-made budget the page seals for itself is saved a moment later, so storage may hold that.)
+  expect(await stored(page)).not.toBe(DAMAGED);
   await page.reload();
   await expect(meter(page)).toBeVisible();
   await expect(note).not.toContainText(ENDED);

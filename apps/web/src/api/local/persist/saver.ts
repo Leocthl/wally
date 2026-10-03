@@ -1,5 +1,6 @@
 // The saver: keeps the stored session equal to the session in the page, without ever getting in the way of it.
-//  - After the log changed it waits a moment (SAVE_DEBOUNCE_MS) and writes once, so a burst of appends is one write.
+//  - After the log changed it waits a moment (SAVE_DEBOUNCE_MS) and writes once, so a burst of appends is one write. The
+//    pause starts at the first change and does not restart: nothing is ever more than one pause out of date.
 //  - When the page goes away (pagehide, or hidden: the last chance on a phone) it writes at once, synchronously.
 //  - It reads the entries only when it writes, from the store's own mirror (store.ts), never from a view: a tamper demo's
 //    changed copy is a view, so it can never be saved.
@@ -7,7 +8,9 @@
 //    would quietly undo a purchase or a cancel. The page then starts fresh next time and says so.
 //  - A family budget is never saved (plan.ts says why): the record of the budget before it is replaced by a marker, so the
 //    next start says the last session ended rather than starting fresh in silence.
-//  - A reset suspends it: the fresh budget the reset seals is not worth keeping, and the old record goes (client).
+//  - A reset suspends it: the old record goes at once (a page that goes away mid-reset cannot bring the old session back), and
+//    the fresh budget the reset seals is not kept until something happens in it. If the reset fails the old session goes on and
+//    is written again (resume).
 // Several tabs: each tab writes its own whole session, the last writer wins, and a `storage` event from another tab is not
 // listened to (no live merging). Nothing here throws; a failed write is a removal, never an error for the shopper.
 import { checkpointOf, toJsonl } from "@wally/core/log";
@@ -89,10 +92,12 @@ export class SessionSaver {
     removeStored(this.#store, SESSION_KEY);
   }
 
-  /** A reset starts: changes are noted but not written. */
+  /** A reset starts: the stored session goes now, and changes are noted but not written. */
   suspend(): void {
     this.#suspended = true;
     this.#cancel();
+    removeStored(this.#store, SESSION_KEY);
+    if (this.#source !== null) this.#dirty = true; // a failed reset leaves the session going: resume(true) writes it again
   }
 
   /** The reset is over. `save`: write what was held back (the reset failed and the session goes on); otherwise drop it. */

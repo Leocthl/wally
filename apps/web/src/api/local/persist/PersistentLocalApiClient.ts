@@ -10,14 +10,16 @@
 //  - a stored session that does not (corrupt, other version, edited log, other keys, ended budget, family budget): removed,
 //    a fresh page, outcome "ended" (the page says so once, in OnDeviceNote);
 //  - storage that cannot be read (private mode, blocked): a plain LocalApiClient in all but name, info().remembers false;
-//  - anything unforeseen in this file: the same plain client (and one line to the logger). The page always starts.
+//  - anything unforeseen in this file: the same plain client (and one line to `report`). The page always starts.
 // DEMO KEYS: the engine and delegator keys are the throwaway keys the page already made and held in memory; they are now also
 // kept in this storage so the same keys can sign the next entries (KEYS.md). They are SIMULATED and worth nothing outside this demo.
 import type { ApiInfo } from "../../types";
+import { BoothError } from "../../../booth/backend/errors";
 import { SYSTEM_CLOCK } from "../../../booth/backend/ids";
 import type { ExportView } from "../../../booth/backend/types";
 import { LocalApiClient, type LocalApiClientOptions } from "../LocalApiClient";
 import { planRestore, type RestorePlan } from "./plan";
+import { RailReplayError } from "./rail";
 import { SESSION_KEY } from "./record";
 import { browserPage, SessionSaver, type PageEvents } from "./saver";
 import { browserStore, readStored, removeStored, storageWorks, type StringStore } from "./storage";
@@ -28,11 +30,25 @@ export interface PersistOptions {
   readonly storage?: StringStore | null;
   /** Where the page's going away is heard. Default: the real page. null: nowhere (a test). */
   readonly page?: PageEvents | null;
+  /**
+   * One line when a stored session is not restored or kept sessions are off, and why (never a key, never the stored text).
+   * Default: none. The page passes console.warn, for whoever opens the inspector; the shopper sees the calm note instead.
+   */
+  readonly report?: (line: string) => void;
 }
 
 /** What info() says about the keys while the session is kept (the base says they are new on every load). */
 const KEPT_KEYS_NOTE = "Throwaway demo keys, kept in this browser until the demo is started over.";
 const KEPT_PUBLIC_KEYS_NOTE = "Throwaway demo keys this page signs with, kept on this phone until the demo is started over (rail SIMULATED). Public keys only.";
+
+/**
+ * Why something went wrong, in words that cannot hold a key: the refusals this lane writes (the rail could not be rebuilt,
+ * the seal was refused) say what failed, with card ids and amounts at most; any other error is named by its type only.
+ */
+function reasonOf(err: unknown): string {
+  if (err instanceof RailReplayError || err instanceof BoothError) return err.message;
+  return err instanceof Error ? err.name : "unknown error";
+}
 
 /** What the page found when it started. */
 export type SessionOutcome = "fresh" | "restored" | "ended";
@@ -67,13 +83,13 @@ export class PersistentLocalApiClient extends LocalApiClient {
 
   /** The page's start-up: restore the stored session if it is good, else start fresh. See the file header. */
   static async open(options: LocalApiClientOptions & PersistOptions = {}): Promise<PersistentLocalApiClient> {
-    const { storage, page, ...client } = options;
+    const { storage, page, report, ...client } = options;
     const store = storage === undefined ? browserStore() : storage;
     const events = page === undefined ? browserPage() : page;
     try {
-      return await PersistentLocalApiClient.#start(client, store, events);
+      return await PersistentLocalApiClient.#start(client, store, events, report);
     } catch (err) {
-      client.logger?.error(`session: kept sessions are off for this page (${err instanceof Error ? err.message : "unknown error"})`);
+      report?.(`session: kept sessions are off for this page (${reasonOf(err)})`);
       return PersistentLocalApiClient.#plain(client);
     }
   }
@@ -83,17 +99,17 @@ export class PersistentLocalApiClient extends LocalApiClient {
     return new PersistentLocalApiClient(options, { saver: new SessionSaver({ store: null, now: () => clock.now() }), wiring: null, remembers: false });
   }
 
-  static async #start(options: LocalApiClientOptions, store: StringStore | null, events: PageEvents | null): Promise<PersistentLocalApiClient> {
+  static async #start(options: LocalApiClientOptions, store: StringStore | null, events: PageEvents | null, report: PersistOptions["report"]): Promise<PersistentLocalApiClient> {
     const clock = options.clock ?? SYSTEM_CLOCK;
     const read = readStored(store, SESSION_KEY);
     if (!read.ok) return PersistentLocalApiClient.#plain(options); // storage that cannot even be read: as before
     let ended = false;
     if (read.text !== null) {
       const planned = planRestore(read.text, clock.now());
-      const restored = planned.kind === "plan" ? await PersistentLocalApiClient.#restore(options, store, events, planned.plan) : null;
+      const restored = planned.kind === "plan" ? await PersistentLocalApiClient.#restore(options, store, events, planned.plan, report) : null;
       if (restored !== null) return restored;
-      // The reason, for whoever is looking (never a key, never the stored text).
-      options.logger?.info(`session: not restored (${planned.kind === "ended" ? `${planned.problem}${planned.detail === undefined ? "" : `: ${planned.detail}`}` : "the stored log could not be sealed again"})`);
+      // The reason, for whoever is looking (never a key, never the stored text). A refused attempt has said its own.
+      if (planned.kind === "ended") report?.(`session: not restored (${planned.problem}${planned.detail === undefined ? "" : `: ${planned.detail}`})`);
       removeStored(store, SESSION_KEY); // what cannot be restored is not kept
       ended = true;
     }
@@ -110,13 +126,14 @@ export class PersistentLocalApiClient extends LocalApiClient {
   }
 
   /** Seals the stored session again and checks it came back exactly; null (nothing kept of the attempt) otherwise. */
-  static async #restore(options: LocalApiClientOptions, store: StringStore | null, events: PageEvents | null, plan: RestorePlan): Promise<PersistentLocalApiClient | null> {
+  static async #restore(options: LocalApiClientOptions, store: StringStore | null, events: PageEvents | null, plan: RestorePlan, report: PersistOptions["report"]): Promise<PersistentLocalApiClient | null> {
     const attempt = PersistentLocalApiClient.#make(options, store, plan);
     try {
       // The seal's own answer, taken before any tick: a read would tick first and could append (a card that ran out while the page was closed).
       const sealed = await attempt.seal(plan.sealRequest);
       if (sealed.mandate.id !== plan.mandateId || sealed.head.seq !== plan.head.seq || sealed.head.entry_hash !== plan.head.entry_hash) throw new Error("restored session differs from the stored one");
-    } catch {
+    } catch (err) {
+      report?.(`session: not restored (${reasonOf(err)})`);
       attempt.#drop();
       return null;
     }
