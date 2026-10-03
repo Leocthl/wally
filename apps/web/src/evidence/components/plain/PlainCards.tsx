@@ -21,15 +21,17 @@ interface CardProps {
   readonly chips: readonly FileChip[];
   readonly wiring: boolean;
   readonly variant?: "wrong";
+  /** Inside a fold whose summary already shows the title: the card keeps it for screen readers and does not say it twice. */
+  readonly folded?: boolean;
   readonly children: ReactNode;
 }
 
-function Card({ id, title, chips, wiring, variant, children }: CardProps): ReactElement {
+function Card({ id, title, chips, wiring, variant, folded = false, children }: CardProps): ReactElement {
   const heading = useId();
   return (
     <PlainScope as="article" labelledBy={heading} card={id} chips={chips} className={cx("evp-card", variant && `evp-card--${variant}`)}>
       <WiringStamp on={wiring} />
-      <h3 id={heading} className="evp-card__title"><Tx text={title} /></h3>
+      <h3 id={heading} className={cx("evp-card__title", folded && "sr-only")}><Tx text={title} /></h3>
       {children}
     </PlainScope>
   );
@@ -69,10 +71,10 @@ function layerRows(v: Layered): readonly BarRow[] {
 const chipsOf = (v: Layered): readonly FileChip[] => [v.wally, v.rules, v.alone].flatMap((r) => (r === null ? [] : [r.chip]));
 const layers = (v: Layered): Layers => ({ wally: v.wally, rules: v.rules });
 
-export function LimitCard({ v, wiring }: { readonly v: Layered; readonly wiring: boolean }): ReactElement {
+export function LimitCard({ v, wiring, folded }: { readonly v: Layered; readonly wiring: boolean; readonly folded?: boolean }): ReactElement {
   const chip = v.wally.chip;
   return (
-    <Card id="limit" title={P.limitTitle} chips={chipsOf(v)} wiring={wiring}>
+    <Card id="limit" title={P.limitTitle} chips={chipsOf(v)} wiring={wiring} {...(folded ? { folded } : {})}>
       <Big value={v.wally.k} tail={P.limitTail} tailSlots={{ n: v.wally.n }} chip={chip} />
       <Sentences list={limitSentences(layers(v))} chip={chip} />
       <PlainBars caption={P.limitCaption} rows={layerRows(v)} />
@@ -80,11 +82,11 @@ export function LimitCard({ v, wiring }: { readonly v: Layered; readonly wiring:
   );
 }
 
-export function RiskyCard({ v, kinds, wiring }: { readonly v: Layered; readonly kinds: readonly string[]; readonly wiring: boolean }): ReactElement {
+export function RiskyCard({ v, kinds, wiring, folded }: { readonly v: Layered; readonly kinds: readonly string[]; readonly wiring: boolean; readonly folded?: boolean }): ReactElement {
   const chip = v.wally.chip;
   const included = riskyKindsSentence(kinds);
   return (
-    <Card id="risky" title={P.riskyTitle} chips={chipsOf(v)} wiring={wiring}>
+    <Card id="risky" title={P.riskyTitle} chips={chipsOf(v)} wiring={wiring} {...(folded ? { folded } : {})}>
       <Big value={v.wally.k} tail={P.riskyTail} tailSlots={{ n: v.wally.n }} chip={chip} />
       <Sentences list={riskySentences(layers(v))} chip={chip} />
       {included === null ? null : <Tx as="p" text={included} className="evp-card__note" />}
@@ -94,10 +96,10 @@ export function RiskyCard({ v, kinds, wiring }: { readonly v: Layered; readonly 
 }
 
 /** What the listing check adds: the trick listings no fixed rule would stop. */
-export function TricksCard({ v, wiring }: { readonly v: Layered; readonly wiring: boolean }): ReactElement {
+export function TricksCard({ v, wiring, folded }: { readonly v: Layered; readonly wiring: boolean; readonly folded?: boolean }): ReactElement {
   const chip = v.wally.chip;
   return (
-    <Card id="tricks" title={P.tricksTitle} chips={chipsOf(v)} wiring={wiring}>
+    <Card id="tricks" title={P.tricksTitle} chips={chipsOf(v)} wiring={wiring} {...(folded ? { folded } : {})}>
       <Big value={v.wally.k} tail={P.tricksTail} tailSlots={{ n: v.wally.n }} chip={chip} />
       <Sentences list={tricksSentences(layers(v))} chip={chip} />
       <Tx as="p" text={TRICKS_NOTE} className="evp-card__note" />
@@ -106,10 +108,10 @@ export function TricksCard({ v, wiring }: { readonly v: Layered; readonly wiring
   );
 }
 
-export function HonestCard({ v, wiring }: { readonly v: Layered; readonly wiring: boolean }): ReactElement {
+export function HonestCard({ v, wiring, folded }: { readonly v: Layered; readonly wiring: boolean; readonly folded?: boolean }): ReactElement {
   const chip = v.wally.chip;
   return (
-    <Card id="honest" title={P.honestTitle} chips={chipsOf(v)} wiring={wiring}>
+    <Card id="honest" title={P.honestTitle} chips={chipsOf(v)} wiring={wiring} {...(folded ? { folded } : {})}>
       <Big value={v.wally.k} tail={P.honestTail} tailSlots={{ n: v.wally.n }} chip={chip} />
       <Sentences list={honestSentences(layers(v))} chip={chip} />
       <PlainBars caption={P.honestCaption} rows={layerRows(v)} />
@@ -129,18 +131,18 @@ function speedRows(speed: Extract<Speed, { kind: "measured" }>): readonly BarRow
   ];
 }
 
-export function SpeedCard({ speed, wiring }: { readonly speed: Speed; readonly wiring: boolean }): ReactElement | null {
+export function SpeedCard({ speed, wiring, folded }: { readonly speed: Speed; readonly wiring: boolean; readonly folded?: boolean }): ReactElement | null {
   if (speed.kind === "absent") return null;
   if (speed.kind === "unmeasured") {
     return (
-      <Card id="speed" title={P.speedTitle} chips={[speed.chip]} wiring={wiring}>
+      <Card id="speed" title={P.speedTitle} chips={[speed.chip]} wiring={wiring} {...(folded ? { folded } : {})}>
         <Tx as="p" text={P.speedNone} className="evp-card__sentence" />
       </Card>
     );
   }
   const { chip } = speed;
   return (
-    <Card id="speed" title={P.speedTitle} chips={[chip]} wiring={wiring}>
+    <Card id="speed" title={P.speedTitle} chips={[chip]} wiring={wiring} {...(folded ? { folded } : {})}>
       <Big value={secondsOf(speed.typicalMs)} tail={P.speedTail} tailSlots={{}} chip={chip} />
       <Sentences list={speedSentences(speed)} chip={chip} />
       <PlainBars caption={P.speedCaption} rows={speedRows(speed)} />

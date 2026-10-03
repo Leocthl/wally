@@ -1,4 +1,4 @@
-// Seal flow (lane b-shell): Meet Wally, Describe your budget, Check and seal, Sealed. Rows validate with words; example
+// Seal flow (lane b-shell): Meet Wally, Describe your budget, Check and lock in, Sealed. Rows validate with words; example
 // chips fill sentence and rows; Top up and Change the rules start prefilled; a failed seal stays put; the model slot
 // (api.compileRules, or suggestRules from <App>) fills rows, says what it read and never seals by itself.
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -26,7 +26,7 @@ function firstRun(api: MockApiClient = new FirstSealFails(), extra: Partial<Para
 }
 
 describe("first run", () => {
-  it("walks Meet Wally, Describe, Check and seal, then Sealed, and lands on the new budget", async () => {
+  it("walks Meet Wally, Describe, Check and lock in, then Sealed, and lands on the new budget", async () => {
     const { api, user } = firstRun();
     await user.click(await screen.findByRole("button", { name: /^Start/ }));
     expect(screen.getByRole("heading", { level: 1, name: "Describe your budget" })).toBeInTheDocument();
@@ -35,14 +35,14 @@ describe("first run", () => {
     expect(screen.getByRole("button", { name: "Clothes" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("switch", { name: "Verified sellers only" })).toBeChecked();
     await user.click(next());
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     const summary = document.querySelector(".seal-summary")!;
     expect(summary).toHaveTextContent("HK$800");
     expect(summary).toHaveTextContent("Clothes only");
     expect(bareFigures(document.querySelector("main")!)).toEqual([]);
     expect(numsWithoutChip(document.querySelector("main")!)).toEqual([]);
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeInTheDocument();
     expect(document.querySelector('.seal-lock[data-locked="true"]')).not.toBeNull();
     const snap = await api.snapshot();
     expect(snap.mandate?.rules.budget.amount_minor).toBe(80000);
@@ -68,7 +68,7 @@ describe("first run", () => {
     await user.type(amount(), "650");
     await user.click(screen.getByRole("button", { name: "Shoes" }));
     await user.click(next());
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     expect(document.querySelector(".seal-summary")).toHaveTextContent("HK$650");
   });
 
@@ -85,14 +85,14 @@ describe("first run", () => {
     expect(screen.queryByRole("textbox", { name: "Ask me above" })).toBeNull();
   });
 
-  it("stays on Check and seal when sealing fails, and says nothing was charged", async () => {
+  it("stays on Check and lock in when sealing fails, and says nothing was charged", async () => {
     const { user } = firstRun(new SealAlwaysFails());
     await user.click(await screen.findByRole("button", { name: /^Start/ }));
     await user.click(next());
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("That didn't go through. Nothing was charged."));
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
-    expect(screen.queryByText("Your budget is sealed")).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
+    expect(screen.queryByText("Your budget is locked in")).toBeNull();
   });
 });
 
@@ -104,9 +104,9 @@ describe("Top up and Change the rules", () => {
     await h.user.clear(amount());
     await h.user.type(amount(), "1200");
     await h.user.click(next());
-    expect(screen.getByText("Sealing starts a new budget and new receipts.")).toBeInTheDocument();
-    await h.user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    expect(screen.getByText("Locking in starts a new budget and new receipts.")).toBeInTheDocument();
+    await h.user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect((await h.api.snapshot()).packet?.budget_minor).toBe(120000);
     await go("#/budget");
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$1,200 left of HK$1,200, SIMULATED");
@@ -129,7 +129,7 @@ describe("a date in the sentence", () => {
     await user.type(sentence(), text);
   }
 
-  it("fills the Until row with the date, keeps it editable, and Check and seal shows the same day", async () => {
+  it("fills the Until row with the date, keeps it editable, and Check and lock in shows the same day", async () => {
     vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-03T02:00:00Z") });
     try {
       const { user } = firstRun();
@@ -139,7 +139,7 @@ describe("a date in the sentence", () => {
       fireEvent.change(until(), { target: { value: "2026-10-25" } });
       expect(until()).toHaveValue("2026-10-25");
       await user.click(next());
-      expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
       expect(document.querySelector(".seal-summary")).toHaveTextContent(/25 Oct 2026/);
     } finally {
       vi.useRealTimers();
@@ -173,7 +173,7 @@ describe("a date in the sentence", () => {
       expect(until()).toHaveValue("2026-12-31");
       expect(screen.queryByText(/too far away for one budget/)).toBeNull();
       await user.click(next());
-      expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -236,7 +236,7 @@ describe("the sentence reader (api.compileRules, or suggestRules from <App>)", (
     expect(within(read).getByText("Left out of the suggestion")).toBeInTheDocument();
     expect(read).toHaveTextContent("A weekly limit is not a rule Wally can enforce.");
     expect(read).toHaveTextContent("Read by the local model.");
-    expect(read).toHaveTextContent("Nothing is sealed until you say so.");
+    expect(read).toHaveTextContent("Nothing is locked in until you say so.");
     expect(seal).toHaveBeenCalledTimes(1); // only the preset seal on load, which failed
   });
 
@@ -256,7 +256,7 @@ describe("the sentence reader (api.compileRules, or suggestRules from <App>)", (
     await user.type(amount(), "650");
     expect(amount()).toHaveValue("650");
     await user.click(next());
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     expect(seal).toHaveBeenCalledTimes(1);
   });
 

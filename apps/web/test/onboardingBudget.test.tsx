@@ -1,5 +1,5 @@
 // Your first budget (step three) when the booth is not an empty one, and the small things around the form: a budget that is
-// over is not "ready", sealing over one says it starts a new budget, Skip says what it does on Check and seal, the loading frame
+// over is not "ready", sealing over one says it starts a new budget, Skip says what it does on Check and lock in, the loading frame
 // has a way back, a missing category is focused, Enter in the typed amount goes on, and the taste hint tells the truth.
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -45,15 +45,15 @@ describe("a budget that is over", () => {
     expect(screen.queryByText(SKIP_NOTE)).toBeNull();
   });
 
-  it("says on Check and seal that sealing starts a new budget and new receipts, and then it does", async () => {
+  it("says on Check and lock in that sealing starts a new budget and new receipts, and then it does", async () => {
     const api = await cancelled();
     const { user } = await toBudget({ api });
     await user.click(await screen.findByRole("radio", { name: "HK$500" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    await screen.findByRole("heading", { level: 1, name: "Check and seal" });
-    expect(screen.getByText("Sealing starts a new budget and new receipts.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
+    expect(screen.getByText("Locking in starts a new budget and new receipts.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     const snap = await api.snapshot();
     expect(snap.packet?.status).toBe("ACTIVE");
     expect(snap.packet?.budget_minor).toBe(50_000);
@@ -62,11 +62,11 @@ describe("a budget that is over", () => {
   it("says nothing about new receipts when there was no budget before, not even once the seal has made one", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("button", { name: "Review budget" }));
-    await screen.findByRole("heading", { level: 1, name: "Check and seal" });
-    expect(screen.queryByText("Sealing starts a new budget and new receipts.")).toBeNull();
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
-    expect(screen.queryByText("Sealing starts a new budget and new receipts.")).toBeNull();
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
+    expect(screen.queryByText("Locking in starts a new budget and new receipts.")).toBeNull();
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
+    expect(screen.queryByText("Locking in starts a new budget and new receipts.")).toBeNull();
   });
 
   it("starts a family choice on the person's own budget, not on Mum's that was cancelled", async () => {
@@ -87,12 +87,12 @@ describe("a budget that is over", () => {
   });
 });
 
-describe("Skip on Check and seal", () => {
+describe("Skip on Check and lock in", () => {
   it("says it uses the ready-made budget, which is what it does", async () => {
     const { api, user } = await toBudget();
     await user.click(await screen.findByRole("radio", { name: "HK$300" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    await screen.findByRole("heading", { level: 1, name: "Check and seal" });
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
     expect(screen.getByText(SKIP_NOTE)).toBeInTheDocument();
     await user.click(skip());
     expect(await tourCard()).toBeInTheDocument();
@@ -102,8 +102,8 @@ describe("Skip on Check and seal", () => {
   it("has no such note once the budget is sealed", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("button", { name: "Review budget" }));
-    await user.click(await screen.findByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(await screen.findByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(screen.queryByText(SKIP_NOTE)).toBeNull();
   });
 });
@@ -136,11 +136,11 @@ describe("the form's keyboard and errors", () => {
     expect(group).toHaveAttribute("aria-describedby", message.closest("[id]")?.id);
   });
 
-  it("Enter in the typed amount goes on to Check and seal", async () => {
+  it("Enter in the typed amount goes on to Check and lock in", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("radio", { name: "Custom" }));
     await user.type(screen.getByRole("textbox", { name: /^Amount/ }), "650{Enter}");
-    expect(await screen.findByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
   });
 });
 

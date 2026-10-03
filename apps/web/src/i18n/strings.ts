@@ -4,6 +4,6 @@
 import { label } from "./label";
 
 export const S = {
-  railBadge: label("SIMULATED rail. No money moves.", "模擬發卡層，沒有款項轉移"),
+  railBadge: label("SIMULATED rail. No money moves.", "模擬發卡層，冇款項轉移"),
   footer: label("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.", "原型作品。與 HKT、Tap & Go 及 Mastercard 並無關連。"),
 } as const;

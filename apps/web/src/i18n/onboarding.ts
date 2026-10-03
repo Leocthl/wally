@@ -113,6 +113,8 @@ export const OB = {
     forYou: label("For you", "啱你"), // NEEDS-REVIEW
     composer: label("What do you need?", "你需要啲咩？"), // NEEDS-REVIEW
     demo: label("Demo scenarios (for judges)", "示範情境（供評審使用）"), // NEEDS-REVIEW
+    // On a friend's phone the same cards are just a demo: no word about judges (the booth, ?booth=1 and presenter mode keep the long label).
+    demoPlain: label("Demo scenarios", "示範情境"), // NEEDS-REVIEW
     demoLead: label("Each one runs the real rules on a simulated shop.", "每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
   },
 

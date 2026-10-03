@@ -57,7 +57,7 @@ test("offline, ?api=local: the storyline on the real stack, then Verify PASS and
   await press(page, "overflow");
   await expect(stop(page, "It costs HK$550 with shipping, but only HK$541 is left in your budget.")).toBeVisible();
   await press(page, "injected");
-  await expect(stop(page, "The listing tried to give Wally orders.")).toBeVisible();
+  await expect(stop(page, "The listing tried to tell Wally what to do.")).toBeVisible();
   await press(page, "small");
   await expect(wally(page).locator('[data-kind="exact"]')).toContainText("Charged the exact HK$120.");
   await page.getByRole("link", { name: "Budget", exact: true }).click();

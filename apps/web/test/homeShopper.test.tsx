@@ -234,6 +234,18 @@ describe("Demo scenarios (for judges)", () => {
   });
 });
 
+describe("the demo scenarios' name", () => {
+  it("says for judges on the booth's pages and plain Demo scenarios everywhere else", async () => {
+    const { DemoScenarios } = await import("../src/screens/home/DemoScenarios");
+    const { rerender } = render(<DemoScenarios lead="Each one runs the real rules." booth><span /></DemoScenarios>);
+    expect(screen.getByText("Demo scenarios (for judges)", { selector: ".home-demo__title" })).toBeInTheDocument();
+    rerender(<DemoScenarios lead="Each one runs the real rules." booth={false}><span /></DemoScenarios>);
+    expect(screen.getByText("Demo scenarios", { selector: ".home-demo__title" })).toBeInTheDocument();
+    expect(screen.queryByText(/judges/)).toBeNull();
+    expect(document.querySelector(".home-demo .sr-only")).toHaveTextContent("Demo scenarios");
+  });
+});
+
 describe("a ?booth=1 link is the crew's, not a first run", () => {
   it("does not start the first run even with no flag in storage", async () => {
     const { openFirstRun } = await import("./helpers/firstRun");

@@ -18,7 +18,7 @@ describe("budget card", () => {
     expect(hero).toHaveTextContent(/HK\$800\s*of your HK\$800 budget · until \d{1,2} \w{3}/);
     expect(screen.getByRole("meter", { name: "Budget left" })).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
     expect(hero).toHaveTextContent("SpentHK$0");
-    expect(hero).toHaveTextContent("On one-off cardsHK$0");
+    expect(hero).toHaveTextContent("Set asideHK$0");
     const tags = within(hero).getByRole("list", { name: "Rules Wally must follow" });
     expect(within(tags).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Clothes only", "Verified sellers", "Signed rules"]);
     expect(hero.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();

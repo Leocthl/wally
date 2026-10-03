@@ -9,7 +9,7 @@ export const ABOUT = {
     replay: label("Recorded answers", "錄製答案"), // NEEDS-REVIEW
   } satisfies Readonly<Record<string, LabelPair>>,
   judge: {
-    laya: label("Laya, on this laptop", "Laya，喺呢部手提電腦"), // NEEDS-REVIEW
+    laya: label("A checker on this laptop", "呢部手提電腦上的檢查器"), // NEEDS-REVIEW
     replay: label("Recorded answers", "錄製答案"), // NEEDS-REVIEW
   } satisfies Readonly<Record<string, LabelPair>>,
   notes: label("Technical notes", "技術備註"), // NEEDS-REVIEW

@@ -189,7 +189,7 @@ describe("stopped before paying", () => {
     expect(alert).toHaveTextContent("Your rules");
     await m.user.click(screen.getByRole("button", { name: "Edit rules" }));
     expect(window.location.hash).toBe("#/seal?mode=edit");
-    expect(screen.getByText("Sealing starts a new budget and new receipts.")).toBeInTheDocument();
+    expect(screen.getByText("Locking in starts a new budget and new receipts.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pick something else" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ask Wally" })).toBeNull();
     expectPlainSurface(m);
@@ -212,7 +212,7 @@ describe("stopped before paying", () => {
   it("injected listing: the plain injection reason, never a probability", async () => {
     const m = await mountRun();
     await m.run("injected");
-    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to give Wally orders.");
+    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to tell Wally what to do.");
     expectPlainSurface(m);
   });
 
@@ -393,14 +393,14 @@ describe("the Why sheet", () => {
       { type: "decision", runId: "run_core", decision: { ...core, id: "dec_core0001" } },
       { type: "run.finished", runId: "run_core", outcome: "DENY", at },
     ]);
-    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to give Wally orders.");
+    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to tell Wally what to do.");
     await m.user.click(screen.getByRole("button", { name: "Why?" }));
     const sheet = await screen.findByRole("dialog");
     await m.user.click(within(sheet).getByText("Details for nerds"));
     const quote = sheet.querySelector(".run-nerd-quote");
     expect(quote).toHaveTextContent("Stopped by R10. Injection risk 0.92 is at or over 0.39.");
     expect(quote?.textContent).not.toContain("?");
-    expect(within(sheet).getByText("It tried to give Wally orders")).toBeInTheDocument();
+    expect(within(sheet).getByText("It tried to tell Wally what to do")).toBeInTheDocument();
   });
 });
 

@@ -59,7 +59,7 @@ test("About switches the language to 繁 and the theme to dark, and remembers bo
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
-test("seals a budget through the whole flow: Meet Wally, Describe, Check and seal, Sealed", async ({ page }) => {
+test("seals a budget through the whole flow: Meet Wally, Describe, Check and lock in, Sealed", async ({ page }) => {
   await page.goto("/?api=mock#/seal?mode=welcome");
   await expect(page.getByRole("heading", { name: "Meet Wally" })).toBeVisible();
   await page.getByRole("button", { name: /^Start/ }).click();
@@ -69,9 +69,9 @@ test("seals a budget through the whole flow: Meet Wally, Describe, Check and sea
   await expect(page.getByText("Enter an amount above zero.")).toBeVisible();
   await page.getByRole("textbox", { name: /^Amount/ }).fill("650");
   await page.getByRole("button", { name: /^Next/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
-  await page.getByRole("button", { name: /Seal budget/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
+  await page.getByRole("button", { name: /Lock in budget/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
   await page.getByRole("link", { name: /Go to your budget/ }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$650 left of HK$650, SIMULATED");
   await expect(page.getByRole("region", { name: "Your budget" })).toContainText("Shoes only");

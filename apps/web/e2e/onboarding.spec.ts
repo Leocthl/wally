@@ -67,7 +67,7 @@ test.describe("Skip, Skip", () => {
 });
 
 test.describe("the four steps", () => {
-  test("walk Hello, taste, budget, Check and seal, sealed and the tour, and land on a personal Budget (on-device engine)", async ({ page }) => {
+  test("walk Hello, taste, budget, Check and lock in, sealed and the tour, and land on a personal Budget (on-device engine)", async ({ page }) => {
     await page.goto("/");
     await expect(hello(page)).toBeVisible();
     await toTaste(page);
@@ -80,9 +80,9 @@ test.describe("the four steps", () => {
     await expect(page.getByRole("radio", { name: "HK$500" })).toBeChecked();
     await page.getByRole("radio", { name: "Two weeks" }).click();
     await page.getByRole("button", { name: "Review budget" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
-    await page.getByRole("button", { name: /Seal budget/ }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
+    await page.getByRole("button", { name: /Lock in budget/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
     await page.getByRole("button", { name: /^Continue/ }).click();
     await expect(page.getByRole("dialog", { name: "Ask Wally" })).toBeVisible();
     await page.getByRole("button", { name: /^Next/ }).click();
@@ -119,7 +119,7 @@ test.describe("the four steps", () => {
     await expect(page.getByText("Enter an amount above zero.")).toBeVisible();
     await page.getByRole("textbox", { name: /^Amount/ }).fill("650");
     await page.getByRole("button", { name: "Review budget" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
     await expect(page.locator(".seal-summary")).toContainText("HK$650");
   });
 
@@ -160,10 +160,10 @@ async function sealButtonReach(page: Page): Promise<{ readonly reach: number; re
   });
 }
 
-test.describe("Check and seal on a short phone", () => {
+test.describe("Check and lock in on a short phone", () => {
   // The Seal button is the one pinned control: the skip note under it is plain text, not a second bar stacked over it.
   for (const viewport of [{ width: 360, height: 740 }, { width: 390, height: 664 }, { width: 390, height: 844 }, { width: 430, height: 932 }] as const) {
-    test(`Seal budget is fully tappable at ${viewport.width}x${viewport.height}, at the top of the page and at the bottom`, async ({ page }) => {
+    test(`Lock in budget is fully tappable at ${viewport.width}x${viewport.height}, at the top of the page and at the bottom`, async ({ page }) => {
       test.skip(test.info().project.name !== "phone", "the sizes are set inside the test");
       await page.setViewportSize(viewport);
       // The page as the public link serves it: on the phone itself, with the strip about that on top (it takes room too).
@@ -172,9 +172,9 @@ test.describe("Check and seal on a short phone", () => {
       await next(page).click();
       await expect(page.getByRole("heading", { level: 1, name: "Your first budget" })).toBeVisible();
       await page.getByRole("button", { name: "Review budget" }).click();
-      await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
       await settled(page);
-      const button = page.getByRole("button", { name: /Seal budget/ });
+      const button = page.getByRole("button", { name: /Lock in budget/ });
       await expect(button).toBeVisible();
       const top = await sealButtonReach(page);
       expect(top, "before any scrolling").toMatchObject({ reach: 1, inside: true });
@@ -186,7 +186,7 @@ test.describe("Check and seal on a short phone", () => {
       await expect(page.getByText(/^Or skip/)).toBeVisible();
       // And the tap goes through: the budget is sealed.
       await button.click();
-      await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
     });
   }
 });
@@ -244,7 +244,7 @@ test.describe("axe and touch targets on every step", () => {
       test.describe(`${viewport.width}x${viewport.height} ${scheme}`, () => {
         test.use({ viewport, colorScheme: scheme });
 
-        test("Hello, taste, budget, Check and seal, sealed and the three tour marks", async ({ page }) => {
+        test("Hello, taste, budget, Check and lock in, sealed and the three tour marks", async ({ page }) => {
           test.skip(test.info().project.name !== "phone", "the widths are set inside the tests");
           await page.goto("/?api=mock");
           await expect(hello(page)).toBeVisible();
@@ -271,11 +271,11 @@ test.describe("axe and touch targets on every step", () => {
           expect(layout.wide, "sideways scroll").toBe(false);
           expect(layout.small, "targets under 44 px").toEqual([]);
           await page.getByRole("button", { name: "Review budget" }).click();
-          await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
+          await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
           await settled(page);
           expect(await blocking(page), "review").toEqual([]);
-          await page.getByRole("button", { name: /Seal budget/ }).click();
-          await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+          await page.getByRole("button", { name: /Lock in budget/ }).click();
+          await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
           await settled(page);
           expect(await blocking(page), "sealed").toEqual([]);
           await page.getByRole("button", { name: /^Continue/ }).click();

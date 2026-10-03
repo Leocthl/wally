@@ -66,11 +66,11 @@ for (const viewport of VIEWPORTS) {
         await settled(page);
         expect(await blocking(page), "seal describe").toEqual([]);
         await page.getByRole("button", { name: /^Next/ }).click();
-        await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
+        await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
         await settled(page);
         expect(await blocking(page), "seal review").toEqual([]);
-        await page.getByRole("button", { name: /Seal budget/ }).click();
-        await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+        await page.getByRole("button", { name: /Lock in budget/ }).click();
+        await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
         await settled(page);
         expect(await blocking(page), "seal sealed").toEqual([]);
       });

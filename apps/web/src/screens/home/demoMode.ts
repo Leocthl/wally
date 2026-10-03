@@ -47,6 +47,14 @@ export function demoDefaultOpen(env: DemoEnv): boolean {
   return !env.native && isLoopbackHost(env.hostname);
 }
 
+/**
+ * Whether this page is the booth's: the booth Mac (a loopback address, outside the native apps), a ?booth=1 link, or presenter
+ * mode. Only there is the disclosure "for judges"; on anyone else's phone the same cards are simply a demo.
+ */
+export function isBoothPage(env: DemoEnv): boolean {
+  return boothFlag(env.search, env.hash) || env.presenter || (!env.native && isLoopbackHost(env.hostname));
+}
+
 /** The slice of Storage these helpers use. */
 export interface ChoiceStorage {
   getItem(key: string): string | null;
@@ -84,6 +92,11 @@ function presenterMode(storage: Pick<ChoiceStorage, "getItem"> | null): boolean 
   } catch {
     return false;
   }
+}
+
+/** True on the booth's own pages (see isBoothPage), read once when Home opens. */
+export function useIsBoothPage(): boolean {
+  return useState(() => isBoothPage(readDemoEnv()))[0];
 }
 
 /** The page as it is now, read once when Home opens. */

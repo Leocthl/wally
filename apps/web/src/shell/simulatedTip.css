@@ -1,0 +1,19 @@
+/* The SIMULATED chip in the top bar is a button: a tap opens one sentence under the bar. Tokens only. */
+.shell-sim__button { display: inline-flex; align-items: center; min-width: var(--tap); min-height: var(--tap); margin: 0; padding: 0; border: 0; border-radius: var(--r-pill); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.shell-sim__button:active { background: var(--c-surface-sunken); }
+.shell-sim__tip {
+  position: absolute;
+  top: 100%;
+  left: max(var(--gutter), var(--safe-left));
+  right: max(var(--gutter), var(--safe-right));
+  z-index: var(--z-raised);
+  margin-top: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-surface-raised);
+  box-shadow: var(--shadow-2);
+  color: var(--c-ink);
+  font-size: var(--text-sm);
+  line-height: var(--lh-snug);
+}
