@@ -42,7 +42,7 @@ describe("proposalTotalMinor: the cart total the cart builder would make, in int
   it("is null for anything it cannot price: an unknown listing, an unknown title, no items, a bad quantity", () => {
     expect(proposalTotalMinor({ ...TEE, listing_url: "https://nowhere.example/p/x" }, SHELF)).toBeNull();
     expect(proposalTotalMinor({ ...TEE, items: [{ title: "Cotton tee", qty: 1 }] }, SHELF)).toBeNull(); // the title must match exactly
-    expect(proposalTotalMinor({ ...TEE, items: [] }, SHELF)).toBeNull();
+    expect(proposalTotalMinor({ ...TEE, items: [] as unknown as ProposeCartInput["items"] }, SHELF)).toBeNull(); // the schema wants one item at least; a bad proposal is still priced as nothing
     for (const qty of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER]) {
       expect(proposalTotalMinor({ ...TEE, items: [{ title: "Cotton tee (SIMULATED)", qty }] }, SHELF), `qty ${qty}`).toBeNull();
     }
