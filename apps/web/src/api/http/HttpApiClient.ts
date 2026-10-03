@@ -79,6 +79,10 @@ export class HttpApiClient implements ApiClient {
     return this.#stream.subscribe(listener);
   }
 
+  onReconnect(listener: () => void): Unsubscribe {
+    return this.#stream.onReconnect(listener);
+  }
+
   info(): Promise<ApiInfo> {
     return this.#get<ApiInfo>("/api/info");
   }

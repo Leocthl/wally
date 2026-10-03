@@ -295,4 +295,9 @@ export interface ApiClient {
   restore(): Promise<LogView>;
   reset(): Promise<void>;
   subscribe(listener: TraceListener): Unsubscribe;
+  /**
+   * The live connection came back after a break (the booth restarted, or the phone lost the network). Events from the gap are not
+   * replayed, so the page reads the booth again. Only a client with a live connection offers it (never fires on the first connect).
+   */
+  onReconnect?(listener: () => void): Unsubscribe;
 }

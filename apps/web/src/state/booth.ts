@@ -57,6 +57,8 @@ export interface BoothState {
 
 export type LocalAction =
   | { readonly type: "snapshot"; readonly snapshot: BoothSnapshot }
+  /** The booth read again after the connection came back: the truth of the gap, keeping the runs this page saw whole. */
+  | { readonly type: "resync"; readonly snapshot: BoothSnapshot }
   | { readonly type: "log.view"; readonly view: LogView };
 export type BoothAction = TraceEvent | LocalAction;
 
@@ -177,6 +179,8 @@ function reduceAction(state: BoothState, action: BoothAction): BoothState {
   switch (action.type) {
     case "snapshot":
       return fromSnapshot(action.snapshot);
+    case "resync":
+      return resynced(state, action.snapshot);
     case "log.view":
       return { ...state, log: showView(state.log, action.view) };
     case "reset":
@@ -204,6 +208,17 @@ function reduceAction(state: BoothState, action: BoothAction): BoothState {
     case "run.finished":
       return reduceRun(state, action);
   }
+}
+
+/**
+ * The booth as it is after a break in the connection. What the page missed is in the snapshot (the log, the cards, the questions,
+ * the budget); the run views are built from events only, so they are kept when this is still the same budget's log and every run
+ * has finished (nothing was cut off), and dropped otherwise (a restarted booth, a run the page stopped hearing about).
+ */
+function resynced(state: BoothState, snapshot: BoothSnapshot): BoothState {
+  const fresh = fromSnapshot(snapshot);
+  const sameLog = logIdOf(state) !== undefined && logIdOf(state) === logIdOf(fresh);
+  return sameLog && state.runs.every((r) => r.finished) ? { ...fresh, runs: state.runs } : fresh;
 }
 
 /** The run to show on the Run screen: the last one that started. */
