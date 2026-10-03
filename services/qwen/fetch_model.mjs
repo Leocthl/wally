@@ -23,7 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const CACHE = process.env.QWEN_CACHE_DIR ?? join(HERE, '.cache');
+const CACHE = process.env.QWEN_CACHE_DIR || join(HERE, '.cache'); // an empty value means unset, as in serve.sh
 const REV_FILE = join(HERE, 'MODEL_REVISION');
 const SHA_FILE = join(HERE, 'MODEL_SHA256');
 const HUB = 'https://huggingface.co';
@@ -132,7 +132,7 @@ async function fetchOne(key, meta) {
 
 async function main() {
   const keys = process.argv.slice(2).length > 0 ? process.argv.slice(2) : Object.keys(MODELS);
-  const unknown = keys.filter((k) => !(k in MODELS));
+  const unknown = keys.filter((k) => !Object.hasOwn(MODELS, k));
   if (unknown.length > 0) fail(`unknown model key(s) ${unknown.join(', ')}; known: ${Object.keys(MODELS).join(', ')}`);
   mkdirSync(CACHE, { recursive: true });
   const revisions = readRevisions();

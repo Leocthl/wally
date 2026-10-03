@@ -52,8 +52,9 @@ export type Fit = (typeof FITS)[number];
 export const STYLES = ["basics", "streetwear", "sporty", "smart_casual", "cozy"] as const;
 export type Style = (typeof STYLES)[number];
 
-/** Most colours and style tags one picture may carry (the answer grammar caps both). */
+/** The most colour words a description holds [F96]. */
 export const MAX_COLORS = 3;
+/** The most style words a description holds [F96]. */
 export const MAX_STYLES = 2;
 
 /** The kinds a person can ask the shop for: everything but the two "no match possible" words. */

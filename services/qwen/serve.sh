@@ -111,7 +111,7 @@ fi
 
 # --- environment: llama-server reads LLAMA_ARG_* variables; none may override the flags below ----------
 for name in $(env | sed -n 's/^\(LLAMA_ARG_[A-Z_]*\)=.*/\1/p'); do unset "$name"; done
-unset LLAMA_API_KEY HF_TOKEN HUGGING_FACE_HUB_TOKEN HF_ENDPOINT
+unset LLAMA_API_KEY HF_TOKEN HUGGING_FACE_HUB_TOKEN HF_ENDPOINT LLAMA_TRACE LLAMA_SERVER_SLOTS_DEBUG LLAMA_CACHE
 
 {
   echo "=== $(date '+%Y-%m-%dT%H:%M:%S%z') start host=$HOST port=$PORT model=$MODEL_FILE ctx=$CONTEXT_TOKENS slots=$PARALLEL_SLOTS spec=${QWEN_SPEC:-mtp} vision=$VISION image_max_tokens=$IMAGE_MAX_TOKENS cache_ram=$CACHE_RAM_MIB"

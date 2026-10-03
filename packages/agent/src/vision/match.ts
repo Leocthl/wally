@@ -43,14 +43,14 @@ export interface Scored {
   readonly colorFit: number;
 }
 
-/** Points out of 100. ASSUMED weights: with colours equally near, the right kind ranks ahead of a close one; a much better colour can still lift a close kind. */
+/** Points out of 100 [F96]. ASSUMED weights: with colours equally near, the right kind ranks ahead of a close one; a much better colour can still lift a close kind. */
 export const WEIGHTS = { kind: 50, closeKind: 25, color: 30, pattern: 8, fit: 6, style: 6 } as const;
-/** Lab distance at which a colour stops counting; the score falls off as (1 - distance / this) squared. */
+/** [F96] Lab distance at which a colour stops counting; the score falls off as (1 - distance / this) squared. */
 export const COLOR_FALLOFF = 50;
-/** A colour fit at or above this reads as "same colour", at or above the lower one as "close colour". */
+/** [F96] A colour fit at or above this reads as "same colour", at or above the lower one as "close colour". */
 export const SAME_COLOR_FIT = 0.8;
 export const CLOSE_COLOR_FIT = 0.2;
-/** Weights of the first, second and third colour of the picture. */
+/** Weights of the first, second and third colour of the picture [F96]. */
 const COLOR_RANK_WEIGHTS: readonly number[] = [1, 0.5, 0.25];
 export const DEFAULT_LIMIT = 4;
 

@@ -63,7 +63,7 @@
 
 - **Start order**: start Qwen before the booth server (`services/qwen/serve.sh`); the server asks `/props` once at start and prints `photo reader: ...`. A later Qwen outage shows as "Wally could not read this picture" with the chips still working.
 - **On-device and Pages**: no model, so `features.see` is `palette`; the judge answers for the 30 items come from `data/photo-shelf/judge.json` (recorded from live Laya by `scripts/record-shop-judge.ts`). `JUDGE_PROVIDER=replay` serves the same recordings (`loadShopRecordings`), so with the operator switch on, a pick is judged like any listing.
-- **Privacy**: the picture is held in memory for the one call and never stored; the server logs its size, dimensions, time and a reason word. `QWEN_VISION=off` turns reading off at the model server.
+- **Privacy**: the picture is held in memory for the one call and never stored; the server logs its size, dimensions, time and a reason word. It goes to a model server on this Mac only (a remote `PLANNER_BASE_URL` gets typed requests if `PLANNER_ALLOW_REMOTE=1` says so, never pictures), one picture at a time, as a JPEG (the page always sends one; PNG and WebP are refused at the boundary). In LAN mode a picture crosses the Wi-Fi as plain http with the pairing token; start Qwen with `QWEN_VISION=off` to keep pictures on the phone (the page then sends the colour shares only). `QWEN_VISION=off` turns reading off at the model server.
 - **Tests**: `test/photo*.test.ts*`, `test/usePhotoFlow.test.tsx`, `test/seeValidate.test.ts`, `test/server/see.*.test.ts`, `e2e/photo.spec.ts` (phone project, axe).
 
 ## Rules the tests hold

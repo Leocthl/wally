@@ -3,7 +3,7 @@
 // dropped on its own, lists are capped, and every other key is ignored. Never throws.
 import { isColor, isFit, isKind, isPattern, isStyle, MAX_COLORS, MAX_STYLES, type Attributes } from "./vocab";
 
-/** The grammar makes an answer of about 40 tokens (under 200 characters); anything much longer is not from it. */
+/** The grammar makes an answer of about 40 tokens (under 200 characters); anything much longer is not from it [F96]. */
 export const MAX_ANSWER_CHARS = 1_000;
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> => typeof value === "object" && value !== null && !Array.isArray(value);

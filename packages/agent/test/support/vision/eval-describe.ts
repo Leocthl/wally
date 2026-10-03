@@ -9,7 +9,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { createChatClient } from "../../../src/planner/local";
 import { describeImage, type Described } from "../../../src/vision/describe";
@@ -18,7 +18,7 @@ import { decodePng } from "./png";
 
 const { values: args } = parseArgs({
   options: {
-    photos: { type: "string", default: "/Users/leo/csProj/hacku-hackathon/data/raw/demo-photos" },
+    photos: { type: "string", default: resolve(import.meta.dirname, "../../../../../data/raw/demo-photos") }, // gitignored: data/raw/
     "base-url": { type: "string", default: "http://127.0.0.1:8809" },
     model: { type: "string", default: "qwen3.5-9b-q4km" },
     out: { type: "string", default: "" },
@@ -191,7 +191,7 @@ function renderMarkdown(s: Record<string, unknown>, rows: readonly Row[]): strin
     "",
     `- **Status**: MEASURED(n=${n}) [F68a] on ${n} Hong Kong retailer product photos (model shots and flat lays), one annotator. Tuned on the same ${n} photos (prompt wording, a legend of the kind words, the picture token budget): there is no held-out set, so treat the rates as an upper bound.`,
     `- **Run**: ${sum.started} to ${sum.finished}; host ${sum.host}; llama.cpp ${sum.server.build}; one request at a time after 2 warm-up calls; --image-max-tokens ${sum.server.imageMaxTokens}, --cache-ram ${sum.server.cacheRam}.`,
-    "- **Input**: each photo re-encoded the way the page does it (long edge 1024 px, JPEG quality 85, metadata dropped) and sent through `describeImage` (grammar of fixed words, 15 s limit, temperature 0, seed 42). The photos stay on the booth Mac and are not in the repository; this file holds no file names, brand names or product names.",
+    "- **Input**: each photo re-encoded to what the page sends (long edge 1024 px, JPEG quality 85, metadata dropped), done here with the macOS `sips` tool where the page uses a canvas and sent through `describeImage` (grammar of fixed words, 15 s limit, temperature 0, seed 42). The photos stay on the booth Mac and are not in the repository; this file holds no file names, brand names or product names.",
     "- **Labels**: written before any tuning, kept next to the photos. Kind = the garment the product page names (accepted synonyms for that one item, for example jeans or trousers for cargo pants). Colour = the main colour of that garment as seen (a few close words accepted where two are fair). Outfit shots show other garments too: the lenient kind rate also accepts a clearly visible large garment.",
     `- **Machine load**: 1-minute load average ${sum.loadAverage1.min} to ${sum.loadAverage1.max} during the run (other work shares the machine).`,
     "",

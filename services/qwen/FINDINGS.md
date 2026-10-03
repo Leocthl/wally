@@ -43,7 +43,7 @@ Measured on the booth Mac (Apple M5 Pro, 48 GB) on 2026-10-02 and 03 by the m-qw
 ## Security
 - `lsof` shows only `127.0.0.1:8809` listening. The server starts with `--offline` and has no `-hf` flag, so it reads only the local files (the weights, and with vision on the projector).
 - The web UI and `/slots` are off, CORS reflects localhost origins only, and `serve.sh` clears all `LLAMA_ARG_*` variables and any key or token before starting.
-- There is no authentication on 8809: any local process can call it.
+- There is no authentication on 8809: any local process can call it. With a projector loaded the server can also fetch an image from an http(s) URL named in a request (a blind GET; `--offline` only stops model downloads, `--media-path` is unset so `file://` is refused, and no flag turns remote fetching off). The booth never sends a URL, and a page open in a browser on this Mac could post to the port but cannot read the answer. An API key (`--api-key-file`) would close it; the planner, compiler, probe and smoke clients would then have to send it.
 
 ## Not done
 - An OS-level network-deny test.
