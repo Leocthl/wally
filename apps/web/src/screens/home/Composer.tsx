@@ -1,11 +1,12 @@
 // The "What do you need?" row, right under the budget: the way in for a shopper. One tap opens the Ask sheet, where the typed
 // field, the microphone and (from the photo lane) the photo entry live. The camera and the microphone are drawn on the row so
 // the ways to ask are plain at a glance; they are part of the one control, not buttons of their own.
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { OB } from "../../i18n/onboarding";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { ASK_EVENT } from "../../shell/askEvent";
+import { isVoiceSupported } from "../../shell/voice/recognizer";
 
 /** Which way in was pressed. The shell opens the same sheet for each today; the photo lane can read `detail.entry` to open its own. */
 export type AskEntry = "text" | "voice" | "photo";
@@ -27,13 +28,15 @@ function CameraGlyph(): ReactElement {
 
 export function Composer(): ReactElement {
   const { t } = useLocale();
+  // The phone apps have no speech service, and some browsers have none: draw the microphone only where the Ask sheet can use it.
+  const [voice] = useState(() => isVoiceSupported());
   return (
     <button type="button" className="home-composer" aria-haspopup="dialog" data-composer onClick={() => askWally("text")}>
       <span className="home-composer__lead" aria-hidden="true"><Icon name="chat" size={20} /></span>
       <span className="home-composer__text">{t(OB.home.composer)}</span>
       <span className="home-composer__tools" aria-hidden="true" data-tools>
         <span className="home-composer__tool" data-tool="photo"><CameraGlyph /></span>
-        <span className="home-composer__tool" data-tool="voice"><Icon name="mic" size={20} /></span>
+        {voice ? <span className="home-composer__tool" data-tool="voice"><Icon name="mic" size={20} /></span> : null}
       </span>
     </button>
   );

@@ -59,17 +59,32 @@ interface NativeApp {
 export interface BackWindow extends CapacitorWindow {
   readonly location: { hash: string };
   readonly history: { readonly length: number; back(): void };
+  /** Where a sheet or a dialog may be open: Back closes it before it goes anywhere. */
+  readonly document?: { querySelectorAll(selector: string): ArrayLike<{ dispatchEvent(event: Event): boolean }> };
+}
+
+const OPEN_MODAL = '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
+
+/** Closes the topmost open sheet or dialog the way Escape does (its focus trap listens for that key). False when none is open. */
+export function closeOpenModal(doc: BackWindow["document"]): boolean {
+  const open = doc === undefined ? [] : Array.from(doc.querySelectorAll(OPEN_MODAL));
+  const top = open[open.length - 1];
+  if (top === undefined) return false;
+  top.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  return true;
 }
 
 function report(what: string, err: unknown): void {
   console.warn(`native: ${what} failed`, err);
 }
 
-/** Android hardware back (and the back gesture): hash history, and exit at home. Returns false when there is no App plugin. */
+/** Android hardware back (and the back gesture): close an open sheet, else hash history, and exit at home. Returns false when there is no App plugin. */
 export function installBackButton(win: BackWindow | undefined = typeof window === "undefined" ? undefined : window): boolean {
   const app = nativePlugin<NativeApp>("App", win);
   if (!win || !app) return false;
   const onBack = ({ canGoBack }: { readonly canGoBack?: boolean }): void => {
+    // A sheet or dialog is open: Back closes it, as it would on any phone, and leaves the screen and the app alone.
+    if (closeOpenModal(win.document)) return;
     const action = backAction(win.location.hash, canGoBack ?? win.history.length > 1);
     if (action === "exit") app.exitApp().catch((err: unknown) => report("exitApp", err));
     else if (action === "back") win.history.back();

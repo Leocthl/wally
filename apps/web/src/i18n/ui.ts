@@ -230,6 +230,7 @@ const SHELL = {
   "shell.modeTitle": label("How this demo runs", "示範點樣運作"), // NEEDS-REVIEW
   "shell.modeHttp": label("Live, on the booth laptop", "即時運行，喺展位手提電腦"), // NEEDS-REVIEW
   "shell.modeLocal": label("In this browser, real rules, recorded answers", "喺呢個瀏覽器運行：真規則，錄製答案"), // NEEDS-REVIEW
+  "shell.modeLocalNative": label("On this phone, real rules, recorded answers", "喺呢部手機運行：真規則，錄製答案"), // NEEDS-REVIEW
   "shell.modeMock": label("Offline demo in this browser", "瀏覽器內的離線示範"), // NEEDS-REVIEW
   "shell.modeLabel": label("Running", "運行方式"), // NEEDS-REVIEW
   "shell.judge": label("Wally reads the listing", "Wally 睇商品資料"), // NEEDS-REVIEW

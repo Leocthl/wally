@@ -19,6 +19,7 @@ import { Segmented } from "../ui/Nav";
 import { Sheet } from "../ui/Overlay";
 import { List, ListRow } from "../ui/Surface";
 import { useIsBoothPage } from "../screens/home/demoMode";
+import { isNative } from "../pwa/native";
 import { AboutPersonal } from "../screens/onboarding/AboutPersonal";
 import { BoothConnect } from "./BoothConnect";
 import { LegalNote } from "./LegalNote";
@@ -28,7 +29,7 @@ import { LanguageSwitch } from "./ShellBar";
 
 function modeText(kind: string, t: ReturnType<typeof useLocale>["t"]): string {
   if (kind === "http") return t(UI["shell.modeHttp"]);
-  if (kind === "local") return t(UI["shell.modeLocal"]);
+  if (kind === "local") return t(UI[isNative() ? "shell.modeLocalNative" : "shell.modeLocal"]);
   if (kind === "mock") return t(UI["shell.modeMock"]);
   return kind;
 }

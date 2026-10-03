@@ -58,7 +58,8 @@ describe("the order of Home", () => {
 });
 
 describe("What do you need?", () => {
-  it("is one control with the camera and the microphone drawn on it, and opens the Ask sheet", async () => {
+  it("is one control with the camera and, where the page can listen, the microphone drawn on it, and opens the Ask sheet", async () => {
+    vi.stubGlobal("webkitSpeechRecognition", function Recogniser() {});
     const h = await bootApp("#/budget");
     const row = composer();
     expect(row.querySelectorAll('[data-tool="photo"] svg')).toHaveLength(1);
@@ -66,6 +67,13 @@ describe("What do you need?", () => {
     expect(row.querySelectorAll("button, a, input")).toHaveLength(0);
     await h.user.click(row);
     expect(await screen.findByRole("dialog", { name: /What should Wally try/ })).toBeInTheDocument();
+  });
+
+  it("draws no microphone where the page has no speech service (the phone apps, some browsers)", async () => {
+    await bootApp("#/budget");
+    const row = composer();
+    expect(row.querySelectorAll('[data-tool="photo"] svg')).toHaveLength(1);
+    expect(row.querySelectorAll('[data-tool="voice"]')).toHaveLength(0);
   });
 
   it("tells the shell which way in was pressed, for the photo lane's entry to read", async () => {

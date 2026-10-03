@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { haptic, HAPTIC_PATTERNS, type HapticKind, type HapticWindow } from "../src/ui/haptics";
 import { ROUTE_NAMES, parseHash } from "../src/hooks/useRoute";
-import { backAction, HOME_ROUTES, installBackButton, isHomeHash, isNative, nativePlugin, type BackWindow } from "../src/pwa/native";
+import { backAction, closeOpenModal, HOME_ROUTES, installBackButton, isHomeHash, isNative, nativePlugin, type BackWindow } from "../src/pwa/native";
 import { shouldRegister } from "../src/pwa/register";
 
 const nativeWindow = (plugins: Readonly<Record<string, unknown>> = {}) => ({ Capacitor: { isNativePlatform: () => true, Plugins: plugins } });
@@ -80,6 +80,11 @@ describe("back button", () => {
     return { win, App, exitApp, back, press: (state: { canGoBack?: boolean } = {}) => handlers.forEach((h) => h(state)) };
   }
 
+  it("closeOpenModal does nothing without a document or without an open modal", () => {
+    expect(closeOpenModal(undefined)).toBe(false);
+    expect(closeOpenModal({ querySelectorAll: () => [] })).toBe(false);
+  });
+
   it("installs nothing in a browser or without the App plugin", () => {
     const browser: BackWindow = { location: { hash: "" }, history: { length: 1, back: vi.fn() } };
     expect(installBackButton(browser)).toBe(false);
@@ -101,6 +106,30 @@ describe("back button", () => {
     s.press({ canGoBack: true });
     expect(s.exitApp).toHaveBeenCalledOnce();
     expect(s.back).not.toHaveBeenCalled();
+  });
+
+  it("closes an open sheet first: Back neither leaves the screen nor the app", () => {
+    const sheet = { dispatchEvent: vi.fn((_event: Event) => true) };
+    const top = { dispatchEvent: vi.fn((_event: Event) => true) };
+    const s = shell("#/budget", 4);
+    const document = { querySelectorAll: vi.fn(() => [sheet, top]) };
+    installBackButton({ ...s.win, document });
+    s.press({ canGoBack: true });
+    expect(document.querySelectorAll).toHaveBeenCalledWith(expect.stringContaining('[role="dialog"]'));
+    expect(sheet.dispatchEvent).not.toHaveBeenCalled();
+    expect(top.dispatchEvent).toHaveBeenCalledOnce();
+    const sent = top.dispatchEvent.mock.calls[0]?.[0] as KeyboardEvent;
+    expect(sent.key).toBe("Escape");
+    expect(sent.bubbles).toBe(true);
+    expect(s.exitApp).not.toHaveBeenCalled();
+    expect(s.back).not.toHaveBeenCalled();
+  });
+
+  it("goes on as before when no sheet or dialog is open", () => {
+    const s = shell("#/seal", 3);
+    installBackButton({ ...s.win, document: { querySelectorAll: () => [] } });
+    s.press({ canGoBack: true });
+    expect(s.back).toHaveBeenCalledOnce();
   });
 
   it("uses history length when the event carries no canGoBack, and goes home when this screen was first", () => {

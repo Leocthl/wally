@@ -17,6 +17,13 @@ export async function attempt(booth: Pick<Booth, "exec">, task: () => Promise<un
   return ok;
 }
 
+/** Shows Wally's screen from the top, also when it is already the route (a second run from the Ask sheet while the first result is scrolled). */
+export function showWally(): void {
+  navigate("wally");
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 /** Runs after React has painted the latest state (two frames), e.g. once a new card has pushed the layout down. */
 export function afterPaint(fn: () => void): void {
   if (typeof requestAnimationFrame !== "function") {
@@ -50,7 +57,7 @@ export function useScenarioRunner(): (id: ScenarioId) => void {
     (id: ScenarioId) => {
       const onBudget = STAYS_ON_BUDGET.has(id);
       if (onBudget) navigate("budget", { [PARAM.focus]: "console" });
-      else navigate("wally");
+      else showWally();
       void runScenario(id).then(() => {
         if (onBudget) afterPaint(revealConsole);
       });
@@ -64,7 +71,7 @@ export function useProposer(): (listingText: string) => void {
   const { propose } = useBoothContext();
   return useCallback(
     (listingText: string) => {
-      navigate("wally");
+      showWally();
       void propose({ listingText });
     },
     [propose],
@@ -85,7 +92,7 @@ export function useAsker(): ((requestText: string) => Promise<RunSummary | undef
   return useMemo(() => {
     if (!available || !ask) return undefined;
     return async (requestText: string): Promise<RunSummary | undefined> => {
-      navigate("wally");
+      showWally();
       let run: RunSummary | undefined;
       await exec(async () => {
         try {

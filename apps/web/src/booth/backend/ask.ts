@@ -20,7 +20,7 @@ export type AskSource =
 
 /**
  * Every fixture shop, then derived listings that do not repeat an item already on the shelf. A derived listing is a
- * scenario variant of a fixture (same item from a seller with an old Scameter capture, the "Try to trick" template):
+ * scenario variant of a fixture (same item from a seller with an old Scameter capture, the Product specifications template):
  * on the shelf it would make every "a cotton tee" a tie between two sellers, and the planner then asks instead of choosing.
  */
 export function askShelf(catalogue: Catalogue, table: ScenarioTable): readonly ListingRecord[] {

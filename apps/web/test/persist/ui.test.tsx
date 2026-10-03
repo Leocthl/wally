@@ -97,6 +97,17 @@ describe("About says the demo remembers, only while it does", () => {
     expect(within(zh).getByText("呢個示範會喺呢部裝置記住你嘅操作，直至你重新開始。")).toBeInTheDocument();
   });
 
+  it("names the phone, not the browser, inside the phone apps", async () => {
+    vi.stubGlobal("Capacitor", { isNativePlatform: () => true });
+    try {
+      const { sheet } = await aboutOf(new MemoryStorage());
+      expect(within(sheet).getByText("On this phone, real rules, recorded answers")).toBeInTheDocument();
+      expect(within(sheet).queryByText("In this browser, real rules, recorded answers")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("is not there when the browser will not keep anything", async () => {
     const blocked = new MemoryStorage();
     blocked.fail = { set: true };
