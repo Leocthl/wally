@@ -6,16 +6,19 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { ApiRequestError } from "../src/api/http/errors";
-import type { ApiKind, BoothSnapshot, Unsubscribe } from "../src/api/types";
+import type { ApiKind, BoothSnapshot, TraceEvent, TraceListener, Unsubscribe } from "../src/api/types";
 import { m0Request } from "../src/booth/compile";
 import { BoothProvider, useBoothContext, type Booth } from "../src/hooks/useBooth";
 
 /** A booth whose connection the test can break and restore, and whose snapshot it can change behind the page's back. */
 class Flaky extends MockApiClient {
   readonly #back = new Set<() => void>();
+  readonly #heard = new Set<TraceListener>();
   replacement: BoothSnapshot | null = null;
   snapshotFails = false;
   snapshots = 0;
+  /** Called inside each snapshot read: an event that arrives while the page is reading the booth. */
+  duringRead: (() => void) | null = null;
 
   constructor(kind: ApiKind = "http") {
     super({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
@@ -26,7 +29,23 @@ class Flaky extends MockApiClient {
   override async snapshot(): Promise<BoothSnapshot> {
     this.snapshots += 1;
     if (this.snapshotFails) throw new ApiRequestError(0, "NETWORK", "The booth server cannot be reached.");
-    return this.replacement ?? super.snapshot();
+    const answer = this.replacement ?? (await super.snapshot());
+    this.duringRead?.();
+    return answer;
+  }
+
+  override subscribe(listener: TraceListener): Unsubscribe {
+    this.#heard.add(listener);
+    const off = super.subscribe(listener);
+    return () => {
+      this.#heard.delete(listener);
+      off();
+    };
+  }
+
+  /** The booth tells the page something over the live stream. */
+  emit(event: TraceEvent): void {
+    for (const listener of this.#heard) listener(event);
   }
 
   onReconnect(listener: () => void): Unsubscribe {
@@ -113,6 +132,26 @@ describe("a page left open while the booth restarted", () => {
     act(() => void window.dispatchEvent(new Event("online")));
     await waitFor(() => expect(screen.getByTestId("budget")).toHaveTextContent("30000"));
     expect(api.snapshots).toBeGreaterThan(before);
+  });
+
+  it("reads once when nothing arrives meanwhile, and again when an event arrived while it was reading", async () => {
+    const api = new Flaky();
+    await open(api);
+    const base = api.snapshots;
+    act(() => api.reconnect());
+    await waitFor(() => expect(api.snapshots).toBe(base + 1));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(api.snapshots).toBe(base + 1); // quiet: one read
+    // An event reaches the page in the middle of the next read: the answer may be older than the event, so the page reads again.
+    let sent = false;
+    api.duringRead = () => {
+      if (sent) return;
+      sent = true;
+      api.emit({ type: "reset", at: "2026-10-03T00:00:00Z" });
+    };
+    act(() => api.reconnect());
+    await waitFor(() => expect(api.snapshots).toBe(base + 3));
+    expect(screen.getByTestId("error")).toHaveTextContent("no error");
   });
 
   it("does not re-read a booth that lives in the page (mock and on-device have no connection to lose)", async () => {

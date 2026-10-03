@@ -95,6 +95,8 @@ function useGuard(): Guard {
 
 /** The soonest a phone waking up or coming back online reads the booth again after the last time it did. */
 const WAKE_RESYNC_MIN_MS = 2_000;
+/** Reads of the booth in one resync: one, and one more each time something arrived over the stream while reading. */
+const MAX_RESYNC_READS = 3;
 
 export interface BoothProviderProps {
   readonly api: ApiClient;
@@ -120,7 +122,16 @@ export function BoothProvider({ api, autoSeal = true, children }: BoothProviderP
     wantSeal.current = autoSeal;
   }, [autoSeal]);
 
-  useEffect(() => api.subscribe((e) => dispatch(e as BoothAction)), [api]);
+  // Counts what the live stream said, so a re-read can tell that something arrived while it was reading.
+  const heard = useRef(0);
+  useEffect(
+    () =>
+      api.subscribe((e) => {
+        heard.current += 1;
+        dispatch(e as BoothAction);
+      }),
+    [api],
+  );
 
   // A verdict belongs to one log: a new seal (a new log) or a reset starts without one.
   const logId = state.packet?.log_id;
@@ -159,10 +170,17 @@ export function BoothProvider({ api, autoSeal = true, children }: BoothProviderP
     if (!loaded.current || resyncing.current) return;
     resyncing.current = true;
     try {
-      const [i, snap] = await Promise.all([api.info(), api.snapshot()]);
-      setInfo(i);
-      dispatch({ type: "resync", snapshot: snap });
-      clearConnectionError();
+      for (let attempt = 1; attempt <= MAX_RESYNC_READS; attempt++) {
+        const before = heard.current;
+        const [i, snap] = await Promise.all([api.info(), api.snapshot()]);
+        // An event that came in while the booth was being read may be newer than the answer: read again, so the answer cannot
+        // replace what the page has just heard with something older.
+        if (heard.current !== before && attempt < MAX_RESYNC_READS) continue;
+        setInfo(i);
+        dispatch({ type: "resync", snapshot: snap });
+        clearConnectionError();
+        return;
+      }
     } catch {
       // out of reach still
     } finally {
