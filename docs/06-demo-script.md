@@ -3,7 +3,7 @@
 ## Roles
 - **Talker**: speaks, owns the clock, no keyboard; says **SIMULATED** for the rail, merchant stub, flagged seller and amounts [F20-F23].
 - **Driver**: runs Budget or the Presenter (Space or Right arrow steps, R resets).
-- **Rota**: one person at the booth throughout [F14].
+- **Rota**: one person at the booth throughout; none present means disqualified [F14].
 
 ## Booth: 3-minute script [F45]
 | Time [F45] | Driver (Budget, Demo scenarios) | Talker (words in 07) | Moment |
