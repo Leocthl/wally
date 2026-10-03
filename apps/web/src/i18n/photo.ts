@@ -146,7 +146,7 @@ export const PHOTO = {
   askLine: (name: string, shop: string): LabelPair => label(`${name} from ${shop}`, `${shop} 的${name}`), // NEEDS-REVIEW
 
   // Empty and error states
-  notClothing: label("That does not look like something to wear.", "呢張相睇落唔似係可以著的嘢。"), // NEEDS-REVIEW
+  notClothing: label("That does not look like something to wear.", "呢張相睇落唔似係可以着嘅嘢。"), // NEEDS-REVIEW
   notClothingHint: label("Try another picture, or pick the type yourself.", "試吓另一張相，或者自己揀款式。"), // NEEDS-REVIEW
   modelFailed: label("Wally could not read this picture, so pick the type yourself.", "Wally 讀唔到呢張相，請自己揀款式。"), // NEEDS-REVIEW
   noMatch: label("Nothing like this in the shop yet. Try another type.", "商店暫時冇相似款式。試吓揀另一款。"), // NEEDS-REVIEW
@@ -154,7 +154,7 @@ export const PHOTO = {
   unreadable: label("That file could not be read as a picture.", "讀唔到呢個檔案，唔似係相片。"), // NEEDS-REVIEW
   unreadableHint: label("Use a JPEG, PNG or WebP picture, or a photo from your camera.", "請用 JPEG、PNG 或 WebP 相片，或者用相機影的相。"), // NEEDS-REVIEW
   tooLarge: label("That picture is too large.", "呢張相太大。"), // NEEDS-REVIEW
-  tooLargeHint: label("Try a smaller picture or a screenshot.", "試吓用細啲的相片或截圖。"), // NEEDS-REVIEW
+  tooLargeHint: label("Try a smaller picture or a screenshot.", "試吓用細啲嘅相片或截圖。"), // NEEDS-REVIEW
   failed: label("Wally could not look just now.", "Wally 暫時睇唔到。"), // NEEDS-REVIEW
   failedHint: label("Check the connection and try again. Nothing was bought.", "請檢查連線再試。冇買任何嘢。"), // NEEDS-REVIEW
   opening: label("Opening.", "打開緊。"), // NEEDS-REVIEW

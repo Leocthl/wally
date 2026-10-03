@@ -57,7 +57,7 @@ describe("OnDeviceNote", () => {
     render(<OnDeviceNote />);
     const note = screen.getByText(ON_DEVICE_NOTE);
     expect(note.closest("[data-api-mode]")).toHaveAttribute("data-api-mode", "local");
-    expect(note.closest("[data-api-mode]")?.querySelector('[lang="zh-HK"]')?.textContent).toBe("示範模式：Wally 喺你部手機上運行，用示範商店資料。資料不會離開你的手機。");
+    expect(note.closest("[data-api-mode]")?.querySelector('[lang="zh-HK"]')?.textContent).toBe("示範模式：Wally 在你的手機上運作，使用示範商店資料。任何內容都不會離開你的手機。");
     // A shopper's words: no "recorded answers" (it reads as a pretend AI), and no "on-device mode" jargon.
     expect(note.textContent).not.toMatch(/recorded|on-device/i);
   });

@@ -26,7 +26,7 @@ export const S = {
   tamper: { en: "Tamper", zh: "竄改" }, // NEEDS-REVIEW zh-HK
   restore: { en: "Restore", zh: "還原" }, // NEEDS-REVIEW zh-HK
   pass: { en: "PASS", zh: "驗證通過" }, // NEEDS-REVIEW zh-HK
-  fail: { en: "FAIL", zh: "已中斷" }, // NEEDS-REVIEW zh-HK
+  fail: { en: "FAIL", zh: "驗證失敗" }, // NEEDS-REVIEW zh-HK
   notVerified: { en: "NOT VERIFIED", zh: "未驗證" }, // NEEDS-REVIEW zh-HK
   idle: {
     en: "Not verified yet. Load the demo log, or paste your receipts and their public keys, then press Verify.",
@@ -58,11 +58,11 @@ export const S = {
   modeHint: { en: "For engineers: receipt ids, fingerprints and the exact codes.", zh: "給工程師：收據編號、指紋及確切代碼。" }, // NEEDS-REVIEW zh-HK
   demoBadge: {
     en: "SIMULATED demo log and throwaway test keys, not the booth keys.",
-    zh: "模擬示範紀錄及一次性測試公鑰，並非攤位所用的金鑰。", // NEEDS-REVIEW zh-HK
+    zh: "模擬示範紀錄及一次性測試公鑰，並非展位所用的金鑰。", // NEEDS-REVIEW zh-HK
   },
   footer: {
     en: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.",
-    zh: "原型。與 HKT、Tap & Go 或 Mastercard 無關。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
+    zh: "原型作品。與 HKT、Tap & Go 及 Mastercard 並無關連。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
   },
 } as const satisfies Record<string, Bi>;
 

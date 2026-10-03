@@ -79,7 +79,7 @@ describe.skipIf(!REAL)("a Chinese listing on the real stack", () => {
         template_id: "R10.unavailable",
         inputs: { reason: "unsupported_language", status: "ERROR" },
         rendered: "Escalated by R10. Wally's listing checker reads English best and could not check this listing, so it asks you.",
-        rendered_zh_hk: "R10 已轉交你確認。Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。",
+        rendered_zh_hk: "R10 已轉交你確認。Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。",
       },
     });
     expect(decision?.judge.answers).toBeUndefined();

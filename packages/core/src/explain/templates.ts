@@ -151,7 +151,7 @@ const r10Scope: Fragment = (i, l) => {
 const r10Escalate: Fragment = (i, l) => {
   const p = formatProbability(field(i, "p_escalate"));
   const t = formatProbability(field(i, "threshold"));
-  return zhOr(l, `The judge leans to asking you first (${p}, limit ${t}).`, `評審傾向先問你（${p}，門檻 ${t}）。`); // NEEDS-REVIEW zh-HK
+  return zhOr(l, `The judge leans to asking you first (${p}, limit ${t}).`, `判斷器傾向先問你（${p}，門檻 ${t}）。`); // NEEDS-REVIEW zh-HK
 };
 
 function unavailableReason(i: TemplateInputs, l: Locale): string {
@@ -175,11 +175,11 @@ const r10Unavailable: Fragment = (i, l) => {
     return zhOr(
       l,
       "Wally's listing checker reads English best and could not check this listing, so it asks you.",
-      "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。", // NEEDS-REVIEW zh-HK
+      "Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。", // NEEDS-REVIEW zh-HK
     );
   }
   const reason = unavailableReason(i, l);
-  return zhOr(l, `The judge gave no usable answer (${reason}), so you decide.`, `評審未能給出可用答案（${reason}），由你決定。`); // NEEDS-REVIEW zh-HK
+  return zhOr(l, `The judge gave no usable answer (${reason}), so you decide.`, `判斷器未能給出可用答案（${reason}），由你決定。`); // NEEDS-REVIEW zh-HK
 };
 
 const r11: Fragment = (i, l) => {

@@ -173,7 +173,7 @@ const RISK_PHRASES: readonly { readonly categories: readonly string[]; readonly 
   { categories: ["replay", "duplicate"], words: label("a card used twice", "一張卡用兩次") }, // NEEDS-REVIEW zh-HK
   { categories: ["price_drift"], words: label("a price that changes at checkout", "結帳時價格改變") }, // NEEDS-REVIEW zh-HK
   { categories: ["velocity_burst"], words: label("too many cards too fast", "短時間內發太多卡") }, // NEEDS-REVIEW zh-HK
-  { categories: ["revoked", "expired"], words: label("a cancelled or ended budget", "已取消或已完結的預算") }, // NEEDS-REVIEW zh-HK
+  { categories: ["revoked", "expired"], words: label("a cancelled or ended budget", "已取消或已到期的預算") }, // NEEDS-REVIEW zh-HK
   { categories: ["off_category"], words: label("something your rules do not allow", "規則不容許的東西") }, // NEEDS-REVIEW zh-HK
   { categories: ["rail_timeout"], words: label("a payment that times out", "付款逾時") }, // NEEDS-REVIEW zh-HK
 ];

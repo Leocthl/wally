@@ -110,7 +110,7 @@ export const TEMPLATES: Readonly<Record<TemplateId, Template>> = {
       isLanguageSkip(i)
         ? "Escalated by R10. Wally's listing checker reads English best and could not check this listing, so it asks you."
         : "Escalated by R10. The judge could not check this listing, so it asks you.",
-    zh: (i) => (isLanguageSkip(i) ? `${askZh(10)}Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。` : `${askZh(10)}判斷器未能檢查這個商品頁，所以交由你決定。`),
+    zh: (i) => (isLanguageSkip(i) ? `${askZh(10)}Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。` : `${askZh(10)}判斷器未能檢查這個商品頁，所以交由你決定。`), // NEEDS-REVIEW zh-HK
   },
   "R11.expired": {
     en: (i) => `Stopped by R11. No answer in ${seconds(i, "window_s")}.`,

@@ -101,7 +101,8 @@ a:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 ${art}
 <h1>You're offline</h1>
 <p>Open Wally again when you're back online. Nothing was charged: payments here are simulated.</p>
-<p lang="zh-HK">你已離線。重新連線後再開啟 Wally。這裡的付款只是模擬。</p>
+<!-- NEEDS-REVIEW zh-HK -->
+<p lang="zh-HK">你已離線。重新連線後再開啟 Wally。沒有任何扣款：這裡的付款只是模擬。</p>
 <a href="./">Try again</a>
 </main>
 </body>

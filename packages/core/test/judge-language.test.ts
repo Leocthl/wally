@@ -90,14 +90,14 @@ describe("R10.unavailable sentences", () => {
   });
 
   it("zh-HK: the same idea in Cantonese", () => {
-    expect(render("R10.unavailable", language, "zh-HK")).toBe("R10 已轉交你確認。Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。");
+    expect(render("R10.unavailable", language, "zh-HK")).toBe("R10 已轉交你確認。Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。");
   });
 
   it("keeps every older R10.unavailable sentence for a record with no reason", () => {
     expect(render("R10.unavailable", { status: "TIMEOUT" }, "en")).toBe("Escalated by R10. The judge gave no usable answer (timed out), so you decide.");
     expect(render("R10.unavailable", { status: "ERROR" }, "en")).toBe("Escalated by R10. The judge gave no usable answer (error), so you decide.");
     expect(render("R10.unavailable", { status: "ERROR", input_truncated: true }, "en")).toBe("Escalated by R10. The judge gave no usable answer (listing cut off), so you decide.");
-    expect(render("R10.unavailable", { status: "ERROR" }, "zh-HK")).toBe("R10 已轉交你確認。評審未能給出可用答案（錯誤），由你決定。");
+    expect(render("R10.unavailable", { status: "ERROR" }, "zh-HK")).toBe("R10 已轉交你確認。判斷器未能給出可用答案（錯誤），由你決定。");
   });
 
   it("a cut-off listing keeps its own sentence even when a reason is also recorded", () => {

@@ -310,7 +310,7 @@ describe("needs your OK", () => {
 
 describe("needs your OK because the listing checker reads English best", () => {
   const EN = "Wally's listing checker reads English best and could not check this listing, so it asks you.";
-  const ZH = "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。";
+  const ZH = "Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。";
 
   async function askedAboutAChineseListing(locale: "en" | "zh-HK"): Promise<Mounted> {
     const m = await mountRun({ locale });

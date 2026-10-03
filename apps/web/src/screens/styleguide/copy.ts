@@ -58,8 +58,8 @@ export const C = {
     label(`${total} is over the ${left} left. Shipping ${shipping} is included.`, `${total} 超出剩餘的 ${left}，已包括運費 ${shipping}。`), // NEEDS-REVIEW
   budgetRule: label("Budget rule", "預算規則"), // NEEDS-REVIEW
   noCard: label("No card was made", "沒有發出任何卡"), // NEEDS-REVIEW
-  noCardBody: label("Nothing can be charged. Your budget is untouched.", "不會有任何扣款，你的預算原封不動。"), // NEEDS-REVIEW
-  cheaper: label("See cheaper options", "睇平啲的選擇"), // NEEDS-REVIEW
+  noCardBody: label("Nothing can be charged. Your budget is untouched.", "不可能有任何扣款，你的預算原封不動。"), // NEEDS-REVIEW
+  cheaper: label("See cheaper options", "睇更平嘅選擇"), // NEEDS-REVIEW
   topUp: label("Top up budget", "增加預算"), // NEEDS-REVIEW
   why: label("Why?", "點解？"), // NEEDS-REVIEW
   whyTitle: label("Why Wally stopped", "Wally 點解攔截"), // NEEDS-REVIEW

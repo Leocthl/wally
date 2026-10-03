@@ -16,7 +16,7 @@ export const DM9_PLAIN: readonly Dm9Column[] = [
       label("The listing check's settings are assumed, tuned on invented listings by one person. It is weaker on Chinese listings.", "商品檢查的設定屬假設，以虛構商品頁及單一標註者調校；對中文商品頁較弱。"), // NEEDS-REVIEW zh-HK
       label("A shop may hold more than it finally charges, so an honest purchase can be declined. We count that as a wrong block.", "商戶可能預先授權高於實際收費，所以正常購買也可能被拒，我們計作誤攔。"), // NEEDS-REVIEW zh-HK
     ],
-    foot: label("Whatever goes wrong, the answer is to stop or to ask you. The listing check can only make a decision stricter.", "無論出什麼問題，結果都是停止或請你確認。商品檢查只會令決定更嚴格。"), // NEEDS-REVIEW zh-HK
+    foot: label("Whatever goes wrong, the answer is to stop or to ask you. The listing check can only make a decision stricter.", "無論出甚麼問題，結果都是停止或請你確認。商品檢查只會令決定更嚴格。"), // NEEDS-REVIEW zh-HK
   },
   {
     id: "loss",
@@ -37,7 +37,7 @@ export const DM9_PLAIN: readonly Dm9Column[] = [
       label("Not found in public sources: a way for an app to get a one-off card, a lock to one shop or purpose, or a loss rule for purchases made by an app.", "公開資料中未找到：讓應用程式取得一次性卡的方法、商戶或用途鎖定，以及應用程式代購的損失規則。"), // NEEDS-REVIEW zh-HK
       label("The ask: a way for an app to make a single-use card with a limit, an expiry, a shop lock and a purpose; cancel it; signed card events; an export for auditors.", "我們的提議：讓應用程式發出附額度、到期日、商戶鎖定及用途的一次性卡；可取消；簽署的卡事件；供審計用的匯出。"), // NEEDS-REVIEW zh-HK
       label("The same rules, signed budget and receipts work on any card network; only the connection to the card changes.", "同一套規則、已簽署的預算與收據可用於任何支付網絡，只需更換與卡的連接。"), // NEEDS-REVIEW zh-HK
-      label("The sealed budget is already a verifiable credential, and the agent-ID pilot uses the same kind of credential. We make no claim about that pilot's results.", "已封定的預算本身已是可驗證憑證；代理身份試驗亦使用可驗證憑證。我們不對該試驗的結果作任何聲稱。"), // NEEDS-REVIEW zh-HK
+      label("The sealed budget is already a verifiable credential, and the agent-ID pilot uses the same kind of credential. We make no claim about that pilot's results.", "已鎖定的預算本身已是可驗證憑證；代理身份試驗亦使用可驗證憑證。我們不對該試驗的結果作任何聲稱。"), // NEEDS-REVIEW zh-HK
     ],
     foot: label("A one-page proposal, not an HKT commitment. Not affiliated with HKT.", "一頁建議書，並非 HKT 的承諾；與 HKT 並無關連。"), // NEEDS-REVIEW zh-HK
   },

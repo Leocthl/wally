@@ -39,7 +39,7 @@ export const EVENT_LABELS: Readonly<Record<EventKey, Bi>> = {
   cancelled: { en: "Card cancelled", zh: "卡已取消" }, // NEEDS-REVIEW zh-HK
   cardExpired: { en: "Card expired", zh: "卡已過期" }, // NEEDS-REVIEW zh-HK
   revoked: { en: "You cancelled the budget", zh: "你已取消預算" }, // NEEDS-REVIEW zh-HK
-  ended: { en: "Budget ended", zh: "預算已完結" }, // NEEDS-REVIEW zh-HK
+  ended: { en: "Budget ended", zh: "預算已到期" }, // NEEDS-REVIEW zh-HK
   other: { en: "A receipt", zh: "一張收據" }, // NEEDS-REVIEW zh-HK
 };
 

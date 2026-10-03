@@ -7,7 +7,7 @@ export const RUNX = {
   // Stopped before paying
   stampStopped: label("Stopped", "已攔截"), // NEEDS-REVIEW
   noCardTitle: label("No card was made", "冇發出任何卡"), // NEEDS-REVIEW
-  nothingCharged: label("Nothing can be charged.", "唔會有任何扣款。"), // NEEDS-REVIEW
+  nothingCharged: label("Nothing can be charged.", "不可能有任何扣款。"), // NEEDS-REVIEW
   budgetUntouched: (amount: string): LabelPair => label(`${amount} is still in your budget.`, `你的預算仍有 ${amount}。`), // NEEDS-REVIEW
   notBought: label("Not bought", "未有購買"), // NEEDS-REVIEW
   stoppedAt: label("Stopped at the rules check", "喺規則檢查攔截"), // NEEDS-REVIEW
