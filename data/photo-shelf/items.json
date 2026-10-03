@@ -2,7 +2,7 @@
   "fixture": "shop/items",
   "provenance": "SIMULATED",
   "schema": "photo-shelf",
-  "note": "SIMULATED photo shelf: 30 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. Prices, weights and limits: [F96]. No real shop, brand or person; times are placeholders [F59].",
+  "note": "SIMULATED photo shelf: 33 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. Prices, weights and limits: [F96]. No real shop, brand or person; times are placeholders [F59].",
   "data": {
     "observed_at": "2026-10-03T02:30:00Z",
     "merchants": {
@@ -529,6 +529,57 @@
         "price_minor": 69900,
         "title": "Brown boots (SIMULATED)",
         "text": "Brown boots (SIMULATED). Leather upper, regular fit, sizes EU 38 to 45. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSocksWhite",
+        "merchant": "apparel",
+        "kind": "socks",
+        "colors": [
+          "white"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics"
+        ],
+        "price_minor": 9900,
+        "title": "White ankle socks, 3 pairs (SIMULATED)",
+        "text": "White ankle socks, 3 pairs (SIMULATED). Soft cotton blend, one size. Free shipping. 30-day returns."
+      },
+      {
+        "id": "lst_photoSocksBlack",
+        "merchant": "outlet",
+        "kind": "socks",
+        "colors": [
+          "black"
+        ],
+        "pattern": "plain",
+        "fit": "regular",
+        "style": [
+          "basics",
+          "sporty"
+        ],
+        "price_minor": 11900,
+        "title": "Black crew socks, 3 pairs (SIMULATED)",
+        "text": "Black crew socks, 3 pairs (SIMULATED). Soft cotton blend, one size. Flat shipping HK$30. 14-day returns."
+      },
+      {
+        "id": "lst_photoSocksNavyStripes",
+        "merchant": "apparel",
+        "kind": "socks",
+        "colors": [
+          "navy",
+          "white"
+        ],
+        "pattern": "stripes",
+        "fit": "regular",
+        "style": [
+          "sporty",
+          "basics"
+        ],
+        "price_minor": 12900,
+        "title": "Navy striped socks, 2 pairs (SIMULATED)",
+        "text": "Navy striped socks, 2 pairs (SIMULATED). Soft cotton blend, one size. Free shipping. 30-day returns."
       }
     ]
   }

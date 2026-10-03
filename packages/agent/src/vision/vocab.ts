@@ -16,11 +16,19 @@ export const KINDS = [
   "skirt",
   "sneakers",
   "boots",
+  "socks",
   "bag",
   "other",
   "not_clothing",
 ] as const;
 export type Kind = (typeof KINDS)[number];
+
+/**
+ * The kinds the picture model may answer with (its grammar and its prompt). Socks are left out on purpose: the shop sells
+ * them and a typed request can ask for them, but the model's wording was tuned and measured without them [F68a], and a
+ * pair of socks in a picture is read as "other" like any other small item.
+ */
+export const READER_KINDS: readonly Kind[] = KINDS.filter((k) => k !== "socks");
 
 export const COLORS = [
   "black",

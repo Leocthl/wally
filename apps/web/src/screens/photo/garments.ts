@@ -3,9 +3,9 @@
 // it (or take the second colour). Every outline is currentColor at low opacity, so the parent card sets `color` and the
 // background and black, white and cream items stay visible on both light and dark cards.
 //
-// This file assembles; the shapes live in garments-tops / -bottoms / -shoes, colours in garments-color, pattern cutting in
-// garments-pattern, geometry in garments-geom. garmentParts is the single source: garmentSvg serialises it and GarmentArt
-// renders the same nodes as React elements.
+// This file assembles; the shapes live in garments-tops / -bottoms / -shoes / -socks, colours in garments-color, pattern
+// cutting in garments-pattern, geometry in garments-geom. garmentParts is the single source: garmentSvg serialises it and
+// GarmentArt renders the same nodes as React elements.
 import { isKind, isPattern, type Color, type Kind, type Pattern } from "@wally/agent/vision";
 import { BOTTOMS } from "./garments-bottoms";
 import type { Builder } from "./garments-build";
@@ -14,6 +14,7 @@ import { boundsOf, innerPoly, roundedD, type Bounds } from "./garments-geom";
 import { outlined, path, toMarkup, type GarmentNode } from "./garments-node";
 import { patternNodes } from "./garments-pattern";
 import { SHOES } from "./garments-shoes";
+import { SOCKS } from "./garments-socks";
 import { TOPS } from "./garments-tops";
 
 export type { GarmentNode } from "./garments-node";
@@ -26,7 +27,7 @@ export interface GarmentSpec {
   readonly pattern: Pattern;
 }
 
-const BUILDERS: Readonly<Record<Kind, Builder>> = { ...TOPS, ...BOTTOMS, ...SHOES };
+const BUILDERS: Readonly<Record<Kind, Builder>> = { ...TOPS, ...BOTTOMS, ...SHOES, ...SOCKS };
 
 /**
  * The shapes of one garment, in paint order: the fabric, the pattern marks cut from it, then the details. An unknown kind

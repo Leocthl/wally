@@ -13,7 +13,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 267,
+          "latency_ms": 276,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -44,7 +44,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 132,
+          "latency_ms": 125,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -75,7 +75,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 133,
+          "latency_ms": 127,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -106,7 +106,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 129,
+          "latency_ms": 127,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -137,7 +137,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 134,
+          "latency_ms": 123,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -168,7 +168,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 145,
+          "latency_ms": 132,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -199,7 +199,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 140,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -230,7 +230,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 148,
+          "latency_ms": 123,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -261,7 +261,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 157,
+          "latency_ms": 130,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -292,7 +292,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 164,
+          "latency_ms": 132,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -323,7 +323,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 157,
+          "latency_ms": 121,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -354,7 +354,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 169,
+          "latency_ms": 126,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -385,7 +385,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 173,
+          "latency_ms": 127,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -416,7 +416,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 178,
+          "latency_ms": 129,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -447,7 +447,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 184,
+          "latency_ms": 134,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -478,7 +478,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 184,
+          "latency_ms": 133,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -509,7 +509,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 180,
+          "latency_ms": 141,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -540,7 +540,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 174,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -571,7 +571,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 179,
+          "latency_ms": 127,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -602,7 +602,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 172,
+          "latency_ms": 126,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -633,7 +633,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 180,
+          "latency_ms": 126,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -664,7 +664,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 171,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -695,7 +695,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 176,
+          "latency_ms": 125,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -726,7 +726,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 172,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -757,7 +757,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 172,
+          "latency_ms": 125,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -788,7 +788,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 176,
+          "latency_ms": 126,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -819,7 +819,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 170,
+          "latency_ms": 121,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -850,7 +850,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 168,
+          "latency_ms": 121,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -881,7 +881,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 169,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -912,7 +912,7 @@
           "model": "typed-decisions",
           "version": "recorded@55cf4c4e",
           "status": "OK",
-          "latency_ms": 171,
+          "latency_ms": 122,
           "shadow": false,
           "answers": {
             "scope_fit": {
@@ -931,6 +931,99 @@
             "escalate_or_proceed": {
               "proceed": 0.69455,
               "escalate": 0.30545
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksWhite",
+        "text_sha256": "17195443ff72a18400c3ba28726515488ef2c67116c78531d4ca0a08ccd92f70",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 128,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7285,
+              "out_of_scope": 0.2715
+            },
+            "injection_risk": {
+              "clean": 0.691267,
+              "suspicious": 0.171433,
+              "injection": 0.1373
+            },
+            "seller_risk": {
+              "low_risk": 0.6468,
+              "high_risk": 0.3532
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6869,
+              "escalate": 0.3131
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksBlack",
+        "text_sha256": "30b518d19ecacb1798168a5222dcacf52397e6de138417b9e2ed9074fdea0fe1",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 184,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.6913,
+              "out_of_scope": 0.3087
+            },
+            "injection_risk": {
+              "clean": 0.692767,
+              "suspicious": 0.171333,
+              "injection": 0.135867
+            },
+            "seller_risk": {
+              "low_risk": 0.7617,
+              "high_risk": 0.2383
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6947,
+              "escalate": 0.3053
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksNavyStripes",
+        "text_sha256": "6505cbea25d5f41252efb81676c2fd0915da2f3864f07268455f936cb6e1c038",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 253,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.72865,
+              "out_of_scope": 0.27135
+            },
+            "injection_risk": {
+              "clean": 0.6985,
+              "suspicious": 0.1698,
+              "injection": 0.1317
+            },
+            "seller_risk": {
+              "low_risk": 0.674,
+              "high_risk": 0.326
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.70085,
+              "escalate": 0.29915
             }
           }
         }

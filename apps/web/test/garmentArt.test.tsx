@@ -49,7 +49,7 @@ describe("garmentSvg: every kind draws", () => {
     expect(shapes(svg)).toBeGreaterThan(0);
   });
 
-  it("gives each of the 16 kinds its own silhouette", () => {
+  it(`gives each of the ${KINDS.length} kinds its own silhouette`, () => {
     const outlines = new Set(KINDS.map(firstOutline));
     expect(outlines.size).toBe(KINDS.length);
     expect([...outlines].every((d) => d.length > 20)).toBe(true);
@@ -91,6 +91,9 @@ describe("garmentSvg: size and content", () => {
     }
     expect(garmentSvg(spec("tee", ["white", "navy"], "stripes"))).toContain(colorSwatch("navy"));
     expect(garmentSvg(spec("shirt", ["light_blue", "red"], "logo"))).toContain(colorSwatch("red"));
+    // a sock's second colour tints its cuff, heel and toe; with none, they stay a shade of the body
+    expect(garmentSvg(spec("socks", ["white", "red"]))).toContain(colorSwatch("red"));
+    expect(garmentSvg(spec("socks", ["white"]))).not.toContain(colorSwatch("red"));
   });
 
   it("carries nothing that loads, runs or references, and is well-formed XML", () => {
@@ -177,6 +180,7 @@ describe("GarmentArt", () => {
       spec("dress", ["pink"], "print"),
       spec("sneakers", ["white", "green"]),
       spec("boots", ["brown"], "print"),
+      spec("socks", ["white", "red"], "stripes"),
       spec("other", ["grey"]),
       spec("skirt", []),
     ];

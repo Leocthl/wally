@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The photo shelf: 30 SIMULATED items in four shops, kept apart from every list that existing flows are built from. The
+// The photo shelf: 33 SIMULATED items in four shops, kept apart from every list that existing flows are built from. The
 // Ask shelf, the scenario listing sets and the derived listings must be exactly what they were before the shelf existed.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -65,9 +65,9 @@ describe("the shelf files stay out of the core fixtures tree, with the same card
   });
 });
 
-describe("the 30 items", () => {
-  it("has 24 to 30 of them, priced from HK$99 to HK$699, in four shops", () => {
-    expect(entries.length).toBe(30);
+describe("the 33 items", () => {
+  it("has 33 of them (30 clothes and shoes, and 3 socks the typed reader can find), priced from HK$99 to HK$699, in four shops", () => {
+    expect(entries.length).toBe(33);
     const prices = entries.map((e) => e.item.priceMinor);
     expect(Math.min(...prices)).toBe(9_900);
     expect(Math.max(...prices)).toBe(69_900);
@@ -171,7 +171,7 @@ describe("buildCatalogue refuses a shelf that touches the scenario listings", ()
   };
 
   it("builds with the shelf as it is", () => {
-    expect(buildCatalogue(sources(() => undefined), table).shop.size).toBe(30);
+    expect(buildCatalogue(sources(() => undefined), table).shop.size).toBe(33);
   });
 
   it("refuses a shelf item that has the id of a scenario listing", () => {

@@ -2,7 +2,7 @@
 // The picture is the only thing that varies. Text printed inside it is part of the picture and is named as such in the
 // system line; the grammar means whatever it says, the answer can only be enum values.
 import type { ChatMessage } from "../planner/local";
-import { COLORS, FITS, KINDS, MAX_COLORS, MAX_STYLES, PATTERNS, STYLES } from "./vocab";
+import { COLORS, FITS, MAX_COLORS, MAX_STYLES, PATTERNS, READER_KINDS, STYLES } from "./vocab";
 
 export const SEE_SYSTEM_PROMPT =
   "You look at one photo of a clothing item or outfit and fill in a short form about the main garment. " +
@@ -22,7 +22,7 @@ export function buildSeeSchema(): unknown {
   return {
     type: "object",
     properties: {
-      kind: { enum: [...KINDS] },
+      kind: { enum: [...READER_KINDS] },
       colors: { type: "array", items: { enum: [...COLORS] }, minItems: 1, maxItems: MAX_COLORS },
       pattern: { enum: [...PATTERNS] },
       fit: { enum: [...FITS] },

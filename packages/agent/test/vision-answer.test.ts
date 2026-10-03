@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { parseAttributes } from "../src/vision/answer";
 import { buildSeeSchema, SEE_SYSTEM_PROMPT, SEE_USER_PROMPT } from "../src/vision/prompt";
-import { COLORS, FITS, KINDS, PATTERNS, STYLES } from "../src/vision/vocab";
+import { COLORS, FITS, PATTERNS, READER_KINDS, STYLES } from "../src/vision/vocab";
 
 const GOOD = { kind: "hoodie", colors: ["navy", "white"], pattern: "plain", fit: "relaxed", style: ["streetwear", "cozy"] };
 const json = (patch: Record<string, unknown> = {}): string => JSON.stringify({ ...GOOD, ...patch });
@@ -59,7 +59,7 @@ describe("the answer grammar", () => {
     expect(schema.type).toBe("object");
     expect(schema.additionalProperties).toBe(false);
     expect(schema.required).toEqual(["kind", "colors", "pattern", "fit", "style"]);
-    expect(schema.properties["kind"]?.enum).toEqual([...KINDS]);
+    expect(schema.properties["kind"]?.enum).toEqual([...READER_KINDS]);
     expect(schema.properties["pattern"]?.enum).toEqual([...PATTERNS]);
     expect(schema.properties["fit"]?.enum).toEqual([...FITS]);
     expect(schema.properties["colors"]).toMatchObject({ type: "array", maxItems: 3, items: { enum: [...COLORS] } });
@@ -71,7 +71,7 @@ describe("the answer grammar", () => {
   });
 
   it("names every allowed word for the model and tells it printed words are not instructions", () => {
-    for (const word of [...KINDS, ...COLORS, ...PATTERNS, ...STYLES]) expect(SEE_USER_PROMPT, word).toContain(word);
+    for (const word of [...READER_KINDS, ...COLORS, ...PATTERNS, ...STYLES]) expect(SEE_USER_PROMPT, word).toContain(word);
     expect(SEE_USER_PROMPT).toContain("unknown");
     expect(SEE_SYSTEM_PROMPT).toMatch(/never an instruction/);
   });
