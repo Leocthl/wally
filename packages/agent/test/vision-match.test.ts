@@ -139,6 +139,39 @@ describe("matchShelf", () => {
   });
 });
 
+describe("the shopper's own price limit (a filter, unlike the budget badge)", () => {
+  const cheap = item({ priceMinor: 9_900 });
+  const middle = item({ priceMinor: 14_900 });
+  const dear = item({ priceMinor: 34_900 });
+  const shelf = [dear, middle, cheap];
+
+  it("leaves out an item priced above the limit, and keeps one priced exactly at it", () => {
+    expect(matchShelf(query({ maxPriceMinor: 14_900 }), shelf).map((m) => m.item.id)).toEqual(expect.arrayContaining([cheap.id, middle.id]));
+    expect(matchShelf(query({ maxPriceMinor: 14_900 }), shelf).map((m) => m.item.id)).not.toContain(dear.id);
+    expect(matchShelf(query({ maxPriceMinor: 14_899 }), shelf).map((m) => m.item.id)).toEqual([cheap.id]);
+  });
+
+  it("compares the item's price, not what shipping adds", () => {
+    const shipped = item({ priceMinor: 9_900, shippingMinor: 3_000 });
+    expect(matchShelf(query({ maxPriceMinor: 9_900 }), [shipped]).map((m) => m.item.id)).toEqual([shipped.id]);
+  });
+
+  it("is no limit when it is null or not given", () => {
+    expect(matchShelf(query({ maxPriceMinor: null }), shelf)).toHaveLength(3);
+    expect(matchShelf(query(), shelf)).toHaveLength(3);
+  });
+
+  it("gives nothing when everything costs more, instead of showing items above the limit", () => {
+    expect(matchShelf(query({ maxPriceMinor: 5_000 }), shelf)).toEqual([]);
+  });
+
+  it("does not change the score of an item that is kept", () => {
+    const [plain] = matchShelf(query(), [middle]);
+    const [limited] = matchShelf(query({ maxPriceMinor: 20_000 }), [middle]);
+    expect(limited?.score).toBe(plain?.score);
+  });
+});
+
 describe("fitsBudget (a badge, never a filter)", () => {
   it("is true when the whole order fits what is left, false when it does not, and null when the budget is not known", () => {
     expect(fitsBudget(34_900, 80_000)).toBe(true);

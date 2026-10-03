@@ -19,6 +19,8 @@ export {
   type Scored,
   type ShelfItem,
 } from "./match";
+export { MAX_READ_CHARS, readRequest, type RequestReading } from "./text";
+export { MAX_LIMIT_DOLLARS, MIN_BARE_DOLLARS, readPriceLimit } from "./text-money";
 export { fromBase64, toBase64 } from "./base64";
 export { checkImage, MAX_IMAGE_BYTES, MAX_IMAGE_PIXELS, sniffImage, type ImageCheck, type ImageInfo, type ImageMime, type ImageProblem } from "./image";
 export { buildSeeMessages, buildSeeSchema, SEE_SYSTEM_PROMPT, SEE_USER_PROMPT } from "./prompt";
@@ -31,6 +33,7 @@ export {
   isPattern,
   isStyle,
   KINDS,
+  READER_KINDS,
   MAX_COLORS,
   MAX_STYLES,
   PATTERNS,

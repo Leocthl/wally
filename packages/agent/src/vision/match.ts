@@ -2,7 +2,8 @@
 // what the picture showed: its kind (must match, or sit in the same close family), how near its colours are in CIELAB,
 // and bonuses for pattern, fit and style. The top four come back with the reasons that earned them, as ids that the
 // screen words in its own language. Whether an item fits the budget is a badge the screen adds, never a filter: the
-// rules decide the purchase, not this list.
+// rules decide the purchase, not this list. A price limit the shopper typed ("under HK$150") is their own wish, not the
+// budget, and does leave dearer items out.
 import { colorDistance } from "./color";
 import type { Color, Fit, Kind, Pattern, Style } from "./vocab";
 
@@ -29,6 +30,8 @@ export interface MatchQuery {
   /** null or "unknown": no preference. */
   readonly fit: Fit | null;
   readonly style: readonly Style[];
+  /** The most the shopper said they would pay for the item (its price, not the shipping), integer minor units; null or absent: no limit [F96]. */
+  readonly maxPriceMinor?: number | null;
 }
 
 export type ReasonId = "same_kind" | "close_kind" | "same_color" | "close_color" | "same_pattern" | "same_fit" | "same_style";
@@ -129,7 +132,9 @@ export function scoreItem(query: MatchQuery, item: ShelfItem): Scored | null {
 
 /** Best first: score, then colour, then the exact kind, then the lower price, then id (so the order never wobbles). */
 export function matchShelf(query: MatchQuery, shelf: readonly ShelfItem[], limit: number = DEFAULT_LIMIT): readonly Scored[] {
+  const cap = query.maxPriceMinor ?? null;
   const scored = shelf.flatMap((item) => {
+    if (cap !== null && item.priceMinor > cap) return []; // the shopper's own limit leaves it out
     const one = scoreItem(query, item);
     return one === null ? [] : [one];
   });
