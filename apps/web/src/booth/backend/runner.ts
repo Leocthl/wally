@@ -136,7 +136,7 @@ export class ScenarioRunner {
   alternatives(decisionId: string, from?: ScenarioEntry): Promise<RunSummary> {
     return this.run("custom", async (runId) => {
       this.#d.merchant.setMode("honest");
-      const replan = from?.cheaper == null ? {} : await this.#cheaperSet(from, from.cheaper);
+      const replan = from === undefined || from.cheaper === null ? {} : await this.#cheaperSet(from, from.cheaper);
       return askStep(await this.#d.orchestrator.suggestAlternatives({ decisionId, checkout: "auto", runId, ...replan }));
     });
   }
