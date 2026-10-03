@@ -73,7 +73,7 @@ test("offline, ?api=local: the storyline on the real stack, then Verify PASS and
   await expect(card).toHaveAttribute("data-status", "fail");
   await expect(card).toContainText(/Broken at receipt #\d/);
   await expect(card.locator("[data-reason]")).toContainText("PAYLOAD_HASH");
-  await page.getByRole("button", { name: "Restore" }).click();
+  await page.getByRole("button", { name: "Restore", exact: true }).click();
   await expect(card).toHaveAttribute("data-status", "pass");
 
   expect(watch.outside).toEqual([]);

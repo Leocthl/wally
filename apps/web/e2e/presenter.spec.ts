@@ -50,7 +50,7 @@ for (const size of SIZES) {
     await page.getByRole("button", { name: "Try to tamper" }).click();
     await expect(page.locator('.pf-card[data-status="fail"]')).toContainText("Broken at receipt");
     await page.screenshot({ path: info.outputPath(`dm7-${size.width}.png`) });
-    await page.getByRole("button", { name: "Restore" }).click();
+    await page.getByRole("button", { name: "Restore", exact: true }).click();
     await expect(page.locator('.pf-card[data-status="pass"]')).toContainText("Receipts verified.");
     await press();
     await expect(page.locator('[data-beat="DM8"] [data-big]')).toHaveCount(3);
