@@ -1,8 +1,12 @@
 // "Start the demo over": a confirm, then reset (a fresh preset budget, no cards, no receipts). In the About sheet and at
-// the foot of Try asking, so the booth crew can reset between judges (docs/06 "Reset after every judge").
+// the foot of Try asking, so the booth crew can reset between judges (docs/06 "Reset after every judge"). A device that more
+// than one person uses should not greet the next judge by name, so the reset also clears the profile kept on the device
+// (and the confirm says so, when there is one); the first run stays counted as seen.
 import { useState, type ReactElement } from "react";
 import { useBoothContext } from "../hooks/useBooth";
+import { OB } from "../i18n/onboarding";
 import { UI } from "../i18n/ui";
+import { useProfile } from "../state/useProfile";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
@@ -13,10 +17,12 @@ export function ResetDemo({ variant = "ghost", onStart }: { readonly variant?: "
   const { t } = useLocale();
   const { busy } = useBoothContext();
   const { startReset } = useShell();
+  const { profile, forget } = useProfile();
   const [asking, setAsking] = useState(false);
   const confirm = (): void => {
     setAsking(false);
     onStart?.();
+    forget();
     startReset();
   };
   return (
@@ -37,6 +43,7 @@ export function ResetDemo({ variant = "ghost", onStart }: { readonly variant?: "
         }
       >
         {t(UI["shell.resetBody"])}
+        {profile !== null ? ` ${t(OB.about.resetAlso)}` : ""}
       </Dialog>
     </>
   );

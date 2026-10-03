@@ -19,9 +19,10 @@ export async function screenReady(): Promise<void> {
   await waitFor(() => expect(document.querySelector("[data-route-loading]")).toBeNull());
 }
 
-export async function bootApp(hash = "#/booth"): Promise<Harness> {
-  // A fresh visitor: no remembered language or theme from an earlier test.
+export async function bootApp(hash = "#/booth", stored: Readonly<Record<string, string>> = {}): Promise<Harness> {
+  // A fresh visitor: no remembered language or theme from an earlier test. `stored` is what a returning visitor already has.
   window.localStorage.clear();
+  for (const [key, value] of Object.entries(stored)) window.localStorage.setItem(key, value);
   window.location.hash = hash;
   const clock = new FakeClock();
   const api = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });

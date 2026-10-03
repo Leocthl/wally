@@ -5,6 +5,7 @@ import type { ScenarioId } from "../api/types";
 import { useBoothContext, type Booth } from "../hooks/useBooth";
 import { navigate, PARAM } from "../hooks/useRoute";
 import { STAYS_ON_BUDGET } from "../screens/home/tryCatalog";
+import { noteAsk } from "../screens/run/askEcho";
 import { useLocale } from "../ui/locale";
 
 export async function attempt(booth: Pick<Booth, "exec">, task: () => Promise<unknown>): Promise<boolean> {
@@ -77,7 +78,15 @@ export function useAsker(): ((requestText: string) => void) | undefined {
     if (!available || !ask) return undefined;
     return (requestText: string): void => {
       navigate("wally");
-      void exec(() => ask.call(api, { requestText, locale }));
+      void exec(async () => {
+        try {
+          await ask.call(api, { requestText, locale });
+        } catch (err) {
+          // The caller noted these words for a run that never started: drop them, so the next run does not wear them.
+          noteAsk("");
+          throw err;
+        }
+      });
     };
   }, [available, ask, api, exec, locale]);
 }

@@ -18,6 +18,7 @@ import { useLocale } from "../ui/locale";
 import { Segmented } from "../ui/Nav";
 import { Sheet } from "../ui/Overlay";
 import { List, ListRow } from "../ui/Surface";
+import { AboutPersonal } from "../screens/onboarding/AboutPersonal";
 import { BoothConnect } from "./BoothConnect";
 import { LegalNote } from "./LegalNote";
 import { PhoneQr } from "./PhoneQr";
@@ -90,6 +91,7 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
           </div>
           <Switch checked={mode === "developer"} onChange={(on) => setMode(on ? "developer" : "plain")} label={t(MODE.switchLabel)} description={t(MODE.switchHint)} />
         </div>
+        <AboutPersonal onClose={onClose} />
         {info ? (
           <section className="shell-about__block" aria-labelledby="about-mode">
             <h3 id="about-mode" className="shell-about__heading">{t(UI["shell.modeTitle"])}</h3>
