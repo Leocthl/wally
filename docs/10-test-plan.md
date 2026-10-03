@@ -1,7 +1,6 @@
 # 10 Test plan
 
-- **Stack**: vitest + fast-check; Playwright and axe, run locally.
-- **Scope**: CI uses recorded fixtures and mocks (no live calls, no key); live checks skip when their server is down.
+- **Stack**: vitest + fast-check; Playwright and axe, run locally. CI uses recorded fixtures and mocks (no live calls, no key); live checks skip when their server is down.
 
 ## Property tests
 | ID | Property over generated inputs |
@@ -20,7 +19,7 @@
 |---|---|---|
 | T-S1 | Packet HK$800 [F20], mint HK$259 [F21], cart HK$550 [F22] vs HK$541 left | R3 DENY; `overshoot` on the live card (DM2): `OVER_LIMIT`, limit held |
 | T-S2 | Flagged seller (SIMULATED); unverified seller | R9 DENY; R9 ESCALATE; no card |
-| T-S3 | Injected instructions in the description | P(injection) >= `T_inj` [F36]; R10 DENY |
+| T-S3 | Injected instructions in a listing | P(injection) >= `T_inj` [F36]; R10 DENY |
 | T-S4 | Revoke before mint or first use | `MANDATE_REVOKED`, then R2 DENY; or `CARD_EVENT(VOIDED)` |
 | T-S5 | ESCALATE unanswered past the window [F31] | R11 DENY resolves it |
 | T-S6 | More than 3 mints in 10 min [F32]; expired mandate | R7 DENY; R2 DENY, `PACKET_EXPIRED` |
@@ -28,24 +27,23 @@
 ## Contract and component checks
 | Check | Expected |
 |---|---|
-| Credential (A-32; R1) | W3C, RFC 8785 and RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1. One `it.fails` probe stays red: categories-only widening passes R1 (08) |
+| Credential (A-32; R1) | W3C, RFC 8785 and RFC 8032 vectors pass; a tampered, unpinned, wrong-issuer or `@context`-less proof fails R1; one `it.fails` probe stays red (08) |
 | Rail (A-33, A-34) | Replay → `CARD_USED`; other domain → `MERCHANT_MISMATCH`; same-key retry after a timeout: one charge |
-| Orchestrator (A-23, A-26) | One queue; failure → `{ ok: false }`, no mint; a live repeat returns the earlier decision; cheaper options only after R3 or R4; bad answer → DENY R11 |
-| JudgePort (B-04, B-14) | laya, jev, replay on a mock: timeout, error, malformed, truncation fail closed; padding → ESCALATE [F26] |
-| Planners, compiler (B-18, M-03, M-04) | Same input, same proposal; `local` off-catalogue or failed → none; compiler failure → fallback |
-| Family (A-30) | A wider term (budget, category, merchant, seller check, end date) → `EXCEEDS_PARENT`, nothing logged |
-| Booth server (X-10) | Ask, cheaper options, compile and family routes; LAN guards: token, Host, Origin, CORS |
+| Orchestrator (A-23, A-26) | Failure → `{ ok: false }`, no mint; a live repeat returns the earlier decision; bad answer → DENY R11 |
+| JudgePort (B-04, B-14) | Timeout, error, truncation fail closed; padding → ESCALATE [F26]; at least 10% CJK letters → ESCALATE `R10.unavailable` (`skipped:unsupported_language`), never an injection DENY; a hard rule still outranks it [F104] |
+| Planners, compiler, family, booth server (X-10) | Same input, same proposal; `local` off-catalogue → none; compiler failure → fallback; a wider child → `EXCEEDS_PARENT`; LAN guards: token, Host, Origin, CORS |
 | Web (C-13) | Contrast pairs; no raw colours or durations; axe at three phone widths; offline `?api=local` |
+| Display modes | Plain default, Developer mode, `?dev=1` and `?dev=0`; changed-copy banner. About 30 new unit test files; e2e `a11y-modes`, evidence, proof; the Pages spec checks the switch reaches the checker page |
 
 ## Harness, rail, verifier, end to end
 | ID | Check |
 |---|---|
 | T-H1 | 0 over-limit mints, deterministic scenarios [F38] |
-| T-H2 | At least 90% of legitimate scenarios approved [F38] (three ways, [05](05-evidence-plan.md)); the final run met both [F69] |
+| T-H2 | At least 90% of legitimate scenarios approved [F38] ([05](05-evidence-plan.md)); the final run met both [F69] |
 | T-H3 | Every reported number is MEASURED(n) with seed and commit; lint blocks harness copies of core |
-| T-V1 | Untouched log passes; byte flip, truncation, reorder, wrong key, step 9 breaks fail at that entry |
-| T-R1 | F1 parity [F1]; calibration on the real decline (`data/real-card-test.md`), else sim-only |
-| T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright, on-device build); tamper fails the verifier; booth smoke (X-17): scenarios offline, no key, Laya stopped → ESCALATE |
+| T-V1 | Untouched log passes; byte flip, truncation, reorder, wrong key, step 9 breaks fail there |
+| T-R1 | F1 parity; calibration on the real decline (`data/real-card-test.md`), else sim-only |
+| T-E2E | DM1-DM7 on the SIMULATED rail with chips (Playwright); tamper fails the verifier; booth smoke (X-17): scenarios offline, no key, Laya stopped → ESCALATE |
 
 ## CI (X-03)
 - **Steps**: `gen-types --check`, `typecheck`, `lint`, `test`, `coverage` (core [F44]), `docs-check`. Over 4,000 tests, core coverage above 95% [F91].

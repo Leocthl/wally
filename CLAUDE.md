@@ -62,6 +62,8 @@ packages/harness                            lane D
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.
 - **Family**: the offline verifier cannot check the parent chain; Mum's credential is exported for reading.
 - **LAN, voice, devices**: plain http with one shared token [F92]; voice needs the browser's speech service; checked on a simulator and an emulator only.
+- **Judge language**: a listing with at least 10% CJK letters is not scored: it escalates `R10.unavailable` (reason `unsupported_language`) and the shopper decides; English with one Chinese sentence under the share still scores about 0.15 higher, and other non-Latin scripts are not gated [F104].
+- **Plain words**: the zh-HK strings in the plain views are drafts (NEEDS-REVIEW); the tamper demo is shared booth state, shown with a banner and Restore on every load until it is put back.
 - **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, public repo and licence.
 
 ## Working agreements
