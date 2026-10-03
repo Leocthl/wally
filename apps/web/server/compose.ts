@@ -26,6 +26,7 @@ import type { ScenarioTable } from "../src/booth/backend/scenarioTable";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
+import { Gate, gated, MODEL_RUNS_AT_ONCE } from "./gate";
 import { loadCatalogue } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { ephemeralKeys, loadDemoKeys, type DemoKeys } from "./booth/keys";
@@ -69,8 +70,8 @@ export interface ComposeOptions {
   readonly planner?: PlannerChoice;
   /** Private practice wallets for visitors (server/sessions.ts). Default: what WALLY_SESSIONS names; unset, on exactly when LAN mode is on. */
   readonly sessions?: "on" | "off";
-  /** Cap and idle drop of the visitors' wallets (tests). Defaults: 12 and 45 minutes. */
-  readonly sessionLimits?: Pick<SessionRegistryOptions, "maxVisitors" | "idleTtlMs">;
+  /** Cap and idle drop of the visitors' wallets, and how many of their runs may be in the planner and judge at once (tests). Defaults: 12, 45 minutes, 2. */
+  readonly sessionLimits?: Pick<SessionRegistryOptions, "maxVisitors" | "idleTtlMs"> & { readonly runsAtOnce?: number };
   /** The log store of one visitor wallet (tests). Default: a new in-memory store each time, so a visitor's log never touches LOG_DIR. */
   readonly visitorStore?: () => LogStore;
   /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
@@ -191,6 +192,8 @@ export function composeBooth(opts: ComposeOptions): Booth {
 
   // A visitor's wallet is a second booth: its own throwaway keys, in-memory log, orchestrator and event hub, the preset
   // budget sealed at once. Nothing of it touches KEY_DIR or LOG_DIR. The judge and planner are shared.
+  const { runsAtOnce, ...registryLimits } = opts.sessionLimits ?? {};
+  const turns = new Gate(runsAtOnce ?? MODEL_RUNS_AT_ONCE); // visitors take turns at the shared models; the Mac does not wait in this line
   const visitorDeps = (): SessionDeps => depsFor(ephemeralKeys(), (opts.visitorStore ?? (() => new MemoryLogStore()))());
   const createVisitor = async (): Promise<VisitorSession> => {
     const wallet = buildBackend(visitorDeps);
@@ -199,7 +202,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     // As for the booth's own: a failed preset seal is logged, not fatal; the page seals it itself.
     await wallet.start().catch((err: unknown) => logger.error(`could not seal the preset mandate for a visitor: ${err instanceof Error ? err.message : "unknown error"}`));
     return {
-      backend: wallet,
+      backend: gated(wallet, turns),
       hub: walletHub,
       tick: () => wallet.tick(),
       close: () => {
@@ -220,7 +223,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
           now: () => clock.now().getTime(),
           logger,
           ...(opts.tickMs === undefined ? {} : { tickMs: opts.tickMs }),
-          ...opts.sessionLimits,
+          ...registryLimits,
         });
   // Without LAN mode every caller is the Mac, so the layer only labels the wallet shared.
   const layer = registry === null ? null : createSessionLayer({ registry, isBooth: (c) => opts.lan === undefined || isLocalClient(c, opts.lan), ...(opts.lan?.nativeOrigins === undefined ? {} : { nativeOrigins: opts.lan.nativeOrigins }) });
