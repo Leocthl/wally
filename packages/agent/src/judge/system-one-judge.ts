@@ -2,7 +2,7 @@
 // Jev (optional). One request carries the four typed questions as k option-order rotations; the answers are
 // averaged back into canonical order. One attempt, no retries, a deadline from the caller (F34). Any failure,
 // timeout, malformed answer or truncated input comes back as a TIMEOUT or ERROR record, which R10 escalates (I5).
-// So does a listing that is mostly CJK: the checkpoint is English-derived, so it is not asked (language.ts).
+// So does a listing with a tenth or more CJK letters: the checkpoint is English-derived, so it is not asked (language.ts).
 import type { JudgeProvider } from "@wally/core/generated";
 import { JUDGE_VERSION_UNSUPPORTED_LANGUAGE, type JudgeInput, type JudgeRecord } from "@wally/core/ports";
 import {
@@ -44,7 +44,7 @@ export interface SystemOneJudgeOptions {
   /** Question wording. Default: the shipped JUDGE_QUESTION_DEFS. The judge:tune experiment passes its variants. */
   readonly questions?: JudgeQuestionDefs | undefined;
   /**
-   * Default true: a listing that is mostly CJK (language.ts) is not sent to the English-derived checkpoint. The record is
+   * Default true: a listing with a tenth or more CJK letters (language.ts) is not sent to the English-derived checkpoint. The record is
    * an ERROR carrying JUDGE_VERSION_UNSUPPORTED_LANGUAGE, which R10 escalates. false is for the tools that measure the raw
    * checkpoint (judge:fit, judge:tune, judge:record); a product composition leaves it on.
    */
@@ -80,7 +80,7 @@ export class SystemOneJudge implements WarmableJudge {
       if (!usableTimeout(opts.timeoutMs)) return this.#finish(callFailure("TIMEOUT", "invalid_timeout", "timeoutMs is not a positive number"), elapsed(), null);
       if (opts.signal?.aborted === true) return this.#finish(callFailure("TIMEOUT", "aborted", "the caller had already aborted"), elapsed(), null);
       if (this.#options.languageGate !== false && isUnsupportedLanguage(input.listingText)) {
-        return this.#finish(callFailure("ERROR", "unsupported_language", "the listing is mostly CJK text and the checkpoint reads English best"), elapsed(), null);
+        return this.#finish(callFailure("ERROR", "unsupported_language", "the listing has too many CJK letters and the checkpoint reads English best"), elapsed(), null);
       }
       deadline = createDeadline(opts.timeoutMs, opts.signal);
       const outcome = await this.#run(input, deadline);
