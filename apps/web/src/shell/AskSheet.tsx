@@ -7,7 +7,6 @@ import type { ScenarioId } from "../api/types";
 import { BRAND } from "../brand";
 import { LISTING_TEXT_HARD_CAP } from "../booth/scenarios";
 import { useBoothContext } from "../hooks/useBooth";
-import { OB } from "../i18n/onboarding";
 import { UI } from "../i18n/ui";
 import { useAskExample } from "../state/useProfile";
 import { Button, IconButton } from "../ui/Button";
@@ -16,6 +15,7 @@ import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
 import { Sheet } from "../ui/Overlay";
 import { DemoScenarios } from "../screens/home/DemoScenarios";
+import { demoLeadFor } from "../screens/home/demoLead";
 import { TryAsking } from "../screens/home/TryAsking";
 import { PhotoButton } from "../screens/photo/PhotoEntry";
 import { ShopChips } from "../screens/photo/ShopChips";
@@ -171,7 +171,7 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
         {ask ? <AskField onAsk={ask} busy={busy} onSent={onClose} onPhoto={onPhoto} /> : null}
         {search ? <ShopChips onPick={search} onPhoto={onPhoto} busy={busy} /> : null}
         {/* The judges' console: the trick box and every scenario, folded away for a shopper (open on the booth Mac and with ?booth=1). */}
-        <DemoScenarios lead={t(OB.home.demoLead)}>
+        <DemoScenarios lead={t(demoLeadFor(state.mandate?.rules.categories, false))}>
           <TrickBox onSend={send} busy={busy} />
           <TryAsking onRun={pick} busy={busy} variant="pills" budgetCategories={state.mandate?.rules.categories} />
         </DemoScenarios>

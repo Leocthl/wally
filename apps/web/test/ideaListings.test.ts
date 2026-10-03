@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ideaCategory, ideaListing, readIdeaListing } from "../src/screens/home/ideaListings";
+import { ideaCategory, ideaListing, readIdeaCategory, readIdeaListing } from "../src/screens/home/ideaListings";
 import { IDEAS, type IdeaId } from "../src/screens/home/ideas";
 
 const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), "../../../data/fixtures");
@@ -72,6 +72,18 @@ describe("the category behind each idea", () => {
     }
     expect(ideaCategory("earbuds")).toBe("electronics");
     expect(ideaCategory("tee")).toBe("apparel");
+  });
+});
+
+describe("readIdeaCategory", () => {
+  it("reads the first item's category from a fixture envelope", () => {
+    expect(readIdeaCategory({ data: { items: [{ category: "apparel" }, { category: "gift_card" }] } })).toBe("apparel");
+  });
+
+  it("gives null for anything that is not that shape: no listing, no items, no category, a category that is not text", () => {
+    for (const file of [null, undefined, "apparel", [], {}, { data: null }, { data: {} }, { data: { items: [] } }, { data: { items: [{}] } }, { data: { items: [{ category: 3 }] } }]) {
+      expect(readIdeaCategory(file), JSON.stringify(file)).toBeNull();
+    }
   });
 });
 

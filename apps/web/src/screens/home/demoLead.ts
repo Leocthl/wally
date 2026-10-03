@@ -3,7 +3,8 @@
 import type { LabelPair } from "../../i18n/label";
 import { OB } from "../../i18n/onboarding";
 
-export function demoLeadFor(categories: readonly string[], personal: boolean): LabelPair {
-  if (!categories.includes("apparel")) return OB.home.demoLeadOutside;
+/** `categories` is the sealed budget's; undefined while no budget is known (the usual line then). */
+export function demoLeadFor(categories: readonly string[] | undefined, personal: boolean): LabelPair {
+  if (categories !== undefined && !categories.includes("apparel")) return OB.home.demoLeadOutside;
   return personal ? OB.home.tryLead : OB.home.demoLead;
 }

@@ -95,7 +95,8 @@ export function BudgetScreen(): ReactElement {
   const [visits] = useState(countThisVisit);
   const desktop = useDesktop();
   const loaded = state.packet !== null && state.mandate !== null;
-  // A person who narrowed what they shop for sees the matching cards first among the scenarios; the lead says so.
+  // A person who narrowed what they shop for sees the matching cards first among the scenarios; the lead says so (unless the budget
+  // leaves clothes out, when the lead says the cards may be stopped instead: screens/home/demoLead.ts).
   const personal = rankTryItems(TRY_ITEMS, profile).forYou.size > 0;
   // An idea asks Wally for the item as if it were typed; a booth that cannot take a typed ask runs the same item's scenario.
   const askIdea = useCallback(

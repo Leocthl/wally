@@ -20,7 +20,7 @@ export const KIND_TERMS: readonly Term<Kind>[] = [
   { value: "polo", words: ["polo", "polo shirt", "polo衫", "polo 衫", "polo裇", "polo 裇"] },
   { value: "sweater", words: ["sweater", "jumper", "pullover", "cardigan", "knitwear", "knit", "sweatshirt", "sweat shirt", "crewneck", "針織", "針織衫", "冷衫", "毛衣", "毛衫", "開衫"] },
   { value: "hoodie", words: ["hoodie", "hoody", "hoddie", "hodie", "hooded", "hooded sweatshirt", "衛衣", "卫衣", "帽衫", "連帽", "連帽衛衣"] },
-  { value: "jacket", words: ["jacket", "jeans jacket", "coat", "blazer", "windbreaker", "bomber", "parka", "puffer", "puffa", "anorak", "raincoat", "overcoat", "outerwear", "外套", "夾克", "夹克", "褸", "大褸", "風褸", "西裝褸", "西裝外套"] },
+  { value: "jacket", words: ["jacket", "jeans jacket", "coat", "blazer", "windbreaker", "bomber", "parka", "puffer", "puffa", "anorak", "raincoat", "overcoat", "outerwear", "外套", "夾克", "夹克", "褸", "面包服", "麵包服", "大褸", "風褸", "西裝褸", "西裝外套"] },
   { value: "jeans", words: ["jeans", "denim pants", "denim trousers", "牛仔褲", "牛仔裤", "丹寧褲"] },
   { value: "trousers", words: ["trousers", "trouser", "pants", "pant", "chinos", "slacks", "dress pants", "sweatpants", "sweat pants", "joggers", "jogger", "cargo pants", "cargos", "長褲", "长裤", "西褲", "西裤", "運動褲", "休閒褲"] },
   { value: "trousers", words: ["褲"], weak: true },
@@ -52,7 +52,7 @@ export const COLOR_TERMS: readonly Term<Color>[] = [
   { value: "purple", words: ["purple", "violet", "lilac", "紫色", "紫"] },
   { value: "brown", words: ["brown", "啡色", "啡", "棕色", "棕", "咖啡色"] },
   { value: "beige", words: ["beige", "khaki", "tan", "camel", "米色", "卡其", "卡其色", "杏色"] },
-  { value: "cream", words: ["cream", "off-white", "off white", "ivory", "奶白", "奶白色", "米白", "米白色", "象牙白"] },
+  { value: "cream", words: ["cream", "off-white", "off white", "ivory", "奶白", "奶白色", "牛奶白", "米白", "米白色", "象牙白"] },
   { value: "denim", words: ["denim", "jean", "牛仔藍", "牛仔"] },
 ];
 
@@ -92,7 +92,6 @@ export const UNSOLD_WORDS: readonly string[] = [
   "gift card", "giftcard", "voucher", "coupon", "禮品卡", "礼品卡", "現金券", "優惠券",
   // Groceries and food: a budget can name them, but the demo shop sells none, so the answer says so.
   "groceries", "grocery", "supermarket", "milk", "egg", "bread", "rice", "vegetable", "veggie", "fruit", "meat", "chicken", "beef", "pork", "fish",
-  "noodle", "pasta", "cereal", "yogurt", "cheese", "snack", "juice", "beer", "wine", "chocolate", "candy", "cake", "burger", "sushi",
-  "lunch", "dinner", "breakfast", "takeaway",
-  "買餸", "买菜", "雜貨", "杂货", "超市", "牛奶", "雞蛋", "鸡蛋", "麵包", "面包", "蔬菜", "水果", "豬肉", "猪肉", "牛肉", "雞肉", "鸡肉", "零食", "外賣", "外卖", "午餐", "晚餐", "早餐",
+  "noodle", "pasta", "cereal", "yogurt", "cheese", "snack", "juice", "beer", "wine", "chocolate", "candy", "cake", "burger", "sushi", "takeaway",
+  "買餸", "買菜", "买菜", "雜貨", "杂货", "超市", "牛奶", "鮮奶", "雞蛋", "鸡蛋", "麵包", "面包", "蔬菜", "水果", "生果", "豬肉", "猪肉", "牛肉", "雞肉", "鸡肉", "零食", "蛋糕", "外賣", "外卖",
 ];

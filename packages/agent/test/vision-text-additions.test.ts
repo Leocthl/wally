@@ -77,18 +77,32 @@ describe("additions: groceries and food are goods the shop does not sell", () =>
     "some fruit",
     "chicken and noodles",
     "snacks for the week",
-    "lunch",
     "supermarket run",
     "買餸",
+    "買菜",
+    "买菜",
     "牛奶",
+    "鮮奶",
     "雞蛋",
     "雜貨",
     "超市",
     "水果",
+    "生果",
+    "蛋糕",
   ])("%s", (text) => {
     const out = read(text);
     expect(out.kind).toBeNull();
     expect(out.unsold).toBe(true);
+  });
+  it("does not call an occasion a product the shop lacks: dinner, lunch and breakfast name no goods", () => {
+    for (const text of ["something to wear to dinner", "a warm outfit for lunch", "breakfast", "午餐", "晚餐"]) expect(read(text).unsold, text).toBe(false);
+  });
+  it("keeps the colours and kinds that share characters with a food word", () => {
+    expect(read("牛奶白T恤")).toMatchObject({ kind: "tee", colors: ["cream"], unsold: false });
+    expect(read("奶白色衛衣")).toMatchObject({ kind: "hoodie", colors: ["cream"] });
+    expect(read("面包服")).toMatchObject({ kind: "jacket", unsold: false });
+    expect(read("麵包褸")).toMatchObject({ kind: "jacket" });
+    expect(read("wine red hoodie")).toMatchObject({ kind: "hoodie", colors: ["red"], unsold: false });
   });
   it("does not read a food word inside another word, and leaves clothing alone", () => {
     expect(read("a tee under the price of 300").unsold).toBe(false);
