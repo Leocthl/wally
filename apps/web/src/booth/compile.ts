@@ -10,6 +10,7 @@ import { type Prov, SIMULATED } from "../domain/provenance";
 import { addMs } from "../domain/time";
 import { label, type LabelPair } from "../i18n/label";
 import { readEndDate } from "./endDate";
+import { askAboveIn, capIn, readAmounts, withoutZhLimits, zhCategories, zhDays, zhSellers } from "./zhReader";
 
 export const M0_SENTENCE = "HK$800 this month for clothes, verified sellers only";
 
@@ -77,8 +78,8 @@ const MSG = {
 
 function budgetChip(sentence: string): RuleChip {
   const skip = /(?:ask|confirm|check)[^.;]*?(?:above|over)\s+HK\$\s?[\d,.]+|no single purchase\s+(?:above|over)\s+HK\$\s?[\d,.]+/gi;
-  const m = sentence.replace(skip, " ").match(/HK\$\s?(\d[\d,]*(?:\.\d{1,2})?)/i);
-  const amountMinor = money(m);
+  // The first amount left once the limit clauses are set aside, in HK$ or in the words people say it in (800蚊, 八百蚊, 港幣800).
+  const amountMinor = readAmounts(withoutZhLimits(sentence.replace(skip, " ")))[0]?.minor ?? null;
   const valid = amountMinor !== null && amountMinor > 0;
   return {
     kind: "budget", rule: "R3", label: label("Budget", "預算"), value: { kind: "budget", amountMinor }, valid, prov: SIMULATED,
@@ -101,25 +102,42 @@ function statedDate(sentence: string, now: Date): { readonly endMs: number; read
   return { endMs: resolved.endMs, value: { kind: "expiry", mode: "date", day: resolved.hkDay, asked: describeEndDate(end) } };
 }
 
+/** The length a sentence gives: "14 days", or 未來14日, 14日內, 兩星期內. Null when it names none. */
+function lengthInDays(sentence: string): number | null {
+  const m = sentence.match(/(\d+)\s+days?/i);
+  return m?.[1] ? Number.parseInt(m[1], 10) : zhDays(sentence);
+}
+
 /** Of a length and a date in one sentence the earlier end wins, so a sentence never lengthens a budget. */
 function expiryChip(sentence: string, now: Date): RuleChip {
-  const m = sentence.match(/(\d+)\s+days?/i);
-  const days = m?.[1] ? Number.parseInt(m[1], 10) : 0;
-  if (m && days < 1) return expiry({ kind: "expiry", mode: "days", days }, false);
+  const days = lengthInDays(sentence);
+  if (days !== null && days < 1) return expiry({ kind: "expiry", mode: "days", days }, false);
   const date = statedDate(sentence, now);
-  if (date !== null && (!m || date.endMs < now.getTime() + days * DAY_MS)) return expiry(date.value);
-  return expiry(m ? { kind: "expiry", mode: "days", days } : { kind: "expiry", mode: "month_end" });
+  if (date !== null && (days === null || date.endMs < now.getTime() + days * DAY_MS)) return expiry(date.value);
+  return expiry(days !== null ? { kind: "expiry", mode: "days", days } : { kind: "expiry", mode: "month_end" });
 }
 
 function categoryChip(sentence: string): RuleChip {
-  const slugs = [...new Set(CATEGORY_WORDS.filter(([re]) => re.test(sentence)).map(([, slug]) => slug))];
+  const slugs = [...new Set([...CATEGORY_WORDS.filter(([re]) => re.test(sentence)).map(([, slug]) => slug), ...zhCategories(sentence)])];
   const valid = slugs.length > 0;
   return { kind: "category", rule: "R6", label: label("Category", "類別"), value: { kind: "category", slugs }, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.categoryMissing }) };
 }
 
+/** "any" when the sentence says any seller will do, "verified" when it asks for verified ones, null when it says neither (English or Chinese). */
+export function sellerWords(sentence: string): "any" | "verified" | null {
+  const zh = zhSellers(sentence);
+  if (/\b(any|unverified)\s+sellers?\b/i.test(sentence) || zh === "any") return "any";
+  return /\bverified\b/i.test(sentence) || zh === "verified" ? "verified" : null;
+}
+
+/** The sentence ends the budget at the month's end: "this month", 今個月, 本月. */
+export function mentionsMonth(sentence: string): boolean {
+  return /\bmonth\b/i.test(sentence) || THIS_MONTH.test(sentence);
+}
+
 function sellersChip(sentence: string): RuleChip {
   // Fail closed: say nothing and sellers must be verified. Only an explicit "any seller" relaxes it.
-  const anySeller = /\b(any|unverified)\s+sellers?\b/i.test(sentence);
+  const anySeller = sellerWords(sentence) === "any";
   return { kind: "sellers", rule: "R9", label: label("Sellers", "賣家"), value: { kind: "sellers", verifiedOnly: !anySeller }, valid: true, prov: SIMULATED };
 }
 
@@ -130,9 +148,9 @@ function optionalChips(sentence: string): RuleChip[] {
     const bp = share[1]?.toLowerCase() === "half" ? HALF_BP : Math.round((Number.parseInt(share[2] ?? "0", 10) / 100) * BP_PER_WHOLE);
     chips.push({ kind: "share", rule: "R4", label: label("Per purchase, share of what is left", "單次上限，佔餘額比例"), value: { kind: "share", bp }, valid: bp > 0 && bp <= BP_PER_WHOLE, prov: SIMULATED });
   }
-  const cap = money(sentence.match(/no single purchase\s+(?:above|over)\s+HK\$\s?(\d[\d,]*(?:\.\d{1,2})?)/i));
+  const cap = money(sentence.match(/no single purchase\s+(?:above|over)\s+HK\$\s?(\d[\d,]*(?:\.\d{1,2})?)/i)) ?? capIn(sentence);
   if (cap !== null) chips.push({ kind: "cap", rule: "R4", label: label("Per purchase cap", "單次上限"), value: { kind: "cap", amountMinor: cap }, valid: cap > 0, prov: SIMULATED });
-  const ask = money(sentence.match(/(?:ask|confirm|check with)[^.;]*?(?:above|over)\s+HK\$\s?(\d[\d,]*(?:\.\d{1,2})?)/i));
+  const ask = money(sentence.match(/(?:ask|confirm|check with)[^.;]*?(?:above|over)\s+HK\$\s?(\d[\d,]*(?:\.\d{1,2})?)/i)) ?? askAboveIn(sentence);
   if (ask !== null) chips.push({ kind: "askAbove", rule: "R4", label: label("Ask me above", "超過即詢問"), value: { kind: "askAbove", amountMinor: ask }, valid: ask > 0, prov: SIMULATED });
   return chips;
 }

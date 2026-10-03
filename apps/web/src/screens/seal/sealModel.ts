@@ -3,7 +3,7 @@
 // reads, cut to the longest a budget may run); suggestRules (the booth's reader) does the same job on request and says
 // what it read. Nothing here seals: toSealRequest only builds the request after validate() finds nothing wrong.
 import type { AskLocale, CompileResult, CompiledRules, SealRequest } from "../../api/types";
-import { compileMandate, expiryClamps, statedUntilDay } from "../../booth/compile";
+import { compileMandate, expiryClamps, mentionsMonth, sellerWords, statedUntilDay } from "../../booth/compile";
 import { dollarsToMinor, minorToDollarsText } from "../../domain/money";
 
 /**
@@ -84,8 +84,9 @@ export function applySentence(form: RulesForm, sentence: string, now: Date): Sen
   const amountMinor = budget?.valid && budget.value.kind === "budget" ? budget.value.amountMinor : null;
   const slugs = category?.valid && category.value.kind === "category" ? category.value.slugs : null;
   const stated = statedUntilDay(chips, now); // a length or a date the sentence names, in Hong Kong days
-  const anySeller = /\b(any|unverified)\s+sellers?\b/i.test(sentence);
-  const verified = /\bverified\b/i.test(sentence) && !anySeller;
+  const sellers = sellerWords(sentence);
+  const anySeller = sellers === "any";
+  const verified = sellers === "verified";
   const extra = (kind: "askAbove" | "cap"): string | null => {
     const c = chip(kind);
     return c && (c.value.kind === "askAbove" || c.value.kind === "cap") ? minorToDollarsText(c.value.amountMinor) : null;
@@ -96,7 +97,7 @@ export function applySentence(form: RulesForm, sentence: string, now: Date): Sen
     amount: amountMinor === null ? form.amount : minorToDollarsText(amountMinor),
     categories: slugs ?? form.categories,
     verifiedOnly: anySeller ? false : verified ? true : form.verifiedOnly,
-    until: stated ?? (/\bmonth\b/i.test(sentence) ? monthEndDay(now) : form.until),
+    until: stated ?? (mentionsMonth(sentence) ? monthEndDay(now) : form.until),
     askAbove: extra("askAbove") ?? form.askAbove,
     cap: extra("cap") ?? form.cap,
     share: share ?? form.share,
