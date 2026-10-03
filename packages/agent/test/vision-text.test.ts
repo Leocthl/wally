@@ -260,6 +260,9 @@ describe("the whole sentences a shopper types", () => {
     ["black jeans under 400", { kind: "jeans", colors: ["black"], maxPriceMinor: 40_000 }],
     ["買件白色T恤", { kind: "tee", colors: ["white"], maxPriceMinor: null }],
     ["A plain cotton tee under HK$150", { kind: "tee", colors: [], maxPriceMinor: 15_000, pattern: "plain" }],
+    // The two examples the Ask field itself suggests (shell.askExample), so the suggestion always finds something.
+    ["A plain cotton tee under HK$300", { kind: "tee", colors: [], maxPriceMinor: 30_000, pattern: "plain" }],
+    ["我想買件純棉T恤，預算三百蚊", { kind: "tee", colors: [], maxPriceMinor: 30_000 }],
     ["黑色牛仔褲 $400以下", { kind: "jeans", colors: ["black"], maxPriceMinor: 40_000 }],
     ["我想要一對白色波鞋，預算五百蚊", { kind: "sneakers", colors: ["white"], maxPriceMinor: 50_000 }],
     ["oversized grey hoodie, nothing over HK$400", { kind: "hoodie", colors: ["grey"], fit: "oversized" }],
