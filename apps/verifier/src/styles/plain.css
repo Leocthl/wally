@@ -1,0 +1,71 @@
+/* Plain mode: what the page adds when it speaks in everyday words. Two folded blocks ("Show the details" inside the
+   verdict, "Check your own receipts" for the three boxes), the plain verdict lines, and rows that read number, what,
+   when, status. Every colour is a token pair that test/tokens.test.ts checks; every target is 44px; hover only for a
+   mouse. Nothing here moves except the small chevron, with the page's 120ms press transform. */
+
+/* ---------- Folded blocks ---------- */
+.more { min-width: 0; }
+.more__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: var(--tap);
+  border-radius: var(--r-md);
+  color: var(--c-ink);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  list-style: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.more__summary::-webkit-details-marker { display: none; }
+.more__summary::after {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.25rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.more[open] > .more__summary::after { transform: translateY(0.1875rem) rotate(-135deg); }
+.more__body { display: grid; gap: var(--sp-3); min-width: 0; padding-top: var(--sp-2); }
+
+/* Inside a verdict card: a hairline above, small text, long ids and hashes may wrap anywhere. */
+.verdict .more { margin-top: var(--sp-1); border-top: 1px solid var(--c-verdict-line); }
+.verdict .more__body { font-size: var(--text-sm); overflow-wrap: anywhere; }
+
+/* The box panel: a slim bar until it is opened; the boxes keep their own spacing inside. */
+.inputs--plain { padding-block: var(--sp-2); }
+.inputs--plain .more__body { gap: var(--sp-4); padding-top: var(--sp-3); }
+
+/* ---------- Verdict lines ---------- */
+.verdict__body { line-height: var(--lh-snug); }
+.verdict__note { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.verdict__tail { font-size: var(--text-sm); line-height: var(--lh-snug); }
+/* "Changed at receipt 12" is a sentence, not a status word: a size down from PASS, free to wrap beside the shield. */
+.verdict__word--long { font-size: var(--text-xl); min-width: 0; }
+
+/* ---------- Receipts: number, what, when, status ---------- */
+.timeline .row.row--plain {
+  grid-template-columns: var(--disc) minmax(0, 1fr) auto;
+  grid-template-areas: "disc seq word" "disc kind kind" "disc ts ts" "disc tag tag";
+}
+.row--plain .row__seq { min-width: 0; white-space: nowrap; }
+/* One line per receipt where the column is wide: a single wide column (600 to 959px) or a wide two-column page (1200px up).
+   Between 960 and 1199px the page has two columns and the run column is only about 450 to 570px: those keep the stacked row. */
+@media (min-width: 600px) and (max-width: 959px), (min-width: 1200px) {
+  .timeline .row.row--plain:not(.row--checkpoint) {
+    grid-template-columns: var(--disc) 6.5rem minmax(0, 1fr) auto auto;
+    grid-template-areas: "disc seq kind ts word" "disc . tag tag tag";
+  }
+}
+
+/* ---------- What Tamper did ---------- */
+.tamper-note--plain .tamper-note__what { font-size: var(--text-md); line-height: var(--lh-snug); }
+.tamper-note__hint { font-size: var(--text-sm); }

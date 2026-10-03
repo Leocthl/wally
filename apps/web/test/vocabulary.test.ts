@@ -5,12 +5,18 @@ import { buildRules, DEFAULT_COMPILER_LIMITS, type RawRules } from "@wally/agent
 import { describe, expect, it } from "vitest";
 import { compileMandate } from "../src/booth/compile";
 import { DM8, DM9 } from "../src/evidence/dm9";
+import { DM9_PLAIN } from "../src/evidence/dm9Plain";
 import { H } from "../src/evidence/humanStrings";
 import { J } from "../src/evidence/judgeStrings";
 import { METRICS } from "../src/evidence/metrics";
 import { E } from "../src/evidence/strings";
+import { falseAlarmBullet, honestSentences, judgeMissSentence, limitSentences, practiceSentence, riskySentences, speedSentences, TRICKS_NOTE, tricksSentences } from "../src/evidence/explainCards";
+import { chipDetails, chipLabel, headlineOf, layersLine, riskyKindsSentence, shareOf, zeroLimit } from "../src/evidence/explainPlain";
+import { P as PLAIN_EVIDENCE } from "../src/evidence/plainStrings";
+import { MODE } from "../src/i18n/mode";
 import { S } from "../src/i18n/strings";
 import { UI } from "../src/i18n/ui";
+import { PLAIN } from "../src/screens/proof/plainStrings";
 
 const BUILD_TIME_EN = /\b(packet|mandate|mint(ed|s|ing)?|lai[ -]?see|red packet)\b/i;
 const BUILD_TIME_ZH = /利是|紅包/;
@@ -24,6 +30,21 @@ function lines(value: unknown, path = ""): readonly (readonly [string, string])[
   if (typeof record["en"] === "string" && typeof record["zh"] === "string") return [[path, record["en"]], [path, record["zh"]]];
   return Object.entries(record).flatMap(([key, child]) => lines(child, path === "" ? key : `${path}.${key}`));
 }
+
+/** The plain Evidence sentences for counts that reach every branch, so the glossary is held to the same vocabulary. */
+const plainEvidenceSentences = [
+  headlineOf(shareOf({ k: 84, n: 84 }), shareOf({ k: 61, n: 66 })), headlineOf(shareOf({ k: 0, n: 84 }), shareOf({ k: 3, n: 66 })),
+  layersLine({ rulesHoldLimit: true, listingCheckAdds: true }), riskyKindsSentence(["shipping_overflow", "injected_text", "flagged_seller", "wrong_merchant", "replay"]),
+  ...(["limit", "risky", "tricks", "blocked"] as const).map((kind) => zeroLimit(kind, 84).text),
+  ...[
+    ...limitSentences({ wally: { k: 0, n: 150 }, rules: { k: 0, n: 150 } }), ...limitSentences({ wally: { k: 2, n: 150 }, rules: null }),
+    ...riskySentences({ wally: { k: 84, n: 84 }, rules: { k: 56, n: 84 } }), ...tricksSentences({ wally: { k: 13, n: 13 }, rules: { k: 0, n: 13 } }),
+    ...honestSentences({ wally: { k: 61, n: 66 }, rules: { k: 63, n: 66 } }), ...speedSentences({ typicalMs: 160, nearlyAllMs: 390, rulesTypicalMs: 1 }),
+    falseAlarmBullet({ k: 5, n: 66 }), judgeMissSentence({ k: 8, n: 40 }), practiceSentence(),
+  ].map((s) => s.text),
+  TRICKS_NOTE,
+  ...(["MEASURED", "RECORDED", "ASSUMED", "OBSERVED", "SIMULATED"] as const).flatMap((kind) => [chipLabel(kind, 150), chipDetails(kind)]),
+];
 
 const compileMessages = ["buy me some clothes", "HK$0 this month for clothes", "HK$800 this month for spaceships", "HK$800 for clothes in 0 days"].map((s) => compileMandate(s, NOW).issues);
 
@@ -44,9 +65,14 @@ const TABLES: readonly (readonly [string, unknown])[] = [
   ["J (evidence/judgeStrings.ts)", J],
   ["H (evidence/humanStrings.ts)", H],
   ["DM8 and DM9 (evidence/dm9.ts)", [DM8, DM9]],
+  ["DM9 in plain words (evidence/dm9Plain.ts)", DM9_PLAIN],
+  ["plain Evidence (evidence/plainStrings.ts)", PLAIN_EVIDENCE],
+  ["plain Evidence sentences (evidence/explainPlain.ts, explainCards.ts)", plainEvidenceSentences],
+  ["the display mode switch (i18n/mode.ts)", MODE],
   ["METRICS (evidence/metrics.ts)", METRICS],
   ["the sentence reader's errors (booth/compile.ts)", compileMessages],
   ["the model compiler's notes and clamps (agent/compiler/rules.ts)", compilerWords],
+  ["PLAIN (screens/proof/plainStrings.ts)", PLAIN],
 ];
 
 describe("words a person reads", () => {

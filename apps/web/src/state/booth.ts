@@ -4,6 +4,7 @@ import type {
   BoothSnapshot, CardBeat, CardEvent, CardRecord, Cart, Decision, EscalationView, JudgeRecord, LogEntry, LogView, Mandate,
   PacketState, PlannerTraceInfo, RunOutcome, ScenarioId, Stage, StageStatus, TraceEvent,
 } from "../api/types";
+import { storedEntries } from "./storedEntries";
 
 export interface StageView {
   readonly status: StageStatus;
@@ -60,8 +61,12 @@ export type BoothAction = TraceEvent | LocalAction;
 
 const EMPTY_LOG: LogState = { entries: [], shown: [], head: null, tampered: null };
 
+/**
+ * A fresh load. Every client's view carries the changed copy in `entries` while the tamper demo is up (the booth shares it
+ * with the next visitor), so the stored log is recovered from the copy and what it says changed; `shown` is the copy itself.
+ */
 function logFromView(view: LogView): LogState {
-  return { entries: view.entries, shown: view.entries, head: view.head, tampered: view.tampered };
+  return { entries: storedEntries(view), shown: view.entries, head: view.head, tampered: view.tampered };
 }
 
 export function initialState(): BoothState {

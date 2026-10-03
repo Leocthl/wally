@@ -25,6 +25,7 @@ async function smallBarControls(page: Page): Promise<string[]> {
 for (const size of SIZES) {
   test(`presenter at ${size.width}x${size.height}: keyboard walk, stops, proof, evidence`, async ({ page, isMobile }, info) => {
     test.skip(isMobile, "big-screen sizes run in the desktop project");
+    await page.addInitScript(() => window.localStorage.setItem("wally:mode", "developer")); // the technical beats: codes, hashes and B0/B2 numbers
     await page.setViewportSize(size);
     await page.goto("/#/presenter");
     await expect(page.locator(".pr-rail")).toContainText("SIMULATED rail. No money moves.");
@@ -49,7 +50,7 @@ for (const size of SIZES) {
     await page.getByRole("button", { name: "Try to tamper" }).click();
     await expect(page.locator('.pf-card[data-status="fail"]')).toContainText("Broken at receipt");
     await page.screenshot({ path: info.outputPath(`dm7-${size.width}.png`) });
-    await page.getByRole("button", { name: "Restore" }).click();
+    await page.getByRole("button", { name: "Restore", exact: true }).click();
     await expect(page.locator('.pf-card[data-status="pass"]')).toContainText("Receipts verified.");
     await press();
     await expect(page.locator('[data-beat="DM8"] [data-big]')).toHaveCount(3);

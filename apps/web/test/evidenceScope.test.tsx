@@ -11,6 +11,7 @@ import { LocaleProvider, type Locale } from "../src/ui/locale";
 import { bootApp } from "./helpers/app";
 import { CLEAN, honestyProblems } from "./evidenceFigures";
 import { harnessFile, rate } from "./evidenceFixtures";
+import { developerModeForFile } from "./helpers/devMode";
 
 type Json = Record<string, unknown>;
 
@@ -41,6 +42,8 @@ function show(locale: Locale, r: HarnessRun): HTMLElement {
 }
 
 const note = (root: ParentNode): Element | null => root.querySelector('[data-big="overspend_rate"] [data-scope-note]');
+
+developerModeForFile(); // plain is the default; these tests are about the developer view
 
 describe("the overspend figure says what its count and the target's count each cover", () => {
   it("reads both counts from the loaded result", () => {

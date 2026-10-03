@@ -14,7 +14,9 @@ import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { Wally } from "../../wally/Wally";
 import { currentDecision, type RunView } from "../../state/booth";
+import { useIsDeveloper } from "../../state/displayMode";
 import { declineWords, TemplateSentence } from "../proof/receiptWords";
+import { PlainStopSentence } from "./PlainStopSentence";
 
 const PU = UI.presenterUi;
 
@@ -102,8 +104,9 @@ function TemplateBoth({ templateId, inputs, prov, judge, api }: { readonly templ
   );
 }
 
-/** The latest run, big: Wally, one plain headline, the rule sentence or the card, then the rail's answers. */
+/** The latest run, big: Wally, one plain headline, the reason (the engine's rule sentence in developer mode) or the card, then the rail's answers. */
 export function RunResult({ run, api }: { readonly run: RunView | undefined; readonly api: string }): ReactElement {
+  const developer = useIsDeveloper();
   if (!run) {
     return (
       <section className="pr-view pr-run pr-run--idle" data-view="run">
@@ -136,7 +139,11 @@ export function RunResult({ run, api }: { readonly run: RunView | undefined; rea
             {(outcome === "DENY" || outcome === "ESCALATE") && decision ? (
               <div role="alert" className="pr-stop" data-template={explanation?.template_id ?? ""} data-outcome={outcome}>
                 <p className="pr-run__title"><Tx text={outcome === "DENY" ? PU.stopped : PU.needsOk} /></p>
-                {explanation ? <p className="pr-run__sentence"><TemplateBoth templateId={explanation.template_id} inputs={explanation.inputs} prov={prov} judge={decision.judge.provider} api={api} /></p> : null}
+                {explanation ? (
+                  <p className="pr-run__sentence">
+                    {developer ? <TemplateBoth templateId={explanation.template_id} inputs={explanation.inputs} prov={prov} judge={decision.judge.provider} api={api} /> : <PlainStopSentence decision={decision} prov={prov} api={api} />}
+                  </p>
+                ) : null}
                 {outcome === "DENY" ? <Tx as="p" text={PU.noCardMade} className="pr-run__note" /> : null}
               </div>
             ) : null}

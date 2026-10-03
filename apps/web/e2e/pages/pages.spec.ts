@@ -145,17 +145,38 @@ test("every screen opens from the mount: the lazy chunks of Wally, Receipts, Pro
   }
 });
 
-test("Proof links to /wally/verifier/ and that page loads and verifies its demo log", async () => {
+test("Proof links to /wally/verifier/, which opens in plain words, checks its sample receipts and follows the app's display mode", async () => {
   await nav(page).getByRole("link", { name: "Proof", exact: true }).click();
-  const link = page.getByRole("link", { name: "Open the offline verifier" });
+  const link = page.getByRole("link", { name: "Open the offline checker" });
   await expect(link).toBeVisible();
   expect(await link.evaluate((a) => (a as HTMLAnchorElement).href)).toBe(`${app}verifier/`);
   await link.click();
   await expect(page).toHaveURL(`${app}verifier/`);
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "plain");
   await expect(page.locator('[data-outcome="idle"]')).toBeVisible();
+  await page.getByRole("button", { name: /^Try the sample receipts/ }).click();
+  await page.getByRole("button", { name: /^Check the receipts/ }).click();
+  await expect(page.locator('#result [data-outcome="pass"]')).toContainText("untouched");
+
+  // The app and the checker live on one origin, so the switch in About reaches the checker: technical details on there too.
+  await page.goto(`${app}#/budget`);
+  await page.getByRole("button", { name: /About and settings/ }).click();
+  await page.getByRole("dialog").getByRole("switch", { name: "Show technical details" }).click();
+  await page.keyboard.press("Escape");
+  await nav(page).getByRole("link", { name: "Proof", exact: true }).click();
+  await page.getByRole("link", { name: "Open the offline verifier" }).click();
+  await expect(page).toHaveURL(`${app}verifier/`);
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "developer");
   await page.getByRole("button", { name: /^Load demo log/ }).click();
   await page.getByRole("button", { name: /^Verify/ }).click();
   await expect(page.locator('#result [data-outcome="pass"]')).toContainText("PASS");
+
+  // Back to the default for the steps that follow.
+  await page.goto(`${app}#/budget`);
+  await page.getByRole("button", { name: /About and settings/ }).click();
+  await page.getByRole("dialog").getByRole("switch", { name: "Show technical details" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("meter")).toBeVisible();
 });
 
 test("with the server gone, a reload still shows the app, from the service worker, and a purchase still runs", async () => {

@@ -1,0 +1,66 @@
+/* The "Show technical details" switch, in the header under the intro, in both display modes. One real button
+   (role="switch"), at least 44px tall, with the label inside it so the whole line is the target; the track and thumb
+   are decoration. Off: a sunken track with a quiet thumb. On: the primary blue with a white thumb (both pairs are in
+   test/tokens.test.ts). The page is rebuilt in the new mode, so the thumb is drawn where it belongs and nothing slides;
+   the only motion is the 120ms press (a scale), which reduced motion switches off. */
+.modebar { display: grid; gap: var(--sp-1); margin-top: var(--sp-1); }
+.modebar__hint { font-size: var(--text-sm); max-width: 60ch; }
+
+.modeswitch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: fit-content;
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3) 0 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-ink);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.modeswitch:active { transform: scale(0.97); }
+
+.modeswitch__track {
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 1.625rem;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface-sunken);
+}
+.modeswitch__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.1875rem;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  margin-top: -0.53125rem;
+  border-radius: 50%;
+  background: var(--c-line-strong);
+}
+.modeswitch[aria-checked="true"] .modeswitch__track { background: var(--c-primary); border-color: var(--c-primary); }
+.modeswitch[aria-checked="true"] .modeswitch__thumb { background: var(--c-on-primary); transform: translateX(1.125rem); }
+
+@media (hover: hover) and (pointer: fine) {
+  .modeswitch[aria-checked="false"]:hover .modeswitch__track { background: var(--c-surface); }
+}
+
+/* Forced colours replace backgrounds: say the state with system colours, and by where the thumb sits. */
+@media (forced-colors: active) {
+  .modeswitch__track { border-color: ButtonText; }
+  .modeswitch__thumb { background: ButtonText; }
+  .modeswitch[aria-checked="true"] .modeswitch__track { background: Highlight; border-color: Highlight; }
+  .modeswitch[aria-checked="true"] .modeswitch__thumb { background: HighlightText; }
+}

@@ -4,12 +4,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mountVerifier, type VerifierPage } from "../src/app";
+import type { VerifierPage } from "../src/app";
 import { LIMITS } from "../src/limits";
 import { MOTION, staggerStep } from "../src/motion";
 import { renderTimeline } from "../src/render/timeline";
 import { runVerification, type RunResult } from "../src/run";
-import { CHECKPOINT, KEYS, LOG } from "./helpers";
+import { CHECKPOINT, KEYS, LOG, mountDeveloper, resetMode } from "./helpers";
 
 const css = (name: string): string => readFileSync(join(import.meta.dirname, "..", "src", "styles", name), "utf8");
 const custom = (el: Element | null | undefined, name: string): string => (el as HTMLElement | null | undefined)?.style.getPropertyValue(name) ?? "";
@@ -75,9 +75,12 @@ describe("what plays the entrance again", () => {
   beforeEach(() => {
     root = document.createElement("div");
     document.body.replaceChildren(root);
-    page = mountVerifier(root);
+    page = mountDeveloper(root);
   });
-  afterEach(() => document.body.replaceChildren());
+  afterEach(() => {
+    document.body.replaceChildren();
+    resetMode();
+  });
 
   it("a Verify press builds a new verdict and new rows, even with the same inputs (a re-verify replays it)", () => {
     click("demo");

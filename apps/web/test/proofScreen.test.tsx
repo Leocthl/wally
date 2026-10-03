@@ -7,9 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { ApiInfo, VerifyOutcome } from "../src/api/types";
 import { ProofScreen } from "../src/screens/proof/ProofScreen";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
+import { developerModeForFile } from "./helpers/devMode";
 import { delegate, emptyClient, instantMock, mountBare, mountScreen, seed } from "./helpers/proofHarness";
 
 vi.setConfig({ testTimeout: 20_000 });
+// These are the developer screens: hashes, #seq, reason codes and raw entries. Plain mode has its own plain*.test files.
+developerModeForFile();
 
 async function proof(opts: { readonly locale?: "en" | "zh-HK"; readonly wrap?: (api: ReturnType<typeof instantMock>["api"]) => Parameters<typeof mountScreen>[1] } = {}) {
   const { api, clock } = instantMock();
