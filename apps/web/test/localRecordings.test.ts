@@ -7,11 +7,11 @@ import { loadReplayRecordings, ReplayJudge } from "@wally/agent/judge";
 import { loadReplayRecords } from "@wally/agent/planner";
 import type { JudgeInput, JudgeRecord } from "@wally/core/ports";
 import { describe, expect, it } from "vitest";
-import { loadCatalogue } from "../server/booth/catalogue";
+import { loadCatalogue, loadShopRecordings } from "../server/booth/catalogue";
 import { loadScenarioTable } from "../server/booth/scenarioTable";
 import { REPO_ROOT } from "../server/booth/settings";
 import { loadBundle } from "../src/api/local/bundle";
-import { judgeRecordingsFrom, RecordingLoadError } from "../src/api/local/recordings";
+import { judgeRecordingsFrom, RecordingLoadError, shopRecordingsFrom } from "../src/api/local/recordings";
 import { LocalReplayJudge } from "../src/api/local/replayJudge";
 
 const FIXTURES = join(REPO_ROOT, "data/fixtures");
@@ -41,6 +41,22 @@ describe("bundled on-device data equals the files the server reads", () => {
 
   it("judge recordings: same fingerprints, records and sources as loadReplayRecordings", () => {
     expect(BUNDLE.judgeRecordings).toEqual(loadReplayRecordings(FIXTURES));
+  });
+
+  it("the photo shelf's recordings: the page and the server read the same answers for the same 30 texts", () => {
+    const disk = loadCatalogue(FIXTURES, DISK_TABLE);
+    expect(BUNDLE.shopRecordings).toHaveLength(30);
+    expect(BUNDLE.shopRecordings).toEqual(loadShopRecordings(FIXTURES, disk));
+  });
+
+  it("refuses a shelf recording file that is not what it says it is (fail closed)", () => {
+    const shop = BUNDLE.catalogue.shop;
+    const envelope = (records: unknown[]) => ({ provenance: "SIMULATED", schema: "photo-shelf-judge", data: { records } });
+    expect(() => shopRecordingsFrom(null, shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom({ provenance: "OBSERVED", schema: "photo-shelf-judge", data: { records: [] } }, shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom(envelope([null]), shop)).toThrow(RecordingLoadError);
+    expect(() => shopRecordingsFrom(envelope([{ listing: "lst_nobodyHome" }]), shop)).toThrow(/no such photo-shelf item/);
+    expect(() => shopRecordingsFrom(envelope([]), shop)).toThrow(/no judge answer for/);
   });
 
   it("refuses a recording that is not an OK record, or that has no listing to fingerprint (fail closed)", () => {

@@ -93,7 +93,21 @@ export function buildCatalogue(sources: CatalogueSources, table: ScenarioTable):
   const shop: Shop = sources.shop === undefined ? new Map() : buildShop(sources.shop.items, new Set(captures.map((c) => c.capture_ref)));
   const catalogue: Catalogue = { listings, captures: new Map(ages), shop };
   checkTable(catalogue, table);
+  checkShopApart(catalogue);
   return catalogue;
+}
+
+/**
+ * The photo shelf must stay apart from the listings the Ask shelf, the scenarios and the recorded planner sets are built from:
+ * a shelf item sharing an id or a url with one of them would take that listing's place when it is picked (the planner is fixed
+ * by the listing id), so a clash is a start-up error, not a quiet override.
+ */
+function checkShopApart(catalogue: Catalogue): void {
+  const urls = new Set([...catalogue.listings.values()].map((l) => l.url));
+  for (const { listing } of catalogue.shop.values()) {
+    if (catalogue.listings.has(listing.id)) throw new CatalogueError(`photo shelf item ${listing.id} has the id of a scenario listing`);
+    if (urls.has(listing.url)) throw new CatalogueError(`photo shelf item ${listing.id} has the url of a scenario listing`);
+  }
 }
 
 function checkTable(catalogue: Catalogue, table: ScenarioTable): void {

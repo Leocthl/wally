@@ -1,11 +1,12 @@
 // @vitest-environment node
 // The photo shelf: 30 SIMULATED items in four shops, kept apart from every list that existing flows are built from. The
 // Ask shelf, the scenario listing sets and the derived listings must be exactly what they were before the shelf existed.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SHOP_KINDS } from "@wally/agent/vision";
 import { askShelf } from "../src/booth/backend/ask";
+import { buildCatalogue, CatalogueError } from "../src/booth/backend/catalogue";
 import { buildShop, categoryOf, ShopError } from "../src/booth/backend/shop";
 import { loadCatalogue } from "../server/booth/catalogue";
 import { loadScenarioTable } from "../server/booth/scenarioTable";
@@ -56,7 +57,8 @@ describe("the shelf files stay out of the core fixtures tree, with the same card
 
   it("holds no card-number-like digit run and no CVV", () => {
     for (const file of files) {
-      const text = readFileSync(join(SHELF_DIR, file), "utf8");
+      // A SHA-256 digest is 64 hex characters and can hold a long run of decimal digits by chance; it is not a card number.
+      const text = readFileSync(join(SHELF_DIR, file), "utf8").replace(/\b[0-9a-f]{64}\b/g, "");
       expect(text, file).not.toMatch(/(?:\d[ -]?){13,19}/);
       expect(text.toLowerCase(), file).not.toMatch(/cvv/);
     }
@@ -149,5 +151,30 @@ describe("buildShop refuses a bad shelf (start-up error, never a silent default)
     ["no items", (c: typeof good) => void (c.data.items = [])],
   ])("%s", (_name, mutate) => {
     expect(build(mutate)).toThrow(ShopError);
+  });
+});
+
+describe("buildCatalogue refuses a shelf that touches the scenario listings", () => {
+  const files = (name: string) => JSON.parse(readFileSync(join(ROOT, "photo-shelf", name), "utf8")) as { data: { items: { id: string }[] } };
+  const sources = (mutate: (items: { id: string; title?: string }[]) => void) => {
+    const items = files("items.json");
+    mutate(items.data.items);
+    return {
+      listings: readdirSync(join(ROOT, "fixtures/listings")).sort().map((f) => ({ name: f, raw: JSON.parse(readFileSync(join(ROOT, "fixtures/listings", f), "utf8")) as unknown })),
+      referenceCart: { name: "attempt-1.json", raw: JSON.parse(readFileSync(join(ROOT, "fixtures/carts/attempt-1.json"), "utf8")) as unknown },
+      captures: readdirSync(join(ROOT, "fixtures/scameter")).sort().map((f) => ({ name: f, raw: JSON.parse(readFileSync(join(ROOT, "fixtures/scameter", f), "utf8")) as unknown })),
+      shop: {
+        items: { name: "items.json", raw: items },
+        captures: readdirSync(join(ROOT, "photo-shelf/scameter")).sort().map((f) => ({ name: f, raw: JSON.parse(readFileSync(join(ROOT, "photo-shelf/scameter", f), "utf8")) as unknown })),
+      },
+    };
+  };
+
+  it("builds with the shelf as it is", () => {
+    expect(buildCatalogue(sources(() => undefined), table).shop.size).toBe(30);
+  });
+
+  it("refuses a shelf item that has the id of a scenario listing", () => {
+    expect(() => buildCatalogue(sources((items) => void (items[0]!.id = "lst_demoTee")), table)).toThrow(CatalogueError);
   });
 });

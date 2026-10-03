@@ -65,6 +65,7 @@ export function shopRecordingsFrom(file: unknown, shop: Shop): readonly ReplayRe
   if (!Array.isArray(rows)) throw new RecordingLoadError(`${source}: records must be a list`);
   const recordings = rows.map((row, index): ReplayRecording => {
     const where = `${source} record ${index}`;
+    if (row === null || typeof row !== "object" || Array.isArray(row)) throw new RecordingLoadError(`${where}: not an object`);
     const entry = row as { listing?: unknown; text_sha256?: unknown; record?: unknown };
     const item = typeof entry.listing === "string" ? shop.get(entry.listing) : undefined;
     if (item === undefined) throw new RecordingLoadError(`${where}: no such photo-shelf item`);
