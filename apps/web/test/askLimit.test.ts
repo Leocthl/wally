@@ -92,9 +92,11 @@ describe("withAskLimit on the whole shelf", () => {
     expect(await planner(unknown).propose(ctxFor("a cotton tee"), OPTS)).toBe(unknown); // no limit: nothing to check, the cart builder decides
   });
 
-  it("does not turn a long amount or a stray number into a limit: 9e99 and 0.5 are not prices", async () => {
+  it("does not turn a long amount or a stray number into a limit: 9e99, 0.5, a count or a number of days are not prices", async () => {
     expect(await planner(TEE).propose(ctxFor("a cotton tee under 9e99"), OPTS)).toBe(TEE);
     expect(await planner(TEE).propose(ctxFor("a cotton tee under 0.5"), OPTS)).toBe(TEE);
+    expect(await planner(TEE).propose(ctxFor("a cotton tee within 3 days"), OPTS)).toBe(TEE);
+    expect(await planner(TEE).propose(ctxFor("up to 5 cotton tees"), OPTS)).toBe(TEE);
   });
 });
 

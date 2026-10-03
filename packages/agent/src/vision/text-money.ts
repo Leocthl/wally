@@ -63,13 +63,19 @@ function dollars(raw: string | undefined, kilo: string | undefined): number | nu
   return value >= 1 && value <= MAX_LIMIT_DOLLARS ? value : null;
 }
 
+/** A currency mark or unit in the matched words or just after them: HK$, HKD, $, 港幣, 蚊, 元, 塊, dollars, bucks. */
+const MONEY_WORD = /hk\s*\$|hkd|\$|港幣|港元|蚊|元|塊|dollars?|bucks/;
+/** How far past the matched words a money word still belongs to the amount ("under 5 dollars"). */
+const MONEY_WORD_REACH = 12;
+
 /** The price limit in minor units (cents), or null when the text names none. */
 export function readPriceLimit(text: string): number | null {
   const lower = text.normalize("NFKC").toLowerCase();
   for (const pattern of [LIMIT_FIRST, LIMIT_AFTER]) {
     const hit = pattern.exec(lower);
     const value = hit === null ? null : dollars(hit[1], hit[2]);
-    if (value !== null) return value * 100;
+    // A small number with no money word is a count or a length of time ("within 3 days", "up to 5 tees"), not a price.
+    if (value !== null && hit !== null && (value >= MIN_BARE_DOLLARS || MONEY_WORD.test(lower.slice(hit.index, hit.index + hit[0].length + MONEY_WORD_REACH)))) return value * 100;
   }
   for (const pattern of [BARE_MARKED, BARE_AFTER_MARK]) {
     const hit = pattern.exec(lower);
