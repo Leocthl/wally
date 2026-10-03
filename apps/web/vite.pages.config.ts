@@ -8,7 +8,9 @@ import { wallyPages } from "./build/pagesPlugin";
 
 if (process.env["VITE_API"] !== "local") throw new Error("vite.pages.config.ts builds the on-device app: set VITE_API=local, or run pnpm pages:build from the repo root");
 
+// WALLY_VERIFIER_FILE: the offline verifier page built by `pnpm pages:build` (scripts/pages-build.mjs builds it first). With it the
+// site carries verifier/index.html inside this build, which the service worker precaches; without it there is no checker page.
 export default mergeConfig(base, {
-  plugins: [wallyPages()],
+  plugins: [wallyPages({ verifierFile: process.env["WALLY_VERIFIER_FILE"] })],
   build: { outDir: "dist-pages", emptyOutDir: true },
 });

@@ -38,7 +38,7 @@ function loadWorker(): { readonly listeners: Map<string, Listener>; readonly pre
   const precache: string[] = [];
   const cache = { addAll: async (urls: string[]) => void precache.push(...urls), match: async () => undefined };
   const self = { registration: { scope: "https://booth.example/" }, clients: { claim: async () => undefined }, skipWaiting: async () => undefined, addEventListener: (t: string, l: Listener) => listeners.set(t, l) };
-  runInNewContext(sw, { self, caches: { open: async () => cache, keys: async () => [], delete: async () => true, match: async () => undefined }, fetch: async () => new Response("net"), URL, Response, JSON, Promise });
+  runInNewContext(sw, { self, caches: { open: async () => cache, keys: async () => [], delete: async () => true, match: async () => undefined }, fetch: async () => new Response("net"), URL, Response, JSON, Promise, AbortController, setTimeout, clearTimeout });
   return { listeners, precache };
 }
 
@@ -68,6 +68,14 @@ describe("built service worker", () => {
     expect([...precache].sort()).toEqual(["./", ...expected].sort());
   });
 
+  it("holds no verifier page: the booth server serves /verifier/ itself", async () => {
+    const { listeners, precache } = loadWorker();
+    let done: Promise<unknown> = Promise.resolve();
+    listeners.get("install")?.({ waitUntil: (p: Promise<unknown>) => void (done = p) });
+    await done;
+    expect(precache.filter((u) => u.includes("verifier"))).toEqual([]);
+  });
+
   it("never answers /api or an event stream, and answers navigations and assets", () => {
     const { listeners } = loadWorker();
     const onFetch = listeners.get("fetch");
@@ -80,6 +88,10 @@ describe("built service worker", () => {
       ["https://elsewhere.example/assets/a.js", {}, false],
       ["https://booth.example/", { mode: "navigate" }, true],
       ["https://booth.example/assets/index.js", {}, true],
+      // The booth server serves the verifier itself and this build holds no copy: the worker leaves every address of it alone.
+      ["https://booth.example/verifier/", { mode: "navigate" }, false],
+      ["https://booth.example/verifier", { mode: "navigate" }, false],
+      ["https://booth.example/verifier/index.html", { mode: "navigate" }, false],
     ] as const;
     for (const [url, init, answers] of cases) {
       const f = fetchEvent(url, init);
