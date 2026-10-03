@@ -1,14 +1,15 @@
 // #/receipts: the signed log as a friendly list, newest first and grouped by Hong Kong day, with filter chips and a
-// detail sheet per receipt. #/receipts?d=<decisionId> opens that decision's sheet. Reads the stored log (never a
-// tampered copy); every amount and time sits under one SIMULATED chip unless its cart says otherwise.
+// detail sheet per receipt. #/receipts?d=<decisionId> opens that decision's sheet. Reads the log as it is shown, the same
+// copy Proof shows: while the tamper demo's changed copy is up, a banner at the top says so and puts the original back,
+// and the changed receipt is tagged "Changed". Every amount and time sits under one SIMULATED chip unless its cart says otherwise.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import type { LogEntry } from "../../api/types";
 import { ChipScope } from "../../components/ChipScope";
 import { NumText } from "../../components/Num";
 import { SIMULATED } from "../../domain/provenance";
 import { useBoothContext } from "../../hooks/useBooth";
 import { receiptHref } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
+import { useDisplayMode } from "../../state/displayMode";
 import { EmptyState } from "../../ui/EmptyState";
 import { useLocale, type Locale } from "../../ui/locale";
 import { TopBar } from "../../ui/Nav";
@@ -16,6 +17,7 @@ import { List, Skeleton } from "../../ui/Surface";
 import { FilterChips, type FilterOption } from "./components/FilterChips";
 import { ReceiptRow } from "./components/ReceiptRow";
 import { ReceiptSheet } from "./components/ReceiptSheet";
+import { TamperedBanner } from "./components/TamperedBanner";
 import {
   countByFilter,
   dayLabel,
@@ -25,30 +27,16 @@ import {
   newestFirst,
   receiptForDecision,
   RECEIPT_FILTERS,
-  toReceipts,
   type DayGroup,
   type Receipt,
   type ReceiptFilter,
 } from "./receipts";
+import { useStableReceipts } from "./useStableReceipts";
 import "./proof.css";
+import "./proofPlain.css";
 
 const R = UI.receipts;
 const FILTER_LABEL = { all: R.all, approved: R.approved, stopped: R.stopped, needsOk: R.needsOk, cards: R.cards } as const;
-
-/** Receipts keep their identity across renders: the log is append-only, so an entry's receipt never changes. */
-function useStableReceipts(entries: readonly LogEntry[]): readonly Receipt[] {
-  const cache = useRef(new WeakMap<LogEntry, Receipt>());
-  return useMemo(() => {
-    const fresh = toReceipts(entries);
-    return entries.map((entry, i) => {
-      const known = cache.current.get(entry);
-      if (known) return known;
-      const made = fresh[i] as Receipt;
-      cache.current.set(entry, made);
-      return made;
-    });
-  }, [entries]);
-}
 
 function replaceHash(hash: string): void {
   if (window.location.hash !== hash) window.history.replaceState(window.history.state, "", hash);
@@ -79,9 +67,23 @@ function useDeepLink(receipts: readonly Receipt[], open: (seq: number) => void):
 }
 
 export function ReceiptsScreen(): ReactElement {
-  const { state, busy, api } = useBoothContext();
+  const booth = useBoothContext();
+  const { state, busy, api } = booth;
   const { t, locale } = useLocale();
-  const entries = state.log.entries;
+  const [mode] = useDisplayMode();
+  const plain = mode === "plain";
+  // What is shown: the stored log, or the changed copy while the tamper demo is up (the banner and the tags say which).
+  const entries = state.log.shown;
+  const changedSeq = state.log.tampered?.seq ?? null;
+  const [restoring, setRestoring] = useState(false);
+  const restore = async (): Promise<void> => {
+    setRestoring(true);
+    try {
+      await booth.restore();
+    } finally {
+      setRestoring(false);
+    }
+  };
   const receipts = useStableReceipts(entries);
   const ordered = useMemo(() => newestFirst(receipts), [receipts]);
   const counts = useMemo(() => countByFilter(receipts), [receipts]);
@@ -116,6 +118,7 @@ export function ReceiptsScreen(): ReactElement {
 
   return (
     <div className="rc-screen" lang={locale} data-screen="receipts">
+      <TamperedBanner onRestore={() => void restore()} restoring={restoring} />
       <TopBar large title={t(R.title)} />
       {entries.length === 0 ? (
         busy ? (
@@ -135,7 +138,7 @@ export function ReceiptsScreen(): ReactElement {
                 <ChipScope provs={[SIMULATED]} className="rc-day__scope" chipsClassName="rc-day__chips">
                   <h2 id={`rc-day-${g.key}`} className="rc-day__title"><DayTitle group={g} locale={locale} now={now} /></h2>
                   <List inset className="rc-list">
-                    {g.receipts.map((r) => <ReceiptRow key={r.seq} receipt={r} onOpen={open} />)}
+                    {g.receipts.map((r) => <ReceiptRow key={r.seq} receipt={r} onOpen={open} plain={plain} flagged={r.seq === changedSeq} />)}
                   </List>
                 </ChipScope>
               </section>
@@ -143,7 +146,7 @@ export function ReceiptsScreen(): ReactElement {
           )}
         </>
       )}
-      <ReceiptSheet open={openSeq !== null} receipt={shown} entry={shownEntry} onClose={close} onOpenDecision={openDecision} api={api.kind} />
+      <ReceiptSheet open={openSeq !== null} receipt={shown} entry={shownEntry} onClose={close} onOpenDecision={openDecision} api={api.kind} plain={plain} changed={shown !== null && shown.seq === changedSeq} />
     </div>
   );
 }
