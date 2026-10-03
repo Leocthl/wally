@@ -5,7 +5,7 @@ import { label, type LabelPair } from "./label";
 export const ABOUT = {
   planner: {
     local: label("A model on this laptop", "呢部手提電腦上的模型"), // NEEDS-REVIEW
-    rule: label("Fixed rules, no model", "固定規則，無用模型"), // NEEDS-REVIEW
+    rule: label("Fixed rules, no model", "只用固定規則，不用模型"), // NEEDS-REVIEW
     replay: label("Recorded answers", "錄製答案"), // NEEDS-REVIEW
   } satisfies Readonly<Record<string, LabelPair>>,
   judge: {

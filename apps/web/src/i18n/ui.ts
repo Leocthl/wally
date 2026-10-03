@@ -84,7 +84,7 @@ const RUN = {
 
   needsOkTitle: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
   approve: label("Approve", "批准"), // NEEDS-REVIEW
-  noThanks: label("No thanks", "唔使喇"), // NEEDS-REVIEW
+  noThanks: label("No thanks", "拒絕"), // NEEDS-REVIEW
   answerLimit: label("Your answer can't override a fixed rule.", "你的回覆唔可以推翻固定規則。"), // NEEDS-REVIEW
   secondsLeft: (n: string): LabelPair => label(`${n} s left`, `尚餘 ${n} 秒`), // NEEDS-REVIEW
   // The clock on a question is told as a promise, not a threat: Wally waits, then cancels it for you.
@@ -114,7 +114,7 @@ const RUN = {
   reasonR9Flagged: label("This seller is flagged as a possible scam.", "呢個賣家被標記為可能詐騙。"), // NEEDS-REVIEW
   reasonR9Unverified: label("Wally couldn't check this seller recently.", "Wally 最近未能核實呢個賣家。"), // NEEDS-REVIEW
   reasonR10Injection: label("The listing tried to tell Wally what to do. Wally only reads listings and never follows them as instructions.", "商品資料試圖叫 Wally 照做。Wally 只會閱讀商品資料，唔會當指令照做。"), // NEEDS-REVIEW
-  reasonR10Seller: label("The listing looks like it comes from a risky seller.", "商品資料顯示賣家風險高。"), // NEEDS-REVIEW
+  reasonR10Seller: label("The listing looks like it comes from a risky seller.", "商品資料看起來像是來自高風險賣家。"), // NEEDS-REVIEW
   reasonR10Scope: label("This might not fit your rules.", "呢件貨品可能唔符合你的規則。"), // NEEDS-REVIEW
   reasonR10Unsure: label("Wally isn't sure about this one.", "Wally 對呢件貨品冇把握。"), // NEEDS-REVIEW
   reasonR10Offline: label("Wally's checker is offline, so it asked you first.", "Wally 的檢查器離線，所以先問你。"), // NEEDS-REVIEW
@@ -190,7 +190,7 @@ const RUN = {
   repeatAsked: label("Wally already asked you about this. It is waiting for your answer.", "Wally 已經問過你，等緊你回覆。"), // NEEDS-REVIEW
   repeatStopped: label("Wally already looked at this exact purchase and stopped it.", "Wally 已經睇過呢單購買，並攔截咗。"), // NEEDS-REVIEW
   unknownAskTitle: label("Wally can't shop for that here", "喺呢度 Wally 買唔到呢樣"), // NEEDS-REVIEW
-  unknownAskBody: label("Wally only knows the sample asks here. Try one of the cards on Budget, or show a photo.", "呢度 Wally 只識得示範用嘅提問。請試預算頁的卡，或者俾 Wally 睇相。"), // NEEDS-REVIEW
+  unknownAskBody: label("Wally only knows the sample asks here. Try one of the cards on Budget, or show a photo.", "呢度 Wally 只識得示範用嘅提問。請試預算頁上嘅示範提問，或者俾 Wally 睇相。"), // NEEDS-REVIEW
   noCheaperTitle: label("No cheaper option fits", "冇更平而合適的選擇"), // NEEDS-REVIEW
   noCheaperBody: label("Nothing cheaper fits what is left in your budget.", "冇更平的貨品放得入你剩餘的預算。"), // NEEDS-REVIEW
   // What was tried, when it is known: the item that was stopped and what the budget has left. {item} is text, {left} a figure.
