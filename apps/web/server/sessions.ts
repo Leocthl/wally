@@ -9,6 +9,7 @@ import { BoothError } from "./http/errors";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { newSessionId, sessionIdFrom } from "./http/sessionWire";
 import type { SseHub } from "./http/sse";
+import type { WalletStats } from "../src/api/http/lanInfo";
 import type { Env } from "./booth/settings";
 
 export { newSessionId, SESSION_COOKIE, SESSION_HEADER, SESSION_ID_RE } from "./http/sessionWire";
@@ -69,15 +70,7 @@ export interface SessionRegistryOptions {
   readonly logger?: Logger;
 }
 
-export interface SessionStats {
-  readonly live: number;
-  readonly created: number;
-  readonly evicted: number;
-  readonly expired: number;
-  /** How long the last and the slowest wallet took to make, in ms; null before the first. */
-  readonly lastCreateMs: number | null;
-  readonly maxCreateMs: number | null;
-}
+export type SessionStats = WalletStats;
 
 interface Entry {
   readonly id: string;

@@ -254,7 +254,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
         });
   // Without LAN mode every caller is the Mac, so the layer only labels the wallet shared.
   const layer = registry === null ? null : createSessionLayer({ registry, isBooth: (c) => opts.lan === undefined || isLocalClient(c, opts.lan), ...(opts.lan?.nativeOrigins === undefined ? {} : { nativeOrigins: opts.lan.nativeOrigins }) });
-  const lan = opts.lan !== undefined && registry !== null ? { ...opts.lan, sessions: true } : opts.lan;
+  const lan = opts.lan !== undefined && registry !== null ? { ...opts.lan, sessions: true, walletStats: () => registry.stats() } : opts.lan;
   const app = createHttpApp({
     backend: layer === null ? () => backend : () => layer.backend,
     hub: layer === null ? hub : layer.hub,

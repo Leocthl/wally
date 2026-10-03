@@ -304,6 +304,12 @@ async function main() {
     }
     if (unnamed.length > p.revokes) fail(`phone ${p.index + 1}: ${unnamed.length} unnamed runs in its stream for ${p.revokes} revokes`);
   });
+  const told = await fetch(`${HOME}/api/lan`).then((r) => r.json(), () => null);
+  const made = told?.sessions;
+  if (made !== undefined) {
+    say(`server says: ${made.live} wallets live, ${made.created} made, ${made.evicted} dropped to make room, ${made.expired} idle; last made in ${made.lastCreateMs} ms, slowest ${made.maxCreateMs} ms`);
+    if (made.live > 12) fail(`${made.live} wallets live, the cap is 12`);
+  }
   const boothAfter = await booth();
   if (JSON.stringify(boothBefore.log.head) !== JSON.stringify(boothAfter.log.head) || boothBefore.cards.length !== boothAfter.cards.length || boothBefore.packet?.remaining_minor !== boothAfter.packet?.remaining_minor) {
     fail("the Mac's own wallet changed while the phones played");

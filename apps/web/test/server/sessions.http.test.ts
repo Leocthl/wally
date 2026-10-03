@@ -219,6 +219,27 @@ describe.skipIf(!REAL)("the Mac is the booth", () => {
   });
 });
 
+describe.skipIf(!REAL)("how many wallets are live", () => {
+  it("is told to the Mac in /api/lan, with how fast they are made, and to nobody else", async () => {
+    const booth = await boot();
+    const mac = macOf(booth);
+    const [a, b] = phonesOf(booth, 2) as [Phone, Phone];
+    expect((await mac.json<{ sessions: { live: number } }>(mac.get("/api/lan"))).sessions.live).toBe(0);
+    await a.info();
+    await b.info();
+    const told = await mac.json<{ sessions: { live: number; created: number; evicted: number; lastCreateMs: number | null; maxCreateMs: number | null } }>(mac.get("/api/lan"));
+    expect(told.sessions).toMatchObject({ live: 2, created: 2, evicted: 0 });
+    expect(told.sessions.lastCreateMs).not.toBeNull();
+    expect((await a.get("/api/lan")).status).toBe(404); // a phone is not told anything about the booth
+  });
+
+  it("is not in the answer when practice wallets are off", async () => {
+    const booth = await boot({ env: { WALLY_SESSIONS: "off" } });
+    const mac = macOf(booth);
+    expect("sessions" in (await mac.json<Record<string, unknown>>(mac.get("/api/lan")))).toBe(false);
+  });
+});
+
 describe.skipIf(!REAL)("the cookie", () => {
   it("is set once, on the first response, HttpOnly and SameSite=Strict on the whole site, and not on later ones", async () => {
     const booth = await boot();

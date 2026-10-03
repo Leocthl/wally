@@ -2,6 +2,17 @@
 // only to a page on the Mac itself (loopback Host and socket); anywhere else it is a plain 404, so "no LAN panel"
 // is the normal case and never an error. Everything is validated: the page shows nothing it did not check.
 
+/** How the practice wallets are doing (server/sessions.ts SessionRegistry.stats); only the booth Mac is told, and only with them on. */
+export interface WalletStats {
+  readonly live: number;
+  readonly created: number;
+  readonly evicted: number;
+  readonly expired: number;
+  /** How long the last and the slowest wallet took to make, in ms; null before the first. */
+  readonly lastCreateMs: number | null;
+  readonly maxCreateMs: number | null;
+}
+
 export interface LanInfo {
   readonly lan: true;
   /** The pairing token of this server start (128 random bits, hex). */
@@ -13,6 +24,8 @@ export interface LanInfo {
   /** The practice copy that works anywhere (WALLY_PUBLIC_URL), with its QR code. Both or neither. */
   readonly publicUrl?: string;
   readonly publicQrSvg?: string;
+  /** Practice wallets on: how many are live and how fast they are made. For the crew and the crowd scripts; the page shows nothing of it. */
+  readonly sessions?: WalletStats;
 }
 
 /** ASSUMED: how long the booth Mac's own page waits for /api/lan before it shows no QR panel. */

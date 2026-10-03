@@ -5,7 +5,7 @@
 // and socket both loopback) need no token, as in loopback-only mode. Web-standard APIs only (no node: imports).
 import type { Context, Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
-import type { LanInfo } from "../../src/api/http/lanInfo";
+import type { LanInfo, WalletStats } from "../../src/api/http/lanInfo";
 import { errorBody } from "./errors";
 import { isAllowedHost, isLoopbackHostname, isLoopbackOrigin, type OriginVerdict } from "./guards";
 import { SESSION_HEADER } from "./sessionWire";
@@ -42,6 +42,8 @@ export interface LanOptions {
   readonly sessions?: boolean;
   /** WALLY_PUBLIC_URL: the practice copy that works anywhere, shown beside the pairing links on the Mac. Absent: not shown. */
   readonly publicUrl?: string;
+  /** Practice wallets on: how they are doing, for the Mac's /api/lan answer. Absent: the answer has no `sessions`. */
+  readonly walletStats?: () => WalletStats;
 }
 
 /** 128 random bits as 32 hex characters. */
@@ -177,6 +179,7 @@ export function registerLan(app: Hono, lan: LanOptions): void {
       urls,
       qrSvg: urls.map((url) => lan.qrSvg(url)),
       ...(lan.publicUrl === undefined ? {} : { publicUrl: lan.publicUrl, publicQrSvg: lan.qrSvg(lan.publicUrl) }),
+      ...(lan.walletStats === undefined ? {} : { sessions: lan.walletStats() }),
     };
     c.header("cache-control", "no-store");
     return c.json(body);

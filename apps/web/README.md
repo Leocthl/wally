@@ -46,7 +46,7 @@
 | `POST /api/compile` | Seal sentence to rule chips; not a run, seals nothing |
 | `POST /api/verify`, `/api/tamper`, `/api/restore`, `/api/reset` | log demo and reset (of the caller's wallet: practice wallets, below) |
 | `GET /api/events` | SSE trace; ready comment, ids, keep-alive every 15 s, no replay |
-| `GET /api/lan` | LAN mode only, and only to a page on the Mac itself (loopback Host and peer; 404 for everyone else): `{ lan, token, urls[], qrSvg[] }` |
+| `GET /api/lan` | LAN mode only, and only to a page on the Mac itself (loopback Host and peer; 404 for everyone else): `{ lan, token, urls[], qrSvg[] }`, plus `publicUrl` and `publicQrSvg` when `WALLY_PUBLIC_URL` is set, and `sessions` (`live`, `created`, `evicted`, `expired`, `lastCreateMs`, `maxCreateMs`) while practice wallets are on |
 
 - **Guards**: loopback Host; loopback Origin, no cross-site fetch and `application/json` on POST; body and listing-text caps (`/api/see` has its own, larger cap for the picture); errors are JSON `{ error: { code, message, details? } }`. LAN mode widens Host and Origin and adds the pairing token (below).
 - **DEMO SHORTCUT**: the server holds the delegator's throwaway key and signs seal, revoke and escalation answers for the shopper. A real deployment keeps that key on the shopper's device. `/api/info` says so.
