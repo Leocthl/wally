@@ -11,6 +11,7 @@ import {
   REPLACEMENT_WINDOW_MS,
   SESSION_ID_RE,
   SESSION_IDLE_TTL_MS,
+  SESSION_TICK_MS,
   SessionRegistry,
   sessionsModeFromEnv,
   type SessionRegistryOptions,
@@ -296,16 +297,47 @@ describe("a wallet that cannot be made", () => {
 });
 
 describe("timers and close", () => {
-  it("ticks every visitor wallet on the interval, never the booth, and drops idle ones", async () => {
+  it("ticks the visitor wallets that have a page open on the interval, never the booth, and drops idle ones", async () => {
     vi.useFakeTimers();
     const { registry, made, advance } = setup({ tickMs: 1_000 });
     await idOf(registry);
     await idOf(registry);
+    const pages = made.map((m) => m.hub.connect());
     await vi.advanceTimersByTimeAsync(3_000);
     expect(made.map((m) => m.ticks())).toEqual([3, 3]);
+    await Promise.all(pages.map((p) => p.body?.cancel()));
     advance(SESSION_IDLE_TTL_MS);
     await vi.advanceTimersByTimeAsync(1_000);
     expect(registry.size).toBe(0);
+    registry.close();
+  });
+
+  it("does not tick a wallet nobody has a page open on: its next request ticks it first", async () => {
+    vi.useFakeTimers();
+    const { registry, made } = setup({ tickMs: 1_000 });
+    await idOf(registry);
+    const watched = made[0];
+    const page = watched?.hub.connect();
+    await idOf(registry);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(made.map((m) => m.ticks())).toEqual([2, 0]);
+    await page?.body?.cancel();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(made.map((m) => m.ticks())).toEqual([2, 0]);
+    registry.close();
+  });
+
+  it("beats every 5 seconds by default: a tick reads the whole log, and twelve wallets at 1 s used 60% of a core", async () => {
+    expect(SESSION_TICK_MS).toBe(5_000);
+    vi.useFakeTimers();
+    const { registry, made } = setup({ tickMs: undefined });
+    await idOf(registry);
+    const page = made[0]?.hub.connect();
+    await vi.advanceTimersByTimeAsync(4_900);
+    expect(made[0]?.ticks()).toBe(0);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(made[0]?.ticks()).toBe(1);
+    await page?.body?.cancel();
     registry.close();
   });
 
@@ -324,9 +356,11 @@ describe("timers and close", () => {
     });
     await idOf(ctx.registry);
     await idOf(ctx.registry);
+    const pages = made.map((m) => m.hub.connect());
     await vi.advanceTimersByTimeAsync(1_000);
     expect(made[1]?.ticks()).toBe(1);
     expect(errors.join("\n")).toContain("tick failed: orchestrator broke");
+    await Promise.all(pages.map((p) => p.body?.cancel()));
     ctx.registry.close();
   });
 

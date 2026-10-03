@@ -408,6 +408,10 @@ describe.skipIf(!REAL)("every operation the app uses works on a visitor's wallet
     expect((await a.snapshot()).cards).toHaveLength(1);
     expect((await b.snapshot()).cards).toHaveLength(0);
 
+    // Show Wally a photo (added by another lane after the session layer was written): the route reaches the caller's wallet with no session code of its own
+    const seen = await a.json<{ matches: readonly unknown[] }>(a.post("/api/see", { attributes: { kind: "hoodie", colors: ["navy"] } }));
+    expect(seen.matches.length).toBeGreaterThan(0);
+
     // Mum's budget is each wallet's own: A takes its share, B's ceiling is untouched
     const before = await b.json<{ remainingMinor: number; ceilingMinor: number }>(b.get("/api/family"));
     expect((await a.run("family_ok")).outcome).toBe("APPROVE");

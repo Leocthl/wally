@@ -17,8 +17,13 @@ export { newSessionId, SESSION_COOKIE, SESSION_HEADER, SESSION_ID_RE } from "./h
 export const MAX_VISITOR_SESSIONS = 12;
 /** ASSUMED: a wallet nobody has used for this long is dropped. A page with its event stream open counts as in use. */
 export const SESSION_IDLE_TTL_MS = 45 * 60_000;
-/** The brief: the booth ticks every second (R11 windows [F31] are 60 s, card TTL [F30] 30 min); the visitors' wallets tick on the same beat. */
-export const SESSION_TICK_MS = 1_000;
+/**
+ * ASSUMED: how often the visitors' wallets are swept and ticked, against the booth's own 1 s. A tick reads and folds the whole
+ * log (MEASURED: about 0.8 ms per entry), so twelve wallets of 40 entries at a 1 s beat used 60% of a core on an idle booth Mac.
+ * Every request ticks its wallet first, so a slower beat only delays the expiry events pushed to a page that is open (R11
+ * windows [F31] are 60 s, card TTL [F30] 30 min), and a wallet with no page open is not ticked at all (tickAll).
+ */
+export const SESSION_TICK_MS = 5_000;
 /** ASSUMED: after a page's old id got it a new wallet, requests it had already sent with the old id still reach that wallet for this long. */
 export const REPLACEMENT_WINDOW_MS = 10_000;
 /** ASSUMED: old ids remembered for that window; a visitor with garbage ids cannot grow this list without end. */
@@ -164,12 +169,14 @@ export class SessionRegistry {
     return idle.length;
   }
 
-  /** Ticks every visitor wallet (expiries inside a wallet: R11 windows, card TTL), as the booth's timer does for the shared one. */
+  /**
+   * Ticks the visitor wallets that have a page connected (expiries inside a wallet: R11 windows, card TTL), as the booth's timer
+   * does for the shared one. A wallet nobody watches has no one to push to; its next request ticks it before anything else.
+   */
   async tickAll(): Promise<void> {
+    const watched = [...this.#entries.values()].filter((entry) => entry.session.hub.clientCount > 0);
     await Promise.all(
-      [...this.#entries.values()].map((entry) =>
-        entry.session.tick().catch((err: unknown) => this.#log.error(`practice wallet ${shortId(entry.id)}: tick failed: ${reason(err)}`)),
-      ),
+      watched.map((entry) => entry.session.tick().catch((err: unknown) => this.#log.error(`practice wallet ${shortId(entry.id)}: tick failed: ${reason(err)}`))),
     );
   }
 
