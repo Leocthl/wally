@@ -19,6 +19,7 @@ export const KIND_WORDS: Readonly<Record<Kind, LabelPair>> = {
   skirt: label("skirt", "半身裙"), // NEEDS-REVIEW
   sneakers: label("sneakers", "波鞋"), // NEEDS-REVIEW
   boots: label("boots", "靴"), // NEEDS-REVIEW
+  socks: label("socks", "襪"), // NEEDS-REVIEW
   bag: label("bag", "手袋"), // NEEDS-REVIEW
   other: label("item", "款式"), // NEEDS-REVIEW
   not_clothing: label("item", "款式"), // NEEDS-REVIEW
@@ -87,38 +88,53 @@ export const PHOTO = {
 
   // The sheet
   title: label("Show Wally a photo", "俾 Wally 睇相"), // NEEDS-REVIEW
+  /** With a model that reads the picture. */
   lead: label("Wally reads your picture and finds similar items in the simulated shop. You pick; the rules still decide.", "Wally 讀你張相，喺模擬商店搵相似款式。由你揀，仍然由規則決定。"), // NEEDS-REVIEW
+  /** With the colours only: the shopper says what it is. */
+  leadPlates: label("Wally takes the colours from your picture and you say what it is. Wally finds similar items in the simulated shop. You pick; the rules still decide.", "Wally 由你張相取顏色，你話俾佢知係乜嘢款式，佢喺模擬商店搵相似款式。由你揀，仍然由規則決定。"), // NEEDS-REVIEW
   yourPicture: label("Your picture", "你的相片"), // NEEDS-REVIEW
   looking: label("Wally is looking", "Wally 睇緊"), // NEEDS-REVIEW
   lookingDetail: label("Reading the picture. This takes a few seconds.", "讀緊相片，需時數秒。"), // NEEDS-REVIEW
   cancel: label("Cancel", "取消"), // NEEDS-REVIEW
   announceLooking: label("Reading your picture.", "讀緊你的相片。"), // NEEDS-REVIEW
-  announceReady: label("Done. Similar items are listed below.", "完成。下面列出相似款式。"), // NEEDS-REVIEW
-  announceProblem: label("Wally could not use this picture.", "Wally 用唔到呢張相。"), // NEEDS-REVIEW
+  announceLookingWords: label("Looking in the demo shop.", "喺示範商店搵緊。"), // NEEDS-REVIEW
+  announceFound: (count: number): LabelPair => label(count === 1 ? "Done. One similar item is listed below." : `Done. ${count} similar items are listed below.`, `完成。下面列出 ${count} 件相似款式。`), // NEEDS-REVIEW
+  announceNone: label("Done. Nothing to show yet. Pick the type to see similar items.", "完成。暫時未有款式顯示，請揀款式去睇相似款式。"), // NEEDS-REVIEW
+  announceUpdated: (count: number): LabelPair => label(count === 0 ? "List updated. Nothing matches now." : `List updated. ${count} shown.`, count === 0 ? "名單已更新，冇相符款式。" : `名單已更新，顯示 ${count} 件。`), // NEEDS-REVIEW
+  announceProblem: label("Wally could not look just now.", "Wally 暫時睇唔到。"), // NEEDS-REVIEW
 
   // Privacy: said plainly, in the words that are true for this booth
   privacyDevice: label("Your picture stays on this device and is not saved.", "你的相片只留喺呢部裝置，唔會儲存。"), // NEEDS-REVIEW
   privacyModel: label("Your picture is read once by the model on the booth Mac and is not saved.", "你的相片只會由展位 Mac 上的模型讀一次，唔會儲存。"), // NEEDS-REVIEW
 
-  // What Wally sees
+  // What Wally sees (a model's reading) or looks for (after the shopper has changed a chip, or from words)
   sees: (words: string): LabelPair => label(`Wally sees: ${words}`, `Wally 見到：${words}`), // NEEDS-REVIEW
+  lookingFor: (words: string): LabelPair => label(`Looking for: ${words}`, `搵緊：${words}`), // NEEDS-REVIEW
   seesNothingYet: label("Wally sees the colours. What is it?", "Wally 見到顏色。係乜嘢款式？"), // NEEDS-REVIEW
+  whichKind: label("Which kind of item?", "你想要邊類款式？"), // NEEDS-REVIEW
   fromPlates: label("Colours in your picture", "相片入面的顏色"), // NEEDS-REVIEW
-  editHint: label("Tap to change what Wally looks for.", "撳一下可以改 Wally 搵的嘢。"), // NEEDS-REVIEW
   typeGroup: label("Type of item", "款式"), // NEEDS-REVIEW
   typePick: label("Pick the type", "揀款式"), // NEEDS-REVIEW
   colorGroup: label("Colours (up to three)", "顏色（最多三種）"), // NEEDS-REVIEW
-  moreGroup: label("More details", "更多細節"), // NEEDS-REVIEW
+  changeGroup: label("Change what Wally looks for", "改變 Wally 搵嘅條件"), // NEEDS-REVIEW
   patternGroup: label("Pattern", "圖案"), // NEEDS-REVIEW
   fitGroup: label("Fit", "版型"), // NEEDS-REVIEW
   styleGroup: label("Style (up to two)", "風格（最多兩種）"), // NEEDS-REVIEW
-  anyFit: label("Any", "任何"), // NEEDS-REVIEW
-  anyPattern: label("Any", "任何"), // NEEDS-REVIEW
+
+  // Words instead of a picture: the typed Ask where no live planner runs, and the way out when the planner cannot pick
+  wordsTitle: label("What Wally found", "Wally 搵到嘅款式"), // NEEDS-REVIEW
+  wordsLead: label("Showing matches from the demo shop. You pick; the rules still decide.", "顯示示範商店入面嘅相似款式。由你揀，仍然由規則決定。"), // NEEDS-REVIEW
+  wordsNothing: label("Wally could not tell what kind of item you meant.", "Wally 唔肯定你想要邊類款式。"), // NEEDS-REVIEW
+  wordsNotSold: label("Wally can't shop for that in the demo shop.", "示範商店買唔到呢類貨品。"), // NEEDS-REVIEW
+  wordsPickKind: label("Pick something Wally can find:", "請揀 Wally 搵得到嘅款式："), // NEEDS-REVIEW
+  limitLabel: label("Price limit", "價錢上限"), // NEEDS-REVIEW
+  limitRemove: label("Remove the limit", "取消上限"), // NEEDS-REVIEW
+  noneUnderLimit: label("Nothing in the demo shop costs that little. Remove the limit to see more.", "示範商店冇咁平嘅款式。取消上限就睇到更多。"), // NEEDS-REVIEW
+  canShop: label("Wally can shop for", "Wally 可以幫你買"), // NEEDS-REVIEW
 
   // The shop
   similar: label("Similar in the shop", "商店入面相似的款式"), // NEEDS-REVIEW
   shopNote: label("The shop is simulated. Nothing here is a real item.", "商店係模擬的，呢度冇真實貨品。"), // NEEDS-REVIEW
-  pickedCard: label("Picked", "已揀"), // NEEDS-REVIEW
   fitsBudget: label("Fits your budget", "預算夠"), // NEEDS-REVIEW
   overBudget: label("More than is left", "超過尚餘預算"), // NEEDS-REVIEW
   plusShipping: label("plus shipping", "另加運費"), // NEEDS-REVIEW
@@ -141,6 +157,9 @@ export const PHOTO = {
   tooLargeHint: label("Try a smaller picture or a screenshot.", "試吓用細啲的相片或截圖。"), // NEEDS-REVIEW
   failed: label("Wally could not look just now.", "Wally 暫時睇唔到。"), // NEEDS-REVIEW
   failedHint: label("Check the connection and try again. Nothing was bought.", "請檢查連線再試。冇買任何嘢。"), // NEEDS-REVIEW
+  opening: label("Opening.", "打開緊。"), // NEEDS-REVIEW
+  openFailed: label("Wally could not open this just now. Please try again.", "Wally 暫時打開唔到，請再試一次。"), // NEEDS-REVIEW
+  lookupFailed: label("Wally could not update the list just now. This is the list for your last choice.", "Wally 暫時更新唔到名單，顯示嘅係你上一次揀嘅結果。"), // NEEDS-REVIEW
   tryAgain: label("Try again", "再試一次"), // NEEDS-REVIEW
   chooseAnother: label("Choose another picture", "揀另一張相"), // NEEDS-REVIEW
   close: label("Close", "關閉"), // NEEDS-REVIEW

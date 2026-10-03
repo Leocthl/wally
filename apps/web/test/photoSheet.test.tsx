@@ -172,8 +172,8 @@ describe("with the colour plates only (the booth has no model)", () => {
     const user = await boot(client);
     const sheet = await choosePicture(user);
     await user.click(await within(sheet).findByRole("radio", { name: "hoodie" }));
-    const cards = await within(sheet).findAllByRole("radio", { name: /hoodie|jacket/i });
     await waitFor(() => expect(within(sheet).getByRole("radiogroup", { name: "Similar in the shop" }).querySelectorAll("[data-listing]")).toHaveLength(4));
+    const cards = within(within(sheet).getByRole("radiogroup", { name: "Similar in the shop" })).getAllByRole("radio"); // the four cards, not the type chips
     const first = within(sheet).getByRole("radiogroup", { name: "Similar in the shop" }).querySelector<HTMLElement>("[data-listing]");
     expect(first).toHaveAttribute("data-listing", "lst_photoHoodieNavy");
     expect(first?.textContent).toContain("Navy relaxed hoodie");
@@ -183,7 +183,8 @@ describe("with the colour plates only (the booth has no model)", () => {
     expect(first?.textContent).toContain("plus shipping");
     expect(first?.textContent).toContain("Fits your budget");
     expect(first?.textContent).toContain("Same type");
-    expect(cards.length).toBeGreaterThan(0);
+    expect(cards).toHaveLength(4);
+    expect(cards.map((c) => c.getAttribute("aria-checked"))).toEqual(["false", "false", "false", "false"]);
     expect(client.seen.at(-1)).toMatchObject({ attributes: { kind: "hoodie", colors: ["navy", "white"] } });
   });
 
@@ -228,7 +229,7 @@ describe("with the colour plates only (the booth has no model)", () => {
     const user = await boot(client);
     const sheet = await choosePicture(user);
     await user.click(await within(sheet).findByRole("radio", { name: "hoodie" }));
-    await user.click(within(sheet).getByText("More details"));
+    await user.click(within(sheet).getByText("Change what Wally looks for"));
     await user.click(within(sheet).getByRole("button", { name: "oversized" }));
     await waitFor(() => expect(client.seen.at(-1)).toMatchObject({ attributes: { kind: "hoodie", fit: "oversized" } }));
     expect(within(sheet).getByRole("button", { name: "oversized" })).toHaveAttribute("aria-pressed", "true");
@@ -325,10 +326,83 @@ describe("when something goes wrong", () => {
     client.failWith = new Error("network");
     const user = await boot(client);
     const sheet = await choosePicture(user);
-    expect(await within(sheet).findByText("Wally could not look just now.")).toBeInTheDocument();
+    const problem = await waitFor(() => {
+      const el = sheet.querySelector<HTMLElement>('[data-slot="photo-problem"]');
+      if (el === null) throw new Error("no problem screen yet");
+      return el;
+    });
+    expect(within(problem).getByText("Wally could not look just now.")).toBeInTheDocument();
+    expect(sheet.querySelector('[data-slot="photo-announce"]')).toHaveTextContent("Wally could not look just now."); // the one live region says it too
     client.failWith = null;
     await user.click(within(sheet).getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(sheet.querySelector('[data-slot="photo-ready"]')).not.toBeNull());
+  });
+});
+
+describe("focus and what a screen reader is told", () => {
+  it("keeps focus inside the sheet when the button that had it goes away: the problem screen takes it, and so does the result after Try again", async () => {
+    const client = new PhotoClient("palette");
+    client.failWith = new Error("network");
+    const user = await boot(client);
+    const sheet = await choosePicture(user);
+    await waitFor(() => expect(sheet.querySelector('[data-slot="photo-problem"]')).not.toBeNull());
+    expect(document.activeElement).toBe(sheet.querySelector('[data-slot="photo-body"]'));
+    client.failWith = null;
+    await user.click(within(sheet).getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(sheet.querySelector('[data-slot="photo-ready"]')).not.toBeNull());
+    expect(sheet.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it("says in the one live region what is true: the first answer, then each refreshed list", async () => {
+    const client = new PhotoClient("palette");
+    const user = await boot(client);
+    const sheet = await choosePicture(user);
+    await waitFor(() => expect(sheet.querySelector('[data-slot="photo-ready"]')).not.toBeNull());
+    const region = sheet.querySelector('[data-slot="photo-announce"]');
+    expect(region).toHaveTextContent("Done. Nothing to show yet. Pick the type to see similar items."); // colours only: the list is still empty
+    await user.click(within(sheet).getByRole("radio", { name: "hoodie" }));
+    await waitFor(() => expect(region).toHaveTextContent("List updated. 4 shown."));
+  });
+
+  it("does not say 'Wally sees' for words the shopper chose, only for Wally's own reading", async () => {
+    const client = new PhotoClient("model");
+    const user = await boot(client);
+    const sheet = await choosePicture(user);
+    await waitFor(() => expect(within(sheet).getByText(/^Wally sees: /)).toBeInTheDocument());
+    await user.click(within(sheet).getByRole("radio", { name: "jacket" }));
+    await waitFor(() => expect(within(sheet).getByText(/^Looking for: /)).toBeInTheDocument());
+    expect(within(sheet).queryByText(/^Wally sees: /)).toBeNull();
+  });
+
+  it("says in the lead what Wally really does: with colours only, the shopper says what it is", async () => {
+    const user = await boot(new PhotoClient("palette"));
+    const sheet = await choosePicture(user);
+    await waitFor(() => expect(sheet.querySelector('[data-slot="photo-ready"]')).not.toBeNull());
+    expect(within(sheet).getByText(/^Wally takes the colours from your picture and you say what it is\./)).toBeInTheDocument();
+    expect(within(sheet).queryByText(/^Wally reads your picture/)).toBeNull();
+  });
+
+  it("a failed refresh keeps the last list on screen, says so, and Try again repeats it", async () => {
+    const client = new PhotoClient("palette");
+    const user = await boot(client);
+    const sheet = await choosePicture(user);
+    await user.click(await within(sheet).findByRole("radio", { name: "hoodie" }));
+    await waitFor(() => expect(sheet.querySelectorAll("[data-listing]")).toHaveLength(4));
+    client.failWith = new Error("network");
+    await user.click(within(sheet).getByRole("radio", { name: "jacket" }));
+    const failed = await waitFor(() => {
+      const el = sheet.querySelector<HTMLElement>('[data-slot="photo-lookup-failed"]');
+      if (el === null) throw new Error("not yet");
+      return el;
+    });
+    expect(failed).toHaveTextContent("Wally could not update the list just now.");
+    expect(sheet.querySelectorAll("[data-listing]")).toHaveLength(4);
+    expect(sheet.querySelector('[data-slot="photo-ready"]')).not.toBeNull(); // still on the chips, not thrown back to a problem screen
+    client.failWith = null;
+    await user.click(within(failed).getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(sheet.querySelector('[data-slot="photo-lookup-failed"]')).toBeNull());
+    await waitFor(() => expect(sheet.querySelector("[data-listing]")?.getAttribute("data-listing")).toMatch(/Jacket/));
   });
 });
 

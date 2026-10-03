@@ -14,3 +14,15 @@
 @media (hover: hover) and (pointer: fine) {
   .home-photo:hover:not(:disabled) { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
 }
+
+/* "Wally can shop for": the shop chips under the Ask question. At least 44 px tall, wrapping, tokens only. */
+.shop-chips { display: grid; gap: var(--sp-2); }
+.shop-chips__title { font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--c-ink-muted); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.shop-chips__row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.shop-chip { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--tap); padding: 0 var(--sp-4); border: 1px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: inherit; font-size: var(--text-md); cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.shop-chip:active { border-color: var(--c-primary); transform: scale(0.97); }
+.shop-chip:disabled { cursor: progress; opacity: 0.55; }
+.shop-chip--photo { border-color: var(--c-primary); background: var(--c-primary-tint); color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+@media (hover: hover) and (pointer: fine) {
+  .shop-chip:hover:not(:disabled) { border-color: var(--c-primary); }
+}

@@ -33,7 +33,7 @@ function Card({ match, picked, tabIndex, remainingMinor, onPick, onKeyDown }: { 
         <span className="photo-card__name" id={nameId}>{name}</span>
         <span id={`${nameId}-more`} className="photo-card__more">
           <span className="photo-card__shop">{shopName(match.merchantName)}</span>
-          <ChipScope provs={[SIMULATED]} className="photo-card__price" chipsClassName="photo-card__chip">
+          <ChipScope as="span" provs={[SIMULATED]} className="photo-card__price" chipsClassName="photo-card__chip">
             <Num kind="money" value={match.priceMinor} prov={SIMULATED} chip="scope" className="photo-card__amount" />
             {match.totalMinor !== match.priceMinor ? <span className="photo-card__ship">{t(PHOTO.plusShipping)}</span> : null}
           </ChipScope>
@@ -61,14 +61,15 @@ export interface MatchCardsProps {
   /** What is left of the budget, for the badge; null when not known. */
   readonly remainingMinor: number | null;
   readonly refreshing: boolean;
-  readonly label: string;
+  /** The id of the heading that names the list. */
+  readonly labelledBy: string;
 }
 
-export function MatchCards({ matches, pickedId, onPick, remainingMinor, refreshing, label }: MatchCardsProps): ReactElement {
+export function MatchCards({ matches, pickedId, onPick, remainingMinor, refreshing, labelledBy }: MatchCardsProps): ReactElement {
   const list = useRef<HTMLDivElement>(null);
   const index = Math.max(0, matches.findIndex((m) => m.listingId === pickedId));
   const onKey = (at: number) => (e: KeyboardEvent<HTMLButtonElement>) => {
-    const next = nextIndex(e.key, at, matches.length);
+    const next = nextIndex(e.key, at, matches.length, "both");
     const match = next === null ? undefined : matches[next];
     if (!match) return;
     e.preventDefault();
@@ -76,7 +77,7 @@ export function MatchCards({ matches, pickedId, onPick, remainingMinor, refreshi
     list.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next ?? 0]?.focus();
   };
   return (
-    <div ref={list} className="photo-matches" role="radiogroup" aria-label={label} aria-busy={refreshing} data-refreshing={refreshing || undefined}>
+    <div ref={list} className="photo-matches" role="radiogroup" aria-labelledby={labelledBy} aria-busy={refreshing} data-refreshing={refreshing || undefined}>
       {matches.map((match, i) => (
         <Card key={match.listingId} match={match} picked={match.listingId === pickedId} tabIndex={i === index ? 0 : -1} remainingMinor={remainingMinor} onPick={() => onPick(match.listingId)} onKeyDown={onKey(i)} />
       ))}

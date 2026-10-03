@@ -47,7 +47,7 @@ export function ChipGroup<T extends string>({ title, options, selected, onPick, 
   const firstOn = options.findIndex((o) => selected.includes(o.id));
   const tab = firstOn === -1 ? 0 : firstOn;
   const onKey = (index: number) => (e: KeyboardEvent<HTMLButtonElement>) => {
-    const next = nextIndex(e.key, index, options.length);
+    const next = nextIndex(e.key, index, options.length, "both");
     const option = next === null ? undefined : options[next];
     if (!option) return;
     e.preventDefault();

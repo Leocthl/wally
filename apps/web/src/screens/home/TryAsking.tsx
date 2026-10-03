@@ -11,7 +11,6 @@ import { Tag } from "../../ui/Chip";
 import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
-import { PhotoPill } from "../photo/PhotoEntry";
 import { FAMILY_GROUP, TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
 import { rankTryItems, type RankedTry } from "./tryRank";
 
@@ -25,11 +24,9 @@ export interface TryAskingProps {
   readonly variant?: "cards" | "pills";
   /** Add Mum's budget (two scenarios) when the booth offers family budgets. Default off. */
   readonly family?: boolean;
-  /** Show Wally a photo: when given, the pills variant starts with its shortcut and hands the chosen picture to this. Default off. */
-  readonly onPhoto?: (file: File) => void;
 }
 
-function Group({ group, ranked, onRun, busy, headingLevel, variant }: { readonly group: TryGroup; readonly ranked: RankedTry } & Required<Omit<TryAskingProps, "family" | "onPhoto">>): ReactElement {
+function Group({ group, ranked, onRun, busy, headingLevel, variant }: { readonly group: TryGroup; readonly ranked: RankedTry } & Required<Omit<TryAskingProps, "family">>): ReactElement {
   const { t } = useLocale();
   const id = useId();
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -52,12 +49,11 @@ function Group({ group, ranked, onRun, busy, headingLevel, variant }: { readonly
   );
 }
 
-export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false, onPhoto }: TryAskingProps): ReactElement {
+export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false }: TryAskingProps): ReactElement {
   const { profile } = useProfile();
   const ranked = useMemo(() => rankTryItems(TRY_ITEMS, profile), [profile]);
   return (
     <div className={cx("home-try", `home-try--${variant}`)}>
-      {onPhoto && variant === "pills" ? <PhotoPill onFile={onPhoto} busy={busy} /> : null}
       {(family ? [...TRY_GROUPS, FAMILY_GROUP] : TRY_GROUPS).map((g) => (
         <Group key={g} group={g} ranked={ranked} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
       ))}

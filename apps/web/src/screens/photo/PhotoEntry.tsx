@@ -1,12 +1,11 @@
 // Where a picture comes in: a hidden file input that offers the camera or the library on a phone, the camera button inside
-// the Ask field (next to the mic), the "Show Wally a photo" row on Home and the shortcut among the Ask sheet's pills. They
+// the Ask field (next to the mic), the "Show Wally a photo" row on Home and the chip beside the shop chips of the Ask sheet. They
 // only hand a File to the shell; the sheet that reads it (PhotoSheet) is loaded the first time one is chosen, so these few
 // lines are all the first load pays for.
 import { useCallback, useRef, type ChangeEvent, type ReactElement } from "react";
 import { PHOTO } from "../../i18n/photo";
 import "./photo-entry.css";
 import { IconButton } from "../../ui/Button";
-import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 
@@ -43,24 +42,18 @@ export function PhotoButton({ onFile, disabled = false }: { readonly onFile: (fi
   );
 }
 
-/** The "Show Wally a photo" shortcut among the Ask sheet's pills, styled with the Try asking pills. */
+/** The "Show Wally a photo" chip, first among the shop chips of the Ask sheet. */
 export function PhotoPill({ onFile, busy = false }: { readonly onFile: (file: File) => void; readonly busy?: boolean }): ReactElement {
   const { t } = useLocale();
   const picker = usePhotoPicker(onFile);
   return (
-    <div className="home-try__group">
-      <ul className="home-try__grid">
-        <li>
-          <button type="button" className="home-try__card" data-slot="photo-pill" disabled={busy} onClick={picker.open}>
-            <span className={cx("home-try__icon", "home-try__icon--primary")}>
-              <Icon name="camera" size={20} />
-            </span>
-            <span className="home-try__title">{t(PHOTO.entryTitle)}</span>
-          </button>
-          {picker.input}
-        </li>
-      </ul>
-    </div>
+    <>
+      <button type="button" className="shop-chip shop-chip--photo" data-slot="photo-pill" disabled={busy} onClick={picker.open}>
+        <Icon name="camera" size={18} />
+        <span>{t(PHOTO.entryTitle)}</span>
+      </button>
+      {picker.input}
+    </>
   );
 }
 

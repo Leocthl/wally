@@ -62,7 +62,8 @@
 .photo-privacy { display: flex; align-items: flex-start; gap: var(--sp-2); }
 .photo-privacy svg { flex: none; margin-top: 0.1rem; }
 .photo-matches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); transition: opacity var(--dur-fast) var(--ease-out); }
-.photo-matches[data-refreshing] { opacity: 0.6; }
+/* While the list is looked up again it stays as it is (full contrast, still tappable); aria-busy tells assistive technology. */
+.photo-matches[data-refreshing] { cursor: progress; }
 .photo-card { position: relative; min-width: 0; display: grid; align-content: start; gap: var(--sp-2); width: 100%; padding: var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
 .photo-card:active { transform: scale(0.98); }
 .photo-card[aria-checked="true"] { border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-primary); }
@@ -86,3 +87,13 @@
   .photo-chip:hover { border-color: var(--c-ink-muted); }
   .photo-card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
 }
+
+/* The body of the sheet takes focus when the screen under it changes (Wally looked, a problem came); it is never a tab stop. */
+.photo-body:focus { outline: none; }
+
+/* Words instead of a picture: the reading line has no thumbnail beside it. */
+.photo-seen--bare { grid-template-columns: minmax(0, 1fr); }
+
+/* The price limit the words named, with a way to lift it. */
+.photo-limit { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface); }
+.photo-limit__text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); min-width: 0; font-weight: var(--weight-semibold); line-height: var(--lh-snug); }

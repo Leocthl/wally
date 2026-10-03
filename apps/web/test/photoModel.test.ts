@@ -66,3 +66,16 @@ describe("fitWithin (the long edge is 1024 px, never scaled up)", () => {
     expect(MAX_SOURCE_BYTES).toBe(30 * 1024 * 1024);
   });
 });
+
+describe("the arrow keys of a radio group that wraps onto rows", () => {
+  it("go forward on Right and Down, back on Left and Up, wrap round, and jump on Home and End", async () => {
+    const { nextIndex } = await import("../src/ui/hooks/useRoving");
+    expect(["ArrowRight", "ArrowDown"].map((key) => nextIndex(key, 1, 4, "both"))).toEqual([2, 2]);
+    expect(["ArrowLeft", "ArrowUp"].map((key) => nextIndex(key, 1, 4, "both"))).toEqual([0, 0]);
+    expect(nextIndex("ArrowDown", 3, 4, "both")).toBe(0);
+    expect(nextIndex("ArrowUp", 0, 4, "both")).toBe(3);
+    expect([nextIndex("Home", 2, 4, "both"), nextIndex("End", 2, 4, "both")]).toEqual([0, 3]);
+    expect(nextIndex("a", 2, 4, "both")).toBeNull();
+    expect(nextIndex("ArrowDown", 0, 4, "horizontal")).toBeNull(); // the old modes are unchanged
+  });
+});

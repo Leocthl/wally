@@ -13,6 +13,8 @@ export interface ShellApi {
   readonly startReset: () => void;
   /** Show Wally a photo: opens the photo sheet on this picture (the sheet's chunk loads on first use). */
   readonly showPhoto: (file: File) => void;
+  /** The shopper's own words: opens the same sheet on what a fixed keyword reader finds in them (no model, any host). */
+  readonly showShopSearch: (text: string) => void;
 }
 
 const ShellContext = createContext<ShellApi | null>(null);
@@ -46,9 +48,17 @@ function useResetWatch(): (from: string | null) => void {
   return setFrom;
 }
 
-const NO_PHOTO = (): void => undefined;
+const NOTHING = (): void => undefined;
 
-export function ShellProvider({ openAsk, openAbout, showPhoto = NO_PHOTO, children }: { readonly openAsk: () => void; readonly openAbout: () => void; readonly showPhoto?: (file: File) => void; readonly children: ReactNode }): ReactElement {
+export interface ShellProviderProps {
+  readonly openAsk: () => void;
+  readonly openAbout: () => void;
+  readonly showPhoto?: (file: File) => void;
+  readonly showShopSearch?: (text: string) => void;
+  readonly children: ReactNode;
+}
+
+export function ShellProvider({ openAsk, openAbout, showPhoto = NOTHING, showShopSearch = NOTHING, children }: ShellProviderProps): ReactElement {
   const booth = useBoothContext();
   const watch = useResetWatch();
   const { reset } = booth;
@@ -58,6 +68,6 @@ export function ShellProvider({ openAsk, openAbout, showPhoto = NO_PHOTO, childr
     navigate("budget");
     void reset();
   }, [watch, mandateId, reset]);
-  const api = useMemo<ShellApi>(() => ({ openAsk, openAbout, startReset, showPhoto }), [openAsk, openAbout, startReset, showPhoto]);
+  const api = useMemo<ShellApi>(() => ({ openAsk, openAbout, startReset, showPhoto, showShopSearch }), [openAsk, openAbout, startReset, showPhoto, showShopSearch]);
   return <ShellContext.Provider value={api}>{children}</ShellContext.Provider>;
 }
