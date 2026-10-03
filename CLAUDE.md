@@ -4,7 +4,7 @@
 
 ## Status
 - **Event**: HacKU 2026, FinTech track "Give a Machine a Wallet", 2026-10-02 to 2026-10-04 [F13]; HKT problem statement declared [F13, F17]. Not affiliated with HKT, Tap & Go or Mastercard.
-- **Phase**: feature-complete on contract V2: local-first, booth first (D13, D15), phone first (D16), LAN, family and voice back in scope (D17). Merged: engine, crypto, log, offline verifier, rail-sim, cart builder, executor, orchestrator, booth server, judge, planners, harness, PWA, on-device mode, LAN mode, Capacitor shells, family budget. Open: human kill tests, deck, video, submission, freeze; see `TASKS.md`.
+- **Phase**: feature-complete on contract V2: local-first, booth first (D13, D15), phone first (D16), LAN, family and voice back in scope (D17). Merged: engine, crypto, log, offline verifier, rail-sim, cart builder, executor, orchestrator, booth server, judge, planners, harness, PWA, on-device mode, LAN mode, Capacitor shells, family budget, first run and shopper-first Home, plain words with a Developer mode, Show Wally a photo, kept on-device session, practice wallets. Open: human kill tests, deck, video, submission, freeze; see `TASKS.md`.
 - **Local-first, two local models**: the demo runs with no network and no API key. Laya, a third-party open-source typed model, runs on this Mac as the judge [F11c]. Qwen3.5 under llama.cpp, also loopback only, is the planner and the sentence-to-rules compiler [F27]; it never gates a decision. There is no LLM judge. Planner providers: `rule` (Laya decision loop), `local` (Qwen), `replay` (recorded; CI default); the booth server's default `auto` picks `local` if Qwen answers at start, else `rule` if Laya does, else `replay`. The `claude` provider is removed; hosted Jev is optional.
 - **Freeze**: no commits after Sun 2026-10-04 13:00 HKT [F16]. The repo is public by then and submitted with deck, video and declaration [F18]. Procedure: 03 §Freeze.
 - **Open**: assumptions in `docs/00-context.md`; unknowns and re-captures in the register's VERIFY queue.
@@ -30,7 +30,7 @@ docs/      00-context 01-product-brief 02-architecture 03-implementation-plan 04
            10-test-plan 11-explain-the-code 12-hallway-interviews lane-prompts facts-register adr/
 schemas/   MandateCredential Mandate Cart Decision LogEntry CardRecord PacketState (JSON Schema, source of truth)
 scripts/   docs-check.py trace-check.py gen-types.mjs keys-gen.mjs verify-log.mjs demo-reset.mjs booth-check.mjs pages-build.mjs
-data/      capture-sheet shop-probe real-card-test (templates), evidence/, fixtures/, scenarios/, judge-corpus/, results/ (MEASURED), raw/ (gitignored)
+data/      capture-sheet shop-probe real-card-test (templates), evidence/, fixtures/, scenarios/, judge-corpus/, photo-shelf/ (SIMULATED shop), trick-examples/, results/ (MEASURED), raw/ (gitignored)
 apps/web apps/verifier                      lane C, M   (PWA, booth server, on-device mode, LAN mode; offline verifier page)
 apps/mobile                                 lane M      (Capacitor iOS and Android shells around the on-device build)
 packages/core packages/rail-sim             lane A      (engine, crypto, log, verifier, cart, executor, orchestrator; SIMULATED rail)
@@ -41,14 +41,14 @@ packages/harness                            lane D
 
 ## Local services
 - **Laya** (judge): `services/laya/` (setup.sh, serve.sh, stop.sh, smoke.mjs) on 127.0.0.1:8808, checkpoint `typed-decisions` [F11c]. Down ⇒ judge status ERROR ⇒ ESCALATE `R10.unavailable` (I5).
-- **Qwen** (planner, compiler): `services/qwen/` (same four scripts) on 127.0.0.1:8809, Q4_K_M GGUF files pinned by commit and SHA-256 [F27, F63]; `QWEN_MODEL=4b` for the smaller model. Down ⇒ no proposal.
+- **Qwen** (planner, compiler): `services/qwen/` (same four scripts) on 127.0.0.1:8809, Q4_K_M GGUF files pinned by commit and SHA-256 [F27, F63]; `QWEN_MODEL=4b` for the smaller model. Down ⇒ no proposal. The 9B model also reads pictures through its vision projector [F63a]; `QWEN_VISION=off` serves text only.
 - **Planner**: no server of its own; `rule` runs the Laya decision loop (02 §14), `local` calls Qwen. `PLANNER_PROVIDER=replay` is the booth fallback and the CI default.
 - **Bound to 127.0.0.1 only**; listing text and requests sent to either model never leave the Mac. Env names: 02 §15.
 
 ## Commands
 - **Docs checks** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
 - **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`, `pnpm invariants` (T-I1 to T-I8, one line each, about half a minute: run it live when a judge asks).
-- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:lan` (the same for phones: `HOST` or `--lan`, pairing token, QR in About and Presenter [F92]), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page), `pnpm pages:build` (on-device app plus verifier as a static site in `apps/web/dist-pages`; `pnpm --filter @wally/web e2e:pages` checks it under `/wally/`; `.github/workflows/pages.yml` deploys it once the repo is public). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE) `/family /lan`; `POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
+- **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:lan` (the same for phones: `HOST` or `--lan`, pairing token, QR in About and Presenter [F92]), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page), `pnpm pages:build` (on-device app plus verifier as a static site in `apps/web/dist-pages`; `pnpm --filter @wally/web e2e:pages` checks it under `/wally/`; `.github/workflows/pages.yml` deploys it once the repo is public). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE) `/family /lan`; `POST /api/seal /scenario/:id /propose /ask /alternatives /see /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
 - **Phones**: on-device page `?api=local`; native shells `pnpm --filter @wally/mobile sync`, then `ios:sim` or `android:apk` (`apps/mobile/README.md`).
 - **Evidence**: `pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]`, `pnpm --filter @wally/agent judge:fit`.
 - **Local models** (loopback only): `services/laya/{setup,serve,stop}.sh` and `node services/laya/smoke.mjs`; `services/qwen/{setup,serve,stop}.sh` and `node services/qwen/smoke.mjs`. Warm both up after every start (the first call is slow).
@@ -61,6 +61,7 @@ packages/harness                            lane D
 - **Kept session**: on-device mode keeps its session in localStorage (`wally:session:v1`: the two throwaway demo keys, the log and its head), so a reload carries on; restored only if keys, chain, head and budget verify [F106]. Not kept: a family budget, a session over the size cap [F107]. One tab at a time (last writer wins). Any script on the origin can read the keys.
 - **Keys**: the web API holds the delegator demo key, and Mum's for a family budget; on-device mode makes every key in the page; a did:key cannot be rotated.
 - **Log**: proves tamper, reorder, truncation (with the checkpoint), signatures, and consent and money for what is logged. Not omissions, a re-fold, or the shopper's intent.
+- **Photo reader**: names the kind of garment in 25 of 29 retailer photos, the colour exactly in 25 [F68a]; it does not understand photos. The on-device build and Pages have no model: the shopper taps the kind. The picture goes to the model on this Mac only and is never stored.
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.
 - **Family**: the offline verifier cannot check the parent chain; Mum's credential is exported for reading.
 - **LAN, voice, devices**: plain http with one shared token [F92]; voice needs the browser's speech service; checked on a simulator and an emulator only.
@@ -90,7 +91,7 @@ packages/harness                            lane D
 - **X cross-lane**: CI green (typecheck, lint, test, docs-check); T-E2E passes DM1-DM7; each gate M1-M5 recorded in TASKS.md; no lane merged red.
 
 ## Cut order and triggers [F41]
-- **Cut first to last (D9)**: screenshot intake (only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. The teen chain is no longer a cut item: it shipped as the family budget (D17). did:key and the credential stay: HKT's workshop centres on DID-VC [F19]. DM6 in the demo goes before any of these.
+- **Cut first to last (D9)**: reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. Screenshot intake and the teen chain are no longer cut items: they shipped as Show Wally a photo (D18) and the family budget (D17). did:key and the credential stay: HKT's workshop centres on DID-VC [F19]. DM6 in the demo goes before any of these.
 - **Optional by design, not cuts**: hosted Jev. The claude planner is removed. There is no LLM judge.
 - **Triggers**: H2 Laya smoke fails ⇒ planner `replay` and recorded judge outputs, labelled; live judge calls ESCALATE · H6 no end-to-end stop ⇒ log signing to hash-chain only (credential proof stays) · H10 still failing ⇒ Track 4 contingency (D8) · H12 no real-card test ⇒ sim-only, say so.
 
@@ -98,7 +99,7 @@ packages/harness                            lane D
 - **Point form**, bold keywords, no intro paragraph under a heading, no filler, at most one hint line per table, few examples, tables and checklists first.
 - **No em dashes, no emoji**, no hype words; plain verbs. Must not read as AI-written.
 - **Terms**: mandate, packet, seal, cart, decision, mint, stop, escalation, revoke, rail, planner, judge. No synonyms.
-- **Length caps** (words outside code fences): 01 600 · 02 2,000 · 03 1,200 · 04 1,000 · 05 800 · 06 800 · 07 1,200 · 09 700 · 10 500 · 11 600 · 12 350 · ADR 15 lines · README 80 lines · this file 120 lines.
+- **Length caps** (words outside code fences): 01 600 · 02 2,100 · 03 1,200 · 04 1,000 · 05 800 · 06 850 · 07 1,200 · 09 700 · 10 500 · 11 600 · 12 350 · ADR 15 lines · README 80 lines · this file 120 lines.
 
 ## Links
 - Context, IDs, decisions: `docs/00-context.md` · numbers: `docs/facts-register.md`

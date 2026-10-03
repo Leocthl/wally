@@ -396,6 +396,7 @@ docs/
 - **`rule`**: the Laya decision loop in a deterministic harness, not a generative LLM: typed choices (item, variant, next action) logged with probabilities; small margins abstain [F47]; step cap [F46].
 - **`local`**: Qwen3.5-9B reads English, Chinese or Cantonese and returns one grammar-constrained JSON answer; enums come from the supplied catalogue; code clamps quantity and guards near-ties [F58]. On 25 calls: wrong item in 0/26 scenarios; author-written cases, no held-out set [F68]. Qwen never gates a decision (ADR-0009).
 - **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60].
+- **Photo reader** (`POST /api/see`, not a run, buys nothing): the same Qwen server reads a picture, a screenshot or words and returns typed fields (kind, colours, pattern, fit, style) from fixed lists. The phone shrinks and re-encodes the picture and works out the colour plates; code matches a SIMULATED shop and fixes a pick's proposal, then the judge and rules R1-R12 run as for any ask. It names the kind of garment in 25 of 29 retailer photos [F68a]; it does not understand photos. The on-device build has no model: the shopper taps the kind on chips. Settings: F63a.
 
 ## 15. Env config
 
@@ -420,7 +421,7 @@ pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <
 pnpm --filter @wally/agent judge:fit        node scripts/gen-types.mjs --check (also checks the precompiled validators)
 services/{laya,qwen}/{setup,serve,stop}.sh
 GET  /api/health /info /snapshot /log /export /events (SSE) /family /lan
-POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only; LAN mode: the guards below)
+POST /api/seal /scenario/:id /propose /ask /alternatives /see /compile /revoke /escalation/answer /verify /tamper /restore /reset      (loopback Host and Origin only; LAN mode: the guards below)
 ```
 
 - **No variable is required**; no key. Secrets in `.env` only (gitignored).

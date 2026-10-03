@@ -6,7 +6,7 @@
 
 ## What it does
 - **Seal**: write a sentence, for example "HK$800 this month, clothes, verified sellers" (illustrative, SIMULATED [F20]). Wally suggests rules, you edit them and sign them as a W3C VC 2.0 delegation credential.
-- **Shop**: type or speak a request. A planner proposes a cart, a judge reads the listing as data, and deterministic rules decide. Only an approved cart gets a one-off card for the exact total.
+- **Shop**: type, speak or show a photo (a screenshot works too). A planner proposes a cart, a judge reads the listing as data, and deterministic rules decide. Only an approved cart gets a one-off card for the exact total.
 - **Stops**: over budget (shipping included), a flagged or unverified seller, orders hidden in a listing, a cancelled or ended budget, an unanswered Needs your OK.
 - **Proof**: every decision is a signed, hash-chained receipt. An offline page checks tamper, order, truncation (with a checkpoint), consent and money for what is logged.
 - **Family budget** (optional): a parent's budget caps a child's; a wider ask is refused.
@@ -19,6 +19,7 @@
 | Judge | Laya, third-party and open source, on the booth Mac [F11c] |
 | Planner and sentence reader | Qwen3.5, third-party and open source, on the booth Mac [F27]; else the Laya loop, else recorded answers. No model gates a decision |
 | On-device mode | The real engine in the page with recorded model answers; the page holds every key |
+| Photo reader | Qwen3.5 with its vision projector, on the booth Mac only [F63a]; names the kind of garment, not the photo [F68a]; the on-device page asks the shopper to tap the kind |
 | Card rail (Single Use Card semantics [F1]), merchants, flagged seller | SIMULATED |
 | Real-card decline, shop probe | Human-run captures, not done yet [F39, F40] |
 | Every number | Tagged in the [facts register](docs/facts-register.md) |
@@ -49,7 +50,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 ## Honest status
 - **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); what each layer adds: AI alone (our B0 baseline) let 43 of 84 stop cases through, rules only 28, rules plus judge 0 (an upper bound of about 4 in 100 [F96]), at the price of 5 of 66 honest buys blocked against 3; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
 - **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
-- **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68].
+- **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68]. **Photo reader**: right kind of garment in 25 of 29 retailer photos [F68a].
 - **Tests**: over 4,000 automated tests; core line coverage above 95%; exact numbers and the last green CI commit in [F91].
 - **Shortcuts**: the booth server holds the delegator's demo key, and Mum's for a family budget. The offline page cannot check the parent link.
 - **Not done**: manual-route stopwatch; native zh-HK read; a physical-phone test. LAN is plain http with one shared token [F92]. Voice uses the browser's speech service.

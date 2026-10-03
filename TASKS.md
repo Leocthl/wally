@@ -4,7 +4,7 @@
 1. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
 1b. **Persist (done on main)**: human check left: reload on a real phone (Safari and Chrome) and in the iOS and Android shells.
 2. **X-01, X-18** Public repo: a private remote exists (pushed through 78d0257, CI green); making it public needs the team's explicit yes (licence: Apache-2.0, chosen 2026-10-03); then the freeze guard. Audit findings are fixed before it goes public.
-3. **M-12** Voice input and the result-screen polish sit on `lane/ui-polish-b`; merge to `main`, then re-run the suite and the axe scan.
+3. **D-17, D-18, D-30** Film and deck refresh (the demo half re-shot on the current build, the photo slide, the live link); then a human listens to the narration and watches every join, and types the four names into slide 17.
 4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
 5. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
 6. **D-26, D-27, X-19** Freeze procedure, booth kit, credits check.
@@ -93,7 +93,7 @@
 | B-10 | Golden judge outputs for the S2 and S3 fixtures, recorded from Laya | [TEAM] | 0.75h | X-07, B-14 | M2 | [x] |
 | B-11 | Injection corpus: description, review and image-alt text variants, incl. negation and booth-style free text, for judge tests and the harness | [TEAM] | 1h | B-14 | M3 | [x] |
 | B-12 | Latency and cost logging per call; MEASURED only [F26], no vendor figure reported as ours; local Laya logs no per-call charge, noted as local compute | [TEAM] | 0.75h | B-14 | M2 | [ ] |
-| B-13 | Stretch, cut second (D9): screenshot intake to a draft cart, only if it fits the D9 time-box | [TEAM] | 2h | B-03 | M4 | [ ] |
+| B-13 | Shipped as Show Wally a photo (D18): a picture, a screenshot or words to four SIMULATED items and a normal ask; the local Qwen model names the kind of garment [F68a] | [TEAM] | 2h | B-03 | M4 | [x] |
 | B-14 | `SystemOneJudge` (providers `laya`, `jev`; one wire protocol, 02 §Judge adapter): one POST `/v1/systemone` with the four questions and semantic labels (never yes/no); k option-order rotations averaged back to canonical order; engine reads probabilities only; always sends `model: typed-decisions`; `usage.truncated` returns ERROR with `input_truncated: true` (padding attack); timeout F34, retries 0; any failure returns TIMEOUT or ERROR, never throws (I5); warm-up call after start [F26]. Shape from `services/laya/FINDINGS.md`. Tests first on a mock server (B-04) | [TEAM] | 2h | B-01, B-04 | M2 | [x] |
 | B-15 | Planner harness and backends: structured listing parser (title, variants, price, shipping, seller; never the description), cart building in code, quantity 1, no money fields; `replay` (recorded outputs in `data/fixtures/planner/`; CI and booth fallback); `PLANNER_PROVIDER` = `rule`, `replay` or `local`; no API key. Tests first: same input, same output | [TEAM] | 1.5h | X-06, X-07 | M1 | [x] |
 | B-16 | Dropped: local generative planner client (the stack is Laya only) | none | 0h | none | none | n/a |
@@ -141,7 +141,7 @@
 | M-09 | Delegator key on the phone: generate and sign seal, revoke and escalation answers on the device; the server only verifies. Groundwork merged: async signer adapter and the design in `apps/web/src/api/local/KEYS.md` | [TEAM] | 2h | M-08 | M4 | [ ] |
 | M-10 | LAN mode: server `--lan` (`pnpm demo:lan`) with a pairing token, Host and Origin checks and a QR in About and Presenter so phones drive the Mac, plus "Connect to the booth Mac" in the native shells (that link is untested in both) | [TEAM] | 2h | e-server merged | M4 | [x] |
 | M-11 | Device pass: iOS Simulator Safari checks, safe areas, install flow, Android emulation; Capacitor wrappers built (`apps/mobile`); checked on the iPhone 17 Simulator and an Android API 36 emulator, not on a physical device | [TEAM] | 2h | M-07 | M4 | [x] |
-| M-12 | Voice input in the Ask sheet: the browser's speech recogniser, a mic inside the field only where one exists and never in the native shells, a first-press note that audio may leave the device, nothing sent until Send. Built on `lane/ui-polish-b`; tick when merged to `main` | [TEAM] | 1.5h | M-07 | M4 | [ ] |
+| M-12 | Voice input in the Ask sheet: the browser's speech recogniser, a mic inside the field only where one exists and never in the native shells, a first-press note that audio may leave the device, nothing sent until Send. Merged to `main`  | [TEAM] | 1.5h | M-07 | M4 | [x] |
 
 ### Lane D: evidence + pitch
 | ID | Task | Owner | Est | Deps | Milestone | Done |

@@ -21,6 +21,7 @@
 - **After 3:00** [F45] the judge drives; the Talker answers.
 - **Demo scenarios** (Budget, for judges): every scenario is one tap and buys what it needs first.
 - **Ask Wally**: type or speak a request (English, Chinese, Cantonese); the rules decide; a repeat buys nothing.
+- **Show Wally a photo**: Home or Ask, the camera button. A plain garment photo gives words and four SIMULATED items; one tap asks Wally to buy, and the rules decide as for any ask. It names the kind of garment, not the photo [F68a]; on the on-device page the shopper taps the kind.
 - **Try to trick Wally**: text reaches the judge only; expect Stopped before paying (`R10.injection`); padded or Chinese text escalates [F26, F104].
 - **See cheaper options** after the shipping stop: Wally replans and the new cart is checked again.
 - **Needs your OK** (a seller Wally cannot verify): Approve mints; No thanks or 60 s of silence [F31] stops it (DMR2); a fixed rule never yields.
@@ -51,6 +52,7 @@
 - [ ] `pnpm demo:reset`: HK$800 [F20], no cards, SIMULATED note on every screen
 - [ ] Network off: the booth runs. Stop Laya once, see Needs your OK (`R10.unavailable`), restart, warm up
 - [ ] LAN: `WALLY_PUBLIC_URL=https://wally-dev.vercel.app pnpm demo:lan`. A judge who scans the Wi-Fi code gets their own HK$800 practice wallet; the second code (works anywhere) opens the practice copy. Reset and `pnpm demo:reset` touch only the Mac's wallet. Rehearse with `node scripts/sessions-crowd.mjs --port 8787`; `curl -s http://127.0.0.1:8787/api/lan` counts live wallets. Phones reach the Mac (else a hotspot); firewall Allow once
+- [ ] A plain garment photo on the phone and the Mac (`data/raw/demo-photos/` is gitignored)
 - [ ] On power; notifications off; mirrored
 - [ ] Video on laptop and phone; `?api=local` page ready; four rehearsals [F41]; submit before Sun 13:00 HKT [F16, F18]
 

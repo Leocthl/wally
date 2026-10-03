@@ -50,7 +50,7 @@
 | D6 | Upgrades: U1 decrementing sealed packet; U2 mint-on-approval; U3 seller-risk gate before minting; U4 rail simulator calibrated on one real decline + 10-shop readiness probe | ADR-0003 |
 | D7 | No issuing API found [F1]: rail is SIMULATED and labelled so everywhere. A processed payment cannot be cancelled [F2]: demo revocation before mint or before first use; after payment use dispute + loss rule | ADR-0003 |
 | D8 | Contingency only: if the H10 trigger fires [F41], switch to Track 4 "overnight desk that escalates" | 08 |
-| D9 | Cut order, first to go: screenshot intake (stretch, only if under 2 h), reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is not cut: HKT's workshop centres on DID-VC [F19]. The teen chain left the list: it is the family budget (D17) | 03 |
+| D9 | Cut order, first to go: reconciliation, harness 200 → 100 [F37], Scameter → manual capture only. did:key is not cut: HKT's workshop centres on DID-VC [F19]. Screenshot intake and the teen chain left the list: they shipped as Show Wally a photo (D18) and the family budget (D17) | 03 |
 | D10 | First-2-hour kill tests: real-card decline [F40]; shop probe [F39]; ask an HKT mentor whether a delegate SUC API is planned [F17] | 03, 05 |
 | D11 | The mandate is an AgentDelegationCredential: W3C VC 2.0 envelope, issuer = delegator did:key, Data Integrity proof (eddsa-jcs-2022). The engine reads `credentialSubject`; R1 verifies the proof [F19] | ADR-0007 |
 | D12 | Superseded by D15 for the planner. Still in force: local-first, no API keys to run the demo, judge = Laya on 127.0.0.1. Was: planner = `rule` (structured parser + Laya typed item choice) and `replay` only, `claude` optional, no second model [F27] | ADR-0008 |
@@ -59,6 +59,7 @@
 | D15 | A second local model is allowed (supersedes D12): Qwen3.5-9B (4B selectable) on llama.cpp, 127.0.0.1 only [F27, F63], plans natural-language requests (English, Chinese, Cantonese) and compiles the sentence into suggested rule chips the shopper confirms. Laya stays the judge; Qwen never gates a decision; rules, the rail limit and Laya's gate stay in charge; `rule` and `replay` planners remain the fallbacks. There is still no LLM judge. The `claude` provider is removed | ADR-0008, ADR-0009 |
 | D16 | Mobile first: a PWA-first web app (manifest, service worker that never caches `/api`, install prompt, safe areas), phones are the main target; on-device mode runs the real engine in the browser with recorded model answers; Capacitor wrappers for iOS and Android (`apps/mobile`) are built and checked on a simulator and an emulator, not on a physical device | 03 |
 | D17 | LAN, family and voice restored to scope after the early finish. LAN mode (`pnpm demo:lan`): phones on the booth Wi-Fi drive the live booth with a pairing token and a QR code. Family budget, optional: a parent's budget (Mum) caps a child's, a wider child is refused `EXCEEDS_PARENT`, and the offline verifier cannot check the parent chain. Voice input in the Ask sheet through the browser's speech service. Each stays optional and labelled | ADR-0005, 02 §15, 08 |
+| D18 | Shopper first, decided 2026-10-03 after a user-feedback review. Plain words by default with a Developer mode, a personal first run, a shopper-first Home. Show Wally a photo: a picture, a screenshot or words become typed fields (the local Qwen model names the kind of garment [F68a]; code does colours, price and the match against a small SIMULATED shop), and the rules decide as for any ask. The on-device session survives a reload [F106]; each phone on the booth Wi-Fi gets its own practice wallet [F108]. The rail stays SIMULATED | 02 §14, 06, 08 |
 
 ## Canonical IDs
 - **One name per thing.** Use these exactly. Do not rename or renumber.
@@ -167,7 +168,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | DMR1 | Reserve: revoke before first use, hold to confirm (S4) | DIR5 |
 | DMR2 | Reserve: escalation expires unanswered (S5) | DIR6 |
 
-- **Hands-on beats** (no DM ID): Ask Wally typed or spoken; See cheaper options after DM4; Needs your OK (DMR2); Cancel this budget (DMR1); Mum's budget and a refused ask [F93]; a phone joining by QR over the LAN (D17). Choreography in 06.
+- **Hands-on beats** (no DM ID): Ask Wally typed, spoken or as a photo (D18); See cheaper options after DM4; Needs your OK (DMR2); Cancel this budget (DMR1); Mum's budget and a refused ask [F93]; a phone joining by QR over the LAN (D17). Choreography in 06.
 - **Run-of-show [F42]**: hook; demo (DM1-DM7, DM6 optional); evidence (DM8, where it breaks); market and moat; path to HKT (DM9); team.
 - **Flagged-seller fixture is SIMULATED.** No real individual's phone, FPS ID or page name enters the repo. Real Scameter lookups appear only as redacted, timestamped captures.
 

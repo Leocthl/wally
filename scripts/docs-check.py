@@ -9,8 +9,8 @@ REG = os.path.join(ROOT, "docs/facts-register.md")
 ADD_DIR = os.path.join(ROOT, "docs/_register-additions")
 
 CAPS = {
-    "docs/01-product-brief.md": 600, "docs/02-architecture.md": 2000, "docs/03-implementation-plan.md": 1200,
-    "docs/04-design-language.md": 1000, "docs/05-evidence-plan.md": 800, "docs/06-demo-script.md": 800,
+    "docs/01-product-brief.md": 600, "docs/02-architecture.md": 2100, "docs/03-implementation-plan.md": 1200,
+    "docs/04-design-language.md": 1000, "docs/05-evidence-plan.md": 800, "docs/06-demo-script.md": 850,
     "docs/07-pitch.md": 1200, "docs/10-test-plan.md": 500, "docs/09-hkt-delegation-api-ask.md": 700,
     "docs/11-explain-the-code.md": 600, "docs/12-hallway-interviews.md": 350,
 }
@@ -107,7 +107,7 @@ def main():
                     problems.append((rel, "F-ID", "unknown %s" % r))
         # id ranges
         for pat, mx, name in [(r"\bR(\d{1,3})\b", 12, "R"), (r"\bI(\d{1,3})\b", 8, "I"), (r"\bS(\d{1,3})\b", 6, "S"),
-                              (r"\bD(\d{1,3})\b", 17, "D"), (r"\bDM(\d{1,3})\b", 9, "DM"), (r"\bE(\d{1,3})\b", 5, "E"),
+                              (r"\bD(\d{1,3})\b", 18, "D"), (r"\bDM(\d{1,3})\b", 9, "DM"), (r"\bE(\d{1,3})\b", 5, "E"),
                               (r"\bSR(\d{1,3})\b", 4, "SR"), (r"\bDIR(\d{1,3})\b", 11, "DIR"), (r"\bU(\d{1,3})\b", 4, "U")]:
             for m in re.finditer(pat, strip_fences(text)):
                 if int(m.group(1)) > mx or int(m.group(1)) == 0:

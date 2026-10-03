@@ -31,7 +31,7 @@
 | Whose models? Did AI write the code? | Third-party open source: Laya judges [F11c]; Qwen3.5 plans [F27]. Ours: the questions, thresholds, the code around them. AI assistants are allowed; we explain every module [F16] ([11](11-explain-the-code.md)). |
 | Judge or Qwen wrong? | The judge only tightens (I3); alone it let 8 of 40 attack items through, 6 of 20 held out [F69]. Qwen proposes and code checks it against the catalogue: wrong item in 0 of 26 author-written scenarios (9B), no held-out set [F68]. Hard rules and the rail limit use no model. |
 | Who pays, how big? | A wallet or issuer; the shopper pays nothing. Fee guess ASSUMED [F98]. Anchors are not Hong Kong figures [F94, F95]; demand data starts with the pilot. |
-| Why will Visa, Mastercard, Cloudflare or Alipay not ship this? | They may bundle limits for their own rail. AP2 defines signed budgets; we found no enforcer for it. We found no one that also screens listing text, sizes cards to the cart and keeps a decision log anyone can verify offline [F103]. Wrong if one ships all of it or none adopts ours. |
+| Why will Visa, Mastercard, Cloudflare or Alipay not ship this? | They may bundle limits for their own rail. We found no one that also screens listing text, sizes cards to the cart and keeps a decision log anyone can verify offline [F103]. Wrong if one ships all of it or none adopts ours. |
 | 0 of 84 against what? | Our own SIMULATED scenarios [F69]. Zero in 84 allows up to about 4 in 100 [F96], not never. Rules alone stop overspend; the judge adds trick-listing cover; 5 of 66 honest buys blocked. |
 | Allowed under HKT's terms and HKMA rules? Who is liable? | Not covered today [F2]; the ask adds an addendum. Our position, not legal advice: delegate software inside the licensed wallet, no value held, exposure capped at the sealed budget (I2); HKMA sandbox route [F8]. Three loss options for HKT Compliance ([09](09-hkt-delegation-api-ask.md)). |
 | Why you: company or feature? | Either. A wallet could build it; we are the neutral budget-and-proof layer across rails. Wrong if a rail bundles both, or none adopts ours. The code is Apache-2.0. |
@@ -47,7 +47,7 @@
 | **Real** | Engine, credential, signed log, offline verifier, two third-party models; public facts READ-BY-CLAUDE |
 | **Simulated** | Rail, merchant lock [F1], merchants, flagged seller, amounts [F20-F23], every scenario |
 | **Shortcut** | Server-held demo keys; design: key on the phone, biometric step-up |
-| **Limits** | Models read no raw pages, do no sums; judge thresholds fitted on simulated cases, seller gate inert [F36]; Cantonese rests on the model [F68] |
+| **Limits** | Models read no raw pages, do no sums; judge thresholds fitted on simulated cases, seller gate inert [F36]; Cantonese rests on the model [F68]; the photo reader names the kind of garment, nothing more [F68a] |
 | **Assumed** | Card TTL [F30], fee [F98], pilot [F97] |
 
 - **Measured**: our own runs only; vendor figures stay VENDOR-REPORTED [F94]. **Not affiliated** with HKT, Tap & Go or Mastercard.
