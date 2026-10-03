@@ -57,7 +57,14 @@ function useGuard(): { readonly busy: boolean; readonly error: string | null; re
   return { busy: pending > 0, error, guard, clearError: useCallback(() => setError(null), []) };
 }
 
-export function BoothProvider({ api, children }: { readonly api: ApiClient; readonly children: ReactNode }): ReactElement {
+export interface BoothProviderProps {
+  readonly api: ApiClient;
+  /** Seal the ready-made budget when nothing is sealed (default). The first run turns it off while a new visitor sets up their own, and seals it itself when they skip. */
+  readonly autoSeal?: boolean;
+  readonly children: ReactNode;
+}
+
+export function BoothProvider({ api, autoSeal = true, children }: BoothProviderProps): ReactElement {
   const [state, dispatch] = useReducer(reduce, undefined, initialState);
   const [info, setInfo] = useState<ApiInfo | null>(null);
   const [verifyOutcome, setVerifyOutcome] = useState<VerifyOutcome | null>(null);
@@ -77,9 +84,9 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
       const [i, snap] = await Promise.all([api.info(), api.snapshot()]);
       setInfo(i);
       dispatch({ type: "snapshot", snapshot: snap });
-      if (!snap.mandate) await api.seal(m0Request(new Date()));
+      if (!snap.mandate && autoSeal) await api.seal(m0Request(new Date()));
     });
-  }, [api, guard]);
+  }, [api, guard, autoSeal]);
 
   const showLog = useCallback(async () => dispatch({ type: "log.view", view: await api.getLog() }), [api]);
 
