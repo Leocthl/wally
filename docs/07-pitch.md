@@ -3,14 +3,14 @@
 ## Finalist run-of-show: 5 + 2 min [F14, F42, F70]
 | Block | Time | Deck | Say |
 |---|---|---|---|
-| **Hook** | 0:00-0:40 | 1-3 | The pipe is live: Mastercard [F7a], Visa [F7b] and HKT's Single Use Card [F1]. The brake is not: the only control we found is trust. 12,505 scams in 2025 [F4] is why the seller check matters; early 2026 is down 28% [F5b]. One shopper: Gen Z, 21 to 30 [F5a]. Mum is a feature. |
+| **Hook** | 0:00-0:40 | 1-3 | The pipe is live: Mastercard [F7a], Visa [F7b] and HKT's Single Use Card [F1]. The brake is not: the control we found is trust, or a limit set by hand. 12,505 scams in 2025 [F4] is why the seller check matters; early 2026 is down 28% [F5b]. One shopper: Gen Z, 21 to 30 [F5a]. Mum is a feature. |
 | **Demo** | 0:40-3:00 | Presenter | Seal one sentence [F20]. Wally can only ask: the planner names a title, code prices the cart, the rules decide, the decision is logged first, then a one-off card for the exact total [F21]. Charge more: declined. Three stops. Flip one byte: Proof fails. |
 | **Evidence** | 3:00-3:30 | 10-11 | What each layer adds, on our own 150 scenarios [F69]. Zero of 84 means under about 4 in 100 [F96]; 5 of 66 honest buys blocked. Limits: rail simulated, seller data a fixture, consent one tap [F36]. Over 4,000 tests [F91]. |
 | **Market, moat** | 3:30-4:15 | 12-13 | A wallet or issuer pays; the shopper pays nothing; fee guess untested [F98]. Anchors, not Hong Kong figures [F94, F95]. Rails will bundle limits and AP2 defines signed budgets; we found no one that also screens listing text, sizes each card to the cart and keeps a decision log anyone can verify offline [F103]. |
 | **Path** | 4:15-4:45 | 14-16 | Delegate software inside the licensed wallet, exposure capped at the sealed budget; HKMA sandbox route [F8]. Pilot on today's card, no new API: 90 days, 50 holders [F97]. One ask: a delegation API. Then Club Points. Hallway result ([12](12-hallway-interviews.md)). |
 | **Team** | 4:45-5:00 | 17-18 | Four roles, four names. Repo public at submission [F18]. |
 
-## Booth: 3 minutes, unchanged [F45]
+## Booth: 3 minutes, same beats [F45]
 | Block | Time | Say |
 |---|---|---|
 | Hook | 0:00-0:25 | 12,505 online shopping scams in Hong Kong in 2025 [F4]; six in ten victims were 11 to 30 [F5c]. Now give them an AI agent with a wallet. Meet Wally: a signed budget it cannot overspend, and it checks the shop before it pays. |
