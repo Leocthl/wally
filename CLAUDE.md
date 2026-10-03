@@ -27,7 +27,7 @@
 CLAUDE.md  README.md  TASKS.md  THIRD_PARTY.md  .env.example
 docs/      00-context 01-product-brief 02-architecture 03-implementation-plan 04-design-language
            05-evidence-plan 06-demo-script 07-pitch 08-risk-register 09-hkt-delegation-api-ask
-           10-test-plan lane-prompts facts-register adr/
+           10-test-plan 11-explain-the-code 12-hallway-interviews lane-prompts facts-register adr/
 schemas/   MandateCredential Mandate Cart Decision LogEntry CardRecord PacketState (JSON Schema, source of truth)
 scripts/   docs-check.py trace-check.py gen-types.mjs keys-gen.mjs verify-log.mjs demo-reset.mjs booth-check.mjs pages-build.mjs
 data/      capture-sheet shop-probe real-card-test (templates), evidence/, fixtures/, scenarios/, judge-corpus/, results/ (MEASURED), raw/ (gitignored)
@@ -94,11 +94,11 @@ packages/harness                            lane D
 - **Point form**, bold keywords, no intro paragraph under a heading, no filler, at most one hint line per table, few examples, tables and checklists first.
 - **No em dashes, no emoji**, no hype words; plain verbs. Must not read as AI-written.
 - **Terms**: mandate, packet, seal, cart, decision, mint, stop, escalation, revoke, rail, planner, judge. No synonyms.
-- **Length caps** (words outside code fences): 01 600 · 02 1,800 · 03 1,200 · 04 1,000 · 05 800 · 06 700 · 07 900 · 09 one page · 10 500 · ADR 15 lines · README 80 lines · this file 120 lines.
+- **Length caps** (words outside code fences): 01 600 · 02 1,800 · 03 1,200 · 04 1,000 · 05 800 · 06 700 · 07 1,200 · 09 700 · 10 500 · 11 600 · 12 350 · ADR 15 lines · README 80 lines · this file 120 lines.
 
 ## Links
 - Context, IDs, decisions: `docs/00-context.md` · numbers: `docs/facts-register.md`
-- Product and demo: `docs/01-product-brief.md` · `docs/06-demo-script.md` · `docs/07-pitch.md`
+- Product and demo: `docs/01-product-brief.md` · `docs/06-demo-script.md` · `docs/07-pitch.md` · before judging: `docs/11-explain-the-code.md` · exhibition tally: `docs/12-hallway-interviews.md`
 - Build: `docs/02-architecture.md` · `docs/03-implementation-plan.md` · `docs/10-test-plan.md` · `TASKS.md` · `docs/lane-prompts.md`
 - Look and evidence: `docs/04-design-language.md` · `docs/05-evidence-plan.md` · `docs/adr/`
 - Risk and ask: `docs/08-risk-register.md` · `docs/09-hkt-delegation-api-ask.md` · credits: `THIRD_PARTY.md`
