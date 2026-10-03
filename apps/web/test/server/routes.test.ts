@@ -129,6 +129,11 @@ describe("booth API routes", () => {
     ["/api/revoke", JSON.stringify({ reason: "r".repeat(201) }), "TEXT_TOO_LONG"],
     ["/api/seal", JSON.stringify({ intentText: "x", rules: {}, validUntil: "tomorrow" }), "INVALID_FIELD"],
     ["/api/seal", JSON.stringify({ intentText: "", rules: {}, validUntil: "2026-10-31T15:59:59Z" }), "INVALID_FIELD"],
+    // An absurd budget amount is a calm 400, not a 500 from the packet fold (9e99 and a number past the safe integers).
+    ["/api/seal", '{"intentText":"x","rules":{"budget":{"amount_minor":9e99}},"validUntil":"2026-10-31T15:59:59Z"}', "INVALID_FIELD"],
+    ["/api/seal", '{"intentText":"x","rules":{"budget":{"amount_minor":9007199254740993}},"validUntil":"2026-10-31T15:59:59Z"}', "INVALID_FIELD"],
+    ["/api/seal", '{"intentText":"x","rules":{"budget":{"amount_minor":200001}},"validUntil":"2026-10-31T15:59:59Z"}', "INVALID_FIELD"],
+    ["/api/seal", '{"intentText":"x","rules":{"budget":{"amount_minor":0}},"validUntil":"2026-10-31T15:59:59Z"}', "INVALID_FIELD"],
   ])("validates %s body %s -> %s", async (path, body, code) => {
     const res = await post(path, body);
     expect(res.status).toBe(400);
