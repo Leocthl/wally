@@ -161,8 +161,8 @@ export function BudgetScreen(): ReactElement {
         <IosInstallHint ready={installReady} />
       </div>
       <div className="home-col home-col--test">
-        {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
-        <DemoScenarios lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
+        {/* On a phone Manage this budget is the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
+        <DemoScenarios panel={desktop} lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
           <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} variant={desktop ? "tabs" : "cards"} />
           <div className="home-block__foot"><ResetDemo /></div>
         </DemoScenarios>

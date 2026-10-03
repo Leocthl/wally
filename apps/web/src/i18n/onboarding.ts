@@ -77,7 +77,7 @@ export const OB = {
   tour: {
     ask: {
       title: label("Ask Wally", "問 Wally"), // NEEDS-REVIEW
-      body: label("Tap here, or Ask below, to say what you need in your own words.", "喺呢度或者下面撳「問」，用你自己嘅講法話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
+      body: label("Tap here, or the Ask button, to say what you need in your own words.", "喺呢度或者撳「問」，用你自己嘅講法話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
     },
     ideas: {
       title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW

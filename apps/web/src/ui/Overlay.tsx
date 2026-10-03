@@ -1,4 +1,4 @@
-// Sheet (bottom sheet with a drag handle) and Dialog (centred). Both: portal to <body>, scrim click and Escape close,
+// Sheet (a bottom sheet with a drag handle; a drawer from the right on a laptop) and Dialog (centred). Both: portal to <body>, scrim click and Escape close,
 // focus moves in and is trapped, focus returns to the opener, the page behind does not scroll, safe-area aware. Opened by
 // a hold that is still pressed, they ignore the release, the click after it and the held key's repeats (usePressGuard).
 // Entering is a CSS transition from @starting-style, leaving is the same transition run the other way (--dur-exit, 0 ms

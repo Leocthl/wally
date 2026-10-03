@@ -1,6 +1,6 @@
 /* Budget screen and its console bits (lane b-shell). Tokens only; motion from --dur tokens (zero under reduced motion). */
 .home { display: grid; gap: var(--sp-6); }
-.home > * { min-width: 0; }
+.home > *, .home-col > * { min-width: 0; }
 
 /* Budget card: see hero.css. Only its loading skeleton lives here. */
 .home-hero-skeleton { display: grid; gap: var(--sp-4); min-height: 16rem; }
@@ -174,14 +174,14 @@
 
 /* The scenarios as an always-open panel on a laptop: a sunken tray with one row of tabs and the cards of the chosen group, so all of
    it is in reach and none of it is a scroll away. */
-.home-demo[data-static] .home-demo__summary { padding: var(--sp-4) var(--sp-4) 0; font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: -0.012em; }
+.home-demo[data-static] .home-demo__summary { padding: var(--sp-4) var(--sp-4) 0; font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: -0.012em; cursor: default; }
 .home-demo[data-static] .home-demo__body { gap: var(--sp-3); padding: var(--sp-2) var(--sp-4) var(--sp-4); }
 .home-try--tabs { gap: var(--sp-3); }
 .home-try__tabs { display: flex; gap: 2px; padding: 3px; border-radius: var(--r-pill); background: var(--c-bg); }
 .home-try__tab {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 2.25rem;
+  min-height: var(--tap);
   padding: 0 var(--sp-2);
   border: 0;
   border-radius: var(--r-pill);

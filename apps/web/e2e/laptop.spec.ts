@@ -89,6 +89,39 @@ test("opens Ask Wally as a drawer from the right edge, full height, and closes i
   await expect(sheet).toHaveCount(0);
 });
 
+test("keeps the name link as wide as the name, and the navigation beside it", async ({ page }) => {
+  const brand = (await page.locator("a.shell-brand").boundingBox())!;
+  expect(brand.width, "name link").toBeLessThan(260);
+  const nav = (await page.getByRole("navigation", { name: "Main" }).boundingBox())!;
+  expect(nav.x - (brand.x + brand.width), "gap between the name and the navigation").toBeLessThan(24);
+});
+
+test("lets the presenter stage use the whole width", async ({ page }) => {
+  await page.goto("/?api=mock#/presenter");
+  await expect(page.locator('[data-route="presenter"]')).toBeVisible();
+  const size = page.viewportSize()!;
+  const main = (await page.locator("main#main").boundingBox())!;
+  expect(main.width).toBeGreaterThanOrEqual(size.width - 2);
+});
+
+test("keeps the scenario tab you chose when you come back from the result", async ({ page }) => {
+  await page.getByRole("tab", { name: "Stops" }).click();
+  await page.locator('main [data-scenario="flagged"]').click();
+  await expect(page).toHaveURL(/#\/wally$/);
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Budget", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "Stops" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('main [data-scenario="overflow"]')).toBeVisible();
+});
+
+test("leaves the page where it is when Cancel the budget reveals Manage: it is already on screen", async ({ page }) => {
+  await page.getByRole("tab", { name: "Budget" }).click();
+  const before = await page.evaluate(() => window.scrollY);
+  await page.locator('main [data-scenario="revoke"]').click();
+  await page.waitForTimeout(1500);
+  const after = await page.evaluate(() => window.scrollY);
+  expect(after - before, "the page did not jump").toBeLessThanOrEqual(2);
+});
+
 for (const scheme of ["light", "dark"] as const) {
   test.describe(`axe, ${scheme}`, () => {
     // Reduced motion, like the phone specs: axe reads colours at one instant, and a figure half-faded in is not a finding.

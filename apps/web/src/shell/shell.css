@@ -1,5 +1,6 @@
 /* App shell (lane b-shell): top bar, main column, tab bar placement, banners, sheets' contents. Tokens only. A phone
-   column everywhere; on wide screens it is centred on a soft backdrop. The presenter screen takes the full width. */
+   column up to 64rem (centred on a soft backdrop on wide windows); from 64rem the laptop layout below. The presenter screen
+   takes the full width in both. */
 
 /* Toasts sit above the tab bar and the home indicator whenever the tab bar shows (the update toast too). */
 :root:has(.shell-app--tabs) { --toast-offset: calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-4)); }
@@ -33,15 +34,16 @@
   .shell-app--desktop .on-device-note { padding-inline: var(--page-x); }
   .shell-app--desktop .shell-bar { padding-inline: var(--page-x); }
   .shell-app--desktop .shell-bar__inner { gap: var(--sp-2); max-width: var(--page-max); min-height: 3.5rem; margin-inline: auto; }
-  .shell-app--desktop .shell-brand { margin-right: 0; padding-right: var(--sp-4); }
+  .shell-app--desktop .shell-brand { flex: none; margin-right: 0; padding-right: var(--sp-4); }
   .shell-app--desktop .shell-bar__about { margin-right: 0; }
   .shell-app--desktop .shell-banners { max-width: var(--page-max); margin-inline: auto; padding-inline: var(--page-x); }
   .shell-app--desktop .shell-main { box-sizing: content-box; max-width: var(--page-max); margin-inline: auto; padding: var(--sp-5) var(--page-x) var(--sp-7); }
+  .shell-app--desktop.shell-app--wide .shell-main { max-width: none; }
   /* Screens that read as one column keep a comfortable measure; the Budget screen, Evidence and the stage use the whole page. */
   .shell-app--desktop:is([data-route="wally"], [data-route="receipts"], [data-route="proof"]) .shell-main { max-width: 42rem; }
   .shell-app--desktop[data-route="seal"] .shell-main { max-width: 40rem; }
   .shell-app--desktop[data-route="evidence"] .shell-main { max-width: 62rem; }
-  .shell-ask { margin-right: var(--sp-2); }
+  .shell-bar__ask { margin-right: var(--sp-2); }
 }
 
 /* Top navigation (laptop): quiet words, the current place a soft pill. */

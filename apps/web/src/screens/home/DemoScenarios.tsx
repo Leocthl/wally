@@ -5,7 +5,6 @@
 import { useId, type ReactElement, type ReactNode } from "react";
 import { OB } from "../../i18n/onboarding";
 import { Icon } from "../../ui/icons";
-import { useDesktop } from "../../shell/layout";
 import { useLocale } from "../../ui/locale";
 import { useDemoOpen, useIsBoothPage } from "./demoMode";
 
@@ -15,15 +14,15 @@ export interface DemoScenariosProps {
   readonly children: ReactNode;
   /** Whether this is the booth's own page (default: read from the address, ?booth=1 and presenter mode). A test says it outright. */
   readonly booth?: boolean;
+  /** An always-open panel (the laptop's Budget screen) instead of a disclosure. The Ask sheet keeps the disclosure. */
+  readonly panel?: boolean;
 }
 
-export function DemoScenarios({ lead, children, booth }: DemoScenariosProps): ReactElement {
+export function DemoScenarios({ lead, children, booth, panel = false }: DemoScenariosProps): ReactElement {
   const { t } = useLocale();
   const [open, choose] = useDemoOpen();
   const onBooth = useIsBoothPage();
   const heading = useId();
-  // On a laptop the scenarios are a panel that is always there: a section with a heading, not a disclosure with nothing to open.
-  const panel = useDesktop();
   // "for judges" only on the booth's pages; on a friend's phone the cards are just a demo.
   const title = t((booth ?? onBooth) ? OB.home.demo : OB.home.demoPlain);
   if (panel) {

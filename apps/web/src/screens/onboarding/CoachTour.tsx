@@ -29,9 +29,9 @@ interface Mark {
 
 const MARKS: readonly Mark[] = [
   // The "What do you need?" row; on a screen without it (a budget that is over) the Ask button in the tab bar.
-  { id: "ask", title: OB.tour.ask.title, body: OB.tour.ask.body, shape: "round", scroll: true, find: () => document.querySelector<HTMLElement>("[data-composer]") ?? document.querySelector<HTMLElement>(".w-tabbar__fab") },
+  { id: "ask", title: OB.tour.ask.title, body: OB.tour.ask.body, shape: "round", scroll: true, find: () => document.querySelector<HTMLElement>("[data-composer]") ?? document.querySelector<HTMLElement>(".w-tabbar__fab") ?? document.querySelector<HTMLElement>(".shell-bar__ask") },
   { id: "ideas", title: OB.tour.ideas.title, body: OB.tour.ideas.body, shape: "card", scroll: true, find: () => document.querySelector<HTMLElement>('[data-tour="ideas"]') },
-  { id: "tabs", title: OB.tour.tabs.title, body: OB.tour.tabs.body, shape: "bar", find: () => document.querySelector<HTMLElement>("nav.w-tabbar") },
+  { id: "tabs", title: OB.tour.tabs.title, body: OB.tour.tabs.body, shape: "bar", find: () => document.querySelector<HTMLElement>("nav.w-tabbar, nav.shell-topnav") },
 ];
 
 /** Room around a target, and between the ring and the card. */

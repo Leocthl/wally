@@ -5,6 +5,8 @@ import { useCallback, useState } from "react";
 import { isNative } from "../../pwa/native";
 
 export const DEMO_OPEN_KEY = "wally:demo-open";
+/** The scenario tab chosen last on a laptop, for this browser session: the next stop is one click, not two. */
+export const DEMO_TAB_KEY = "wally:demo-tab";
 /**
  * The key presenter mode sets (the display-mode switch writes "1"). Read here so the stage opens the demo scenarios without a
  * tap; if the switch is kept somewhere else when the lanes meet, this is the one line that follows it.
@@ -114,4 +116,29 @@ export function useDemoOpen(): readonly [boolean, (open: boolean) => void] {
     rememberChoice(next, pageStorage());
   }, []);
   return [open, choose];
+}
+
+function sessionStore(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+/** The tab chosen last in this session, or null (none yet, or storage refused). The caller checks it is still a tab that exists. */
+export function readDemoTab(): string | null {
+  try {
+    return sessionStore()?.getItem(DEMO_TAB_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberDemoTab(group: string): void {
+  try {
+    sessionStore()?.setItem(DEMO_TAB_KEY, group);
+  } catch {
+    // Blocked storage: the tab is remembered for this page only.
+  }
 }

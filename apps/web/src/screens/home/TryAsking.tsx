@@ -12,6 +12,7 @@ import { cx } from "../../ui/cx";
 import { nextIndex } from "../../ui/hooks/useRoving";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
+import { readDemoTab, rememberDemoTab } from "./demoMode";
 import { FAMILY_GROUP, TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
 import { rankTryItems, type RankedTry } from "./tryRank";
 
@@ -74,7 +75,12 @@ function Tabbed({ groups, ranked, onRun, busy }: { readonly groups: readonly Try
   const { t } = useLocale();
   const base = useId();
   const list = useRef<HTMLDivElement>(null);
-  const [current, setCurrent] = useState<TryGroup>(groups[0] ?? "buy");
+  // The tab chosen last in this session comes back, so running the second stop is one click, not two.
+  const [current, setCurrentState] = useState<TryGroup>(() => groups.find((g) => g === readDemoTab()) ?? groups[0] ?? "buy");
+  const setCurrent = (group: TryGroup): void => {
+    rememberDemoTab(group);
+    setCurrentState(group);
+  };
   // Mum's budget can leave the list (a booth without family budgets): fall back to the first group rather than show nothing.
   const shown = groups.includes(current) ? current : (groups[0] ?? "buy");
   const index = Math.max(0, groups.indexOf(shown));

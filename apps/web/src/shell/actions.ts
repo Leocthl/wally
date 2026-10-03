@@ -26,12 +26,19 @@ export function afterPaint(fn: () => void): void {
   requestAnimationFrame(() => requestAnimationFrame(fn));
 }
 
-/** Brings "Manage this budget" (cards and Cancel this budget) into view and gives it focus. */
+/** True when the element is fully on screen, below the sticky top bar. */
+function isInView(el: Element): boolean {
+  const rect = el.getBoundingClientRect();
+  const bar = document.querySelector(".shell-bar")?.getBoundingClientRect().bottom ?? 0;
+  return rect.top >= bar && rect.bottom <= window.innerHeight;
+}
+
+/** Brings "Manage this budget" (cards and Cancel this budget) into view and gives it focus. On a laptop it is already there: no scroll. */
 export function revealConsole(): void {
   const el = document.getElementById("budget-console");
   if (!el) return;
   const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (typeof el.scrollIntoView === "function") el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+  if (typeof el.scrollIntoView === "function" && !isInView(el)) el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
   el.focus({ preventScroll: true });
 }
 

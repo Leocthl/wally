@@ -1,5 +1,6 @@
-// The app shell: top bar, the routed screen, the bottom tabs with the raised Ask button, the Ask and About sheets, and
-// the connection and failure states. A phone-width column on wide screens; the presenter screen gets the full width.
+// The app shell: top bar, the routed screen, the bottom tabs with the raised Ask button (on a laptop, top navigation and an Ask Wally
+// button in the bar), the Ask and About sheets, and the connection and failure states. A phone-width column up to 64rem and a wide
+// page from there; the presenter screen gets the full width.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type MouseEvent, type ReactElement } from "react";
 import { BRAND } from "../brand";
 import { useBoothContext } from "../hooks/useBooth";
@@ -172,7 +173,7 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
         <ShellBar
           onAbout={openAbout}
           {...(desktop && tabbar ? { nav: <TopNav label={t(UI.mainNav)} items={tabs} current={tabFor(route.name)} /> } : {})}
-          {...(desktop && tabbar ? { action: <Button size="sm" className="shell-ask" onClick={openAsk}>{t(UI.run.ask)}</Button> } : {})}
+          {...(desktop && tabbar ? { action: <Button size="sm" className="shell-bar__ask" onClick={openAsk}>{t(UI.run.ask)}</Button> } : {})}
         />
         <ConnectionBanners />
         <main id="main" tabIndex={-1} className="shell-main">

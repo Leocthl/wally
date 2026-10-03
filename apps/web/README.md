@@ -33,7 +33,7 @@
 
 - **Old addresses**: `#/run` goes to Wally, `#/console` to Budget `?focus=console`, `#/log` to Receipts; `?decision=` reads as `?d=`. Each is replaced in the address bar.
 - **Shell** (`src/shell/`): top bar with the SIMULATED note, tab bar with the raised Ask button, Ask and About sheets, connection banners. Screens load as separate chunks.
-- **Laptop layout** (`shell/layout.ts`, 64rem and up; 78rem for three columns): the tab bar becomes `TopNav` beside an Ask Wally button, Budget is three groups (`home-col--now`, `--shelf`, `--test`; Manage sits under the budget card), the scenarios are an always-open panel of tabs (`TryAsking variant="tabs"`), and a `Sheet` is a drawer from the right. Below 64rem nothing changes. The Playwright project `laptop` (1440 x 900) runs only `e2e/laptop*.spec.ts`; `desktop` is 1000 wide, still the phone column.
+- **Laptop layout** (`shell/layout.ts`, 64rem and up; 78rem for three columns): the tab bar becomes `TopNav` beside an Ask Wally button, Budget is three groups (`home-col--now`, `--shelf`, `--test`; Manage sits under the budget card), the scenarios are an always-open panel of tabs (`TryAsking variant="tabs"`), and a `Sheet` is a drawer from the right. Below 64rem the phone layout stays. The Playwright project `laptop` (1440 x 900) runs only `e2e/laptop*.spec.ts`; `desktop` is 1000 wide, still the phone column.
 - **State**: `src/state/booth.ts` is a pure fold of trace events; a new seal (a new log) starts it over.
 
 ## Booth server

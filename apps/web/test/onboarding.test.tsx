@@ -367,7 +367,7 @@ describe("the quick tour", () => {
     await skipToTour(user);
     const card = screen.getByRole("dialog", { name: "Ask Wally" });
     await waitFor(() => expect(card).toHaveFocus());
-    expect(card).toHaveAccessibleDescription(/Tap here, or Ask below, to say what you need/);
+    expect(card).toHaveAccessibleDescription(/Tap here, or the Ask button, to say what you need/);
     expect(within(card).getByText("1 of 3")).toBeInTheDocument();
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
