@@ -1,0 +1,79 @@
+/* "Why trust Wally?" in plain words (evp-). A calm column of cards: one idea each, a big number, a sentence, a pair of
+   bars, a small honest chip. Tokens only. The one motion is the bars drawing once when their card first shows, off under
+   reduced motion. Builds on the .ev base (grid column, .chip, .num, .disclosure) from evidence.css. */
+.evp { gap: var(--sp-4); }
+.evp > * { min-width: 0; }
+
+/* Cards */
+.evp-card, .evp-hero { display: grid; gap: var(--sp-3); align-content: start; }
+.evp-card { padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
+.evp-card:has(> .ev-stamp) { border-style: dashed; border-color: var(--c-line-strong); }
+.evp-card__title { font-size: var(--text-md); font-weight: var(--weight-bold); line-height: var(--lh-snug); color: var(--c-ink-muted); }
+.evp-card__sentence { font-size: var(--text-lg); line-height: var(--lh-snug); }
+.evp-card__line { font-size: var(--text-md); line-height: var(--lh-snug); }
+.evp-card__note { font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--c-ink-muted); }
+
+/* The hero: the whole page in one sentence */
+.evp-hero { padding: var(--sp-5) var(--sp-4); border-radius: var(--r-xl); background: var(--c-primary-tint); color: var(--c-ink); }
+.evp-hero__title { font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: var(--lh-snug); letter-spacing: var(--track-tight); text-wrap: balance; }
+.evp-hero__layers { font-size: var(--text-lg); line-height: var(--lh-snug); }
+.evp-hero__sub { font-size: var(--text-md); line-height: var(--lh-snug); color: var(--c-ink-muted); }
+.evp-hero .num__v, .evp-card__sentence .num__v, .evp-card__line .num__v, .evp-card__note .num__v { font-weight: var(--weight-bold); }
+
+/* The big number and what it is out of */
+.evp-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--sp-3); margin: 0; }
+.evp-big__k .num__v { font-family: var(--font-display); font-size: var(--text-5xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); line-height: var(--lh-tight); }
+.evp-big__tail { font-size: var(--text-md); color: var(--c-ink-muted); }
+.evp-big__tail .num__v { font-weight: var(--weight-semibold); color: var(--c-ink); }
+
+/* Bars: the name and the count on one line, the bar under them. Wally solid, an AI on its own hatched. */
+.evp-bars { display: grid; gap: var(--sp-2); }
+.evp-bars__caption { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--c-ink-muted); }
+.evp-bars__list { display: grid; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.evp-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-3); align-items: baseline; }
+.evp-bar__name { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.evp-bar__value { font-size: var(--text-sm); font-variant-numeric: var(--num); }
+.evp-bar__value .num__v { font-weight: var(--weight-bold); }
+.evp-bar__track { grid-column: 1 / -1; display: block; block-size: 0.75rem; overflow: hidden; border-radius: var(--r-pill); background: var(--c-surface-sunken); }
+.evp-bar__fill { display: block; block-size: 100%; border-radius: var(--r-pill); }
+.evp-bar[data-who="wally"] .evp-bar__fill, .evp-swatch[data-who="wally"] { background: var(--c-primary); }
+.evp-bar[data-who="rules"] .evp-bar__fill, .evp-swatch[data-who="rules"] { background: repeating-linear-gradient(90deg, var(--c-accent-ink) 0 4px, transparent 4px 6px); box-shadow: inset 0 0 0 1px var(--c-accent-ink); }
+.evp-bar[data-who="alone"] .evp-bar__fill, .evp-swatch[data-who="alone"] { background: repeating-linear-gradient(45deg, var(--c-ink-muted) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--c-ink-muted); }
+
+/* The key to the three layers: the same patterns as the bars, so a bar can be read without the colour. */
+.evp-legend { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
+.evp-legend__list { display: grid; gap: var(--sp-3); margin: 0; }
+.evp-legend__row { display: grid; gap: var(--sp-1); }
+.evp-legend__row dt { display: flex; align-items: center; gap: var(--sp-2); font-weight: var(--weight-bold); }
+.evp-legend__row dd { margin: 0; font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--c-ink-muted); }
+.evp-swatch { flex: none; inline-size: 2rem; block-size: 0.75rem; border-radius: var(--r-pill); }
+
+/* The chip: a 44 px row that says where the numbers come from, and opens what that means. */
+.evp-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: 0; }
+.evp-chipbtn { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); min-height: var(--tap); padding: var(--sp-1) 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.evp-chipbtn__hint { font-size: var(--text-xs); color: var(--c-ink-muted); text-decoration: underline; text-underline-offset: 0.2em; }
+.evp-chipbtn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; border-radius: var(--r-md); }
+.evp-chipdetail { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-md); background: var(--c-surface-sunken); font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--c-ink-muted); }
+.evp-chipdetail[hidden] { display: none; }
+
+/* Where Wally still gets it wrong: a dashed card, said as plainly as the good news. */
+.evp-card--wrong { border-style: dashed; border-color: var(--c-line-strong); background: var(--c-surface-sunken); }
+.evp-card--wrong .evp-card__title { color: var(--c-ink); font-size: var(--text-lg); }
+.evp-wrong { display: grid; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.evp-wrong > li { position: relative; padding-inline-start: var(--sp-5); line-height: var(--lh-snug); }
+.evp-wrong > li::before { content: ""; position: absolute; inset-inline-start: 0.25rem; inset-block-start: 0.55em; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--c-warn); }
+.evp-wrong .num__v { font-weight: var(--weight-bold); }
+.evp-foot { font-size: var(--text-sm); line-height: var(--lh-snug); color: var(--c-ink-muted); text-align: center; text-wrap: balance; }
+
+/* How we know: the developer view, opened in place */
+.evp-know { padding: 0 var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
+.evp-know[open] { padding-bottom: var(--sp-4); }
+.evp-know__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); padding-top: var(--sp-2); }
+.evp-know__body > * { min-width: 0; }
+
+/* The bars draw once, when their card first shows (useReveal sets data-reveal); the stagger is the row order. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] .evp-bar__fill { transition: clip-path var(--dur-slow) var(--ease-out); transition-delay: calc(var(--order, 0) * var(--dur-press)); }
+  [data-reveal="pending"] .evp-bar__fill { clip-path: inset(0 100% 0 0); }
+  [data-reveal="in"] .evp-bar__fill { clip-path: inset(0 0 0 0); }
+}
