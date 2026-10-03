@@ -16,13 +16,13 @@
 | AP2 [F12] | ● | ● | ● | ◐ | ○ | ● |
 | Visa [F7b] | ● | ● | ◐ | ○ | ○ | ◐ |
 | Mastercard [F7a] | ● | ◐ | ◐ | ◐ | ○ | ◐ |
-| Cloudflare [F10] | ● | ● | ○ | ○ | ○ | ◐ |
+| Cloudflare [F10] | ◐ | ◐ | ○ | ○ | ○ | ◐ |
 | Alipay [F9] | ○ | ◐ | ○ | ○ | ○ | ○ |
 | OpenAI, Stripe | ● | ◐ | ○ | ○ | ○ | ◐ |
 | HKT card [F1] | ● | ◐ | ○ | ○ | ○ | ○ |
 | Wally | ◐ | ● | ● | ● | ◐ | ◐ |
 
-- ● found, ◐ partial or draft, ○ not found, in public pages read 2026-10-03 [F103]. Wally: rail SIMULATED, any rail design, delegator key a demo shortcut.
+- ● found, ◐ partial, draft or planned, ○ not found, in public pages read 2026-10-03 [F103]. Wally: rail SIMULATED, any rail design, delegator key a demo shortcut.
 
 ## Storyboard
 | Attempt | Cart | Outcome | Rule | Left |
