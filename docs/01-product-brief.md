@@ -8,7 +8,7 @@
 - **Customer**: a wallet or issuer that embeds Wally as delegate controls plus proof; the shopper pays nothing (ASSUMED [F98]).
 - **Revenue guess**: a fee per active budget, or basis points on agent volume (ASSUMED [F98]).
 - **Wedge**: Hong Kong prepaid wallets, then card rails through the RailPort ([09](09-hkt-delegation-api-ask.md)).
-- **Anchors**, not Hong Kong figures: Alipay AI Pay, over 120 million transactions in one week [F94]; McKinsey, US$3 to 5 trillion of agentic commerce revenue by 2030 [F95].
+- **Anchors**, not Hong Kong figures: Alipay AI Pay, 300 million transactions to date [F94]; McKinsey, US$3 to 5 trillion of agentic commerce revenue by 2030 [F95].
 
 ## Who does what
 | Player | Rail token | Budget limit | Signed budget | Offline proof | Injection screen | Any rail |
