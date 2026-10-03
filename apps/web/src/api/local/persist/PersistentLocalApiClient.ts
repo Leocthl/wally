@@ -92,6 +92,8 @@ export class PersistentLocalApiClient extends LocalApiClient {
       const planned = planRestore(read.text, clock.now());
       const restored = planned.kind === "plan" ? await PersistentLocalApiClient.#restore(options, store, events, planned.plan) : null;
       if (restored !== null) return restored;
+      // The reason, for whoever is looking (never a key, never the stored text).
+      options.logger?.info(`session: not restored (${planned.kind === "ended" ? `${planned.problem}${planned.detail === undefined ? "" : `: ${planned.detail}`}` : "the stored log could not be sealed again"})`);
       removeStored(store, SESSION_KEY); // what cannot be restored is not kept
       ended = true;
     }

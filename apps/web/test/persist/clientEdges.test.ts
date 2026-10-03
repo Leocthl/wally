@@ -59,6 +59,19 @@ describe("a stored session that cannot be restored starts the page fresh and say
     expect((await client.snapshot()).packet?.remaining_minor).toBe(50_000);
   });
 
+  it("says why to the logger, in a line with no key and no stored text", async () => {
+    const { storage, rig: r, text } = await stored();
+    const record = JSON.parse(text) as { log: string };
+    storage.items.set(SESSION_KEY, JSON.stringify({ ...record, log: record.log.replace(/"total_minor":(\d)/, (_m, d: string) => `"total_minor":${Number(d) === 9 ? 1 : Number(d) + 1}`) }));
+    const logger = { info: vi.fn(), error: vi.fn() };
+    await r.boot({ logger });
+    expect(logger.info).toHaveBeenCalledTimes(1);
+    const line = String(logger.info.mock.calls[0]?.[0]);
+    expect(line).toMatch(/^session: not restored \(CHAIN: seq \d+: [A-Z_]+\)$/);
+    expect(line).not.toContain("did:key");
+    expect(line).not.toContain(JSON.parse(text).keys.engine.secret_key);
+  });
+
   it("the budget has ended", async () => {
     const { rig: r } = await stored();
     r.clock.advance(40 * 86_400_000);
