@@ -4,20 +4,21 @@
 // signed budget through api.seal (SealRequest unchanged); nothing seals by itself.
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import type { Mandate } from "../../api/types";
-import { cssDurationMs } from "../../design/motion";
 import { useBoothContext } from "../../hooks/useBooth";
 import { navigate, PARAM, useRouteParam } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
+import { draftFor, formOf, sentenceFor } from "../onboarding/budgetModel";
+import type { Profile } from "../../state/profile";
+import { useProfile } from "../../state/useProfile";
 import { IconButton } from "../../ui/Button";
-import { haptic } from "../../ui/haptics";
 import { Icon } from "../../ui/icons";
 import { useLocale, type Locale } from "../../ui/locale";
-import { attempt } from "../../shell/actions";
 import { DescribeStep } from "./DescribeStep";
 import { EXAMPLES } from "./examples";
 import { useFamilySeal } from "./FamilyChoice";
 import { SealLock } from "./SealLock";
 import { DoneStep, MeetStep, ReviewStep } from "./SealSteps";
+import { useSealCeremony } from "./useSealCeremony";
 import { applySentence, EMPTY_FORM, formFromRules, hkDay, isValid, monthEndDay, toSealRequest, validate, type FieldName, type RulesForm, type SuggestRules } from "./sealModel";
 import "./seal.css";
 
@@ -32,11 +33,16 @@ interface Start {
   readonly form: RulesForm;
 }
 
-function startFrom(mandate: Mandate | null, locale: Locale, now: Date, welcome: boolean): Start {
+function startFrom(mandate: Mandate | null, locale: Locale, now: Date, welcome: boolean, profile: Profile | null): Start {
   if (mandate && !welcome) {
     const form = formFromRules(mandate.rules, mandate.valid_until);
     const stale = form.until < hkDay(now.toISOString());
     return { step: "describe", sentence: mandate.intent_text, form: stale ? { ...form, until: monthEndDay(now) } : form };
+  }
+  // A person who said what they shop for starts from that: its amount and its categories (taste is a starting point, they can change it).
+  if (profile !== null && profile.shopFor.length > 0) {
+    const form = formOf(draftFor(profile, now), now);
+    return { step: "meet", sentence: sentenceFor(form, locale, now), form };
   }
   const example = EXAMPLES[0];
   const sentence = example ? (locale === "zh-HK" ? example.sentence.zh : example.sentence.en) : "";
@@ -76,17 +82,17 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
   const booth = useBoothContext();
   const suggestRules = useSuggester(given);
   const { t, locale } = useLocale();
+  const { profile } = useProfile();
   const mode = useRouteParam(PARAM.mode);
   const now = useMemo(() => new Date(), []);
-  const start = useMemo(() => startFrom(booth.state.mandate, locale, now, mode === "welcome"), []);
+  const start = useMemo(() => startFrom(booth.state.mandate, locale, now, mode === "welcome", profile), []);
   const [step, setStep] = useState<Step>(start.step);
   const [sentence, setSentence] = useState(start.sentence);
   const [form, setForm] = useState<RulesForm>(start.form);
   const [incomplete, setIncomplete] = useState(false);
   const [touched, setTouched] = useState<ReadonlySet<FieldName>>(new Set());
   const [submitted, setSubmitted] = useState(false);
-  const [sealing, setSealing] = useState(false);
-  const [sealedForm, setSealedForm] = useState<RulesForm | null>(null);
+  const { sealing, sealedForm, settled, seal: sealBudget } = useSealCeremony();
   const top = useRef<HTMLDivElement>(null);
   // Which way the person is moving, so the next pane arrives from that side (and a Back goes the other way). Set with the
   // step in one go: a pane's animation must not see its direction change after it has started.
@@ -111,13 +117,10 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
   // The seal moment plays on Check and seal (the lock closes where the person pressed), then the sealed screen takes over.
   // Under reduced motion --dur-ceremony is 0, so the next screen follows at once.
   useEffect(() => {
-    if (sealedForm === null || step !== "review") return undefined;
-    const timer = window.setTimeout(() => {
-      setDirection("fwd");
-      setStep("done");
-    }, cssDurationMs("--dur-ceremony"));
-    return () => window.clearTimeout(timer);
-  }, [sealedForm, step]);
+    if (!settled || step !== "review") return;
+    setDirection("fwd");
+    setStep("done");
+  }, [settled, step]);
 
   const next = (): void => {
     setSubmitted(true);
@@ -135,13 +138,7 @@ function SealFlow({ suggestRules: given }: { readonly suggestRules?: SuggestRule
       go("describe");
       return;
     }
-    setSealing(true);
-    const ok = await attempt(booth, () => booth.api.seal(family.apply(toSealRequest(sentence, form, at))));
-    setSealing(false);
-    if (!ok) return;
-    // The haptic and the lock close on the same frame (apple-design: causality and harmony).
-    haptic("success");
-    setSealedForm(form);
+    await sealBudget((now) => family.apply(toSealRequest(sentence, form, now)), form);
   };
 
   const title = mode === "topup" ? t(UI["seal.topUpTitle"]) : mode === "edit" ? t(UI["seal.editTitle"]) : t(UI["seal.describeTitle"]);

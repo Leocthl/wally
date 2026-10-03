@@ -75,11 +75,11 @@ export const OB = {
   tour: {
     ask: {
       title: label("Ask Wally", "問 Wally"), // NEEDS-REVIEW
-      body: label("Tap Ask to say what you need, in your own words or with one tap.", "撳「問」，用你自己的說話，或者一撳，話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
+      body: label("Tap here, or Ask below, to say what you need in your own words.", "喺呢度或者下面撳「問」，用你自己的說話話俾 Wally 知你想買乜。"), // NEEDS-REVIEW
     },
-    try: {
-      title: label("Try asking", "試吓問"), // NEEDS-REVIEW
-      body: label("Tap a card to watch Wally shop on a simulated store. Fixed rules decide every buy.", "撳一張卡，睇 Wally 喺模擬商店購物。每次購買都由固定規則決定。"), // NEEDS-REVIEW
+    ideas: {
+      title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW
+      body: label("Tap an idea and Wally shops for it on a simulated store. Fixed rules decide every buy.", "撳一個推介，Wally 就喺模擬商店幫你買。每次購買都由固定規則決定。"), // NEEDS-REVIEW
     },
     tabs: {
       title: label("Find your way", "點樣搵到嘢"), // NEEDS-REVIEW
@@ -109,6 +109,29 @@ export const OB = {
     hi: (name: string): LabelPair => label(`Hi ${name}.`, `${name}，你好。`), // NEEDS-REVIEW
     tryLead: label("Your picks come first. Each one runs the real rules on a simulated shop.", "先睇啱你的。每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
     forYou: label("For you", "啱你"), // NEEDS-REVIEW
+    composer: label("What do you need?", "你需要啲咩？"), // NEEDS-REVIEW
+    demo: label("Demo scenarios (for judges)", "示範情境（供評審使用）"), // NEEDS-REVIEW
+    demoLead: label("Each one runs the real rules on a simulated shop.", "每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
+  },
+
+  ideas: {
+    title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW
+    item: {
+      tee: label("Cotton tee", "純棉T恤"), // NEEDS-REVIEW
+      socks: label("Ankle socks", "短襪"), // NEEDS-REVIEW
+      jacket: label("Denim jacket", "牛仔褸"), // NEEDS-REVIEW
+      hoodie: label("Fleece hoodie", "抓毛衛衣"), // NEEDS-REVIEW
+      graphic: label("Graphic tee", "圖案T恤"), // NEEDS-REVIEW
+      earbuds: label("Wireless earbuds", "藍牙耳機"), // NEEDS-REVIEW
+    },
+    kind: {
+      tee: label("Everyday basics", "日常基本款"), // NEEDS-REVIEW
+      socks: label("A small buy", "細額購買"), // NEEDS-REVIEW
+      jacket: label("Streetwear", "街頭潮流"), // NEEDS-REVIEW
+      hoodie: label("Cozy", "舒適暖和"), // NEEDS-REVIEW
+      graphic: label("Streetwear", "街頭潮流"), // NEEDS-REVIEW
+      earbuds: label("Electronics", "電子產品"), // NEEDS-REVIEW
+    },
   },
 } as const;
 

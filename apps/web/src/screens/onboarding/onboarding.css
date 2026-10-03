@@ -1,0 +1,202 @@
+/* The first run (lane onboarding): four short steps, one thumb. Tokens only; every duration is a --dur token, so reduced
+   motion shows each step at once. Full screen, no sheet: a progress bar and Skip on top, the actions pinned at the bottom. */
+.onb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: var(--column);
+  margin: 0 auto;
+  background: var(--c-bg);
+  color: var(--c-ink);
+  /* A step arrives a few pixels to one side: clip (not scroll) so the page never gains a sideways scrollbar, or a wider
+     layout on a phone, mid-slide. Clip keeps the actions sticky, which hidden would not. */
+  overflow-x: clip;
+}
+@media (min-width: 40rem) {
+  body:has(.onb) { background: radial-gradient(64rem 32rem at 50% -8%, var(--c-primary-tint), transparent 70%), var(--c-surface-sunken); }
+  .onb { border-inline: 1px solid var(--c-line); box-shadow: var(--shadow-2); }
+}
+
+/* Top: where we are, and the way out. */
+.onb-top {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: max(var(--sp-2), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left));
+  background: var(--c-bg);
+}
+.onb-progress { display: flex; flex: 1; gap: var(--sp-1); min-width: 0; }
+.onb-progress__seg { flex: 1; height: 0.375rem; border-radius: var(--r-pill); background: var(--c-line-strong); transition: background-color var(--dur-base) var(--ease-out), flex-grow var(--dur-base) var(--ease-out); }
+.onb-progress__seg[data-state="done"] { background: var(--c-primary); }
+.onb-progress__seg[data-state="now"] { flex-grow: 2; background: var(--c-primary); }
+.onb-skip { flex: none; margin-right: calc(-1 * var(--sp-2)); }
+
+/* Main column. */
+.onb-main { flex: 1; display: grid; align-content: start; gap: var(--sp-5); min-width: 0; padding: var(--sp-3) max(var(--gutter), var(--safe-right)) var(--sp-5) max(var(--gutter), var(--safe-left)); }
+.onb-main > * { min-width: 0; }
+.onb-body { display: grid; gap: var(--sp-5); min-width: 0; }
+.onb-body > * { min-width: 0; }
+
+/* Wally and the step's title, as a speech bubble (hello: large, centred). */
+.onb-hero { display: flex; align-items: flex-end; gap: var(--sp-3); }
+.onb-hero__wally { flex: none; margin-bottom: -0.25rem; }
+.onb-hero__title {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-line);
+  /* The squared corner next to Wally is the tail. */
+  border-radius: var(--r-lg) var(--r-lg) var(--r-lg) var(--r-xs);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-snug);
+}
+.onb-hero__title:focus { outline: none; }
+.onb-hero[data-big] { flex-direction: column; align-items: center; gap: var(--sp-3); padding-top: clamp(var(--sp-2), 3vh, var(--sp-5)); text-align: center; }
+.onb-hero[data-big] .onb-hero__wally { margin-bottom: 0; }
+.onb-hero[data-big] .onb-hero__title { flex: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: var(--text-3xl); line-height: var(--lh-tight); }
+
+.onb-lead { color: var(--c-ink-muted); line-height: var(--lh-snug); }
+.onb-hero[data-big] + .onb-body > .onb-lead:first-child { text-align: center; font-size: var(--text-lg); }
+.onb-block { display: grid; gap: var(--sp-2); min-width: 0; }
+.onb-label { font-size: var(--text-md); font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+.onb-hint { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.onb-privacy { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.onb-privacy svg { flex: none; }
+.onb-note { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--c-info-tint); color: var(--c-ink); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.onb-note svg { flex: none; margin-top: 0.125rem; color: var(--c-info-ink); }
+.onb-unit { color: var(--c-ink-muted); font-weight: var(--weight-semibold); }
+.onb-scope { justify-self: end; margin: 0; }
+.onb-switch .w-switch { min-height: var(--tap); }
+
+/* Pills you switch on and off (style, what you shop for, what Wally can buy). */
+.onb-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.onb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  padding: 0 var(--sp-4) 0 var(--sp-2);
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.onb-chip[aria-pressed="true"] { border-color: var(--c-primary); background: var(--c-primary-tint); color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+.onb-chip__tick { display: inline-grid; place-items: center; flex: none; width: 1.5rem; height: 1.5rem; border: 1.5px solid var(--c-line-strong); border-radius: 50%; }
+.onb-chip[aria-pressed="true"] .onb-chip__tick { border-color: var(--c-primary); background: var(--c-primary); color: var(--c-on-primary); }
+
+/* Colour swatches: a sample (--swatch, set per dot) with its name; the badge and the ring say which are chosen. */
+.onb-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-1); }
+.onb-swatch { display: grid; justify-items: center; align-content: start; gap: var(--sp-1); min-height: var(--tap); padding: var(--sp-1); border: 0; border-radius: var(--r-md); background: transparent; color: var(--c-ink-muted); cursor: pointer; }
+.onb-swatch__dot { position: relative; display: block; width: 2.5rem; height: 2.5rem; border: 2px solid var(--c-line-strong); border-radius: 50%; background: var(--swatch); transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
+.onb-swatch[aria-pressed="true"] .onb-swatch__dot { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-surface), 0 0 0 5px var(--c-primary); }
+.onb-swatch__tick { position: absolute; right: -0.375rem; bottom: -0.375rem; display: grid; place-items: center; width: 1.25rem; height: 1.25rem; border: 2px solid var(--c-surface); border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); }
+.onb-swatch__name { font-size: var(--text-xs); line-height: var(--lh-snug); text-align: center; overflow-wrap: anywhere; }
+.onb-swatch[aria-pressed="true"] .onb-swatch__name { color: var(--c-ink); font-weight: var(--weight-semibold); }
+
+/* Sizes: a few joined buttons per row; pressing the chosen one clears it. */
+.onb-size { display: grid; gap: var(--sp-1); }
+.onb-size + .onb-size { margin-top: var(--sp-2); }
+.onb-size__label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-ink-muted); }
+.onb-seg { display: flex; overflow: hidden; border: 1.5px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); }
+.onb-seg__opt { flex: 1; min-width: 0; padding: 0 var(--sp-1); border: 0; border-radius: 0; background: transparent; color: var(--c-ink); font-weight: var(--weight-semibold); cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out); }
+.onb-seg__opt + .onb-seg__opt { border-left: 1px solid var(--c-line); }
+.onb-seg__opt[aria-pressed="true"] { background: var(--c-primary); color: var(--c-on-primary); }
+
+/* The amount presets. */
+.onb-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); }
+.onb-preset { min-height: var(--tap-xl); border: 1.5px solid var(--c-line-strong); border-radius: var(--r-lg); background: var(--c-surface); color: var(--c-ink); font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
+.onb-preset[data-preset="custom"] { grid-column: span 2; font-family: var(--font-sans); font-size: var(--text-md); font-weight: var(--weight-semibold); letter-spacing: 0; }
+.onb-preset[aria-checked="true"] { border-color: var(--c-primary); background: var(--c-primary); color: var(--c-on-primary); }
+.onb-ends { margin-top: calc(-1 * var(--sp-1)); }
+
+/* Sealed and ready. */
+.onb-sealed { justify-items: center; text-align: center; }
+.onb-sealed .seal-summary, .onb-body[data-ready] .seal-summary { width: 100%; text-align: left; }
+
+/* The actions stay in reach at the bottom of the screen. */
+.onb-actions { position: sticky; bottom: 0; z-index: var(--z-raised); display: grid; gap: var(--sp-2); padding: var(--sp-3) max(var(--gutter), var(--safe-right)) max(var(--sp-3), var(--safe-bottom)) max(var(--gutter), var(--safe-left)); background: var(--c-bg); }
+.onb-actions:empty { display: none; }
+/* Scroll edge: content fades out above the bar instead of being cut by a hard line (no blur: the branding guard bans glass). */
+.onb-actions::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sp-5); background: linear-gradient(to top, var(--c-bg), transparent); pointer-events: none; }
+.onb-actions__row { display: flex; gap: var(--sp-2); }
+/* Two buttons share the row on the narrowest phone: tighter sides so a label stays on one line. */
+.onb-actions__row .w-btn--lg { padding-inline: var(--sp-4); }
+.onb-actions__grow { flex: 1; min-width: 0; }
+.onb-skipnote { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
+
+/* The quick tour: a ring on the target, a card above the tab bar. The page behind waits. */
+.tour { position: fixed; inset: 0; z-index: var(--z-dialog); }
+.tour__block { position: absolute; inset: 0; touch-action: none; }
+.tour__block[data-dim] { background: var(--c-scrim); }
+.tour__spot {
+  position: fixed;
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 200vmax var(--c-scrim);
+  outline: 3px solid var(--c-on-primary);
+  pointer-events: none;
+  transition: top var(--dur-base) var(--ease-out), left var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out), height var(--dur-base) var(--ease-out);
+}
+.tour__spot--round { border-radius: var(--r-pill); }
+.tour__spot--bar { border-radius: var(--r-xl) var(--r-xl) 0 0; }
+.tour__card {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Clear of the tab bar and of the raised Ask button, so the ring on either is not under the card. */
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-6));
+  display: grid;
+  gap: var(--sp-2);
+  width: min(calc(100% - 2 * var(--gutter)), 28rem);
+  margin-inline: auto;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-surface-raised);
+  color: var(--c-ink);
+  box-shadow: var(--shadow-2);
+}
+.tour__card:focus { outline: none; }
+.tour__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.tour__label { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--c-primary-ink); font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.tour__dots { display: inline-flex; gap: 0.375rem; }
+.tour__dot { width: 0.5rem; height: 0.5rem; border-radius: var(--r-pill); background: var(--c-line-strong); transition: width var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out); }
+.tour__dot[data-on] { width: 1.25rem; background: var(--c-primary); }
+.tour__title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); line-height: var(--lh-snug); }
+.tour__body { color: var(--c-ink-muted); line-height: var(--lh-snug); }
+.tour__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); }
+
+/* Motion: only where it is welcome. The step arrives from the side the person is moving to, Wally waves hello, the body rises
+   one block after another, and the tour card settles in. */
+@media (prefers-reduced-motion: no-preference) {
+  .onb[data-dir="fwd"] .onb-main { --from: 0.875rem; }
+  .onb[data-dir="back"] .onb-main { --from: -0.875rem; }
+  .onb-main { animation: onb-in var(--dur-base) var(--ease-out) both; }
+  .onb-body > * { animation: onb-rise var(--dur-slow) var(--ease-out) both; }
+  .onb-body > :nth-child(2) { animation-delay: var(--dur-stagger); }
+  .onb-body > :nth-child(3) { animation-delay: calc(var(--dur-stagger) * 2); }
+  .onb-body > :nth-child(4) { animation-delay: calc(var(--dur-stagger) * 3); }
+  .onb-body > :nth-child(n + 5) { animation-delay: calc(var(--dur-stagger) * 4); }
+  .onb[data-step="hello"] .onb-hero__wally { animation: onb-wave var(--dur-ceremony) var(--ease-pop) var(--dur-fast) both; }
+  .onb[data-step="taste"] .onb-hero__wally, .onb[data-step="budget"] .onb-hero__wally { animation: onb-hop var(--dur-slow) var(--ease-pop) both; }
+  .tour__card { animation: onb-card var(--dur-base) var(--ease-pop) both; }
+}
+@keyframes onb-in { from { opacity: 0; transform: translateX(var(--from, 0.875rem)); } to { opacity: 1; transform: none; } }
+@keyframes onb-rise { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+@keyframes onb-wave { 0% { opacity: 0; transform: translateY(0.75rem) scale(0.9) rotate(-6deg); } 45% { opacity: 1; transform: translateY(-3%) scale(1) rotate(6deg); } 70% { transform: rotate(-4deg); } 100% { opacity: 1; transform: none; } }
+@keyframes onb-hop { from { opacity: 0; transform: translateX(-0.5rem) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes onb-card { from { opacity: 0; transform: translateY(0.75rem) scale(0.96); } to { opacity: 1; transform: none; } }
