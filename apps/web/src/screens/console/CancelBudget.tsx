@@ -1,7 +1,8 @@
 // "Cancel this budget": hold to confirm (useHold, the RevokeButton timing: early release cancels, Space or Enter hold
 // from the keyboard, steps under reduced motion), then one plain question in a dialog, then api.revoke. The dialog opens
 // while the finger, mouse button or key is still down; Dialog ignores that press's release, the click after it and the
-// key's repeats (usePressGuard), so letting go never answers the question.
+// key's repeats (usePressGuard), so letting go never answers the question. Focus opens on "Keep it" (data-autofocus), so a
+// fresh Enter or Space cancels nothing: ending the budget takes a deliberate move to the other button.
 import { useId, useState, type KeyboardEvent, type ReactElement } from "react";
 import { useHold } from "../../hooks/useHold";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
@@ -85,7 +86,8 @@ export function CancelBudget({ disabled, onConfirm }: CancelBudgetProps): ReactE
         actions={
           <>
             <Button variant="danger" block onClick={() => { setAsking(false); onConfirm(); }}>{t(UI["console.confirm"])}</Button>
-            <Button variant="ghost" block onClick={close}>{t(UI["console.keep"])}</Button>
+            {/* Focus opens here, not on the button that cancels: Enter or Space must not be able to end the budget by accident. */}
+            <Button variant="ghost" block onClick={close} data-autofocus>{t(UI["console.keep"])}</Button>
           </>
         }
       >

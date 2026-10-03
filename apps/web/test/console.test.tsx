@@ -1,6 +1,7 @@
 // Cancel this budget (replaces the RevokeButton tests): hold to confirm with the same timing rules (early release
 // cancels, Space or Enter hold, steps under reduced motion), then a dialog, then api.revoke. Plus the cards list.
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CardRecord } from "../src/api/types";
 import { HOLD_MS } from "../src/design/motion";
@@ -74,14 +75,18 @@ describe("Cancel this budget: the hold", () => {
     button().focus();
     fireEvent.keyDown(button(), { key: "Enter", code: "Enter" });
     act(() => void vi.advanceTimersByTime(HOLD_MS));
+    const keep = within(dialog()!).getByRole("button", { name: "Keep it" });
     const confirm = within(dialog()!).getByRole("button", { name: "Cancel budget" });
-    expect(confirm).toHaveFocus();
+    // Focus starts on the safe answer, so no key can cancel the budget by accident (see "where focus lands" below).
+    expect(keep).toHaveFocus();
     // The key is still down: its repeats would each click the focused button. They are not an answer.
-    for (let i = 0; i < 3; i += 1) expect(fireEvent.keyDown(confirm, { key: "Enter", code: "Enter", repeat: true })).toBe(false);
-    fireEvent.keyUp(confirm, { key: "Enter", code: "Enter" });
+    for (let i = 0; i < 3; i += 1) expect(fireEvent.keyDown(keep, { key: "Enter", code: "Enter", repeat: true })).toBe(false);
+    fireEvent.keyUp(keep, { key: "Enter", code: "Enter" });
     expect(onConfirm).not.toHaveBeenCalled();
-    // A fresh press of Enter is a decision.
-    expect(fireEvent.keyDown(confirm, { key: "Enter", code: "Enter" })).toBe(true);
+    expect(dialog()).not.toBeNull();
+    // A fresh press of Enter on the focused button is a decision, and it is "Keep it".
+    expect(fireEvent.keyDown(keep, { key: "Enter", code: "Enter" })).toBe(true);
+    // Cancelling is a deliberate act of its own: a click on the confirm button.
     fireEvent.click(confirm);
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
@@ -146,6 +151,87 @@ describe("Cancel this budget: the hold", () => {
     expect(dialog()).toBeNull();
     act(() => void vi.advanceTimersByTime(HOLD_MS / 2));
     expect(dialog()).not.toBeNull();
+  });
+});
+
+describe("Cancel this budget: where focus lands when the question opens", () => {
+  const confirmButton = () => within(dialog()!).getByRole("button", { name: "Cancel budget" });
+  const keepButton = () => within(dialog()!).getByRole("button", { name: "Keep it" });
+
+  /** Holds Enter on the hold button until the question opens, then lets go of the key: what a keyboard user does. */
+  async function askByKeyboard(onConfirm: () => void): Promise<void> {
+    render(<CancelBudget disabled={false} onConfirm={onConfirm} />);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      button().focus();
+      fireEvent.keyDown(button(), { key: "Enter", code: "Enter" });
+      act(() => void vi.advanceTimersByTime(HOLD_MS));
+    } finally {
+      vi.useRealTimers();
+    }
+    await screen.findByRole("alertdialog", { name: "Cancel this budget?" });
+    fireEvent.keyUp(keepButton(), { key: "Enter", code: "Enter" });
+  }
+
+  it("is on Keep it, not on the button that cancels", async () => {
+    await askByKeyboard(() => undefined);
+    expect(keepButton()).toHaveFocus();
+    expect(confirmButton()).not.toHaveFocus();
+  });
+
+  it("lets Enter on the opening focus close the question without cancelling, and puts focus back on the hold button", async () => {
+    const onConfirm = vi.fn();
+    await askByKeyboard(onConfirm);
+    await userEvent.setup().keyboard("{Enter}");
+    await waitFor(() => expect(dialog()).toBeNull());
+    expect(onConfirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(button()).toHaveFocus());
+  });
+
+  it("lets Space on the opening focus close the question without cancelling", async () => {
+    const onConfirm = vi.fn();
+    await askByKeyboard(onConfirm);
+    await userEvent.setup().keyboard(" ");
+    await waitFor(() => expect(dialog()).toBeNull());
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("still closes on Escape without cancelling", async () => {
+    const onConfirm = vi.fn();
+    await askByKeyboard(onConfirm);
+    await userEvent.setup().keyboard("{Escape}");
+    await waitFor(() => expect(dialog()).toBeNull());
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("keeps the cancelling button one Tab away in both directions, and it still cancels on a click", async () => {
+    const onConfirm = vi.fn();
+    await askByKeyboard(onConfirm);
+    const user = userEvent.setup();
+    await user.tab({ shift: true });
+    expect(confirmButton()).toHaveFocus();
+    await user.tab();
+    expect(keepButton()).toHaveFocus();
+    await user.tab(); // wraps from the last control to the first
+    expect(confirmButton()).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(keepButton()).toHaveFocus();
+    expect(onConfirm).not.toHaveBeenCalled();
+    await user.click(confirmButton());
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens on Keep it after a pointer hold too", async () => {
+    render(<CancelBudget disabled={false} onConfirm={() => undefined} />);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.pointerDown(button(), { pointerId: 5, pointerType: "touch" });
+      act(() => void vi.advanceTimersByTime(HOLD_MS));
+    } finally {
+      vi.useRealTimers();
+    }
+    await screen.findByRole("alertdialog", { name: "Cancel this budget?" });
+    expect(keepButton()).toHaveFocus();
   });
 });
 

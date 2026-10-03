@@ -88,6 +88,37 @@ describe("Dialog", () => {
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   });
+
+  it("puts first focus on the control marked data-autofocus (a destructive confirm is never the first stop); Tab still wraps through both", async () => {
+    render(
+      <Dialog open onClose={() => undefined} role="alertdialog" title="Sure?" actions={<><Button variant="danger">Do it</Button><Button variant="ghost" data-autofocus>Not now</Button></>}>
+        Really?
+      </Dialog>,
+    );
+    const doIt = screen.getByRole("button", { name: "Do it" });
+    const notNow = screen.getByRole("button", { name: "Not now" });
+    expect(notNow).toHaveFocus();
+    await userEvent.tab(); // from the last control round to the first
+    expect(doIt).toHaveFocus();
+    await userEvent.tab();
+    expect(notNow).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(doIt).toHaveFocus();
+  });
+
+  it("falls back to the first control when the marked one cannot take focus", () => {
+    render(
+      <Dialog open onClose={() => undefined} title="Sure?" actions={<><Button>First</Button><button type="button" disabled data-autofocus>Second</button></>}>
+        Really?
+      </Dialog>,
+    );
+    expect(screen.getByRole("button", { name: "First" })).toHaveFocus();
+  });
+
+  it("leaves a dialog without a mark as it was: first control first", () => {
+    render(<Dialog open onClose={() => undefined} title="Sure?" actions={<><Button>First</Button><Button variant="ghost">Second</Button></>}>Really?</Dialog>);
+    expect(screen.getByRole("button", { name: "First" })).toHaveFocus();
+  });
 });
 
 function ToastDemo({ withAction }: { readonly withAction: boolean }): ReactElement {

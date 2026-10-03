@@ -1,5 +1,5 @@
-// Focus management for modal surfaces (Sheet, Dialog): focus moves inside on open, Tab and Shift+Tab wrap, Escape
-// calls onEscape, and focus returns to the element that opened it.
+// Focus management for modal surfaces (Sheet, Dialog): focus moves inside on open (to the control marked `data-autofocus`
+// when there is one, else the first), Tab and Shift+Tab wrap, Escape calls onEscape, and focus returns to the element that opened it.
 import { useEffect, useRef, type RefObject } from "react";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
@@ -22,6 +22,16 @@ export function focusables(root: HTMLElement): HTMLElement[] {
   );
 }
 
+/**
+ * Where focus lands when a surface opens: the control marked `data-autofocus` if Tab can reach it (a question whose first
+ * button cannot be undone marks its safe answer, so Enter or Space on opening never does the irreversible thing), else the
+ * first control. Tab order and the wrap are not affected.
+ */
+export function initialFocus(root: HTMLElement): HTMLElement | undefined {
+  const stops = focusables(root);
+  return stops.find((el) => el.hasAttribute("data-autofocus")) ?? stops[0];
+}
+
 export function useFocusTrap(active: boolean, root: RefObject<HTMLElement | null>, onEscape: () => void): void {
   const escape = useRef(onEscape);
   escape.current = onEscape;
@@ -29,8 +39,7 @@ export function useFocusTrap(active: boolean, root: RefObject<HTMLElement | null
     const el = root.current;
     if (!active || !el) return undefined;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const first = focusables(el)[0];
-    (first ?? el).focus();
+    (initialFocus(el) ?? el).focus();
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
         e.stopPropagation();
