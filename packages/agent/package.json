@@ -2,6 +2,7 @@
   "name": "@wally/agent",
   "version": "0.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Planner backends and judge adapters (lane B). No signing code, no rail (I4)",
   "type": "module",
   "exports": {

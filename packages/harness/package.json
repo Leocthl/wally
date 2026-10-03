@@ -2,6 +2,7 @@
   "name": "@wally/harness",
   "version": "0.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Seeded replay harness, B0/B1/B2 metrics (lane D). Reuses core and rail-sim, never copies them",
   "type": "module",
   "exports": {

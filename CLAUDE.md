@@ -62,7 +62,7 @@ packages/harness                            lane D
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.
 - **Family**: the offline verifier cannot check the parent chain; Mum's credential is exported for reading.
 - **LAN, voice, devices**: plain http with one shared token [F92]; voice needs the browser's speech service; checked on a simulator and an emulator only.
-- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, public repo and licence.
+- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, the public flip (the licence is Apache-2.0, chosen 2026-10-03).
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.
