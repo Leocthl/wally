@@ -116,7 +116,8 @@ test("Needs your OK: the Budget banner leads to the question and Approve makes t
   await expect(wally(page).getByRole("article", { name: "One-off card" })).toBeVisible();
 });
 
-test("Verify passes, Try to tamper breaks it at the changed receipt, Restore passes again", async ({ page }) => {
+test("Verify passes, Try to tamper breaks it at the changed receipt, Restore passes again (the developer view)", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("wally:mode", "developer")); // plain words are the default
   await press(page, "normal");
   await page.getByRole("link", { name: "Proof", exact: true }).click();
   const card = page.locator(".pf-card");

@@ -40,6 +40,7 @@ const wally = (page: Page) => page.locator('[data-screen="wally"]');
 const stop = (page: Page, text: string | RegExp) => wally(page).getByRole("alert").filter({ hasText: text });
 
 test("offline, ?api=local: the storyline on the real stack, then Verify PASS and Try to tamper FAIL at the changed receipt", async ({ page, baseURL }) => {
+  await page.addInitScript(() => window.localStorage.setItem("wally:mode", "developer")); // the codes and hashes this test reads
   const watch = await blockNetwork(page, new URL(baseURL ?? "http://127.0.0.1").origin);
   await page.goto("/?api=local#/budget");
   await expect(page.locator('[data-api-mode="local"]')).toContainText("On-device mode: recorded answers, nothing leaves your phone");

@@ -25,6 +25,7 @@ async function smallBarControls(page: Page): Promise<string[]> {
 for (const size of SIZES) {
   test(`presenter at ${size.width}x${size.height}: keyboard walk, stops, proof, evidence`, async ({ page, isMobile }, info) => {
     test.skip(isMobile, "big-screen sizes run in the desktop project");
+    await page.addInitScript(() => window.localStorage.setItem("wally:mode", "developer")); // the technical beats: codes, hashes and B0/B2 numbers
     await page.setViewportSize(size);
     await page.goto("/#/presenter");
     await expect(page.locator(".pr-rail")).toContainText("SIMULATED rail. No money moves.");
