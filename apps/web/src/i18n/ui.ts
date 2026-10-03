@@ -362,7 +362,7 @@ const SHELL = {
   "seal.what": label("What Wally can buy", "Wally 可以買甚麼"), // NEEDS-REVIEW
   "seal.sellers": label("Sellers", "賣家"), // NEEDS-REVIEW
   "seal.verifiedOnly": label("Verified sellers only", "只限認證賣家"), // NEEDS-REVIEW
-  "seal.verifiedHint": label("Wally checks scam reports before every buy.", "每次購買前，Wally 都會查詐騙紀錄。"), // NEEDS-REVIEW
+  "seal.verifiedHint": label("Wally checks the seller against a seller list before every buy.", "每次購買前，Wally 都會對照賣家名單。"), // NEEDS-REVIEW
   "seal.until": label("Until", "有效至"), // NEEDS-REVIEW
   "seal.askAbove": label("Ask me above", "超過此金額要問我"), // NEEDS-REVIEW
   "seal.cap": label("Most per buy", "每次最多"), // NEEDS-REVIEW
@@ -520,7 +520,7 @@ export const UI = {
       R6: label("A shop and category you allow", "屬你允許的商戶及類別"), // NEEDS-REVIEW
       R7: label("Not too many cards in a short time", "短時間內沒有發太多卡"), // NEEDS-REVIEW
       R8: label("Not too many cards open at once", "同時有效的卡不算多"), // NEEDS-REVIEW
-      R9: label("Seller checked against scam reports", "已查核賣家詐騙紀錄"), // NEEDS-REVIEW
+      R9: label("Seller checked against a seller list", "已對照賣家名單查核"), // NEEDS-REVIEW
       R9NoRecord: label("No scam record found for the seller (not proof of safety)", "賣家查無詐騙紀錄（不代表安全）"), // NEEDS-REVIEW
       R10scope: label("The item fits what you asked for", "貨品符合你的要求"), // NEEDS-REVIEW
       R10injection: label("The listing text gives no orders", "商品文字沒有夾帶指令"), // NEEDS-REVIEW
@@ -579,7 +579,7 @@ export const UI = {
     yourWords: label("In your words", "你的原話"), // NEEDS-REVIEW
     ruleBudget: label("Budget {amount}", "預算 {amount}"), // NEEDS-REVIEW
     ruleCategories: label("Only these kinds of things", "只限這些類別"), // NEEDS-REVIEW
-    ruleSellers: label("Sellers checked against scam reports first", "賣家先查核詐騙紀錄"), // NEEDS-REVIEW
+    ruleSellers: label("Sellers checked against a seller list first", "賣家先對照名單查核"), // NEEDS-REVIEW
     ruleCap: label("Each purchase at most {amount}", "每次購買最多 {amount}"), // NEEDS-REVIEW
     ruleAsk: label("Asks you above {amount}", "超過 {amount} 要你確認"), // NEEDS-REVIEW
     ruleUntil: label("Valid until {time} (Hong Kong time)", "有效至 {time}（香港時間）"), // NEEDS-REVIEW
