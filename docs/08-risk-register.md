@@ -47,6 +47,7 @@
 | Seller data source | H/M | Scameter is manual and has no API or terms for automated use [F6]; the demo captures are a fixture; the seller gate is inert [F36]; a fresh no-hit capture passes R9 | Say so; arithmetic, the exact-total card and single use protect the money; production starts with an issuer-side merchant allow-list that R6 and R9 read | [TEAM] |
 | Business case unproven | H/M | No customer evidence; the fee and pilot numbers are ASSUMED [F97, F98]; the market anchors are not Hong Kong figures [F94, F95] | Hallway tally ([12](12-hallway-interviews.md)) and the 90-day pilot test it; we are wrong if a rail bundles a user-signed budget with offline proof, or no second rail adopts ours | [TEAM] |
 | Sleep and scope creep | H/H | A person works past their slot; work outside TASKS.md; a gate is missed | Rota, one person off 4 h at a time [F41]; scope locked (X-09); cut order D9 | [TEAM] |
+| Typed Ask buys over the price the shopper said | L/M | The planner picks by words; the limit in the sentence was shown but not applied [F105] | Code prices the pick with shipping; a pick above the limit is no proposal and the reader sheet shows the limit; it only tightens, and R3 and R9 still decide | [TEAM] |
 
 ## Contingency (D8)
 - If the end-to-end stop still fails at H10 [F41], after the H6 cut, switch to Track 4, "overnight desk that escalates" (Jev-native), the second-ranked option [F43]. All lane owners decide together at H10; there is no half-switch. Not planned further here.

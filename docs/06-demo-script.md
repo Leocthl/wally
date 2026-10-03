@@ -23,7 +23,7 @@
 - **Ask Wally**: type or speak a request (English, Chinese, Cantonese); the rules decide; a repeat buys nothing.
 - **Show Wally a photo**: Home or Ask, the camera button. A plain garment photo gives words and four SIMULATED items; one tap asks Wally to buy, and the rules decide as for any ask. It names the kind of garment, not the photo [F68a]; on the on-device page the shopper taps the kind.
 - **Try to trick Wally**: text reaches the judge only; expect Stopped before paying (`R10.injection`); padded or Chinese text escalates [F26, F104].
-- **See cheaper options** after the shipping stop: Wally replans and the new cart is checked again.
+- **See cheaper options** after the shipping stop: Wally replans over the three demo clothes and buys the ankle socks (HK$120 [F23]) if they fit what is left; the new cart is checked again.
 - **Needs your OK** (a seller Wally cannot verify): Approve mints; No thanks or 60 s of silence [F31] stops it (DMR2); a fixed rule never yields.
 - **Cancel this budget** (DMR1): Manage this budget, hold, confirm. Unused cards stop; receipts stay.
 - **Mum's budget**: Demo scenarios, or Seal then Whose money. Her HK$1,000 caps a HK$800 budget; HK$1,500 is refused `EXCEEDS_PARENT` [F93].
