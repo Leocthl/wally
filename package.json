@@ -27,6 +27,7 @@
     "demo:lan": "node scripts/booth-check.mjs --build-if-needed --lan && pnpm --filter @wally/web api:lan",
     "booth": "bash scripts/booth-up.sh",
     "booth:lan": "bash scripts/booth-up.sh --lan",
+    "rehearse": "node scripts/rehearse-booth.mjs",
     "invariants": "node scripts/invariants.mjs"
   },
   "devDependencies": {
