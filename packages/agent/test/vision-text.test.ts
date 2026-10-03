@@ -228,6 +228,11 @@ describe("the price limit", () => {
     ["250蚊", 25_000],
     ["一千二以下", 120_000],
     ["五十蚊以下", 5_000],
+    ["under 1.5k", 150_000],
+    // A fraction is cut down, never up, so a limit never rises past what the shopper typed.
+    ["under HK$258.99", 25_800],
+    ["under 99.5", 9_900],
+    ["under 150.", 15_000],
   ] as const)("%s", (text, minor) => {
     expect(readPriceLimit(text)).toBe(minor);
   });
@@ -242,6 +247,14 @@ describe("the price limit", () => {
     "買兩件T恤",
     "under 0",
     "under 1000000",
+    // A number written in another way is not a smaller number: 9e99 is not 9, 12e5 is not 12 or 1, 0.5 is not HK$1.
+    "tee under 9e99",
+    "under 12e5",
+    "under 5e+3",
+    "under 0.5",
+    "under HK$0.99",
+    "HK$0.5",
+    "under 1.2.3",
     "",
   ])("is not a price: %s", (text) => {
     expect(readPriceLimit(text)).toBeNull();

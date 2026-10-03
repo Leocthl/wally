@@ -37,7 +37,9 @@ export function parseChineseNumber(text: string): number | null {
   return total + (digit > 0 && lastUnit >= 100 && !zeroSince ? (digit * lastUnit) / 10 : digit);
 }
 
-const AMOUNT = String.raw`(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?|[零〇一二兩两三四五六七八九十百千]+)\s*(k(?![a-z]))?`;
+/** A written number that is the whole token: "9e99", "12e5", "1.2.3" and a digit run cut short are not read as a smaller number. */
+const NUMBER = String.raw`(?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)(?!\d|\.\d|e[+-]?\d)`;
+const AMOUNT = String.raw`(${NUMBER}|[零〇一二兩两三四五六七八九十百千]+)\s*(k(?![a-z]))?`;
 const MONEY_MARK = String.raw`(?:hk\s*\$|hkd|\$|港幣|港元)`;
 const BEFORE_EN = String.raw`(?:under|below|beneath|less than|lower than|up to|upto|at most|maximum|max|within|no more than|not more than|cheaper than|budget(?: of| is| around)?|around|about)`;
 const BEFORE_ZH = "(?:預算|最多|至多|不超過|唔超過|唔好貴過|唔好超過|不要超過|低於|少於|少過|不多於|上限|限額)";
@@ -56,7 +58,8 @@ function dollars(raw: string | undefined, kilo: string | undefined): number | nu
   if (raw === undefined) return null;
   const base = /^[\d,.]+$/.test(raw) ? Number(raw.replaceAll(",", "")) : parseChineseNumber(raw);
   if (base === null || !Number.isFinite(base)) return null;
-  const value = Math.round(kilo === undefined ? base : base * 1_000);
+  // A fractional amount is cut down, never up: HK$258.99 is HK$258, and HK$0.5 is no price at all.
+  const value = kilo === undefined ? Math.floor(base) : Math.round(base * 1_000);
   return value >= 1 && value <= MAX_LIMIT_DOLLARS ? value : null;
 }
 

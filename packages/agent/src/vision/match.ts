@@ -30,7 +30,7 @@ export interface MatchQuery {
   /** null or "unknown": no preference. */
   readonly fit: Fit | null;
   readonly style: readonly Style[];
-  /** The most the shopper said they would pay for the item (its price, not the shipping), integer minor units; null or absent: no limit [F105]. */
+  /** The most the shopper said they would pay for the order (the item's price plus its shipping: the card is for the total), integer minor units; null or absent: no limit [F105]. */
   readonly maxPriceMinor?: number | null;
 }
 
@@ -134,7 +134,7 @@ export function scoreItem(query: MatchQuery, item: ShelfItem): Scored | null {
 export function matchShelf(query: MatchQuery, shelf: readonly ShelfItem[], limit: number = DEFAULT_LIMIT): readonly Scored[] {
   const cap = query.maxPriceMinor ?? null;
   const scored = shelf.flatMap((item) => {
-    if (cap !== null && item.priceMinor > cap) return []; // the shopper's own limit leaves it out
+    if (cap !== null && item.priceMinor + item.shippingMinor > cap) return []; // the shopper's own limit leaves it out; shipping counts, the card is for the total
     const one = scoreItem(query, item);
     return one === null ? [] : [one];
   });
