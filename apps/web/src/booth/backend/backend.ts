@@ -33,6 +33,7 @@ import type {
   VerifyOutcome,
 } from "../../api/types";
 import type { AskSource } from "./ask";
+import { withAskLimit } from "./askLimit";
 import type { Catalogue } from "./catalogue";
 import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
@@ -202,7 +203,8 @@ export class OrchestratorBackend implements BoothBackend {
     const restore = this.#holdOut(old, kit);
     let session: Session;
     try {
-      session = await openSession({ ...deps, planner: withPhotoPicks(deps.planner, this.#d.catalogue.shop) }, req, kit);
+      // The planner each session asks: a photo pick is fixed by code, and a typed ask over the whole shelf is kept to the price limit it names.
+      session = await openSession({ ...deps, planner: withAskLimit(withPhotoPicks(deps.planner, this.#d.catalogue.shop), this.#d.ask) }, req, kit);
     } catch (err) {
       restore();
       throw err;
