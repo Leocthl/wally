@@ -1,8 +1,9 @@
 // Step four, the quick tour: three coach marks over the real Budget screen, on Ask, Ideas for you and the tabs. A ring marks the
-// target, a card above the tab bar says what it is. Next moves on, Skip tour (or Escape) ends it at once, and the last mark
-// ends it too. The page behind waits (taps are swallowed) and nothing here changes the booth.
+// target, a card above the tab bar says what it is. Next moves on, Skip tour (or Escape, wherever focus is) ends it at once, and
+// the last mark ends it too. The tour is modal: the page behind is inert and a tap on the dim layer keeps focus on the card.
+// Nothing here changes the booth.
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactElement, type RefObject } from "react";
 import { OB } from "../../i18n/onboarding";
 import type { LabelPair } from "../../i18n/label";
 import { Button } from "../../ui/Button";
@@ -44,6 +45,31 @@ function boxOf(el: HTMLElement): Box {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
+/** A target in the fixed tab bar is always on screen: scrolling the page for it would only move the page away. */
+function inFixedLayer(el: HTMLElement): boolean {
+  for (let node: HTMLElement | null = el; node !== null; node = node.parentElement) {
+    if (getComputedStyle(node).position === "fixed") return true;
+  }
+  return false;
+}
+
+/** Everything in the page but the tour is inert while it runs (a screen reader and the keyboard stay on the card). */
+function useInertPage(active: boolean, keep: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    if (!active) return undefined;
+    const changed: HTMLElement[] = [];
+    for (const el of Array.from(document.body.children)) {
+      if (!(el instanceof HTMLElement) || el.hasAttribute("inert") || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+      if (keep.current !== null && el.contains(keep.current)) continue;
+      el.setAttribute("inert", "");
+      changed.push(el);
+    }
+    return () => {
+      for (const el of changed) el.removeAttribute("inert");
+    };
+  }, [active, keep]);
+}
+
 /** Brings a target that sits below the fold up under the shell's top bar. */
 function scrollUnderBar(el: HTMLElement): void {
   const bar = document.querySelector<HTMLElement>(".shell-bar");
@@ -73,7 +99,19 @@ export default function CoachTour(): ReactElement | null {
     document.body.scrollTop = 0;
     finishTour();
   }, [finishTour]);
-  useFocusTrap(mark !== null, card, end);
+  const open = mark !== null;
+  useFocusTrap(open, card, end);
+  useInertPage(open, card);
+
+  // Escape ends the tour wherever focus is (the trap only hears the card).
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") end();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, end]);
 
   useEffect(() => {
     setAt(nextMark(present(), -1, 1));
@@ -100,15 +138,17 @@ export default function CoachTour(): ReactElement | null {
   // A new mark: scroll its target into view if it needs it and draw the ring.
   useLayoutEffect(() => {
     const target = mark?.find() ?? null;
-    if (mark?.scroll === true && target !== null) scrollUnderBar(target);
+    if (mark?.scroll === true && target !== null && !inFixedLayer(target)) scrollUnderBar(target);
     measure();
   }, [mark, measure]);
 
-  // Focus rests on the card (after the trap has moved it in), so a screen reader reads the mark's title and words.
+  // Focus rests on the card when the tour opens (after the trap has moved it in), so a screen reader reads the first mark. Later
+  // marks leave focus on Next, which stays where it is, and are announced by the live region on the card.
   useEffect(() => {
-    card.current?.focus({ preventScroll: true });
-  }, [mark]);
+    if (open) card.current?.focus({ preventScroll: true });
+  }, [open]);
 
+  // The ring follows the target when the page moves under it: scrolling, resizing, and layout that settles late (a font, a hint).
   useEffect(() => {
     let frame = 0;
     const again = (): void => {
@@ -117,12 +157,17 @@ export default function CoachTour(): ReactElement | null {
     };
     window.addEventListener("resize", again);
     window.addEventListener("scroll", again, true);
+    const watcher = typeof ResizeObserver === "function" ? new ResizeObserver(again) : null;
+    watcher?.observe(document.body);
+    const target = mark?.find() ?? null;
+    if (target !== null) watcher?.observe(target);
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", again);
       window.removeEventListener("scroll", again, true);
+      watcher?.disconnect();
     };
-  }, [measure]);
+  }, [measure, mark]);
 
   if (mark === null) return null;
   const move = (step: 1 | -1): void => {
@@ -138,7 +183,8 @@ export default function CoachTour(): ReactElement | null {
   const total = shown.length;
   return createPortal(
     <div className="tour" lang={locale} data-tour-overlay data-mark={mark.id}>
-      <div className="tour__block" data-dim={box === null || undefined} aria-hidden="true" />
+      {/* A tap on the dim layer does nothing, and must not pull focus off the card either. */}
+      <div className="tour__block" data-dim={box === null || undefined} aria-hidden="true" onMouseDown={(e) => e.preventDefault()} />
       {box !== null ? <div className={cx("tour__spot", `tour__spot--${mark.shape}`)} style={{ top: box.top, left: box.left, width: box.width, height: box.height }} aria-hidden="true" /> : null}
       <div ref={card} className="tour__card" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} tabIndex={-1}>
         <div className="tour__top">
@@ -148,8 +194,10 @@ export default function CoachTour(): ReactElement | null {
           </span>
           <span className="sr-only">{t(OB.tour.markOf(String(position), String(total)))}</span>
         </div>
-        <h2 id={titleId} className="tour__title">{t(mark.title)}</h2>
-        <p id={bodyId} className="tour__body">{t(mark.body)}</p>
+        <div className="tour__words" aria-live="polite" aria-atomic="true">
+          <h2 id={titleId} className="tour__title">{t(mark.title)}</h2>
+          <p id={bodyId} className="tour__body">{t(mark.body)}</p>
+        </div>
         <div className="tour__actions">
           <Button variant="ghost" onClick={end} data-skip-tour>{t(OB.tour.skip)}</Button>
           <Button onClick={() => move(1)} iconEnd={last ? <Icon name="check" size={20} /> : <Icon name="chevronRight" size={20} />} data-next-mark>

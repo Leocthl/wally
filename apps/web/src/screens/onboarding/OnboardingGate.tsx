@@ -4,7 +4,7 @@
 // back next time): a first run is never a way to get stuck.
 import { lazy, Suspense, useEffect, useRef, type ReactElement, type ReactNode } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
-import { parseHash, navigate } from "../../hooks/useRoute";
+import { navigate, useRoute } from "../../hooks/useRoute";
 import { UI } from "../../i18n/ui";
 import { ErrorBoundary } from "../../shell/ErrorBoundary";
 import { useLocale } from "../../ui/locale";
@@ -62,11 +62,21 @@ export interface OnboardingGateProps {
 
 export function OnboardingGate({ children, onRetry }: OnboardingGateProps): ReactElement {
   const { phase, finishTour } = useOnboarding();
+  const route = useRoute();
+  const onBudget = route.name === "budget";
 
-  // The tour points at the Budget screen: take the visitor there (a replay can start from any screen).
+  // The tour points at the Budget screen: take the visitor there (a replay can start from any screen), show it once they are
+  // there, and end it if they leave (the back button, a link): it does not start again on the way back.
+  const toured = useRef(false);
   useEffect(() => {
-    if (phase === "tour" && parseHash(window.location.hash).route.name !== "budget") navigate("budget");
-  }, [phase]);
+    if (phase !== "tour") {
+      toured.current = false;
+      return;
+    }
+    if (onBudget) toured.current = true;
+    else if (toured.current) finishTour();
+    else navigate("budget");
+  }, [phase, onBudget, finishTour]);
 
   if (phase === "setup") {
     return (
@@ -80,7 +90,7 @@ export function OnboardingGate({ children, onRetry }: OnboardingGateProps): Reac
   return (
     <>
       {children}
-      {phase === "tour" ? (
+      {phase === "tour" && onBudget ? (
         <ErrorBoundary resetKey="tour" fallback={() => <LetThrough end={finishTour} />}>
           <Suspense fallback={null}>
             <CoachTour />

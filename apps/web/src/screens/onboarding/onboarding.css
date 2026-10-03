@@ -176,6 +176,7 @@
 .tour__dots { display: inline-flex; gap: 0.375rem; }
 .tour__dot { width: 0.5rem; height: 0.5rem; border-radius: var(--r-pill); background: var(--c-line-strong); transition: width var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out); }
 .tour__dot[data-on] { width: 1.25rem; background: var(--c-primary); }
+.tour__words { display: grid; gap: var(--sp-2); }
 .tour__title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); line-height: var(--lh-snug); }
 .tour__body { color: var(--c-ink-muted); line-height: var(--lh-snug); }
 .tour__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); }
