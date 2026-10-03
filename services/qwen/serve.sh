@@ -24,6 +24,7 @@ CONTEXT_TOKENS=8192       # whole KV pool; one planner request is about 1,000 to
 PARALLEL_SLOTS=2          # booth planner plus the compiler or the harness
 GPU_LAYERS=999            # all layers on Metal
 SEED=42                   # default seed; the clients also send their own
+CACHE_RAM_MIB=0           # llama-server's default RAM prompt cache is 8,192 MiB and grew by about 175 MB per picture; 0 keeps no prompt (or picture) state between requests
 IMAGE_MAX_TOKENS="${QWEN_IMAGE_MAX_TOKENS:-512}"   # most tokens one picture may cost; 512 kept kind accuracy at 25/29 and ran about 2.3 s per picture (FINDINGS.md)
 PID_FILE="$HERE/qwen-serve.pid"
 LOG_FILE="$HERE/qwen-serve.log"
@@ -113,7 +114,7 @@ for name in $(env | sed -n 's/^\(LLAMA_ARG_[A-Z_]*\)=.*/\1/p'); do unset "$name"
 unset LLAMA_API_KEY HF_TOKEN HUGGING_FACE_HUB_TOKEN HF_ENDPOINT
 
 {
-  echo "=== $(date '+%Y-%m-%dT%H:%M:%S%z') start host=$HOST port=$PORT model=$MODEL_FILE ctx=$CONTEXT_TOKENS slots=$PARALLEL_SLOTS spec=${QWEN_SPEC:-mtp} vision=$VISION image_max_tokens=$IMAGE_MAX_TOKENS"
+  echo "=== $(date '+%Y-%m-%dT%H:%M:%S%z') start host=$HOST port=$PORT model=$MODEL_FILE ctx=$CONTEXT_TOKENS slots=$PARALLEL_SLOTS spec=${QWEN_SPEC:-mtp} vision=$VISION image_max_tokens=$IMAGE_MAX_TOKENS cache_ram=$CACHE_RAM_MIB"
 } >> "$LOG_FILE"
 
 # perl setsid detaches the server from this shell's session, so closing the terminal that ran serve.sh does
@@ -125,7 +126,7 @@ perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec failed: $!\n"' -- \
     --host "$HOST" --port "$PORT" \
     --offline ${VISION_ARGS[@]+"${VISION_ARGS[@]}"} \
     --ctx-size "$CONTEXT_TOKENS" --parallel "$PARALLEL_SLOTS" --kv-unified \
-    --n-gpu-layers "$GPU_LAYERS" --flash-attn on \
+    --n-gpu-layers "$GPU_LAYERS" --flash-attn on --cache-ram "$CACHE_RAM_MIB" \
     --jinja --reasoning off --reasoning-budget 0 \
     --temp 0 --top-k 1 --seed "$SEED" \
     --no-webui --no-slots --cors-origins localhost --no-cors-credentials \

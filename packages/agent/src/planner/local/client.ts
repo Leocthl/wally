@@ -10,6 +10,12 @@ export interface ChatMessage {
   readonly content: string;
 }
 
+/** A picture for a vision model: the bytes as base64 (no data: prefix) and the type read from them. */
+export interface ChatImage {
+  readonly mime: "image/jpeg" | "image/png" | "image/webp";
+  readonly base64: string;
+}
+
 export interface ChatRequest {
   readonly model: string;
   readonly messages: readonly ChatMessage[];
@@ -18,6 +24,8 @@ export interface ChatRequest {
   readonly schema: unknown;
   readonly maxTokens: number;
   readonly seed: number;
+  /** Optional. Sent with the last user message as an OpenAI image_url data URI; the server reads it, nothing is stored. */
+  readonly image?: ChatImage;
 }
 
 export interface ChatUsage {
@@ -52,11 +60,18 @@ const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(["127.0.0.1", "localhost", "
 /** "scheme://user@host": user info in the authority part (refused, never echoed). */
 const USERINFO = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*@/i;
 
+/** The text of a message, or with a picture the picture part first and the text after it. */
+function messageContent(text: string, image: ChatImage | undefined): string | readonly object[] {
+  if (image === undefined) return text;
+  return [{ type: "image_url", image_url: { url: `data:${image.mime};base64,${image.base64}` } }, { type: "text", text }];
+}
+
 /** Request body bytes: the same request always gives the same bytes (fixed key order, no clock, no random). */
 export function buildChatBody(request: ChatRequest): string {
+  const pictureAt = request.image === undefined ? -1 : request.messages.map((m) => m.role).lastIndexOf("user");
   return JSON.stringify({
     model: request.model,
-    messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+    messages: request.messages.map((m, index) => ({ role: m.role, content: messageContent(m.content, index === pictureAt ? request.image : undefined) })),
     temperature: 0,
     top_k: 1,
     seed: request.seed,
