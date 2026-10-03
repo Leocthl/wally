@@ -6,6 +6,8 @@
 
 ![Four phone screens: Home with a sealed budget, a one-off card paid for the exact price, a stop before paying, and Proof saying all receipts are untouched](docs/img/wally-screens.png)
 
+![The laptop layout on the booth Mac: Budget on one screen, with the ask box, the budget, ideas and the demo scenarios in three columns](docs/img/wally-laptop.png)
+
 ## What it does
 - **Seal**: write a sentence, for example "HK$800 this month, clothes, verified sellers" (illustrative, SIMULATED [F20]). Wally suggests rules, you edit them and sign them as a W3C VC 2.0 delegation credential.
 - **Shop**: type, speak or show a photo (a screenshot works too). A planner proposes a cart, a judge reads the listing as data, and deterministic rules decide. Only an approved cart gets a one-off card for the exact total.
