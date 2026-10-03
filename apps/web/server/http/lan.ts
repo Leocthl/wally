@@ -5,9 +5,10 @@
 // and socket both loopback) need no token, as in loopback-only mode. Web-standard APIs only (no node: imports).
 import type { Context, Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
-import type { LanInfo } from "../../src/api/http/lanInfo";
+import type { LanInfo, WalletStats } from "../../src/api/http/lanInfo";
 import { errorBody } from "./errors";
 import { isAllowedHost, isLoopbackHostname, isLoopbackOrigin, type OriginVerdict } from "./guards";
+import { SESSION_HEADER } from "./sessionWire";
 
 export const TOKEN_HEADER = "x-wally-token";
 export const TOKEN_COOKIE = "wally_t";
@@ -16,6 +17,13 @@ export const TOKEN_PARAM = "t";
 export const NATIVE_ORIGINS: readonly string[] = ["capacitor://localhost", "http://localhost", "https://localhost"];
 /** ASSUMED: how long a browser keeps the pairing cookie (the token itself ends with the server process). */
 export const COOKIE_MAX_AGE_S = 24 * 60 * 60;
+
+/**
+ * The only API paths the token check leaves open: health for the pre-flight scripts, and /api/lan, which answers (or says 404)
+ * by where the request comes from. The practice-wallet layer (server/sessionScope.ts) leaves them alone too, for every method:
+ * a request that skipped the token check must never make a wallet.
+ */
+export const isTokenExempt = (path: string): boolean => path === "/api/health" || path === "/api/lan";
 
 const ALLOWED_REQUEST_HEADERS = "content-type, x-wally-token";
 const ALLOWED_METHODS = "GET, POST, OPTIONS";
@@ -37,6 +45,12 @@ export interface LanOptions {
   readonly remoteAddress: (c: Context) => string | undefined;
   /** Default NATIVE_ORIGINS. */
   readonly nativeOrigins?: readonly string[];
+  /** Private practice wallets are on (server/sessions.ts): the native shells may send X-Wally-Session and read it back. Default off. */
+  readonly sessions?: boolean;
+  /** WALLY_PUBLIC_URL: the practice copy that works anywhere, shown beside the pairing links on the Mac. Absent: not shown. */
+  readonly publicUrl?: string;
+  /** Practice wallets on: how they are doing, for the Mac's /api/lan answer. Absent: the answer has no `sessions`. */
+  readonly walletStats?: () => WalletStats;
 }
 
 /** 128 random bits as 32 hex characters. */
@@ -79,7 +93,7 @@ function sameOrigin(origin: string, host: string | undefined): boolean {
 }
 
 /** A page on the Mac itself: loopback Host and a loopback peer. */
-function isLocalClient(c: Context, lan: LanOptions): boolean {
+export function isLocalClient(c: Context, lan: LanOptions): boolean {
   return isAllowedHost(hostOf(c), isLoopbackHostname) && isLoopbackAddress(lan.remoteAddress(c));
 }
 
@@ -102,20 +116,23 @@ function hasToken(c: Context, token: string): boolean {
 
 const refuse = (c: Context, status: 401 | 403 | 404, code: string, message: string): Response => c.json(errorBody(code, message), status);
 
+/** The request and response headers the native shells use, plus the wallet id header when practice wallets are on. */
+const withSessionHeader = (list: string, lan: LanOptions): string => (lan.sessions === true ? `${list}, ${SESSION_HEADER}` : list);
+
 /** Echoes one allowlisted native origin (never a wildcard) and exposes the headers the client reads. */
-function allowCors(c: Context, origin: string): void {
+function allowCors(c: Context, origin: string, lan: LanOptions): void {
   c.res.headers.set("access-control-allow-origin", origin);
   c.res.headers.append("vary", "Origin");
-  c.res.headers.set("access-control-expose-headers", EXPOSED_HEADERS);
+  c.res.headers.set("access-control-expose-headers", withSessionHeader(EXPOSED_HEADERS, lan));
 }
 
-function preflight(origin: string): Response {
+function preflight(origin: string, lan: LanOptions): Response {
   return new Response(null, {
     status: 204,
     headers: {
       "access-control-allow-origin": origin,
       "access-control-allow-methods": ALLOWED_METHODS,
-      "access-control-allow-headers": ALLOWED_REQUEST_HEADERS,
+      "access-control-allow-headers": withSessionHeader(ALLOWED_REQUEST_HEADERS, lan),
       "access-control-max-age": PREFLIGHT_MAX_AGE_S,
       // Chrome and Android WebView ask this of a preflight that goes to a private address (Private Network Access).
       "access-control-allow-private-network": "true",
@@ -149,12 +166,12 @@ export function registerLan(app: Hono, lan: LanOptions): void {
     if (!isAllowedHost(hostOf(c), lan.hostAllowed)) return refuse(c, 403, "FORBIDDEN_HOST", "this API answers this machine's own addresses and names only");
     const origin = c.req.header("origin");
     const native = origin !== undefined && natives.includes(origin) ? origin : null;
-    if (native !== null) allowCors(c, native);
+    if (native !== null) allowCors(c, native, lan);
     if (c.req.method === "OPTIONS") {
-      return native === null ? refuse(c, 403, "FORBIDDEN_ORIGIN", "this API accepts requests from its own pages and the Wally app only") : preflight(native);
+      return native === null ? refuse(c, 403, "FORBIDDEN_ORIGIN", "this API accepts requests from its own pages and the Wally app only") : preflight(native, lan);
     }
     // /api/lan answers (or says 404) by where the request comes from, so the token is not asked for there.
-    const open = c.req.path === "/api/health" || c.req.path === "/api/lan" || isLocalClient(c, lan);
+    const open = isTokenExempt(c.req.path) || isLocalClient(c, lan);
     if (!open && !hasToken(c, lan.token)) return refuse(c, 401, "UNAUTHORIZED", "pairing needed: open the link or scan the QR code shown on the booth screen");
     return next();
   });
@@ -163,7 +180,14 @@ export function registerLan(app: Hono, lan: LanOptions): void {
   app.get("/api/lan", (c) => {
     if (!isLocalClient(c, lan)) return refuse(c, 404, "NOT_FOUND", "no such API route");
     const urls = lan.urls();
-    const body: LanInfo = { lan: true, token: lan.token, urls, qrSvg: urls.map((url) => lan.qrSvg(url)) };
+    const body: LanInfo = {
+      lan: true,
+      token: lan.token,
+      urls,
+      qrSvg: urls.map((url) => lan.qrSvg(url)),
+      ...(lan.publicUrl === undefined ? {} : { publicUrl: lan.publicUrl, publicQrSvg: lan.qrSvg(lan.publicUrl) }),
+      ...(lan.walletStats === undefined ? {} : { sessions: lan.walletStats() }),
+    };
     c.header("cache-control", "no-store");
     return c.json(body);
   });

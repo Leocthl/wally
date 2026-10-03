@@ -757,6 +757,10 @@ export const UI = {
       unreachable: label("No answer. Check the phone is on the same Wi-Fi as the Mac and that LAN mode is on.", "冇回應。請檢查手機同 Mac 用同一個 Wi-Fi，並確認區域網絡模式已開啟。"), // NEEDS-REVIEW
       refused: label("The Mac did not accept the pairing code. Copy the link from its screen again.", "Mac 唔接受配對碼，請重新由佢嘅螢幕複製連結。"), // NEEDS-REVIEW
     },
+    // The practice copy (WALLY_PUBLIC_URL): the on-device app on the public web, for a phone that is not on this Wi-Fi.
+    publicTitle: label("Works anywhere (practice copy, sample shop)", "隨處可用（練習版，示範商店）"), // NEEDS-REVIEW
+    publicNote: label("Opens on any network. It runs on the phone itself, with recorded answers, and does not reach this Mac.", "任何網絡都開到。喺手機本身運行，用預先錄製嘅答案，唔會連到呢部 Mac。"), // NEEDS-REVIEW
+    publicQrAlt: label("QR code that opens the practice copy of Wally", "打開 Wally 練習版的 QR 碼"), // NEEDS-REVIEW
   },
 
   simulated: label("Simulated. No money moves.", "模擬示範，冇真錢轉移。"), // NEEDS-REVIEW

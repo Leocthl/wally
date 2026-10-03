@@ -13,6 +13,7 @@ import { appendEntry } from "@wally/core/log";
 import { FileLogStore } from "@wally/core/log/file";
 import { createOrchestrator as realOrchestrator, type Orchestrator, type OrchestratorDeps, type PlannerFactory } from "@wally/core/orchestrator";
 import type { Clock, JudgePort, LogStore } from "@wally/core/ports";
+import { MemoryLogStore } from "@wally/core/testing";
 import { cryptoRandom, type RandomSource } from "@wally/rail-sim";
 import type { Hono } from "hono";
 import { askShelf, recordedRequests, type AskSource } from "../src/booth/backend/ask";
@@ -27,16 +28,20 @@ import { oneAtATime, type PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
+import { Gate, gated, MAX_WALLET_ENTRIES, MODEL_LINE_LENGTH, MODEL_RUNS_AT_ONCE } from "./gate";
 import { loadCatalogue, loadShopRecordings, loadTrickRecordings } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
-import { loadDemoKeys, type DemoKeys } from "./booth/keys";
+import { ephemeralKeys, loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
 import { loadScenarioTable } from "./booth/scenarioTable";
 import { settingsFromEnv, type BoothSettings, type Env } from "./booth/settings";
 import type { SeeMode } from "./booth/visionProbe";
-import type { LanOptions } from "./http/lan";
+import { isLocalClient, type LanOptions } from "./http/lan";
+import { BoothError } from "./http/errors";
 import { SILENT_LOGGER, type Logger } from "./http/routes";
 import { SseHub } from "./http/sse";
+import { createSessionLayer } from "./sessionScope";
+import { SessionRegistry, sessionsModeFromEnv, type SessionRegistryOptions, type VisitorSession } from "./sessions";
 
 export { randomId } from "../src/booth/backend/ids";
 
@@ -67,6 +72,12 @@ export interface ComposeOptions {
   readonly keys?: () => DemoKeys;
   /** The planner chosen at start (selectPlanner). Default: what PLANNER_PROVIDER names, the rule planner when it is unset. */
   readonly planner?: PlannerChoice;
+  /** Private practice wallets for visitors (server/sessions.ts). Default: what WALLY_SESSIONS names; unset, on exactly when LAN mode is on. */
+  readonly sessions?: "on" | "off";
+  /** Cap and idle drop of the visitors' wallets, how long a used wallet is safe from being dropped for room, how many of their runs may be in the planner and judge at once and how many may wait, and how long a wallet's log may grow (tests). Defaults: 12, 45 minutes, 5 s, 2, 48, 200 entries. */
+  readonly sessionLimits?: Pick<SessionRegistryOptions, "maxVisitors" | "idleTtlMs" | "recentMs"> & { readonly runsAtOnce?: number; readonly maxEntries?: number; readonly lineLength?: number };
+  /** The log store of one visitor wallet (tests). Default: a new in-memory store each time, so a visitor's log never touches LOG_DIR. */
+  readonly visitorStore?: () => LogStore;
   /** LAN mode (server/lanMode.ts): pairing token and phone rules. Default off: loopback only. */
   readonly lan?: LanOptions;
   /** Show Wally a photo: "model" when the local model reads pictures (server/booth/visionProbe.ts, asked once at start). Default "palette". */
@@ -80,6 +91,8 @@ export interface Booth {
   readonly settings: BoothSettings;
   /** The planner in use: chosen by the operator, by the start-up check, or the default. Fixed for the life of the booth. */
   readonly planner: PlannerChoice;
+  /** The visitors' private wallets; null when they are off and every client shares the booth's. */
+  readonly sessions: SessionRegistry | null;
   /** Seals M0 and starts the tick timer and the judge warm-up. */
   start(): Promise<void>;
   close(): Promise<void>;
@@ -164,46 +177,98 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const loadKeys = opts.keys ?? (() => loadDemoKeys(settings.keyDir));
   let keys = loadKeys();
   let health: JudgeHealth = { state: isWarmable(judge) ? "warming" : "not_applicable" };
+  /** What one wallet runs on: the shared judge, planner and clock, and the keys and log store that wallet owns. */
+  const depsFor = (own: DemoKeys, ownStore: LogStore): SessionDeps => ({
+    engine: defaultEngine,
+    judge,
+    planner,
+    store: ownStore,
+    appendEntry,
+    engineSigner: own.engine,
+    delegator: own.delegator,
+    clock,
+    scameter: scameterLookup(catalogue, clock),
+    random: opts.railRandom ?? cryptoRandom,
+    newId: (prefix) => randomId(prefix),
+    createOrchestrator: opts.createOrchestrator ?? realOrchestrator,
+  });
   const sessionDeps = (): SessionDeps => {
     try {
       keys = loadKeys();
     } catch (err) {
       logger.error(`keys: ${err instanceof Error ? err.message : "unreadable"}; keeping the keys in use`);
     }
-    return {
-      engine: defaultEngine,
-      judge,
-      planner,
-      store,
-      appendEntry,
-      engineSigner: keys.engine,
-      delegator: keys.delegator,
-      clock,
-      scameter: scameterLookup(catalogue, clock),
-      random: opts.railRandom ?? cryptoRandom,
-      newId: (prefix) => randomId(prefix),
-      createOrchestrator: opts.createOrchestrator ?? realOrchestrator,
-    };
+    return depsFor(keys, store);
   };
-  const backend = new OrchestratorBackend({
-    sessionDeps,
+  const reader = pictureReader(settings, see); // one for every wallet: its guard keeps the whole booth to one picture read at a time
+  const buildBackend = (deps: () => SessionDeps): OrchestratorBackend => new OrchestratorBackend({
+    sessionDeps: deps,
     catalogue,
     table,
     plannerProvider: choice.provider,
     ask: askSource(settings, choice, catalogue, table),
     compileModel: compileModel(settings, choice),
-    pictureReader: pictureReader(settings, see),
+    pictureReader: reader,
     info: () => buildInfo({ settings, judgeProvider: judge.provider, health, keySource: keys.source, planner: choice, features }),
     presetSeal: (now) => m0Request(now),
     logger,
   });
-  const hub = new SseHub({ keepAliveMs: KEEP_ALIVE_MS, maxQueuedChunks: SSE_MAX_QUEUED });
+  const backend = buildBackend(sessionDeps);
+  const newHub = (): SseHub => new SseHub({ keepAliveMs: KEEP_ALIVE_MS, maxQueuedChunks: SSE_MAX_QUEUED });
+  const hub = newHub();
   const off = backend.subscribe((event) => hub.publish(event));
+
+  // A visitor's wallet is a second booth: its own throwaway keys, in-memory log, orchestrator and event hub, the preset
+  // budget sealed at once. Nothing of it touches KEY_DIR or LOG_DIR. The judge and planner are shared.
+  const { runsAtOnce, maxEntries, lineLength, ...registryLimits } = opts.sessionLimits ?? {};
+  const turns = new Gate(runsAtOnce ?? MODEL_RUNS_AT_ONCE, lineLength ?? MODEL_LINE_LENGTH); // visitors take turns at the shared models; the Mac does not wait in this line
+  const visitorDeps = (): SessionDeps => depsFor(ephemeralKeys(), (opts.visitorStore ?? (() => new MemoryLogStore()))());
+  const createVisitor = async (): Promise<VisitorSession> => {
+    const wallet = buildBackend(visitorDeps);
+    const walletHub = newHub();
+    let entries = 0; // entries of this wallet's current log, counted from its events: every request reads all of them
+    const unlisten = wallet.subscribe((event) => {
+      walletHub.publish(event);
+      if (event.type === "reset") entries = 0;
+      else if (event.type === "log") entries += 1;
+    });
+    const full = (): BoothError | null =>
+      entries < (maxEntries ?? MAX_WALLET_ENTRIES) ? null : new BoothError(409, "WALLET_FULL", "This practice wallet has a very long history, so Wally stops here. Start the demo over from About to go on.");
+    // As for the booth's own: a failed preset seal is logged, not fatal; the page seals it itself.
+    await wallet.start().catch((err: unknown) => logger.error(`could not seal the preset mandate for a visitor: ${err instanceof Error ? err.message : "unknown error"}`));
+    return {
+      backend: gated(wallet, turns, full),
+      hub: walletHub,
+      tick: () => wallet.tick(),
+      close: () => {
+        unlisten();
+        wallet.close();
+        walletHub.close();
+      },
+    };
+  };
+  const wanted = opts.sessions === undefined ? sessionsModeFromEnv(opts.env, opts.lan !== undefined) : { mode: opts.sessions, note: null };
+  if (wanted.note !== null) logger.error(wanted.note);
+  const registry =
+    wanted.mode === "off"
+      ? null
+      : new SessionRegistry({
+          booth: { backend, hub },
+          create: createVisitor,
+          now: () => clock.now().getTime(),
+          logger,
+          ...(opts.tickMs === undefined ? {} : { tickMs: opts.tickMs }),
+          ...registryLimits,
+        });
+  // Without LAN mode every caller is the Mac, so the layer only labels the wallet shared.
+  const layer = registry === null ? null : createSessionLayer({ registry, isBooth: (c) => opts.lan === undefined || isLocalClient(c, opts.lan), ...(opts.lan?.nativeOrigins === undefined ? {} : { nativeOrigins: opts.lan.nativeOrigins }) });
+  const lan = opts.lan !== undefined && registry !== null ? { ...opts.lan, sessions: true, walletStats: () => registry.stats() } : opts.lan;
   const app = createHttpApp({
-    backend: () => backend,
-    hub,
+    backend: layer === null ? () => backend : () => layer.backend,
+    hub: layer === null ? hub : layer.hub,
+    ...(layer === null ? {} : { around: layer.around }),
     logger,
-    ...(opts.lan === undefined ? {} : { lan: opts.lan }),
+    ...(lan === undefined ? {} : { lan }),
     ...(opts.extraRoutes === undefined ? {} : { extraRoutes: opts.extraRoutes }),
   });
   let timer: ReturnType<typeof setInterval> | null = null;
@@ -221,6 +286,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     backend,
     settings,
     planner: choice,
+    sessions: registry,
     async start() {
       // A failed preset seal is logged, not fatal: the API stays up and the UI seals M0 itself (never a blank screen).
       await backend.start().catch((err: unknown) => logger.error(`could not seal the preset mandate at start: ${err instanceof Error ? err.message : "unknown error"}`));
@@ -233,6 +299,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
     },
     async close() {
       if (timer !== null) clearInterval(timer);
+      registry?.close();
       off();
       backend.close();
       hub.close();

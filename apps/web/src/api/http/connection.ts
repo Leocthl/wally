@@ -5,8 +5,13 @@
 
 export const TOKEN_KEY = "wally:token";
 export const SERVER_KEY = "wally:server";
+/** The practice-wallet id of a client that keeps no cookie (the native shells), kept beside the pairing token. Not the on-device session record (`wally:session:v1`, src/api/local/persist). */
+export const WALLET_KEY = "wally:wallet";
 /** Request header the booth server reads (server/http/lan.ts). */
 export const TOKEN_HEADER = "X-Wally-Token";
+/** Request and response header of the practice-wallet id (server/http/sessionWire.ts). A browser page never uses it: its id is an HttpOnly cookie. */
+export const SESSION_HEADER = "X-Wally-Session";
+const SESSION_SHAPE = /^[0-9a-f]{32}$/;
 const TOKEN_PARAM = "t";
 /** The server makes 32 hex characters; this accepts any URL-safe token of a sane length. */
 const TOKEN_SHAPE = /^[A-Za-z0-9_-]{8,128}$/;
@@ -100,6 +105,43 @@ export function readToken(stores: ConnectionStores = browserStores()): string | 
   return found !== null && TOKEN_SHAPE.test(found) ? found : null;
 }
 
+/** The practice-wallet id this client holds (only a client the server told one in a header has any), session storage first. */
+export function readSessionId(stores: ConnectionStores = browserStores()): string | null {
+  const found = read(stores.session, WALLET_KEY) ?? read(stores.local, WALLET_KEY);
+  return found !== null && SESSION_SHAPE.test(found) ? found : null;
+}
+
+/** Keeps the id beside the pairing token: local storage in the native shell (a relaunch keeps the wallet), session storage in a page. */
+export function saveSessionId(id: string, stores: ConnectionStores = browserStores()): void {
+  if (!SESSION_SHAPE.test(id)) return;
+  const native = read(stores.session, TOKEN_KEY) === null && read(stores.local, TOKEN_KEY) !== null;
+  write(native ? stores.local : stores.session, WALLET_KEY, id);
+  drop(native ? stores.session : stores.local, WALLET_KEY);
+}
+
+/**
+ * The same fetch, with the practice-wallet id sent on every request and kept from every answer. The server tells a native
+ * shell its id in a header (it can keep no cookie); while no answer has, nothing is added and the request is passed on as it was.
+ */
+export function sessionAware(inner: typeof fetch, stores: ConnectionStores = browserStores()): typeof fetch {
+  let held = readSessionId(stores);
+  return async (input, init) => {
+    const res = await inner(input, held === null ? init : { ...init, headers: withSessionHeader(init?.headers, held) });
+    const given = res.headers.get(SESSION_HEADER);
+    if (given !== null && SESSION_SHAPE.test(given) && given !== held) {
+      held = given;
+      saveSessionId(given, stores);
+    }
+    return res;
+  };
+}
+
+function withSessionHeader(headers: HeadersInit | undefined, id: string): Headers {
+  const next = new Headers(headers);
+  next.set(SESSION_HEADER, id);
+  return next;
+}
+
 /** The booth Mac a native shell saved, checked again on every read (storage is not trusted). */
 export function readServer(stores: ConnectionStores = browserStores()): string | null {
   const found = read(stores.local, SERVER_KEY);
@@ -130,6 +172,7 @@ export function saveConnection(link: { readonly server: string; readonly token: 
   if (link.token === null) drop(stores.local, TOKEN_KEY);
   else write(stores.local, TOKEN_KEY, link.token);
   drop(stores.session, TOKEN_KEY);
+  dropSession(stores); // a new pairing is a new Mac or a new start of it: the old wallet id means nothing there
 }
 
 /** The native shell's "Disconnect": back to on-device mode on the next load. */
@@ -137,4 +180,10 @@ export function clearConnection(stores: ConnectionStores = browserStores()): voi
   drop(stores.local, SERVER_KEY);
   drop(stores.local, TOKEN_KEY);
   drop(stores.session, TOKEN_KEY);
+  dropSession(stores);
+}
+
+function dropSession(stores: ConnectionStores): void {
+  drop(stores.local, WALLET_KEY);
+  drop(stores.session, WALLET_KEY);
 }

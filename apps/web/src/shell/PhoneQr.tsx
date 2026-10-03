@@ -45,6 +45,23 @@ function useCopied(): readonly [boolean, () => void] {
   return [copied, () => setCopied(true)];
 }
 
+/** The practice copy (WALLY_PUBLIC_URL): a second code and its link, for a phone that is not on this Wi-Fi. */
+function PracticeCopy({ url, qrSvg, id, Heading }: { readonly url: string; readonly qrSvg: string; readonly id: string; readonly Heading: "h3" | "h4" }): ReactElement {
+  const { t } = useLocale();
+  return (
+    <div className="lan-phone__public" role="group" aria-labelledby={id}>
+      <Heading id={id} className="lan-phone__subtitle">{t(UI.lan.publicTitle)}</Heading>
+      <div className="lan-phone__public-body">
+        <img className="lan-phone__qr lan-phone__qr--small" src={svgDataUrl(qrSvg)} alt={t(UI.lan.publicQrAlt)} width={144} height={144} />
+        <div className="lan-phone__text">
+          <p className="lan-phone__note">{t(UI.lan.publicNote)}</p>
+          <a className="lan-phone__url" href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps): ReactElement | null {
   const { t } = useLocale();
   const { api } = useBoothContext();
@@ -52,6 +69,8 @@ export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps
   const [pick, setPick] = useState(0);
   const [copied, markCopied] = useCopied();
   if (lan === null) return null;
+  // Inside the About sheet the panel is a section under its title; on the presenter screen it sits right under the page title.
+  const Title = variant === "stage" ? "h2" : "h3";
 
   const link = lan.urls[Math.min(pick, lan.urls.length - 1)];
   const svg = lan.qrSvg[Math.min(pick, lan.qrSvg.length - 1)];
@@ -63,7 +82,7 @@ export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps
   return (
     <section className="lan-phone" data-variant={variant} aria-labelledby={`lan-title-${variant}`}>
       <div className="lan-phone__head">
-        <h3 id={`lan-title-${variant}`} className="lan-phone__title">{t(UI.lan.title)}</h3>
+        <Title id={`lan-title-${variant}`} className="lan-phone__title">{t(UI.lan.title)}</Title>
         <Tag size="sm" tone="warn" icon={<Icon name="alert" size={14} />}>{t(UI.lan.on)}</Tag>
       </div>
       {link === undefined || svg === undefined ? (
@@ -89,6 +108,7 @@ export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps
           </div>
         </div>
       )}
+      {lan.publicUrl !== undefined && lan.publicQrSvg !== undefined ? <PracticeCopy url={lan.publicUrl} qrSvg={lan.publicQrSvg} id={`lan-public-${variant}`} Heading={variant === "stage" ? "h3" : "h4"} /> : null}
     </section>
   );
 }
