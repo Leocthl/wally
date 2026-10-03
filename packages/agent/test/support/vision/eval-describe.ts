@@ -189,7 +189,7 @@ function renderMarkdown(s: Record<string, unknown>, rows: readonly Row[]): strin
   const lines = [
     "# Photo reader evaluation 2026-10-03",
     "",
-    `- **Status**: MEASURED(n=${n}) on ${n} Hong Kong retailer product photos (model shots and flat lays), one annotator. Tuned on the same ${n} photos (prompt wording, a legend of the kind words, the picture token budget): there is no held-out set, so treat the rates as an upper bound.`,
+    `- **Status**: MEASURED(n=${n}) [F68a] on ${n} Hong Kong retailer product photos (model shots and flat lays), one annotator. Tuned on the same ${n} photos (prompt wording, a legend of the kind words, the picture token budget): there is no held-out set, so treat the rates as an upper bound.`,
     `- **Run**: ${sum.started} to ${sum.finished}; host ${sum.host}; llama.cpp ${sum.server.build}; one request at a time after 2 warm-up calls; --image-max-tokens ${sum.server.imageMaxTokens}, --cache-ram ${sum.server.cacheRam}.`,
     "- **Input**: each photo re-encoded the way the page does it (long edge 1024 px, JPEG quality 85, metadata dropped) and sent through `describeImage` (grammar of fixed words, 15 s limit, temperature 0, seed 42). The photos stay on the booth Mac and are not in the repository; this file holds no file names, brand names or product names.",
     "- **Labels**: written before any tuning, kept next to the photos. Kind = the garment the product page names (accepted synonyms for that one item, for example jeans or trousers for cargo pants). Colour = the main colour of that garment as seen (a few close words accepted where two are fair). Outfit shots show other garments too: the lenient kind rate also accepts a clearly visible large garment.",
