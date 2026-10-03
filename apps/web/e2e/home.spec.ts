@@ -110,12 +110,51 @@ test("the composer opens the Ask sheet", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("an idea shops for the item, and the result is on Wally's screen", async ({ page }) => {
+test("an idea opens a preview first, and only its buy button shops for the item", async ({ page }) => {
   await folded(page);
   await page.goto("/?api=mock#/budget");
   await page.locator('main [data-idea="socks"]').click();
+  const sheet = page.getByRole("dialog", { name: "Ankle socks" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet).toContainText("HK$120");
+  await expect(sheet).toContainText("From the demo shop");
+  await expect(sheet.locator("[data-chip]").first()).toContainText("SIMULATED");
+  // Nothing was bought by looking: Not now puts it all back.
+  await sheet.getByRole("button", { name: "Not now" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/#\/budget$/);
+  await page.locator('main [data-idea="socks"]').click();
+  await page.getByRole("dialog", { name: "Ankle socks" }).getByRole("button", { name: "Ask Wally to buy this" }).click();
   await expect(page).toHaveURL(/#\/wally$/);
   await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$120.");
+});
+
+test.describe("the preview sheet passes axe, light and dark, at the narrowest phone", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 360, height: 740 });
+      await folded(page);
+      await page.goto("/?api=mock#/budget");
+      for (const id of ["tee", "jacket"]) {
+        await page.locator(`main [data-idea="${id}"]`).click();
+        const sheet = page.locator("[data-idea-sheet]");
+        await expect(sheet).toBeVisible();
+        await page.waitForTimeout(450);
+        expect(await blocking(page), id).toEqual([]);
+        const fits = await page.evaluate(() => {
+          const panel = document.querySelector(".w-sheet")?.getBoundingClientRect();
+          const buy = document.querySelector("[data-idea-buy]")?.getBoundingClientRect();
+          return { sideways: document.documentElement.scrollWidth > window.innerWidth, buyBottom: buy?.bottom ?? 0, panelTop: panel?.top ?? 0, height: window.innerHeight, buyHeight: buy?.height ?? 0 };
+        });
+        expect(fits.sideways, id).toBe(false);
+        expect(fits.buyBottom, `${id}: the buy button is on screen`).toBeLessThanOrEqual(fits.height);
+        expect(fits.buyHeight, `${id}: 44 px target`).toBeGreaterThanOrEqual(44);
+        await page.getByRole("button", { name: "Not now" }).click();
+        await expect(sheet).toHaveCount(0);
+      }
+    });
+  }
 });
 
 test("the scenario cards open with one tap and the choice is remembered; ?booth=1 opens them whatever was chosen", async ({ page }) => {

@@ -1,0 +1,32 @@
+/* The preview sheet an idea opens on Home, and the drawings in it. Tokens only. */
+.idea-sheet { display: grid; gap: var(--sp-4); min-width: 0; }
+.idea-sheet > * { min-width: 0; }
+.idea-sheet__art { display: grid; place-items: center; padding: var(--sp-4); border-radius: var(--r-lg); background: var(--c-primary-tint); }
+.idea-sheet__facts { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--sp-1) var(--sp-3); }
+.idea-sheet__facts > .idea-sheet__sub, .idea-sheet__facts > .idea-sheet__shop { grid-column: 1 / -1; }
+.idea-sheet__price { margin: 0; font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); line-height: var(--lh-tight); }
+.idea-sheet__chip { justify-self: start; margin: 0; }
+.idea-sheet__sub { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.idea-sheet__shop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); margin: var(--sp-1) 0 0; }
+.idea-sheet__shopname { font-weight: var(--weight-semibold); }
+.idea-sheet__note { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+
+/* The drawings: flat shapes in the app's colours. --ia-main is the cloth, --ia-shade the trim; each idea sets its own. */
+.idea-art { display: block; flex: none; max-width: 100%; }
+.idea-art .ia-glow { fill: var(--c-surface); opacity: 0.55; }
+.idea-art .ia-main { fill: var(--ia-main, var(--c-surface)); }
+.idea-art .ia-shade { fill: var(--ia-shade, var(--c-primary-pressed)); }
+.idea-art .ia-accent { fill: var(--c-accent); }
+.idea-art .ia-light { fill: var(--c-surface); }
+.idea-art .ia-case { fill: var(--c-ticket); }
+.idea-art .ia-edge { stroke: var(--c-primary-ink); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.idea-art .ia-line { fill: none; stroke: var(--ia-line, var(--c-primary-ink)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.6; }
+.idea-art .ia-heavy { stroke-width: 4; opacity: 1; }
+.idea-art .ia-stitch { stroke-dasharray: 3 3; }
+.idea-art .ia-light-line { stroke: var(--c-on-ticket-muted); opacity: 1; }
+.idea-art[data-art="tee"] { --ia-main: var(--c-surface); }
+.idea-art[data-art="socks"] { --ia-main: var(--c-surface); --ia-shade: var(--c-primary-tint); }
+.idea-art[data-art="jacket"] { --ia-main: var(--c-primary-pressed); --ia-shade: var(--c-primary); --ia-line: var(--c-on-primary); }
+.idea-art[data-art="hoodie"] { --ia-main: var(--c-accent); --ia-shade: var(--c-accent-ink); --ia-line: var(--c-on-accent); }
+.idea-art[data-art="graphic"] { --ia-main: var(--c-primary); --ia-line: var(--c-on-primary); }
+.idea-art[data-art="earbuds"] { --ia-main: var(--c-surface); }

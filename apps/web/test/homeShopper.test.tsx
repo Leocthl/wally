@@ -134,14 +134,22 @@ describe("Ideas for you", () => {
     window.location.hash = "#/budget";
     render(<App api={new Asking()} />);
     await screen.findByRole("meter");
-    await userEvent.setup().click(await screen.findByRole("button", { name: /Denim jacket/ }));
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Denim jacket/ }));
+    // The card only opens the preview: nothing is asked until its own button is pressed.
+    const sheet = await screen.findByRole("dialog", { name: "Denim jacket" });
+    expect(asked).toEqual([]);
+    expect(window.location.hash).toBe("#/budget");
+    await user.click(within(sheet).getByRole("button", { name: "Ask Wally to buy this" }));
     await waitFor(() => expect(asked).toEqual([{ requestText: "a denim jacket", locale: "en" }]));
     expect(window.location.hash).toBe("#/wally");
   });
 
-  it("runs the same item's booth scenario when the booth cannot take a typed ask (the offline mock)", async () => {
+  it("runs the same item's booth scenario when the booth cannot take a typed ask (the offline mock), after the preview's buy button", async () => {
     const h = await bootApp("#/budget");
     await h.user.click(screen.getByRole("button", { name: /Cotton tee/ }));
+    expect(window.location.hash).toBe("#/budget");
+    await h.user.click(within(await screen.findByRole("dialog", { name: "Cotton tee" })).getByRole("button", { name: "Ask Wally to buy this" }));
     expect(window.location.hash).toBe("#/wally");
     await waitFor(async () => expect((await h.api.snapshot()).log.entries.some((e) => e.kind === "DECISION")).toBe(true));
     expect((await h.api.snapshot()).packet?.spent_minor).toBeGreaterThanOrEqual(0);

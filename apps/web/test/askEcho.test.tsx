@@ -66,6 +66,7 @@ describe("a refused ask leaves no words behind", () => {
     const client = new RefusedAsk();
     const user = await openBudget(client);
     await user.click(document.querySelector<HTMLElement>('main [data-idea="jacket"]')!);
+    await user.click(within(await screen.findByRole("dialog", { name: "Denim jacket" })).getByRole("button", { name: "Ask Wally to buy this" }));
     await waitFor(() => expect(client.asked).toHaveLength(1));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("the planner is down"));
     expect(claimAsk("run_refused_idea")).toBeUndefined();

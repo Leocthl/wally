@@ -103,6 +103,7 @@
 /* Ideas for you: the same cards as Try asking, with the reason an idea is here under its name. */
 .home-idea[data-idea-reason] { border-color: var(--c-primary); }
 .home-idea[data-idea-reason] .home-idea__why { color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+.home-idea__price { margin-top: var(--sp-1); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
 
 /* Demo scenarios (for judges): the booth's scenario cards in a disclosure at the bottom. */
 .home-demo { border-radius: var(--r-lg); background: var(--c-surface-sunken); }

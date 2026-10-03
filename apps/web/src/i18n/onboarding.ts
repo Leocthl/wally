@@ -118,6 +118,11 @@ export const OB = {
 
   ideas: {
     title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW
+    // The preview sheet an idea opens before anything is bought. Figures arrive formatted, so no digit lives here.
+    from: label("From the demo shop", "來自示範商店"), // NEEDS-REVIEW
+    buy: label("Ask Wally to buy this", "叫 Wally 買呢件"), // NEEDS-REVIEW
+    checks: label("Wally checks this against your rules before any card is made.", "Wally 會先按你的規則檢查，通過先會發卡。"), // NEEDS-REVIEW
+    shipping: label("{price} plus {shipping} shipping", "{price} 加 {shipping} 運費"), // NEEDS-REVIEW
     item: {
       tee: label("Cotton tee", "純棉T恤"), // NEEDS-REVIEW
       socks: label("Ankle socks", "短襪"), // NEEDS-REVIEW
