@@ -105,7 +105,7 @@ export const OB = {
     forgotten: label("Profile forgotten.", "已清除個人資料。"), // NEEDS-REVIEW
     forgottenHere: label("Hidden for now. This browser would not let Wally remove it, so it may come back.", "暫時隱藏。呢個瀏覽器唔俾 Wally 移除，所以可能會再出現。"), // NEEDS-REVIEW
     resetAlso: label("Your name and taste on this device are cleared too.", "你喺呢部裝置嘅名同喜好亦會清除。"), // NEEDS-REVIEW
-    stays: label("Stays on this device. Never sent anywhere.", "只留喺呢部裝置，不會傳送出去。"), // NEEDS-REVIEW
+    stays: label("Stays on this device. Never sent anywhere.", "只儲存在這部裝置，不會傳送出去。"), // NEEDS-REVIEW
   },
 
   home: {
