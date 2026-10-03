@@ -1,5 +1,5 @@
 // @vitest-environment node
-// "Try to trick Wally" on a booth that has no live judge (JUDGE_PROVIDER=replay, which is also what the on-device page runs):
+// "Product specifications" on a booth that has no live judge (JUDGE_PROVIDER=replay, which is also what the on-device page runs):
 // the three recorded examples are really stopped by the rules from the recorded judge answers, and any other text is
 // asked about, never guessed.
 import type { Decision } from "@wally/core/generated";

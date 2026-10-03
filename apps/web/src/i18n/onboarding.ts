@@ -1,6 +1,7 @@
-// Words for the first run and the personal touches (lane onboarding): the four steps, the coach marks, the About rows, the
-// named greeting and the "For you" tag. User words only: budget, rules, one-off card, Wally. No digits: figures go through
-// the formatter and wear a provenance chip. Every zh-HK line is a draft for the native read.
+// Words for the first run and the personal touches (lane onboarding): the four steps (hello, what Wally can buy, the first
+// budget, the quick tour), the coach marks, the About rows, the named greeting and the "For you" tag. User words only: budget,
+// rules, one-off card, Wally. No digits: figures go through the formatter and wear a provenance chip. Every zh-HK line is a
+// draft for the native read.
 import type { ScenarioId } from "../api/types";
 import { label, type LabelPair } from "./label";
 
@@ -25,33 +26,24 @@ export const OB = {
     nicknamePlaceholder: label("Your nickname", "你的暱稱"), // NEEDS-REVIEW
   },
 
-  taste: {
-    title: label("What's your style?", "你鍾意咩風格？"), // NEEDS-REVIEW
-    lead: label("Pick what fits. Wally shows these first. Nothing here changes how Wally decides.", "揀啱你的。Wally 會先顯示呢啲。呢度嘅選擇唔會影響 Wally 點樣決定。"), // NEEDS-REVIEW
-    styles: label("Your style", "你的風格"), // NEEDS-REVIEW
-    colours: label("Colours you wear", "你常着的顏色"), // NEEDS-REVIEW
-    sizes: label("Your usual sizes", "你常着的尺碼"), // NEEDS-REVIEW
-    top: label("Top", "上衣"), // NEEDS-REVIEW
-    bottom: label("Bottom", "褲或裙"), // NEEDS-REVIEW
-    shoe: label("Shoes (EU)", "鞋（歐碼）"), // NEEDS-REVIEW
-    shopFor: label("What do you shop for?", "你通常買咩？"), // NEEDS-REVIEW
-    shopForHint: label("These fill in your first budget.", "呢啲會預設做你第一個預算的類別。"), // NEEDS-REVIEW
-    style: {
-      basics: label("Basics", "基本款"), // NEEDS-REVIEW
-      streetwear: label("Streetwear", "街頭潮流"), // NEEDS-REVIEW
-      sporty: label("Sporty", "運動風"), // NEEDS-REVIEW
-      smart: label("Smart casual", "休閒時尚"), // NEEDS-REVIEW
-      cozy: label("Cozy", "舒適暖和"), // NEEDS-REVIEW
-    },
-    colour: {
-      black: label("Black", "黑色"), // NEEDS-REVIEW
-      white: label("White", "白色"), // NEEDS-REVIEW
-      grey: label("Grey", "灰色"), // NEEDS-REVIEW
-      navy: label("Navy", "深藍"), // NEEDS-REVIEW
-      olive: label("Olive", "橄欖綠"), // NEEDS-REVIEW
-      sand: label("Sand", "沙色"), // NEEDS-REVIEW
-      rust: label("Rust", "磚紅"), // NEEDS-REVIEW
-      sky: label("Sky", "天藍"), // NEEDS-REVIEW
+  // Step two. One broad, optional question: which kinds of purchase this budget may cover. All four start ticked, which is what
+  // "any category" means; the demo shop stocks only some of them, and the step says so. No digits: "four" is a word.
+  buy: {
+    title: label("What can Wally buy for you?", "Wally 可以幫你買啲咩？"), // NEEDS-REVIEW zh-HK
+    lead: label("Tick the kinds of purchase this budget may cover. Fixed rules check every buy against them.", "揀呢個預算可以買嘅類別。每次購買都會由固定規則對照檢查。"), // NEEDS-REVIEW zh-HK
+    group: label("Kinds of purchase", "購買類別"), // NEEDS-REVIEW zh-HK
+    // Under the chips. A first budget is still to be made: the ticks start its rules. Nothing ticked reads as any category, and says so.
+    hintForm: label("Optional. Leave all four ticked for any category. You can change this on the next step.", "可選填。四樣都揀晒即係任何類別都得。下一步仍然可以改。"), // NEEDS-REVIEW zh-HK
+    hintNone: label("Nothing ticked, so your first budget will allow any category.", "全部都冇揀，所以你第一個預算任何類別都得。"), // NEEDS-REVIEW zh-HK
+    // The booth already holds a budget, so there is no form to start: the ticks only change what Wally shows first.
+    hintHeld: label("Your budget is already set up, so this only changes what Wally shows first.", "你嘅預算已經設定好，所以呢度只會影響 Wally 先顯示嘅內容。"), // NEEDS-REVIEW zh-HK
+    // Said on every visit to the step: the budget's rules reach further than the sample shop does.
+    shopNote: label("The demo shop stocks only some of these.", "示範商店只有其中部分貨品。"), // NEEDS-REVIEW zh-HK
+    kind: {
+      groceries: label("Groceries and food", "雜貨同食品"), // NEEDS-REVIEW zh-HK
+      apparel: label("Clothes", "衣物"), // NEEDS-REVIEW zh-HK
+      footwear: label("Shoes", "鞋"), // NEEDS-REVIEW zh-HK
+      electronics: label("Gadgets and electronics", "電子產品同小工具"), // NEEDS-REVIEW zh-HK
     },
   },
 
@@ -96,15 +88,15 @@ export const OB = {
     heading: label("Personal", "個人"), // NEEDS-REVIEW
     profile: label("Your profile", "你的個人資料"), // NEEDS-REVIEW
     tourAgain: label("Take the tour again", "再睇一次導覽"), // NEEDS-REVIEW
-    tourAgainHint: label("Hello, your taste and a quick look around.", "打招呼、你的喜好同快速導覽。"), // NEEDS-REVIEW
+    tourAgainHint: label("Hello, what you buy and a quick look around.", "打招呼、你想買嘅類別同快速導覽。"), // NEEDS-REVIEW zh-HK
     forget: label("Forget my profile", "清除我的個人資料"), // NEEDS-REVIEW
     forgetTitle: label("Forget your profile?", "清除你的個人資料？"), // NEEDS-REVIEW
-    forgetBody: label("Wally forgets your name and taste on this device. Your budget and receipts stay.", "Wally 會喺呢部裝置忘記你的名同喜好。預算同收據會保留。"), // NEEDS-REVIEW
+    forgetBody: label("Wally forgets your name and what you shop for on this device. Your budget and receipts stay.", "Wally 會喺呢部裝置忘記你的名同你想買嘅類別。預算同收據會保留。"), // NEEDS-REVIEW zh-HK
     forgetConfirm: label("Forget", "清除"), // NEEDS-REVIEW
     keep: label("Keep it", "保留"), // NEEDS-REVIEW
     forgotten: label("Profile forgotten.", "已清除個人資料。"), // NEEDS-REVIEW
     forgottenHere: label("Hidden for now. This browser would not let Wally remove it, so it may come back.", "暫時隱藏。呢個瀏覽器唔俾 Wally 移除，所以可能會再出現。"), // NEEDS-REVIEW
-    resetAlso: label("Your name and taste on this device are cleared too.", "你喺呢部裝置嘅名同喜好亦會清除。"), // NEEDS-REVIEW
+    resetAlso: label("Your name and what you shop for on this device are cleared too.", "你喺呢部裝置嘅名同想買嘅類別亦會清除。"), // NEEDS-REVIEW zh-HK
     stays: label("Stays on this device. Never sent anywhere.", "只儲存在這部裝置，不會傳送出去。"), // NEEDS-REVIEW
   },
 

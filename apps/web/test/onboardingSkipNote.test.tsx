@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { chipsToRules, compileMandate, M0_SENTENCE } from "../src/booth/compile";
 import { readyMadeBudgetMinor } from "../src/screens/onboarding/ensureBudget";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
-import { hello, openFirstRun, skip, tourCard } from "./helpers/firstRun";
+import { buyStep, hello, openFirstRun, skip, tourCard } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -33,11 +33,11 @@ describe("the note under Skip", () => {
     expect(button).toHaveAccessibleDescription(/ready-made HK\$800 budget for clothes/);
   });
 
-  it("follows Skip to Your style and to Your first budget, and goes once a budget is locked in", async () => {
+  it("follows Skip to What can Wally buy for you? and to Your first budget, and goes once a budget is locked in", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.click(next());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     expect(noteText()).toMatch(/ready-made HK\$800 budget for clothes/);
     await user.click(next());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
@@ -64,7 +64,7 @@ describe("the note under Skip", () => {
     expect(note()).toBeNull();
     expect(screen.getByRole("button", { name: "Skip" })).not.toHaveAttribute("aria-describedby");
     await user.click(next());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     expect(note()).toBeNull();
   });
 

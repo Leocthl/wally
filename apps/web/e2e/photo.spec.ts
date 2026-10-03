@@ -286,15 +286,15 @@ test.describe("typed words on the device (no live planner)", () => {
     await shot(page, "16-words-socks");
   });
 
-  test("the judges' console is folded away, and Try to trick Wally says it needs the booth Mac and runs a recorded example", async ({ page }) => {
+  test("the judges' console is folded away, and Product specifications says it needs the booth Mac and runs a recorded example", async ({ page }) => {
     phoneOnly();
     await openAsk(page);
     const folded = page.getByRole("dialog").locator("details.home-demo");
     await expect(folded).not.toHaveAttribute("open", "");
     await folded.locator("summary").click();
     await expect(folded).toHaveAttribute("open", "");
-    await expect(page.getByText("Typing your own listing needs the booth Mac.")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: /Product description/ })).toBeDisabled();
+    await expect(page.getByText("Typing your own product specifications needs the booth Mac.")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: /Product specifications/ })).toBeDisabled();
     await folded.scrollIntoViewIfNeeded();
     await settled(page);
     await shot(page, "17-ask-sheet-judges");

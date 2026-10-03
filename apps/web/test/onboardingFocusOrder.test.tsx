@@ -4,7 +4,7 @@
 import { screen } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { hello, openFirstRun } from "./helpers/firstRun";
+import { buyStep, hello, openFirstRun } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -47,15 +47,17 @@ describe("Tab on the first run's steps", () => {
     expect(field).toBeLessThan(stops.indexOf("skip"));
   });
 
-  it("puts Skip before Back and Next on Your style and on Your first budget", async () => {
+  it("puts Skip before Back and Next on What can Wally buy for you? and on Your first budget", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    const style = await stopsFromTitle(user);
-    expect(style.indexOf("skip")).toBeGreaterThan(0);
-    expect(style.indexOf("skip")).toBeLessThan(style.indexOf("back"));
-    expect(style.indexOf("back")).toBeLessThan(style.indexOf("next"));
+    await buyStep();
+    const buy = await stopsFromTitle(user);
+    // The four kinds come first (the step's own controls), then Skip, then Back and Next.
+    expect(buy.slice(0, 4).every((stop) => stop.startsWith("group:") || stop.startsWith("button:"))).toBe(true);
+    expect(buy.indexOf("skip")).toBeGreaterThan(3);
+    expect(buy.indexOf("skip")).toBeLessThan(buy.indexOf("back"));
+    expect(buy.indexOf("back")).toBeLessThan(buy.indexOf("next"));
     await user.click(nextButton());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
     const budget = await stopsFromTitle(user);

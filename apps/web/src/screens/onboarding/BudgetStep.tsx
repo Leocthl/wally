@@ -6,7 +6,6 @@ import { useMemo, useState, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
 import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
-import type { Profile } from "../../state/profile";
 import { Button } from "../../ui/Button";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
@@ -20,11 +19,11 @@ import { useSealCeremony } from "../seal/useSealCeremony";
 import "../seal/seal.css";
 import { BudgetPicker } from "./BudgetPicker";
 import { formOf, sentenceFor, untilOf, type BudgetDraft } from "./budgetModel";
+import { holdsLiveBudget } from "./liveBudget";
 import { StepFrame, type SkipControl } from "./StepFrame";
 
 export interface BudgetStepProps {
-  /** The taste so far: what the person shops for sets the categories and the amount to start from. */
-  readonly taste: Profile;
+  /** The form as it stands: it started from what the person ticked on the step before. */
   readonly draft: BudgetDraft;
   readonly onDraft: (next: BudgetDraft) => void;
   readonly onBack: () => void;
@@ -63,9 +62,9 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
   const [replacing, setReplacing] = useState(false);
   const errors = validate(form, now);
   const until = untilOf(draft, now);
-  const { mandate, packet } = booth.state;
+  const { mandate } = booth.state;
   // Ready means a budget Wally can shop in now. One that is cancelled, ended or all used is not that: the form is offered.
-  const live = mandate !== null && packet !== null && packet.status === "ACTIVE" && !booth.state.revoked;
+  const live = holdsLiveBudget(booth.state);
   const mine = ceremony.sealing || ceremony.sealedForm !== null;
   // Skip uses the ready-made budget when there is none (the note under the link says so); with one held, or once this one is
   // being sealed, it seals nothing.

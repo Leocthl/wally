@@ -1,6 +1,6 @@
 // The Ask sheet, opened by the raised tab button on every screen. On top, what a shopper needs: the question (typed or said,
 // with a camera for a photo) and the kinds of item the demo shop has as chips. Under "Demo scenarios (for judges)", closed
-// for a shopper and open on the booth Mac: "Try to trick Wally" (the text goes to api.propose as an untrusted listing
+// for a shopper and open on the booth Mac: "Product specifications" (the text goes to api.propose as an untrusted listing
 // description) and the Try asking shortcuts.
 import { useId, useMemo, useState, type FormEvent, type ReactElement } from "react";
 import type { ScenarioId } from "../api/types";
@@ -35,10 +35,11 @@ const ASK_MAX_CHARS = 1_000;
 export type AskWally = (request: string) => Promise<void> | void;
 
 /**
- * "Try to trick Wally": the text becomes the description of a listing that only the judge reads. A host with no live judge (the
- * on-device page, GitHub Pages, the native shells, a booth on the recorded judge) cannot judge text it never saw, so the box
- * is switched off there, says so in one line, and offers three recorded examples to run instead. The box stops at the listing
- * record's own text limit (LISTING_TEXT_HARD_CAP), and a counter shows how much room is left once the text nears it.
+ * "Product specifications": the text becomes the description of a listing that only the judge reads, as data and never as orders
+ * (the recorded examples are the injection ones). A host with no live judge (the on-device page, GitHub Pages, the native shells,
+ * a booth on the recorded judge) cannot judge text it never saw, so the box is switched off there, says so in one line, and offers
+ * three recorded examples to run instead. The box stops at the listing record's own text limit (LISTING_TEXT_HARD_CAP), and a
+ * counter shows how much room is left once the text nears it.
  */
 function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; readonly busy: boolean }): ReactElement {
   const { t, locale } = useLocale();
@@ -57,9 +58,11 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
   const hint = recordedOnly ? t(UI["shell.trickOfflineHint"]) : info?.kind === "mock" ? `${t(UI["shell.trickHint"])}${gap}${t(UI["shell.trickStandIn"])}` : t(UI["shell.trickHint"]);
   return (
     <form className="shell-trick" onSubmit={submit} aria-labelledby={titleId} data-recorded-only={recordedOnly || undefined}>
-      <h3 id={titleId} className="shell-trick__title"><Icon name="shieldAlert" size={20} /> {t(UI["shell.trickTitle"](BRAND.name))}</h3>
+      <h3 id={titleId} className="shell-trick__title"><Icon name="list" size={20} /> {t(UI["shell.trickTitle"])}</h3>
+      {/* The title above is the visible label; the field repeats it for a screen reader. */}
       <TextArea
         label={t(UI["shell.trickLabel"])}
+        hideLabel
         hint={hint}
         placeholder={t(UI["shell.trickPlaceholder"])}
         rows={3}

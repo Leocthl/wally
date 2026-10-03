@@ -105,12 +105,25 @@ describe("Ideas for you", () => {
     expect(document.querySelector('main [data-idea][data-idea-reason]')).toBeNull();
   });
 
-  it("leads with the person's taste, and says why in their own words", async () => {
-    await bootApp("#/budget", profile({ styles: ["streetwear"] }));
-    expect(ideaIds()).toEqual(["jacket", "graphic", "tee", "socks"]);
-    const jacket = document.querySelector<HTMLElement>('main [data-idea="jacket"]')!;
-    expect(jacket).toHaveAttribute("data-idea-reason", "streetwear");
-    expect(jacket).toHaveTextContent("Streetwear");
+  it("leads with the earbuds for someone who shops for electronics, and says why in the category's name", async () => {
+    await bootApp("#/budget", profile({ shopFor: ["electronics"] }));
+    expect(ideaIds()).toEqual(["earbuds", "tee", "socks", "jacket"]);
+    const earbuds = document.querySelector<HTMLElement>('main [data-idea="earbuds"]')!;
+    expect(earbuds).toHaveAttribute("data-idea-reason", "electronics");
+    expect(earbuds).toHaveTextContent("Electronics");
+  });
+
+  it("keeps the everyday four for categories the shelf has no pick in, and never orders by style, colour or size", async () => {
+    await bootApp("#/budget", profile({ shopFor: ["groceries", "footwear"] }));
+    expect(ideaIds()).toEqual(["tee", "socks", "jacket", "hoodie"]);
+    expect(document.querySelector('main [data-idea][data-idea-reason]')).toBeNull();
+  });
+
+  it("reads a profile an old first run stored (styles, colours, sizes) as if they were not there", async () => {
+    const old = JSON.stringify({ v: 1, nickname: "Mei", styles: ["streetwear"], colours: ["black"], sizes: { top: "M", bottom: null, shoe: "38" }, shopFor: [] });
+    await bootApp("#/budget", { [PROFILE_KEY]: old });
+    expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
+    expect(ideaIds()).toEqual(["tee", "socks", "jacket", "hoodie"]);
   });
 
   it("asks Wally for the item as if it were typed, when the booth can take a typed ask", async () => {

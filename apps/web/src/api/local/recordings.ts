@@ -83,7 +83,7 @@ export function shopRecordingsFrom(file: unknown, shop: Shop): readonly ReplayRe
 }
 
 /**
- * Judge answers for the three recorded "Try to trick Wally" examples (data/trick-examples/judge.json), recorded from live Laya
+ * Judge answers for the three recorded Product specifications examples (data/trick-examples/judge.json), recorded from live Laya
  * by scripts/record-trick-judge.ts. One record per example, keyed by the SHA-256 of the example's text; a record made for
  * other text is a load error (re-record), so an edited example can never be judged by a stale answer, and an example with no
  * record is a load error too.

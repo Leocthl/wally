@@ -61,7 +61,7 @@
 .home-try__icon--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
 .home-try__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
 .home-try__desc { font-size: var(--text-sm); color: var(--c-ink-muted); line-height: var(--lh-snug); }
-/* "For you": a quiet tag on the cards that fit the person's taste (screens/home/tryRank.ts). */
+/* "For you": a quiet tag on the cards that fit the categories the person chose (screens/home/tryRank.ts). */
 .home-try__for-you { margin-top: var(--sp-1); }
 .home-try__card[data-for-you] { border-color: var(--c-primary); }
 /* Pills: the same scenarios as one-tap shortcuts (Ask sheet). */

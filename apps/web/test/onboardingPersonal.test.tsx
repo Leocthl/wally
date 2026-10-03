@@ -1,5 +1,6 @@
 // The personal touches after the first run: About (the tour again, forget my profile), the greeting by name, Try asking in the
-// person's order, the Ask example, and the Seal screen starting from what they shop for. None of it reaches the rules.
+// order of the categories the person chose, the Ask example, and the Seal screen starting from what they shop for. None of it
+// reaches the rules.
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OB, ASK_EXAMPLES } from "../src/i18n/onboarding";
@@ -10,7 +11,9 @@ import { hello, skip, skipTour, skipToTour } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
-const mei = serialiseProfile(mergeProfile(null, { nickname: "Mei", styles: ["streetwear"], shopFor: ["footwear"] }));
+const mei = serialiseProfile(mergeProfile(null, { nickname: "Mei", shopFor: ["footwear"] }));
+/** Someone who narrowed what they shop for to electronics: the one category the shelf has a pick in (the earbuds). */
+const electronics = serialiseProfile(mergeProfile(null, { shopFor: ["electronics"] }));
 
 const bootWith = (stored: Record<string, string>, hash = "#/budget") => bootApp(hash, stored);
 
@@ -99,7 +102,7 @@ describe("About", () => {
     await h.user.click(aboutButton());
     const sheet = await screen.findByRole("dialog", { name: "About Wally" });
     const row = within(sheet).getByText("Your profile").closest("li");
-    expect(row).toHaveTextContent("Mei · Streetwear");
+    expect(row).toHaveTextContent("Mei · Shoes");
     await h.user.click(within(sheet).getByRole("button", { name: /Forget my profile/ }));
     const confirm = await screen.findByRole("alertdialog", { name: "Forget your profile?" });
     await h.user.click(within(confirm).getByRole("button", { name: "Keep it" }));
@@ -147,7 +150,7 @@ describe("Start the demo over", () => {
     expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
     await h.user.click(resetButton());
     const dialog = await screen.findByRole("alertdialog", { name: "Start the demo over" });
-    expect(dialog).toHaveTextContent("Your name and taste on this device are cleared too.");
+    expect(dialog).toHaveTextContent("Your name and what you shop for on this device are cleared too.");
     await h.user.click(within(dialog).getByRole("button", { name: /^Start over/ }));
     await waitFor(() => expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull());
     expect(await screen.findByText("Hi, I'm Wally.")).toBeInTheDocument();
@@ -171,7 +174,7 @@ describe("Start the demo over", () => {
   });
 });
 
-describe("Try asking in the person's order", () => {
+describe("Try asking in the order of what the person shops for", () => {
   const inStops = () => [...document.querySelectorAll<HTMLElement>("main .home-try__group:nth-of-type(2) [data-scenario]")].map((b) => b.dataset["scenario"]);
 
   it("is the booth's order, with no tags, for someone Wally knows nothing about", async () => {
@@ -181,18 +184,32 @@ describe("Try asking in the person's order", () => {
     expect(screen.getByText("Each one runs the real rules on a simulated shop.")).toBeInTheDocument();
   });
 
-  it("puts the cozy pick first and tags it, and says whose picks come first", async () => {
-    await bootWith({ [PROFILE_KEY]: serialiseProfile(mergeProfile(null, { styles: ["cozy"] })) });
-    expect(inStops()[0]).toBe("flagged");
-    expect([...document.querySelectorAll("main [data-for-you]")].map((b) => b.getAttribute("data-scenario"))).toEqual(["flagged"]);
+  it("is the booth's order for a profile that holds a name and categories the shelf has no pick in", async () => {
+    await bootWith({ [PROFILE_KEY]: mei });
+    expect(inStops()).toEqual(["flagged", "overflow", "injected", "off_category", "unverified"]);
+    expect(document.querySelectorAll("main [data-for-you]")).toHaveLength(0);
+  });
+
+  it("puts the earbuds first and tags them for someone who shops for electronics, and says whose picks come first", async () => {
+    await bootWith({ [PROFILE_KEY]: electronics });
+    expect(inStops()[0]).toBe("off_category");
+    expect([...document.querySelectorAll("main [data-for-you]")].map((b) => b.getAttribute("data-scenario"))).toEqual(["off_category"]);
     expect(screen.getByText("Your picks come first. Each one runs the real rules on a simulated shop.")).toBeInTheDocument();
   });
 
-  it("still runs the same scenario when a tagged card is pressed (taste is a hint, not a different purchase)", async () => {
-    const h = await bootWith({ [PROFILE_KEY]: serialiseProfile(mergeProfile(null, { styles: ["basics"] })) });
+  it("still runs the same scenario when a tagged card is pressed (what the person shops for is a hint, not a different purchase)", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: electronics });
     await press(h, "normal");
     expect(await screen.findByText(/Charged the exact HK\$259/)).toBeInTheDocument();
     expect((await h.api.snapshot()).packet?.spent_minor).toBeGreaterThanOrEqual(0);
+  });
+
+  it("ignores the styles an old first run kept: they order nothing and tag nothing", async () => {
+    const old = JSON.stringify({ v: 1, nickname: "Mei", styles: ["cozy", "streetwear"], colours: ["rust"], sizes: { top: "M", bottom: null, shoe: null }, shopFor: [] });
+    await bootWith({ [PROFILE_KEY]: old });
+    expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
+    expect(inStops()).toEqual(["flagged", "overflow", "injected", "off_category", "unverified"]);
+    expect(document.querySelectorAll("main [data-for-you]")).toHaveLength(0);
   });
 });
 
@@ -215,14 +232,16 @@ describe("the Ask example", () => {
     expect(await placeholder({})).toBe("A plain cotton tee under HK$300");
   });
 
-  it("is an item the shelf has when the person's taste points at one", async () => {
-    const stored = { [PROFILE_KEY]: serialiseProfile(mergeProfile(null, { styles: ["streetwear"] })) };
-    expect(await placeholder(stored)).toBe("A denim jacket");
+  it("is an item the shelf has when the categories the person chose point at one", async () => {
+    expect(await placeholder({ [PROFILE_KEY]: electronics })).toBe("Wireless earbuds");
+  });
+
+  it("is the booth's example for categories the shelf has no item in", async () => {
+    expect(await placeholder({ [PROFILE_KEY]: mei })).toBe("A plain cotton tee under HK$300");
   });
 
   it("speaks 繁", async () => {
-    const stored = { [PROFILE_KEY]: serialiseProfile(mergeProfile(null, { styles: ["cozy"] })), "wally:lang": "zh-HK" };
-    expect(await placeholder(stored)).toBe("幫我搵件抓毛衛衣");
+    expect(await placeholder({ [PROFILE_KEY]: electronics, "wally:lang": "zh-HK" })).toBe("我想買藍牙耳機");
   });
 
   it("names only items the shelf has (a cotton tee, socks, a jacket, a graphic tee, a hoodie, earbuds)", () => {
@@ -232,11 +251,11 @@ describe("the Ask example", () => {
 });
 
 describe("Seal starts from what the person shops for", () => {
-  it("fills the amount, the category and the sentence, and puts the matching example first", async () => {
+  it("fills the category and the sentence at the ready-made amount, and puts the matching example first", async () => {
     const h = await bootWith({ [PROFILE_KEY]: mei }, "#/seal?mode=welcome");
     await h.user.click(await screen.findByRole("button", { name: /^Start/ }));
-    expect(screen.getByRole("textbox", { name: /Your budget in a sentence/ })).toHaveValue("HK$500 this month for shoes, verified sellers only");
-    expect(screen.getByRole("textbox", { name: /^Amount/ })).toHaveValue("500");
+    expect(screen.getByRole("textbox", { name: /Your budget in a sentence/ })).toHaveValue("HK$800 this month for shoes, verified sellers only");
+    expect(screen.getByRole("textbox", { name: /^Amount/ })).toHaveValue("800");
     expect(screen.getByRole("button", { name: "Shoes" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Clothes" })).toHaveAttribute("aria-pressed", "false");
     const examples = within(screen.getByRole("group", { name: "Examples" })).getAllByRole("button").map((b) => b.textContent);

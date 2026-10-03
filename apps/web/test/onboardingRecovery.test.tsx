@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HelloStepProps } from "../src/screens/onboarding/HelloStep";
 import { ONBOARDED_KEY } from "../src/state/profile";
 import { FirstLoadFails, FirstSealFails } from "./helpers/shellClients";
-import { hello, openFirstRun, skip, storedProfile, tourCard } from "./helpers/firstRun";
+import { buyStep, hello, kindChip, openFirstRun, skip, storedProfile, tourCard } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -98,8 +98,8 @@ describe("a booth that does not answer", () => {
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    await user.click(screen.getByRole("button", { name: "Cozy" }));
+    await buyStep();
+    await user.click(kindChip("Shoes"));
     await user.click(nextButton());
     expect(await screen.findByText("Can't reach Wally")).toBeInTheDocument();
 
@@ -107,7 +107,8 @@ describe("a booth that does not answer", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Your first budget" })).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Step 3 of 4");
     await user.click(screen.getByRole("button", { name: "Back" }));
-    expect(await screen.findByRole("button", { name: "Cozy" })).toHaveAttribute("aria-pressed", "true");
+    expect(await screen.findByRole("button", { name: "Shoes" })).toHaveAttribute("aria-pressed", "false");
+    expect(kindChip("Clothes")).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("textbox", { name: "What should Wally call you?" })).toHaveValue("Mei");
   });
@@ -123,16 +124,17 @@ describe("Skip keeps what was entered on the step in front", () => {
     expect(storedProfile()).toMatchObject({ nickname: "Mei" });
   });
 
-  it("keeps the choices made on Your taste", async () => {
+  it("keeps the choices made on What can Wally buy for you?", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    await user.click(screen.getByRole("button", { name: "Cozy" }));
+    await buyStep();
+    await user.click(kindChip("Groceries and food"));
+    await user.click(kindChip("Clothes"));
     await user.click(skip());
     await tourCard();
-    expect(storedProfile()).toMatchObject({ nickname: "Mei", styles: ["cozy"] });
+    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", shopFor: ["footwear", "electronics"] });
   });
 
   it("saves nothing when nothing was told (the judge's two taps)", async () => {
@@ -149,7 +151,7 @@ describe("a date that is cleared", () => {
     const { user } = await openFirstRun();
     await hello();
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     await user.click(nextButton());
     await user.click(await screen.findByRole("radio", { name: "Pick a date" }));
     const until = screen.getByLabelText(/^Until/) as HTMLInputElement;

@@ -179,11 +179,11 @@
 .shell-legal { display: grid; gap: var(--sp-1); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: center; }
 .shell-legal__replayed { font-weight: var(--weight-semibold); color: var(--c-ink); }
 
-/* The counter under the trick box: quiet muted figures from 90 percent of the listing limit; at the limit the words and the warning ink say so. */
+/* The counter under the Product specifications box: quiet muted figures from 90 percent of the listing limit; at the limit the words and the warning ink say so. */
 .shell-trick__count { margin-top: calc(-1 * var(--sp-1)); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); font-variant-numeric: var(--num); }
 .shell-trick__count[data-level="full"] { color: var(--c-warn-ink); font-weight: var(--weight-semibold); }
 
-/* Try to trick Wally on a host with no live judge: the box is off, and three recorded examples run instead. */
+/* Product specifications on a host with no live judge: the box is off, and three recorded examples run instead. */
 .shell-trick__examples { display: grid; gap: var(--sp-2); }
 .shell-trick__examples-title { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .shell-trick__chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }

@@ -1,9 +1,9 @@
-// Taste as a hint on Try asking: the cards that fit the person's style (or what they shop for) come first inside their
-// group, and up to three carry a "For you" tag. Only order and tags change: every card stays, none is added, and a card does
-// exactly what it did (the scenario, the rules and the verdict are the same). Pure.
+// What the person shops for as a hint on Try asking: when they narrowed it to categories, the cards that fit come first inside
+// their group, and up to three carry a "For you" tag. Only order and tags change: every card stays, none is added, and a card
+// does exactly what it did (the scenario, the rules and the verdict are the same). Pure.
 import type { ScenarioId } from "../../api/types";
 import type { Profile } from "../../state/profile";
-import { FOR_YOU_MAX, SHOP_PICKS, STYLE_PICKS } from "../../state/taste";
+import { FOR_YOU_MAX, SHOP_PICKS } from "../../state/shopping";
 import type { TryItem, TryScenario } from "./tryCatalog";
 
 export interface RankedTry {
@@ -12,13 +12,12 @@ export interface RankedTry {
   readonly forYou: ReadonlySet<TryScenario>;
 }
 
-/** How well each shelf scenario fits the profile (absent = not at all): a pick near the head of a style's list fits better than one near its tail. */
+/** How well each shelf scenario fits the profile (absent = not at all): a pick near the head of a category's list fits better than one near its tail. */
 export function fitScores(profile: Profile): ReadonlyMap<ScenarioId, number> {
-  const shopPicks = profile.shopFor.flatMap((s) => {
+  const picks = profile.shopFor.flatMap((s) => {
     const list = SHOP_PICKS[s];
     return list ? [list] : [];
   });
-  const picks = [...profile.styles.map((s) => STYLE_PICKS[s]), ...shopPicks];
   const scores = new Map<ScenarioId, number>();
   for (const list of picks) list.forEach((id, at) => scores.set(id, (scores.get(id) ?? 0) + list.length - at));
   return scores;

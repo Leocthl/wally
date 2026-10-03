@@ -68,6 +68,13 @@ export async function openFirstRun(options: FirstRunOptions = {}): Promise<First
 }
 
 export const hello = (): Promise<HTMLElement> => screen.findByRole("heading", { level: 1, name: "Hi, I'm Wally." });
+/** Step two, "What can Wally buy for you?": the four kinds of purchase, all ticked to start with. */
+export const BUY_TITLE = "What can Wally buy for you?";
+export const buyStep = (): Promise<HTMLElement> => screen.findByRole("heading", { level: 1, name: BUY_TITLE });
+/** The kinds on step two, in the order the step lists them, by the names it gives them. */
+export const BUY_KINDS = ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const;
+/** The chip of one kind on step two (the budget form on step three has chips of its own, named a little differently). */
+export const kindChip = (name: (typeof BUY_KINDS)[number]): HTMLElement => screen.getByRole("button", { name });
 export const skip = (): HTMLElement => screen.getByRole("button", { name: "Skip" });
 export const tourCard = (): Promise<HTMLElement> => screen.findByRole("dialog", { name: /Ask Wally|Ideas for you|Find your way/ });
 export const storedProfile = (): unknown => JSON.parse(window.localStorage.getItem(PROFILE_KEY) ?? "null");

@@ -9,7 +9,7 @@ import { useLocale } from "../../ui/locale";
 import { useDemoOpen, useIsBoothPage } from "./demoMode";
 
 export interface DemoScenariosProps {
-  /** The line over the cards (it says whose picks come first when the person's taste is known). */
+  /** The line over the cards (it says whose picks come first when the person narrowed what they shop for). */
   readonly lead: string;
   readonly children: ReactNode;
   /** Whether this is the booth's own page (default: read from the address, ?booth=1 and presenter mode). A test says it outright. */

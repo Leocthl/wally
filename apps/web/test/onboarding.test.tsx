@@ -1,11 +1,12 @@
-// The first run (src/screens/onboarding): shown once per browser, four short steps, Skip always visible, and a judge who taps
-// Skip twice is in the live demo. What a person tells Wally is kept on the device and changes only what Wally shows first.
+// The first run (src/screens/onboarding): shown once per browser, four short steps (Hello, What can Wally buy for you?, Your first
+// budget, the quick tour), Skip always visible, and a judge who taps Skip twice is in the live demo. What a person tells Wally is
+// kept on the device and changes only what Wally shows first and where the first budget's form starts.
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { SealRequest } from "../src/api/types";
 import { ONBOARDED_KEY, PROFILE_KEY } from "../src/state/profile";
 import { bootApp } from "./helpers/app";
-import { FamilyMock, hello, openFirstRun, skip, skipToTour, skipTour, storedProfile, tourCard } from "./helpers/firstRun";
+import { buyStep, FamilyMock, hello, kindChip, openFirstRun, skip, skipToTour, skipTour, storedProfile, tourCard } from "./helpers/firstRun";
 import { SealAlwaysFails } from "./helpers/shellClients";
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -99,42 +100,50 @@ describe("Skip, Skip: the judge's two taps", () => {
 });
 
 describe("the four steps", () => {
-  it("walks Hello, Your taste, Your first budget and the sealed screen, then the tour, and lands on a personal Budget", async () => {
+  it("walks Hello, What can Wally buy for you?, Your first budget and the sealed screen, then the tour, and lands on a personal Budget", async () => {
     const { api, user } = await openFirstRun();
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "  Mei ");
     await user.click(nextButton());
 
-    // Step two: taste.
-    expect(await screen.findByRole("heading", { level: 1, name: "What's your style?" })).toBeInTheDocument();
+    // Step two: what Wally can buy. All four kinds are ticked to start with; the person unticks what they do not want.
+    expect(await buyStep()).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Step 2 of 4");
     expect(document.querySelector('[data-onboarding] .wally')).toHaveAttribute("data-state", "thinking");
-    await user.click(screen.getByRole("button", { name: "Streetwear" }));
-    await user.click(screen.getByRole("button", { name: "Basics" }));
-    await user.click(screen.getByRole("button", { name: "Black" }));
-    await user.click(screen.getByRole("button", { name: "Olive" }));
-    const top = screen.getByRole("group", { name: "Top" });
-    await user.click(within(top).getByRole("button", { name: "M" }));
-    await user.click(within(screen.getByRole("group", { name: "Shoes (EU)" })).getByRole("button", { name: "38" }));
-    await user.click(within(screen.getByRole("group", { name: "What do you shop for?" })).getByRole("button", { name: "Shoes" }));
+    const kinds = screen.getByRole("group", { name: "Kinds of purchase" });
+    expect(within(kinds).getAllByRole("button").map((b) => [b.textContent, b.getAttribute("aria-pressed")])).toEqual([
+      ["Groceries and food", "true"],
+      ["Clothes", "true"],
+      ["Shoes", "true"],
+      ["Gadgets and electronics", "true"],
+    ]);
+    await user.click(kindChip("Groceries and food"));
+    await user.click(kindChip("Gadgets and electronics"));
     await user.click(nextButton());
 
-    // Step three: the first budget, started from what was said (shoes: HK$500, shoes pre-selected, verified sellers).
+    // Step three: the first budget, started from what was ticked (clothes and shoes, the ready-made HK$800, verified sellers).
     expect(await screen.findByRole("heading", { level: 1, name: "Your first budget" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "HK$500" })).toBeChecked();
-    expect(within(screen.getByRole("group", { name: "What Wally can buy" })).getByRole("button", { name: "Shoes" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("radio", { name: "HK$800" })).toBeChecked();
+    const what = screen.getByRole("group", { name: "What Wally can buy" });
+    expect(within(what).getAllByRole("button").map((b) => [b.textContent, b.getAttribute("aria-pressed")])).toEqual([
+      ["Clothes", "true"],
+      ["Shoes", "true"],
+      ["Electronics", "false"],
+      ["Groceries", "false"],
+    ]);
     expect(screen.getByRole("switch", { name: "Verified sellers only" })).toBeChecked();
     expect((await api.snapshot()).mandate).toBeNull();
     await user.click(screen.getByRole("radio", { name: "Two weeks" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
+    expect(document.querySelector(".seal-summary")).toHaveTextContent("Clothes, Shoes only");
     await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
     expect(await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeInTheDocument();
     const snap = await api.snapshot();
-    expect(snap.mandate?.rules.budget.amount_minor).toBe(50_000);
-    expect(snap.mandate?.rules.categories).toEqual(["footwear"]);
+    expect(snap.mandate?.rules.budget.amount_minor).toBe(80_000);
+    expect(snap.mandate?.rules.categories).toEqual(["apparel", "footwear"]);
     expect(snap.mandate?.rules.seller_check.require_capture).toBe(true);
-    expect(snap.mandate?.intent_text).toBe("HK$500 for shoes over the next 14 days, verified sellers only");
+    expect(snap.mandate?.intent_text).toBe("HK$800 for clothes and shoes over the next 14 days, verified sellers only");
     await user.click(screen.getByRole("button", { name: /^Continue/ }));
 
     // Step four: the quick tour, three marks.
@@ -146,35 +155,57 @@ describe("the four steps", () => {
     await user.click(screen.getByRole("button", { name: /^Done/ }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    // The home screen is personal.
+    // The home screen is personal, and says what the budget can buy.
     expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
-    expect(meter()).toHaveAttribute("aria-valuetext", "HK$500 left of HK$500, SIMULATED");
-    expect(storedProfile()).toEqual({
-      v: 1,
-      nickname: "Mei",
-      styles: ["basics", "streetwear"],
-      colours: ["black", "olive"],
-      sizes: { top: "M", bottom: null, shoe: "38" },
-      shopFor: ["footwear"],
-    });
+    expect(meter()).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
+    expect(screen.getByRole("region", { name: "Your budget" })).toHaveTextContent("Clothes, Shoes only");
+    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", shopFor: ["apparel", "footwear"] });
     expect(flag()).toBe("1");
+    // Clothes and shoes name no shelf item of their own: the cards keep the booth's order and carry no "For you" tag.
     const stops = [...document.querySelectorAll<HTMLElement>('main .home-try__group:nth-of-type(2) [data-scenario]')].map((b) => b.dataset["scenario"]);
-    expect(stops.slice(0, 2)).toEqual(["overflow", "injected"]);
-    expect(document.querySelectorAll("main [data-for-you]").length).toBeGreaterThan(0);
+    expect(stops.slice(0, 2)).toEqual(["flagged", "overflow"]);
+    expect(document.querySelectorAll("main [data-for-you]")).toHaveLength(0);
   });
 
-  it("keeps what was typed when the visitor goes Back", async () => {
+  it("leaves all four kinds ticked and the budget at any category when nothing is touched", async () => {
+    const { api, user } = await openFirstRun();
+    await hello();
+    await user.click(nextButton());
+    await buyStep();
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) expect(kindChip(name)).toHaveAttribute("aria-pressed", "true");
+    await user.click(nextButton());
+    await screen.findByRole("heading", { level: 1, name: "Your first budget" });
+    await user.click(screen.getByRole("button", { name: "Review budget" }));
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
+    expect(document.querySelector(".seal-summary")).toHaveTextContent("Any category");
+    expect(document.querySelector(".seal-summary")).not.toHaveTextContent("Clothes");
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
+    expect(document.querySelector(".seal-summary")).toHaveTextContent("Any category");
+    expect([...((await api.snapshot()).mandate?.rules.categories ?? [])].sort()).toEqual(["apparel", "electronics", "footwear", "groceries"]);
+    await user.click(screen.getByRole("button", { name: /^Continue/ }));
+    await user.click(await screen.findByRole("button", { name: "Skip tour" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    // The budget card says Any category, not a list of all four with "only".
+    expect(screen.getByRole("region", { name: "Your budget" })).toHaveTextContent("Any category");
+    expect(screen.getByRole("region", { name: "Your budget" })).not.toHaveTextContent("Clothes");
+    // Nothing was narrowed, so nothing is kept about it.
+    expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull();
+  });
+
+  it("keeps what was typed and ticked when the visitor goes Back", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    await user.click(screen.getByRole("button", { name: "Cozy" }));
+    await buyStep();
+    await user.click(kindChip("Shoes"));
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(await hello()).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "What should Wally call you?" })).toHaveValue("Mei");
     await user.click(nextButton());
-    expect(await screen.findByRole("button", { name: "Cozy" })).toHaveAttribute("aria-pressed", "true");
+    expect(await screen.findByRole("button", { name: "Shoes" })).toHaveAttribute("aria-pressed", "false");
+    expect(kindChip("Clothes")).toHaveAttribute("aria-pressed", "true");
   });
 
   it("Skip on a later step keeps the steps before it and the one on screen", async () => {
@@ -182,37 +213,77 @@ describe("the four steps", () => {
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    await user.click(screen.getByRole("button", { name: "Cozy" }));
+    await buyStep();
+    await user.click(kindChip("Groceries and food"));
     await skipToTour(user);
-    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", styles: ["cozy"], colours: [], sizes: { top: null, bottom: null, shoe: null }, shopFor: [] });
+    expect(storedProfile()).toEqual({ v: 1, nickname: "Mei", shopFor: ["apparel", "footwear", "electronics"] });
   });
 
   it("saves nothing when nothing was told", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     await user.click(nextButton());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
     expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull();
   });
 
-  it("a size can be cleared by pressing it again, and a swatch toggles off", async () => {
+  it("saves nothing either when a kind was unticked and ticked again", async () => {
     const { user } = await openFirstRun();
     await hello();
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    const top = screen.getByRole("group", { name: "Top" });
-    await user.click(within(top).getByRole("button", { name: "L" }));
-    expect(within(top).getByRole("button", { name: "L" })).toHaveAttribute("aria-pressed", "true");
-    await user.click(within(top).getByRole("button", { name: "L" }));
-    expect(within(top).getByRole("button", { name: "L" })).toHaveAttribute("aria-pressed", "false");
-    const sky = screen.getByRole("button", { name: "Sky" });
-    await user.click(sky);
-    expect(sky).toHaveAttribute("aria-pressed", "true");
-    await user.click(sky);
-    expect(sky).toHaveAttribute("aria-pressed", "false");
+    await buyStep();
+    await user.click(kindChip("Shoes"));
+    await user.click(kindChip("Shoes"));
+    await user.click(nextButton());
+    await screen.findByRole("heading", { level: 1, name: "Your first budget" });
+    expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull();
+  });
+
+  it("a kind toggles off and on, and none ticked says the first budget will allow any category", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(nextButton());
+    await buyStep();
+    const shoes = kindChip("Shoes");
+    await user.click(shoes);
+    expect(shoes).toHaveAttribute("aria-pressed", "false");
+    await user.click(shoes);
+    expect(shoes).toHaveAttribute("aria-pressed", "true");
+    const hint = document.querySelector("[data-buy-hint]");
+    expect(hint).toHaveTextContent("Optional. Leave all four ticked for any category. You can change this on the next step.");
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
+    expect(hint).toHaveTextContent("Nothing ticked, so your first budget will allow any category.");
+    // The form that follows starts from all four, as it would have with every kind ticked.
+    await user.click(nextButton());
+    await screen.findByRole("heading", { level: 1, name: "Your first budget" });
+    const what = screen.getByRole("group", { name: "What Wally can buy" });
+    for (const button of within(what).getAllByRole("button")) expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(window.localStorage.getItem(PROFILE_KEY)).toBeNull();
+  });
+
+  it("says the demo shop stocks only some of the kinds, and that the ticks are saved on this device only", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(nextButton());
+    await buyStep();
+    expect(screen.getByText("The demo shop stocks only some of these.")).toBeInTheDocument();
+    expect(screen.getByText("Saved on this device only. Wally never sends it anywhere.")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Kinds of purchase" })).toHaveAccessibleDescription(/Leave all four ticked for any category/);
+  });
+
+  it("asks nothing about style, colours or sizes", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(nextButton());
+    await buyStep();
+    const step = document.querySelector("[data-onboarding]");
+    expect(step).not.toBeNull();
+    for (const old of [/style/i, /colou?rs?/i, /sizes?/i, /wear/i, /taste/i, /streetwear/i, /smart casual/i]) expect(step?.textContent ?? "", String(old)).not.toMatch(old);
+    expect(document.querySelectorAll("[data-swatch-id], [data-size]")).toHaveLength(0);
+    expect(screen.queryByRole("group", { name: "Top" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "Shoes (EU)" })).toBeNull();
   });
 });
 
@@ -221,7 +292,7 @@ describe("Your first budget", () => {
     const run = await openFirstRun(options);
     await hello();
     await run.user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     await run.user.click(nextButton());
     return run;
   }
@@ -265,9 +336,17 @@ describe("Your first budget", () => {
     expect((await api.snapshot()).packet?.budget_minor).toBe(65_000);
   });
 
+  it("starts with all four categories ticked", async () => {
+    await toBudget();
+    const what = await screen.findByRole("group", { name: "What Wally can buy" });
+    expect(within(what).getAllByRole("button").map((b) => b.textContent)).toEqual(["Clothes", "Shoes", "Electronics", "Groceries"]);
+    for (const button of within(what).getAllByRole("button")) expect(button).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("will not go on without a category", async () => {
     const { user } = await toBudget();
-    await user.click(await screen.findByRole("button", { name: "Clothes" }));
+    const what = await screen.findByRole("group", { name: "What Wally can buy" });
+    for (const button of within(what).getAllByRole("button")) await user.click(button);
     await user.click(screen.getByRole("button", { name: "Review budget" }));
     expect(screen.getByText("Pick at least one thing Wally can buy.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Your first budget" })).toBeInTheDocument();
@@ -288,10 +367,44 @@ describe("Your first budget", () => {
     }
   });
 
-  it("Back from the budget returns to the taste, which is as it was left", async () => {
+  it("Back from the budget returns to what Wally can buy, which is as it was left", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("button", { name: "Back" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "What's your style?" })).toBeInTheDocument();
+    expect(await buyStep()).toBeInTheDocument();
+    expect(kindChip("Clothes")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("starts the form over from the new ticks when they change after Back", async () => {
+    const { user } = await toBudget();
+    await user.click(await screen.findByRole("radio", { name: "HK$1,200" }));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    await buyStep();
+    await user.click(kindChip("Groceries and food"));
+    await user.click(nextButton());
+    const what = await screen.findByRole("group", { name: "What Wally can buy" });
+    expect(within(what).getByRole("button", { name: "Groceries" })).toHaveAttribute("aria-pressed", "false");
+    expect(within(what).getByRole("button", { name: "Clothes" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("radio", { name: "HK$800" })).toBeChecked();
+  });
+
+  it("keeps the form when the ticks go to none and back to all four after Back, which is the same budget", async () => {
+    const { user } = await toBudget();
+    await user.click(await screen.findByRole("radio", { name: "HK$1,200" }));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    await buyStep();
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
+    await user.click(nextButton());
+    expect(await screen.findByRole("radio", { name: "HK$1,200" })).toBeChecked();
+  });
+
+  it("keeps the form as it was when Back and Next change nothing", async () => {
+    const { user } = await toBudget();
+    await user.click(await screen.findByRole("radio", { name: "HK$1,200" }));
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    await buyStep();
+    await user.click(nextButton());
+    expect(await screen.findByRole("radio", { name: "HK$1,200" })).toBeChecked();
   });
 
   it("Edit on Check and lock in returns to the form with the choices kept", async () => {
@@ -345,7 +458,7 @@ describe("in 繁體", () => {
     expect(document.documentElement).toHaveAttribute("lang", "zh-HK");
     expect(document.querySelector("[data-onboarding]")).toHaveAttribute("lang", "zh-HK");
     await user.click(screen.getByRole("button", { name: "下一步" }));
-    await screen.findByRole("heading", { level: 1, name: "你鍾意咩風格？" });
+    await screen.findByRole("heading", { level: 1, name: "Wally 可以幫你買啲咩？" });
     const cjk = new RegExp("[\\u3000-\\u303f\\u3400-\\u9fff\\uff00-\\uffef]");
     const bad: string[] = [];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -354,9 +467,30 @@ describe("in 繁體", () => {
       if (cjk.test(text) && node.parentElement?.closest("[lang]")?.getAttribute("lang") !== "zh-HK") bad.push(text.trim().slice(0, 30));
     }
     expect(bad).toEqual([]);
+    // The four kinds, in 繁體, all ticked.
+    const kinds = screen.getByRole("group", { name: "購買類別" });
+    expect(within(kinds).getAllByRole("button").map((b) => [b.textContent, b.getAttribute("aria-pressed")])).toEqual([
+      ["雜貨同食品", "true"],
+      ["衣物", "true"],
+      ["鞋", "true"],
+      ["電子產品同小工具", "true"],
+    ]);
     await user.click(screen.getByRole("button", { name: "下一步" }));
     expect(await screen.findByRole("heading", { level: 1, name: "你的第一個預算" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "略過" })).toBeInTheDocument();
+  });
+
+  it("calls a budget that names all four categories 任何類別", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(screen.getByRole("radio", { name: "繁體中文" }));
+    await user.click(await screen.findByRole("button", { name: "下一步" }));
+    await screen.findByRole("heading", { level: 1, name: "Wally 可以幫你買啲咩？" });
+    await user.click(screen.getByRole("button", { name: "下一步" }));
+    await screen.findByRole("heading", { level: 1, name: "你的第一個預算" });
+    await user.click(screen.getByRole("button", { name: "檢查預算" }));
+    await screen.findByRole("heading", { level: 1, name: "檢查並鎖定" });
+    expect(document.querySelector(".seal-summary")).toHaveTextContent("任何類別");
   });
 });
 
@@ -402,7 +536,7 @@ describe("a failed profile store (private mode)", () => {
       await hello();
       await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Mei");
       await user.click(nextButton());
-      await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+      await buyStep();
       await skipToTour(user);
       await skipTour(user);
       expect(screen.getByText("Hi Mei, I'm Wally.")).toBeInTheDocument();
@@ -421,12 +555,12 @@ describe("storage that holds nonsense", () => {
 });
 
 describe("Skip is on every step, and never a dead end", () => {
-  it("is there and enabled on Hello, Your taste, the form, Check and lock in and the sealed screen", async () => {
+  it("is there and enabled on Hello, What can Wally buy for you?, the form, Check and lock in and the sealed screen", async () => {
     const { user } = await openFirstRun();
     await hello();
     expect(skip()).toBeEnabled();
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+    await buyStep();
     expect(skip()).toBeEnabled();
     await user.click(nextButton());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
@@ -443,7 +577,7 @@ describe("Skip is on every step, and never a dead end", () => {
 });
 
 describe("what the person tells Wally stays on the device", () => {
-  it("never reaches the booth: the only calls the first run makes carry the budget's own rules", async () => {
+  it("never reaches the booth: the only call the first run makes carries the budget's own rules", async () => {
     const { MockApiClient } = await import("../src/api/MockApiClient");
     const { FakeClock } = await import("@wally/core/testing");
     class Recording extends MockApiClient {
@@ -461,16 +595,18 @@ describe("what the person tells Wally stays on the device", () => {
     await hello();
     await user.type(screen.getByRole("textbox", { name: "What should Wally call you?" }), "Zed");
     await user.click(nextButton());
-    await screen.findByRole("heading", { level: 1, name: "What's your style?" });
-    await user.click(screen.getByRole("button", { name: "Streetwear" }));
-    await user.click(screen.getByRole("button", { name: "Rust" }));
+    await buyStep();
+    await user.click(kindChip("Groceries and food"));
     await user.click(nextButton());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
     await user.click(screen.getByRole("button", { name: "Review budget" }));
     await user.click(await screen.findByRole("button", { name: /Lock in budget/ }));
     await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(api.sent).toHaveLength(1);
-    for (const secret of ["Zed", "streetwear", "Streetwear", "rust", "Rust"]) expect(api.sent[0], secret).not.toContain(secret);
+    expect(api.sent[0], "the name").not.toContain("Zed");
+    // What the budget can buy is its rule, so it is in the call; the profile (name, kinds) stays in the page.
+    expect(api.sent[0]).toContain("apparel");
+    expect(api.sent[0]).not.toContain("groceries");
     expect(window.localStorage.getItem(PROFILE_KEY)).toContain("Zed");
   });
 });

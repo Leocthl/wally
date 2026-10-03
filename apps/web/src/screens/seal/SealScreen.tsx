@@ -39,7 +39,7 @@ function startFrom(mandate: Mandate | null, locale: Locale, now: Date, welcome: 
     const stale = form.until < hkDay(now.toISOString());
     return { step: "describe", sentence: mandate.intent_text, form: stale ? { ...form, until: monthEndDay(now) } : form };
   }
-  // A person who said what they shop for starts from that: its amount and its categories (taste is a starting point, they can change it).
+  // A person who narrowed what they shop for starts from that: its categories and the ready-made amount (a starting point, they can change it).
   if (profile !== null && profile.shopFor.length > 0) {
     const form = formOf(draftFor(profile, now), now);
     return { step: "meet", sentence: sentenceFor(form, locale, now), form };

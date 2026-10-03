@@ -5,7 +5,7 @@ import { UI } from "../i18n/ui";
 import { ASK_EXAMPLES } from "../i18n/onboarding";
 import { useLocale } from "../ui/locale";
 import { mergeProfile, profileStore, type Profile, type ProfilePatch } from "./profile";
-import { SHOP_PICKS, STYLE_PICKS } from "./taste";
+import { SHOP_PICKS } from "./shopping";
 
 export interface ProfileApi {
   readonly profile: Profile | null;
@@ -32,13 +32,13 @@ export function useNickname(): string {
 }
 
 /**
- * The words in the Ask field's placeholder. The booth's example, unless the person's taste points at an item the shelf
- * has (a denim jacket, a fleece hoodie): then that item, so the example is something Wally can really shop for.
+ * The words in the Ask field's placeholder. The booth's example, unless the categories the person narrowed their shopping to
+ * point at an item the shelf has (the earbuds): then that item, so the example is something Wally can really shop for.
  */
 export function useAskExample(): string {
   const { t } = useLocale();
   const { profile } = useProfile();
-  const picks = profile === null ? [] : [...profile.styles.flatMap((s) => STYLE_PICKS[s]), ...profile.shopFor.flatMap((s) => SHOP_PICKS[s] ?? [])];
+  const picks = profile === null ? [] : profile.shopFor.flatMap((s) => SHOP_PICKS[s] ?? []);
   for (const id of picks) {
     const example = ASK_EXAMPLES[id];
     if (example !== undefined && id !== "normal") return t(example);

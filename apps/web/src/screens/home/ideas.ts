@@ -1,11 +1,11 @@
-// "Ideas for you" on Home: three or four items from the booth's shelf, led by what fits the person's taste. Every idea is an item
-// the shelf really has (data/fixtures/listings), asked in the words the booth's own buy button and recording use, so a card
-// shops for something that exists. A person Wally knows nothing about sees the everyday picks. Taste only picks and orders:
-// what an idea does is the same ask any shopper could type, and the rules decide it. Pure.
+// "Ideas for you" on Home: four items from the booth's shelf, led by the categories the person narrowed their shopping to. Every
+// idea is an item the shelf really has (data/fixtures/listings), asked in the words the booth's own buy button and recording use,
+// so a card shops for something that exists. A person who did not narrow anything sees the everyday picks. The categories only
+// order: what an idea does is the same ask any shopper could type, and the rules decide it. Pure.
 import type { LabelPair } from "../../i18n/label";
 import { OB } from "../../i18n/onboarding";
 import type { Profile } from "../../state/profile";
-import { SHOP_PICKS, STYLE_PICKS, type ShopId, type StyleId } from "../../state/taste";
+import { SHOP_PICKS, type ShopId } from "../../state/shopping";
 import type { IconName } from "../../ui/icons";
 import type { TryScenario } from "./tryCatalog";
 import { fitScores } from "./tryRank";
@@ -20,7 +20,7 @@ export interface Idea {
   readonly ask: string;
   readonly icon: IconName;
   readonly title: LabelPair;
-  /** What the item is, when nothing in the person's taste is why it is here. */
+  /** What the item is, when no category the person chose is why it is here. */
   readonly kind: LabelPair;
 }
 
@@ -36,8 +36,8 @@ export const IDEAS: readonly Idea[] = [
 
 export const IDEAS_SHOWN = 4;
 
-/** Why an idea is on the list: the style it fits, or what the person shops for; null for a plain pick. */
-export type IdeaReason = StyleId | ShopId | null;
+/** Why an idea is on the list: the category the person chose that it belongs to; null for a plain pick. */
+export type IdeaReason = ShopId | null;
 
 export interface ShownIdea {
   readonly idea: Idea;
@@ -46,8 +46,6 @@ export interface ShownIdea {
 
 function reasonOf(idea: Idea, profile: Profile | null): IdeaReason {
   if (profile === null) return null;
-  const style = profile.styles.find((s) => STYLE_PICKS[s].includes(idea.scenario));
-  if (style !== undefined) return style;
   return profile.shopFor.find((s) => SHOP_PICKS[s]?.includes(idea.scenario)) ?? null;
 }
 

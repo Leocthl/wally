@@ -49,18 +49,13 @@ export function capUntil(day: string, now: Date): { readonly day: string; readon
   return day > latest ? { day: latest, capped: true } : { day, capped: false };
 }
 
-/** Groceries are the small budget, shoes the middle one, anything else (or a mix) the booth's ready-made HK$800. */
-export function presetFor(profile: Profile | null): Preset {
-  const shop = profile?.shopFor ?? [];
-  if (shop.length === 1 && shop[0] === "groceries") return 300;
-  if (shop.length === 1 && shop[0] === "footwear") return 500;
-  return 800;
-}
+/** The amount a first budget starts on: the booth's ready-made HK$800 [F20], whatever the person shops for. */
+export const DEFAULT_PRESET: Preset = 800;
 
-/** The form a first budget starts from: the person's categories if they gave any, otherwise clothes like the ready-made budget. */
+/** The form a first budget starts from: the categories the person chose, and when they chose none, all four (any category). */
 export function draftFor(profile: Profile | null, now: Date): BudgetDraft {
   const shop = profile?.shopFor ?? [];
-  return { amount: presetFor(profile), custom: "", howLong: "month", date: dayAfter(now, DATE_DEFAULT_DAYS), categories: shop.length > 0 ? shop : ["apparel"], verifiedOnly: true };
+  return { amount: DEFAULT_PRESET, custom: "", howLong: "month", date: dayAfter(now, DATE_DEFAULT_DAYS), categories: shop.length > 0 ? shop : [...CATEGORY_SLUGS], verifiedOnly: true };
 }
 
 /** A real YYYY-MM-DD day. A date field reports "" while it is cleared or half typed. */

@@ -119,7 +119,7 @@ export interface SealResult {
 }
 
 export interface ProposeRequest {
-  /** Free text the visitor wrote as a listing description ("Try to trick the agent"). Untrusted data. */
+  /** Free text the visitor wrote as a listing description (the Product specifications box). Untrusted data. */
   readonly listingText: string;
 }
 

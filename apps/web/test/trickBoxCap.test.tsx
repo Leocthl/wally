@@ -1,4 +1,4 @@
-// "Try to trick Wally" stops where the real limit does. A listing record's text holds 4,000 characters at most
+// "Product specifications" stops where the real limit does. A listing record's text holds 4,000 characters at most
 // (schemas/listing-record.schema.json); the box used to take 20,000, so a long paste got as far as the run and ended as "No card
 // was made". Now the box stops at 4,000, and from 90 percent of it a small counter shows how much room is left: silent to a
 // screen reader while typing, said once when it appears and once when the limit is reached.
@@ -49,7 +49,7 @@ async function openTrick(locale: "en" | "zh-HK" = "en") {
   await screen.findByRole("meter");
   await user.click(screen.getByRole("button", { name: locale === "en" ? /^Ask$/ : /^問 Wally$/ }));
   const ask = await screen.findByRole("dialog");
-  const box = within(ask).getByRole("textbox", { name: locale === "en" ? /Product description/ : /商品描述/ }) as HTMLTextAreaElement;
+  const box = within(ask).getByRole("textbox", { name: locale === "en" ? /Product specifications/ : /產品規格/ }) as HTMLTextAreaElement;
   await user.click(box);
   return { client, user, ask, box };
 }

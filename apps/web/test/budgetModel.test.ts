@@ -4,17 +4,17 @@
 import { describe, expect, it } from "vitest";
 import {
   capUntil,
+  DEFAULT_PRESET,
   draftFor,
   formOf,
   HOW_LONG,
   isDay,
   maxDay,
   PRESETS_HKD,
-  presetFor,
   sentenceFor,
   type BudgetDraft,
 } from "../src/screens/onboarding/budgetModel";
-import { applySentence, EMPTY_FORM, isValid, monthEndDay, toSealRequest, validate } from "../src/screens/seal/sealModel";
+import { applySentence, CATEGORY_SLUGS, EMPTY_FORM, isValid, monthEndDay, toSealRequest, validate } from "../src/screens/seal/sealModel";
 import { mergeProfile } from "../src/state/profile";
 
 const NOW = new Date("2026-10-03T02:00:00Z"); // 10:00 on Saturday 3 October in Hong Kong
@@ -24,25 +24,40 @@ describe("presets", () => {
     expect(PRESETS_HKD).toEqual([300, 500, 800, 1200]);
   });
 
-  it("starts from what the person shops for: groceries small, shoes in the middle, anything else the ready-made amount", () => {
-    expect(presetFor(null)).toBe(800);
-    expect(presetFor(mergeProfile(null, { shopFor: ["groceries"] }))).toBe(300);
-    expect(presetFor(mergeProfile(null, { shopFor: ["footwear"] }))).toBe(500);
-    expect(presetFor(mergeProfile(null, { shopFor: ["apparel"] }))).toBe(800);
-    expect(presetFor(mergeProfile(null, { shopFor: ["footwear", "apparel"] }))).toBe(800);
-    expect(presetFor(mergeProfile(null, { shopFor: ["electronics"] }))).toBe(800);
+  it("starts on the booth's ready-made HK$800, whatever the person shops for", () => {
+    expect(DEFAULT_PRESET).toBe(800);
+    expect(PRESETS_HKD).toContain(DEFAULT_PRESET);
+    for (const shopFor of [[], ["groceries"], ["footwear"], ["apparel"], ["footwear", "apparel"], ["electronics"]] as const) {
+      expect(draftFor(mergeProfile(null, { shopFor }), NOW).amount, shopFor.join(",")).toBe(800);
+    }
+    expect(draftFor(null, NOW).amount).toBe(800);
   });
 });
 
 describe("draftFor", () => {
-  it("is the ready-made budget without a profile: HK$800, this month, clothes, verified sellers", () => {
-    expect(draftFor(null, NOW)).toMatchObject({ amount: 800, howLong: "month", categories: ["apparel"], verifiedOnly: true, custom: "" });
+  it("is HK$800 this month for any category, verified sellers, without a profile", () => {
+    const draft = draftFor(null, NOW);
+    expect(draft).toMatchObject({ amount: 800, howLong: "month", verifiedOnly: true, custom: "" });
+    expect(draft.categories).toEqual([...CATEGORY_SLUGS]);
+    expect([...draft.categories].sort()).toEqual(["apparel", "electronics", "footwear", "groceries"]);
   });
 
-  it("pre-fills the categories from what the person shops for", () => {
+  it("is all four categories too for a profile that chose none (nothing narrowed)", () => {
+    expect(draftFor(mergeProfile(null, { nickname: "Mei" }), NOW).categories).toEqual([...CATEGORY_SLUGS]);
+    expect(draftFor(mergeProfile(null, { shopFor: [] }), NOW).categories).toEqual([...CATEGORY_SLUGS]);
+  });
+
+  it("starts from the categories the person chose", () => {
     const draft = draftFor(mergeProfile(null, { shopFor: ["footwear", "groceries"] }), NOW);
-    expect(draft.categories).toEqual(["footwear", "groceries"]);
+    expect(draft.categories).toEqual(["groceries", "footwear"]);
     expect(draft.verifiedOnly).toBe(true);
+    expect(draftFor(mergeProfile(null, { shopFor: ["apparel"] }), NOW).categories).toEqual(["apparel"]);
+  });
+
+  it("hands out its own list: changing the draft of one visitor cannot change the next", () => {
+    const first = draftFor(null, NOW);
+    expect(first.categories).not.toBe(CATEGORY_SLUGS);
+    expect(draftFor(null, NOW).categories).not.toBe(first.categories);
   });
 
   it("offers a date a week out for the date option", () => {
@@ -100,6 +115,7 @@ describe("sentenceFor", () => {
     ["shoes for two weeks", { amount: 500, custom: "", howLong: "twoWeeks", date: "2026-10-10", categories: ["footwear"], verifiedOnly: true }],
     ["a custom amount until a date, any seller", { amount: "custom", custom: "1,250", howLong: "date", date: "2026-10-20", categories: ["groceries", "electronics"], verifiedOnly: false }],
     ["three categories", { amount: 1200, custom: "", howLong: "month", date: "2026-10-10", categories: ["apparel", "footwear", "groceries"], verifiedOnly: true }],
+    ["all four categories (any category)", { amount: 800, custom: "", howLong: "month", date: "2026-10-10", categories: [...CATEGORY_SLUGS], verifiedOnly: true }],
   ];
 
   it.each(cases)("reads back to the same rules through the booth's own reader: %s", (_name, draft) => {
@@ -111,6 +127,12 @@ describe("sentenceFor", () => {
     expect(read.until).toBe(form.until);
   });
 
+  it("reads all four categories back in Cantonese too", () => {
+    const form = formOf(draftFor(null, NOW), NOW);
+    const read = applySentence(EMPTY_FORM(NOW), sentenceFor(form, "zh-HK", NOW), NOW).form;
+    expect([...read.categories].sort()).toEqual([...CATEGORY_SLUGS].sort());
+  });
+
   it("says it in plain words in English and in Cantonese", () => {
     const form = formOf({ amount: 500, custom: "", howLong: "twoWeeks", date: "", categories: ["footwear", "apparel"], verifiedOnly: true }, NOW);
     expect(sentenceFor(form, "en", NOW)).toBe("HK$500 for clothes and shoes over the next 14 days, verified sellers only");
@@ -120,7 +142,8 @@ describe("sentenceFor", () => {
   it("builds a seal request the engine accepts, with that sentence as the signed words", () => {
     const form = formOf(draftFor(null, NOW), NOW);
     const request = toSealRequest(sentenceFor(form, "en", NOW), form, NOW);
-    expect(request.intentText).toBe("HK$800 this month for clothes, verified sellers only");
+    expect(request.intentText).toBe("HK$800 this month for clothes, shoes, electronics and groceries, verified sellers only");
+    expect([...request.rules.categories].sort()).toEqual(["apparel", "electronics", "footwear", "groceries"]);
     expect(request.rules.budget.amount_minor).toBe(80_000);
     expect(request.rules.seller_check.require_capture).toBe(true);
     expect(isValid(validate(form, NOW))).toBe(true);

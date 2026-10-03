@@ -1,4 +1,4 @@
-// The character counter under "Try to trick Wally". Quiet while the text is short; from 90 percent of the listing limit it shows
+// The character counter under "Product specifications". Quiet while the text is short; from 90 percent of the listing limit it shows
 // "3,720 / 4,000 characters" in muted text, and at the limit it says so in words (and in the warning colour, never colour alone).
 // The figure changes with every key, so it is not a live region. A separate hidden status line says "close to the limit" once when
 // the counter first appears and "limit reached" once at the limit, and stays as it is in between, so a screen reader hears two

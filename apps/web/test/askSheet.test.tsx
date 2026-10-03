@@ -78,7 +78,7 @@ describe("Ask sheet: typed request", () => {
     const { sheet } = await openSheet(new AskClient("http", { ask: false }));
     expect(within(sheet).queryByRole("textbox", { name: /Tell Wally what you need/ })).toBeNull();
     expect(within(sheet).queryByText(/booth server/i)).toBeNull();
-    expect(within(sheet).getByRole("textbox", { name: /Product description/ })).toBeInTheDocument();
+    expect(within(sheet).getByRole("textbox", { name: /Product specifications/ })).toBeInTheDocument();
   });
 
   it("shows nothing extra on the offline mock, which has no ask at all", async () => {

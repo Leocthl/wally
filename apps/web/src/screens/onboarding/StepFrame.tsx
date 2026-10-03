@@ -17,7 +17,7 @@ import "./onboarding.css";
 const NOTE_ID = "onb-skip-note";
 
 export type StepId = SetupStep;
-export const STEP_ORDER: readonly StepId[] = ["hello", "taste", "budget"];
+export const STEP_ORDER: readonly StepId[] = ["hello", "buy", "budget"];
 /** Setup is the three steps here; the fourth, the quick tour, plays on the real Budget screen. */
 export const TOTAL_STEPS = STEP_ORDER.length + 1;
 

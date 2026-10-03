@@ -1,6 +1,7 @@
 // The first run in a real browser, as a visitor who has never been here (the config puts the "onboarded" flag in storage for every
-// other spec; this one starts empty). Skip, Skip is the judge's way to the live demo; the full walk ends on a personal Budget; the
-// tour can be taken again and the profile forgotten from About; every step passes axe at the phone widths, light and dark.
+// other spec; this one starts empty). Skip, Skip is the judge's way to the live demo; the full walk (Hello, What can Wally buy for
+// you?, the budget, the quick tour) ends on a personal Budget; the tour can be taken again and the profile forgotten from About;
+// every step passes axe at the phone widths, light and dark.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -28,12 +29,15 @@ const hello = (page: Page) => page.getByRole("heading", { level: 1, name: "Hi, I
 const next = (page: Page) => page.locator("[data-onboarding] [data-next]");
 const meter = (page: Page) => page.getByRole("meter");
 
-/** Hello, with a nickname, to the budget step. */
-async function toTaste(page: Page, nickname = "Mei"): Promise<void> {
+/** Hello, with a nickname, to step two: What can Wally buy for you? */
+async function toBuy(page: Page, nickname = "Mei"): Promise<void> {
   await page.getByRole("textbox", { name: "What should Wally call you?" }).fill(nickname);
   await next(page).click();
-  await expect(page.getByRole("heading", { level: 1, name: "What's your style?" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "What can Wally buy for you?" })).toBeVisible();
 }
+
+/** A kind of purchase on step two, by the engine's category (the chip's data attribute stays when the words change). */
+const kind = (page: Page, category: "groceries" | "apparel" | "footwear" | "electronics") => page.locator(`[data-onboarding] [data-chip-id="${category}"]`);
 
 test.describe("Skip, Skip", () => {
   test("is the way to the live demo: Hello, Skip, the tour, Skip tour, then Budget with the ready-made HK$800", async ({ page }) => {
@@ -67,20 +71,23 @@ test.describe("Skip, Skip", () => {
 });
 
 test.describe("the four steps", () => {
-  test("walk Hello, taste, budget, Check and lock in, sealed and the tour, and land on a personal Budget (on-device engine)", async ({ page }) => {
+  test("walk Hello, what Wally can buy, budget, Check and lock in, sealed and the tour, and land on a personal Budget (on-device engine)", async ({ page }) => {
     await page.goto("/");
     await expect(hello(page)).toBeVisible();
-    await toTaste(page);
-    await page.locator('[data-chip-id="streetwear"]').click();
-    await page.locator('[data-swatch-id="black"]').click();
-    await page.locator('[data-size="M"]').first().click();
-    await page.locator('[data-chip-id="footwear"]').click();
+    await toBuy(page);
+    // All four kinds start ticked (that is any category); this visitor keeps clothes and shoes.
+    for (const category of ["groceries", "apparel", "footwear", "electronics"] as const) await expect(kind(page, category)).toHaveAttribute("aria-pressed", "true");
+    await kind(page, "groceries").click();
+    await kind(page, "electronics").click();
     await next(page).click();
     await expect(page.getByRole("heading", { level: 1, name: "Your first budget" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "HK$500" })).toBeChecked();
+    await expect(page.getByRole("radio", { name: "HK$800" })).toBeChecked();
+    await expect(page.getByRole("group", { name: "What Wally can buy" }).getByRole("button", { name: "Shoes" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("group", { name: "What Wally can buy" }).getByRole("button", { name: "Groceries" })).toHaveAttribute("aria-pressed", "false");
     await page.getByRole("radio", { name: "Two weeks" }).click();
     await page.getByRole("button", { name: "Review budget" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
+    await expect(page.locator(".seal-summary")).toContainText("Clothes, Shoes only");
     await page.getByRole("button", { name: /Lock in budget/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
     await page.getByRole("button", { name: /^Continue/ }).click();
@@ -92,27 +99,52 @@ test.describe("the four steps", () => {
     await page.getByRole("button", { name: /^Done/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByText("Hi Mei, I'm Wally.")).toBeVisible();
-    await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$500 left of HK$500, SIMULATED");
-    // The same real purchase works from a card that was put first for this person.
+    await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
+    await expect(page.getByRole("region", { name: "Your budget" })).toContainText("Clothes, Shoes only");
+    // Clothes and shoes name no shelf item of their own: the cards keep the booth's order and carry no "For you" tag.
     const stops = page.locator("main .home-try__group").nth(1).locator("[data-scenario]");
-    await expect(stops.first()).toHaveAttribute("data-scenario", "overflow");
-    await expect(page.locator("main [data-for-you]").first()).toBeVisible();
+    await expect(stops.first()).toHaveAttribute("data-scenario", "flagged");
+    await expect(page.locator("main [data-for-you]")).toHaveCount(0);
   });
 
-  test("Back keeps what was typed, and a size can be cleared", async ({ page }) => {
+  test("leaving all four kinds ticked makes a budget for any category", async ({ page }) => {
+    await page.goto("/");
+    await toBuy(page);
+    await next(page).click();
+    await page.getByRole("button", { name: "Review budget" }).click();
+    await expect(page.locator(".seal-summary")).toContainText("Any category");
+    await page.getByRole("button", { name: /Lock in budget/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: "Skip tour" }).click();
+    await expect(page.getByRole("region", { name: "Your budget" })).toContainText("Any category");
+    // Nothing was narrowed, so no categories are stored (the name is).
+    expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem("wally:profile:v1") ?? "null"))).toEqual({ v: 1, nickname: "Mei", shopFor: [] });
+  });
+
+  test("Back keeps what was typed and what was ticked", async ({ page }) => {
     await page.goto("/?api=mock");
-    await toTaste(page, "Jo");
-    await page.locator('[data-size="L"]').first().click();
-    await expect(page.locator('[data-size="L"]').first()).toHaveAttribute("aria-pressed", "true");
-    await page.locator('[data-size="L"]').first().click();
-    await expect(page.locator('[data-size="L"]').first()).toHaveAttribute("aria-pressed", "false");
+    await toBuy(page, "Jo");
+    await kind(page, "footwear").click();
+    await expect(kind(page, "footwear")).toHaveAttribute("aria-pressed", "false");
     await page.getByRole("button", { name: "Back" }).click();
     await expect(page.getByRole("textbox", { name: "What should Wally call you?" })).toHaveValue("Jo");
+    await next(page).click();
+    await expect(kind(page, "footwear")).toHaveAttribute("aria-pressed", "false");
+    await expect(kind(page, "apparel")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("asks nothing about style, colours or sizes", async ({ page }) => {
+    await page.goto("/?api=mock");
+    await toBuy(page);
+    await expect(page.locator("[data-swatch-id], [data-size]")).toHaveCount(0);
+    const words = await page.locator("[data-onboarding]").innerText();
+    for (const old of [/style/i, /colou?rs?/i, /\bsizes?\b/i, /taste/i, /streetwear/i, /smart casual/i]) expect(words, String(old)).not.toMatch(old);
   });
 
   test("a typed amount is checked in the Seal screen's words", async ({ page }) => {
     await page.goto("/?api=mock");
-    await toTaste(page);
+    await toBuy(page);
     await next(page).click();
     await page.getByRole("radio", { name: "Custom" }).click();
     await page.getByRole("button", { name: "Review budget" }).click();
@@ -168,7 +200,7 @@ test.describe("Check and lock in on a short phone", () => {
       await page.setViewportSize(viewport);
       // The page as the public link serves it: on the phone itself, with the strip about that on top (it takes room too).
       await page.goto("/");
-      await toTaste(page);
+      await toBuy(page);
       await next(page).click();
       await expect(page.getByRole("heading", { level: 1, name: "Your first budget" })).toBeVisible();
       await page.getByRole("button", { name: "Review budget" }).click();
@@ -201,8 +233,8 @@ test.describe("Check and lock in on a short phone", () => {
 test.describe("About: the tour again, and forget my profile", () => {
   test("the tour again replays the flow with what was told; forgetting removes it and leaves the budget", async ({ page }) => {
     await page.goto("/?api=mock");
-    await toTaste(page, "Mei");
-    await page.locator('[data-chip-id="cozy"]').click();
+    await toBuy(page, "Mei");
+    await kind(page, "groceries").click();
     await page.getByRole("button", { name: "Skip", exact: true }).click();
     await page.getByRole("button", { name: "Skip tour" }).click();
     await expect(page.getByText("Hi Mei, I'm Wally.")).toBeVisible();
@@ -210,6 +242,7 @@ test.describe("About: the tour again, and forget my profile", () => {
     await page.getByRole("button", { name: "About and settings" }).click();
     const sheet = page.getByRole("dialog", { name: "About Wally" });
     await expect(sheet.getByText("Your profile")).toBeVisible();
+    await expect(sheet.getByText("Mei · Clothes, Shoes, Gadgets and electronics")).toBeVisible();
     await sheet.getByRole("button", { name: /Take the tour again/ }).click();
     await expect(hello(page)).toBeVisible();
     await expect(page.getByRole("textbox", { name: "What should Wally call you?" })).toHaveValue("Mei");
@@ -237,7 +270,8 @@ test.describe("繁體中文", () => {
     await expect(page.locator("[data-onboarding]")).toHaveAttribute("lang", "zh-HK");
     await page.getByRole("textbox", { name: "Wally 應該點稱呼你？" }).fill("美");
     await page.locator("[data-onboarding] [data-next]").click();
-    await expect(page.getByRole("heading", { level: 1, name: "你鍾意咩風格？" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Wally 可以幫你買啲咩？" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "雜貨同食品" })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "略過", exact: true }).click();
     await expect(page.getByRole("dialog", { name: "問 Wally" })).toBeVisible();
     await page.getByRole("button", { name: "略過導覽" }).click();
@@ -251,18 +285,25 @@ test.describe("axe and touch targets on every step", () => {
       test.describe(`${viewport.width}x${viewport.height} ${scheme}`, () => {
         test.use({ viewport, colorScheme: scheme });
 
-        test("Hello, taste, budget, Check and lock in, sealed and the three tour marks", async ({ page }) => {
+        test("Hello, what Wally can buy, budget, Check and lock in, sealed and the three tour marks", async ({ page }) => {
           test.skip(test.info().project.name !== "phone", "the widths are set inside the tests");
           await page.goto("/?api=mock");
           await expect(hello(page)).toBeVisible();
           await settled(page);
           expect(await blocking(page), "hello").toEqual([]);
-          await toTaste(page);
-          await page.locator('[data-chip-id="streetwear"]').click();
-          await page.locator('[data-swatch-id="black"]').click();
-          await page.locator('[data-size="M"]').first().click();
+          await toBuy(page);
           await settled(page);
-          expect(await blocking(page), "taste").toEqual([]);
+          expect(await blocking(page), "what Wally can buy, all four ticked").toEqual([]);
+          await kind(page, "groceries").click();
+          await settled(page);
+          expect(await blocking(page), "what Wally can buy, one unticked").toEqual([]);
+          // Every chip is a 44 px target, and the step does not scroll sideways.
+          const reach = await page.evaluate(() => ({
+            wide: document.documentElement.scrollWidth > window.innerWidth,
+            small: [...document.querySelectorAll<HTMLElement>("[data-onboarding] [data-chip-id]")].map((el) => ({ w: Math.round(el.getBoundingClientRect().width), h: Math.round(el.getBoundingClientRect().height) })).filter((b) => b.h < 43.5 || b.w < 43.5),
+          }));
+          expect(reach.wide, "sideways scroll on step two").toBe(false);
+          expect(reach.small, "chips under 44 px").toEqual([]);
           await next(page).click();
           await expect(page.getByRole("heading", { level: 1, name: "Your first budget" })).toBeVisible();
           await settled(page);

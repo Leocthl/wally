@@ -1,5 +1,5 @@
 // Two small fixes from the hostile QA run, in a real browser on the phone: the Cancel this budget question opens on Keep it (Enter
-// keeps the budget, Escape closes the question), and the Try to trick Wally box stops at 4,000 characters with a counter near the
+// keeps the budget, Escape closes the question), and the Product specifications box stops at 4,000 characters with a counter near the
 // limit. Both screens pass axe (no serious or critical finding) in light and dark.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
@@ -61,10 +61,10 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(page.locator('.oc[data-card-state="ACTIVE"]')).toBeVisible();
     });
 
-    test("the trick box stops at 4,000 characters, shows a counter from 3,600, and has no serious axe finding", async ({ page }) => {
+    test("the Product specifications box stops at 4,000 characters, shows a counter from 3,600, and has no serious axe finding", async ({ page }) => {
       await page.getByRole("button", { name: "Ask", exact: true }).click();
       const sheet = page.getByRole("dialog", { name: /What should Wally try/ });
-      const box = sheet.getByRole("textbox", { name: /Product description/ });
+      const box = sheet.getByRole("textbox", { name: /Product specifications/ });
       const count = sheet.locator("[data-trick-count]");
 
       await box.fill("x".repeat(3_000));

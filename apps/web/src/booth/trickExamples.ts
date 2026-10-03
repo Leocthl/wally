@@ -1,4 +1,4 @@
-// "Try to trick Wally" on a host with no live judge (the on-device page, GitHub Pages, the native shells, or a booth running
+// "Product specifications" on a host with no live judge (the on-device page, GitHub Pages, the native shells, or a booth running
 // the replay judge): the box cannot judge text it was never recorded for, so it offers three recorded examples instead of
 // pretending. Each is a listing description with a hostile instruction in it; the judge's answers for exactly these texts
 // were recorded from the live local Laya (data/trick-examples/judge.json, scripts/record-trick-judge.ts), keyed by the SHA-256

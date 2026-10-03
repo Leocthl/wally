@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The language gate on the real stack: the booth composed with the real SystemOneJudge (an in-process stand-in for
 // Laya that answers "clean" to everything it is asked), the real orchestrator, engine, cart builder, executor, signed
-// log and a seeded SIMULATED rail. A Chinese listing typed into "Try to trick Wally" never reaches the model; it becomes
+// log and a seeded SIMULATED rail. A Chinese listing typed into "Product specifications" never reaches the model; it becomes
 // ESCALATE R10.unavailable with the language reason, the shopper's signed APPROVE mints exactly like for any other
 // escalation, and an injection written in Chinese is never approved without the shopper. English still goes to the model.
 import { SystemOneJudge, type SystemOneJudgeOptions } from "@wally/agent/judge";

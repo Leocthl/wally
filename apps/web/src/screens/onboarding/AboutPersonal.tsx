@@ -1,5 +1,6 @@
-// The personal rows in About: what Wally remembers (shown only when it remembers something), "Take the tour again", and
-// "Forget my profile". The profile lives on this device only; forgetting it removes it and leaves the budget and receipts.
+// The personal rows in About: what Wally remembers (a name, and the kinds of purchase if the person narrowed them; shown only when
+// it remembers something), "Take the tour again", and "Forget my profile". The profile lives on this device only; forgetting it
+// removes it and leaves the budget and receipts.
 import { useRef, useState, type ReactElement } from "react";
 import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
@@ -25,8 +26,9 @@ export function AboutPersonal({ onClose }: AboutPersonalProps): ReactElement {
   const [asking, setAsking] = useState(false);
   const rows = useRef<HTMLDivElement>(null);
 
-  const styles = (profile?.styles ?? []).map((id) => t(OB.taste.style[id])).join(t(UI["home.listJoin"]));
-  const summary = [profile?.nickname ?? "", styles].filter((part) => part !== "").join(" · ");
+  // What Wally remembers: the name, and the kinds of purchase the person narrowed it to (nothing when they left it at any category).
+  const kinds = (profile?.shopFor ?? []).map((id) => t(OB.buy.kind[id])).join(t(UI["home.listJoin"]));
+  const summary = [profile?.nickname ?? "", kinds].filter((part) => part !== "").join(" · ");
 
   const confirm = (): void => {
     setAsking(false);

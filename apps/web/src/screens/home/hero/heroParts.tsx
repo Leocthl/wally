@@ -29,7 +29,17 @@ export function categoryName(slug: string, t: T): string {
   return isKnown(slug) ? t(UI[`home.cat.${slug}`]) : slug;
 }
 
+/**
+ * Whether a budget names every category Wally knows and no other: such a budget has no category rule to list. (A fifth,
+ * unknown category beside the four still gets its list, with "only": that is a limit the person should see.)
+ */
+export function allowsAnyCategory(slugs: readonly string[]): boolean {
+  return KNOWN_CATEGORIES.every((known) => slugs.includes(known)) && slugs.every(isKnown);
+}
+
+/** The rule tag for what the budget can buy: "Any category" when all four are named, otherwise "Clothes, Shoes only". */
 export function categoriesText(slugs: readonly string[], t: T): string {
+  if (allowsAnyCategory(slugs)) return t(UI["home.anyCategory"]);
   const names = slugs.map((s) => categoryName(s, t));
   const joined = names.join(t(UI["home.listJoin"]));
   const sentence = fillText(t(UI["home.only"]), { things: joined });

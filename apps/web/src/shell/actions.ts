@@ -59,7 +59,7 @@ export function useScenarioRunner(): (id: ScenarioId) => void {
   );
 }
 
-/** Sends visitor text as a listing description ("Try to trick Wally") and shows Wally at work. */
+/** Sends visitor text as a listing description (the Product specifications box) and shows Wally at work. */
 export function useProposer(): (listingText: string) => void {
   const { propose } = useBoothContext();
   return useCallback(

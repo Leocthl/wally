@@ -11,7 +11,6 @@ import {
   ONBOARDED_KEY,
   parseProfile,
   PROFILE_KEY,
-  profileSummary,
   serialiseProfile,
   type Profile,
   type ProfileStorage,
@@ -59,10 +58,17 @@ class ReadOnlyStorage extends FakeStorage {
 const mei: Profile = {
   ...emptyProfile(),
   nickname: "Mei",
+  shopFor: ["apparel", "footwear"],
+};
+
+/** What the first version of the first run left in localStorage: a name, a taste for clothes, and what the person shops for. */
+const OLD_PROFILE = {
+  v: 1,
+  nickname: "Mei",
   styles: ["basics", "streetwear"],
   colours: ["black", "olive"],
-  sizes: { top: "M", bottom: "S", shoe: "38" },
-  shopFor: ["apparel", "footwear"],
+  sizes: { top: "M", bottom: null, shoe: "38" },
+  shopFor: ["footwear", "groceries"],
 };
 
 describe("normaliseNickname", () => {
@@ -121,29 +127,19 @@ describe("parseProfile", () => {
     const raw = JSON.stringify({
       v: 1,
       nickname: 7,
-      styles: ["cozy", "punk", "basics", "cozy", 5],
-      colours: "black",
-      sizes: { top: "XXL", bottom: "L", shoe: 38 },
-      shopFor: ["footwear", "weapons", "apparel"],
+      shopFor: ["footwear", "weapons", "apparel", "footwear", 5],
       extra: "<script>alert(1)</script>",
     });
-    expect(parseProfile(raw)).toEqual({
-      v: 1,
-      nickname: "",
-      styles: ["basics", "cozy"],
-      colours: [],
-      sizes: { top: null, bottom: "L", shoe: null },
-      shopFor: ["apparel", "footwear"],
-    });
+    expect(parseProfile(raw)).toEqual({ v: 1, nickname: "", shopFor: ["apparel", "footwear"] });
   });
 
   it("never carries a key it does not own", () => {
     const parsed = parseProfile(JSON.stringify({ ...mei, extra: "x", __proto__: { admin: true } }));
-    expect(Object.keys(parsed ?? {}).sort()).toEqual(["colours", "nickname", "shopFor", "sizes", "styles", "v"]);
+    expect(Object.keys(parsed ?? {}).sort()).toEqual(["nickname", "shopFor", "v"]);
   });
 
   it("is null when nothing usable is left", () => {
-    expect(parseProfile(JSON.stringify({ v: 1, nickname: "  ", styles: ["punk"] }))).toBeNull();
+    expect(parseProfile(JSON.stringify({ v: 1, nickname: "  ", shopFor: ["weapons"] }))).toBeNull();
   });
 
   it("is null for stored text far larger than any profile (it was not written by Wally)", () => {
@@ -155,11 +151,11 @@ describe("parseProfile", () => {
 
 describe("mergeProfile and isEmptyProfile", () => {
   it("returns a new profile and leaves the old one alone", () => {
-    const frozen = Object.freeze({ ...mei, styles: Object.freeze([...mei.styles]) }) as Profile;
+    const frozen = Object.freeze({ ...mei, shopFor: Object.freeze([...mei.shopFor]) }) as Profile;
     const next = mergeProfile(frozen, { nickname: "Jo", shopFor: ["groceries"] });
     expect(next).not.toBe(frozen);
-    expect(next).toMatchObject({ nickname: "Jo", shopFor: ["groceries"], styles: ["basics", "streetwear"] });
-    expect(frozen.nickname).toBe("Mei");
+    expect(next).toEqual({ v: 1, nickname: "Jo", shopFor: ["groceries"] });
+    expect(frozen).toEqual({ v: 1, nickname: "Mei", shopFor: ["apparel", "footwear"] });
   });
 
   it("starts from an empty profile when there is none", () => {
@@ -167,20 +163,39 @@ describe("mergeProfile and isEmptyProfile", () => {
   });
 
   it("cleans what it is given with the same rules as a read", () => {
-    expect(mergeProfile(null, { nickname: "  Jo  ", styles: ["cozy", "cozy"] })).toMatchObject({ nickname: "Jo", styles: ["cozy"] });
+    expect(mergeProfile(null, { nickname: "  Jo  ", shopFor: ["footwear", "footwear"] })).toEqual({ v: 1, nickname: "Jo", shopFor: ["footwear"] });
   });
 
   it("knows an empty profile", () => {
     expect(isEmptyProfile(emptyProfile())).toBe(true);
-    expect(isEmptyProfile(mergeProfile(null, { sizes: { top: null, bottom: null, shoe: "40" } }))).toBe(false);
+    expect(isEmptyProfile(mergeProfile(null, { shopFor: ["electronics"] }))).toBe(false);
+    expect(isEmptyProfile(mergeProfile(null, { nickname: "Jo" }))).toBe(false);
     expect(isEmptyProfile(mei)).toBe(false);
   });
 });
 
-describe("profileSummary", () => {
-  it("lists the nickname and the styles, and is empty for a profile with neither", () => {
-    expect(profileSummary(mei)).toEqual({ nickname: "Mei", styles: ["basics", "streetwear"] });
-    expect(profileSummary(mergeProfile(null, { colours: ["navy"] }))).toEqual({ nickname: "", styles: [] });
+describe("a profile stored by the first version of the first run", () => {
+  it("keeps the name and the categories, and ignores the styles, colours and sizes it also held", () => {
+    expect(parseProfile(JSON.stringify(OLD_PROFILE))).toEqual({ v: 1, nickname: "Mei", shopFor: ["groceries", "footwear"] });
+  });
+
+  it("is read without throwing and gives back nothing of the old taste", () => {
+    const parsed = parseProfile(JSON.stringify(OLD_PROFILE));
+    expect(Object.keys(parsed ?? {}).sort()).toEqual(["nickname", "shopFor", "v"]);
+    expect(JSON.stringify(parsed)).not.toMatch(/streetwear|olive|"top"|38/);
+  });
+
+  it("is no profile at all when only the taste was kept (a name or a category is what is left to remember)", () => {
+    const tasteOnly = { v: 1, nickname: "", styles: ["cozy"], colours: ["sky"], sizes: { top: "L", bottom: "L", shoe: "40" }, shopFor: [] };
+    expect(parseProfile(JSON.stringify(tasteOnly))).toBeNull();
+  });
+
+  it("is read by the store, and the next save writes the shorter shape", () => {
+    const storage = new FakeStorage({ [PROFILE_KEY]: JSON.stringify(OLD_PROFILE) });
+    const store = createProfileStore(() => storage);
+    expect(store.profile()).toEqual({ v: 1, nickname: "Mei", shopFor: ["groceries", "footwear"] });
+    store.save(mergeProfile(store.profile(), { nickname: "Jo" }));
+    expect(JSON.parse(storage.data.get(PROFILE_KEY) ?? "null")).toEqual({ v: 1, nickname: "Jo", shopFor: ["groceries", "footwear"] });
   });
 });
 

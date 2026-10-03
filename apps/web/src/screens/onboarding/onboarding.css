@@ -85,7 +85,7 @@
 .onb-scope { justify-self: end; margin: 0; }
 .onb-switch .w-switch { min-height: var(--tap); }
 
-/* Pills you switch on and off (style, what you shop for, what Wally can buy). */
+/* Pills you switch on and off (what Wally can buy: step two, and the same choice on the budget form). */
 .onb-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .onb-chip {
   display: inline-flex;
@@ -104,24 +104,6 @@
 .onb-chip[aria-pressed="true"] { border-color: var(--c-primary); background: var(--c-primary-tint); color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
 .onb-chip__tick { display: inline-grid; place-items: center; flex: none; width: 1.5rem; height: 1.5rem; border: 1.5px solid var(--c-line-strong); border-radius: 50%; }
 .onb-chip[aria-pressed="true"] .onb-chip__tick { border-color: var(--c-primary); background: var(--c-primary); color: var(--c-on-primary); }
-
-/* Colour swatches: a sample (--swatch, set per dot) with its name; the badge and the ring say which are chosen. */
-.onb-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-1); }
-.onb-swatch { display: grid; justify-items: center; align-content: start; gap: var(--sp-1); min-height: var(--tap); padding: var(--sp-1); border: 0; border-radius: var(--r-md); background: transparent; color: var(--c-ink-muted); cursor: pointer; }
-.onb-swatch__dot { position: relative; display: block; width: 2.5rem; height: 2.5rem; border: 2px solid var(--c-line-strong); border-radius: 50%; background: var(--swatch); transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
-.onb-swatch[aria-pressed="true"] .onb-swatch__dot { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-surface), 0 0 0 5px var(--c-primary); }
-.onb-swatch__tick { position: absolute; right: -0.375rem; bottom: -0.375rem; display: grid; place-items: center; width: 1.25rem; height: 1.25rem; border: 2px solid var(--c-surface); border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); }
-.onb-swatch__name { font-size: var(--text-xs); line-height: var(--lh-snug); text-align: center; overflow-wrap: anywhere; }
-.onb-swatch[aria-pressed="true"] .onb-swatch__name { color: var(--c-ink); font-weight: var(--weight-semibold); }
-
-/* Sizes: a few joined buttons per row; pressing the chosen one clears it. */
-.onb-size { display: grid; gap: var(--sp-1); }
-.onb-size + .onb-size { margin-top: var(--sp-2); }
-.onb-size__label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--c-ink-muted); }
-.onb-seg { display: flex; overflow: hidden; border: 1.5px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); }
-.onb-seg__opt { flex: 1; min-width: 0; padding: 0 var(--sp-1); border: 0; border-radius: 0; background: transparent; color: var(--c-ink); font-weight: var(--weight-semibold); cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out); }
-.onb-seg__opt + .onb-seg__opt { border-left: 1px solid var(--c-line); }
-.onb-seg__opt[aria-pressed="true"] { background: var(--c-primary); color: var(--c-on-primary); }
 
 /* The amount presets. */
 .onb-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); }
@@ -198,7 +180,7 @@
   .onb-body > :nth-child(4) { animation-delay: calc(var(--dur-stagger) * 3); }
   .onb-body > :nth-child(n + 5) { animation-delay: calc(var(--dur-stagger) * 4); }
   .onb[data-step="hello"] .onb-hero__wally { animation: onb-wave var(--dur-ceremony) var(--ease-pop) var(--dur-fast) both; }
-  .onb[data-step="taste"] .onb-hero__wally, .onb[data-step="budget"] .onb-hero__wally { animation: onb-hop var(--dur-slow) var(--ease-pop) both; }
+  .onb[data-step="buy"] .onb-hero__wally, .onb[data-step="budget"] .onb-hero__wally { animation: onb-hop var(--dur-slow) var(--ease-pop) both; }
   .tour__card { animation: onb-card var(--dur-base) var(--ease-pop) both; }
 }
 @keyframes onb-in { from { opacity: 0; transform: translateX(var(--from, 0.875rem)); } to { opacity: 1; transform: none; } }

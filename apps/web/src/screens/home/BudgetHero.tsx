@@ -21,7 +21,7 @@ import { leftLabel, meterText, MiniStat, PROV, RollingFig, RuleTags, UntilFig, u
 import { useHeroMotion } from "./useHeroMotion";
 import "./hero.css";
 
-export { categoriesText, categoryName, meterText } from "./hero/heroParts";
+export { allowsAnyCategory, categoriesText, categoryName, meterText } from "./hero/heroParts";
 export type { HeroProps as BudgetHeroProps } from "./hero/heroParts";
 
 export interface BudgetHeroChildren {

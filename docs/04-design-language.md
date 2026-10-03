@@ -46,10 +46,10 @@
 ## Components
 - **Primitives** (`ui/`): Button, Tag, Card, List, ProgressBar, Ring, TextField, Switch, TopBar, BottomTabBar with a raised Ask button, Segmented, Sheet (follows the finger), Dialog, Steps, Toast, RollingMoney (NumberFlow, budget amount only).
 - **Figures** go through `Num` with a provenance chip; no bare numbers, tests count them.
-- **Ask sheet**: a typed field, "Try to trick Wally" (listing text, read as data), scenario shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
+- **Ask sheet**: a typed field, "Product specifications" (product details, read as data), scenario shortcuts. A mic sits inside the field only where the browser has a speech recogniser, never in the native shells; the first press says audio may leave the device, and nothing is sent until Send.
 - **Libraries**: NumberFlow rolls the budget amount; CSS does all other motion.
 - **Laptop** (64rem and up): top navigation with Ask Wally, three columns on Budget, scenarios as tabs, sheets as drawers. Phones keep one column.
-- **Screens**: Budget (hero with rule tags, What do you need?, Ideas for you, one-off cards, Recent, Demo scenarios (for judges), Manage this budget); First run (Hello, Your taste, Your first budget, a tour; once per browser, `?booth=1` skips it); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
+- **Screens**: Budget (hero with rule tags, What do you need?, Ideas for you, one-off cards, Recent, Demo scenarios (for judges), Manage this budget); First run (Hello, What can Wally buy for you?, Your first budget, a tour; once per browser, `?booth=1` skips it); Wally (steps, approved card, Stopped before paying, Needs your OK, Why sheet with "Details for nerds"); Seal (Meet Wally, Describe, Check and seal, Sealed); Receipts; Proof; Why trust Wally; Presenter; About.
 
 ## Vocabulary
 | Engine | The app says | zh-HK (draft) |

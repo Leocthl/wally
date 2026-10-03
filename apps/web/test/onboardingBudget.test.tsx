@@ -1,13 +1,14 @@
 // Your first budget (step three) when the booth is not an empty one, and the small things around the form: a budget that is
 // over is not "ready", sealing over one says it starts a new budget, Skip says what it does on Check and lock in, the loading frame
-// has a way back, a missing category is focused, Enter in the typed amount goes on, and the taste hint tells the truth.
+// has a way back, a missing category is focused, Enter in the typed amount goes on, and the hint on "What can Wally buy for you?"
+// tells the truth.
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MockApiClient } from "../src/api/MockApiClient";
 import type { BoothSnapshot } from "../src/api/types";
 import { m0Request } from "../src/booth/compile";
 import { FakeClock } from "@wally/core/testing";
-import { FamilyMock, hello, instantMock, openFirstRun, skip, tourCard } from "./helpers/firstRun";
+import { buyStep, FamilyMock, hello, instantMock, openFirstRun, skip, tourCard } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -15,16 +16,16 @@ const nextButton = () => screen.getByRole("button", { name: /^Next/ });
 /** The note under the Skip link ("Skip uses a ready-made HK$800 budget for clothes."), or null when there is none. */
 const skipNote = (): string | null => document.querySelector("[data-skip-note]")?.textContent?.replace(/\s+/g, " ").trim() ?? null;
 
-async function toTaste(options: Parameters<typeof openFirstRun>[0] = {}) {
+async function toBuy(options: Parameters<typeof openFirstRun>[0] = {}) {
   const run = await openFirstRun(options);
   await hello();
   await run.user.click(nextButton());
-  await screen.findByRole("heading", { level: 1, name: "What's your style?" });
+  await buyStep();
   return run;
 }
 
 async function toBudget(options: Parameters<typeof openFirstRun>[0] = {}) {
-  const run = await toTaste(options);
+  const run = await toBuy(options);
   await run.user.click(nextButton());
   return run;
 }
@@ -152,7 +153,7 @@ describe("a typed amount above what one card can hold", () => {
     await hello();
     await user.click(screen.getByRole("radio", { name: "繁體中文" }));
     await user.click(await screen.findByRole("button", { name: "下一步" }));
-    await screen.findByRole("heading", { level: 1, name: "你鍾意咩風格？" });
+    await screen.findByRole("heading", { level: 1, name: "Wally 可以幫你買啲咩？" });
     await user.click(screen.getByRole("button", { name: "下一步" }));
     await screen.findByRole("heading", { level: 1, name: "你的第一個預算" });
     await user.click(await screen.findByRole("radio", { name: "自訂" }));
@@ -174,16 +175,16 @@ describe("while the booth is still answering", () => {
     const { user } = await toBudget({ api: new NeverAnswers() });
     expect(await screen.findByText("Getting your budget ready")).toBeInTheDocument();
     await user.click(await screen.findByRole("button", { name: "Back" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "What's your style?" })).toBeInTheDocument();
+    expect(await buyStep()).toBeInTheDocument();
   });
 });
 
 describe("the form's keyboard and errors", () => {
   it("a missing category moves focus to the first choice and is read with the group", async () => {
     const { user } = await toBudget();
-    await user.click(await screen.findByRole("button", { name: "Clothes" }));
+    const group = await screen.findByRole("group", { name: "What Wally can buy" });
+    for (const button of within(group).getAllByRole("button")) await user.click(button);
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    const group = screen.getByRole("group", { name: "What Wally can buy" });
     const message = screen.getByText("Pick at least one thing Wally can buy.");
     await waitFor(() => expect(within(group).getAllByRole("button")[0]).toHaveFocus());
     expect(group).toHaveAttribute("aria-describedby", message.closest("[id]")?.id);
@@ -197,16 +198,26 @@ describe("the form's keyboard and errors", () => {
   });
 });
 
-describe("the taste step's hint", () => {
-  const HINT = "These fill in your first budget.";
+describe("the hint on What can Wally buy for you?", () => {
+  const FORM = "Optional. Leave all four ticked for any category. You can change this on the next step.";
+  const HELD = "Your budget is already set up, so this only changes what Wally shows first.";
+  const hint = (): string => document.querySelector("[data-buy-hint]")?.textContent ?? "";
 
-  it("says what they fill in when the first budget is still to be made", async () => {
-    await toTaste();
-    expect(screen.getByText(HINT)).toBeInTheDocument();
+  it("says the ticks start the first budget when that is still to be made", async () => {
+    await toBuy();
+    expect(hint()).toBe(FORM);
   });
 
-  it("is left out when the booth already holds a budget, because there is no form to fill in", async () => {
-    await toTaste({ sealed: true });
-    await waitFor(() => expect(screen.queryByText(HINT)).toBeNull());
+  it("says they only change what Wally shows first when the booth already holds a live budget, because there is no form to start", async () => {
+    await toBuy({ sealed: true });
+    await waitFor(() => expect(hint()).toBe(HELD));
+  });
+
+  it("goes back to the form hint for a budget that is over, because the form is offered then", async () => {
+    const api = instantMock();
+    await api.seal(m0Request(new Date()));
+    await api.revoke();
+    await toBuy({ api });
+    await waitFor(() => expect(hint()).toBe(FORM));
   });
 });

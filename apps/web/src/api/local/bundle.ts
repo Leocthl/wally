@@ -31,7 +31,7 @@ export interface LocalBundle {
   readonly judgeRecordings: readonly ReplayRecording[];
   /** Recorded judge answers for the photo shelf (shop/judge.json), kept apart from `judgeRecordings` (the fixtures set). */
   readonly shopRecordings: readonly ReplayRecording[];
-  /** Recorded judge answers for the three "Try to trick Wally" examples (trick-examples/judge.json). */
+  /** Recorded judge answers for the three recorded Product specifications examples (trick-examples/judge.json). */
   readonly trickRecordings: readonly ReplayRecording[];
 }
 

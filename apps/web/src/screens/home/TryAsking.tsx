@@ -1,6 +1,6 @@
 // "Try asking" (replaces the booth ScenarioPicker): the scenarios as grouped cards, Buy, Stops, Card and Budget. One tap
-// runs it and shows Wally at work. Used on the Budget screen and inside the Ask sheet. A person who told Wally their taste
-// sees the cards that fit first inside each group, the best fits tagged "For you" (screens/home/tryRank.ts): the same
+// runs it and shows Wally at work. Used on the Budget screen and inside the Ask sheet. A person who narrowed what they shop
+// for sees the cards that fit first inside each group, the best fits tagged "For you" (screens/home/tryRank.ts): the same
 // cards, the same scenarios, only the order and a tag change.
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactElement } from "react";
 import type { ScenarioId } from "../../api/types";
