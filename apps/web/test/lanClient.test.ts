@@ -48,8 +48,8 @@ describe("isPrivateHost", () => {
     ["169.254.1.1", true],
     ["127.0.0.1", true],
     ["localhost", true],
-    ["leos-mac.local", true],
-    ["LEOS-MAC.LOCAL", true],
+    ["booth-mac.local", true],
+    ["BOOTH-MAC.LOCAL", true],
     ["[::1]", true],
     ["[fd12:3456::1]", true],
     ["[fe80::1]", true],
@@ -61,7 +61,7 @@ describe("isPrivateHost", () => {
     ["300.1.1.1", false],
     ["example.com", false],
     ["local", false],
-    ["leos-mac", false],
+    ["booth-mac", false],
     ["192.168.0.6.evil.example", false],
     ["notlocal.example", false],
     ["[2001:db8::1]", false],
@@ -73,13 +73,13 @@ describe("isPrivateHost", () => {
 describe("parseBoothLink", () => {
   it("takes the origin and the token from the link the server shows", () => {
     expect(parseBoothLink(`http://192.168.0.6:8787/?t=${TOKEN}`)).toEqual({ ok: true, server: "http://192.168.0.6:8787", token: TOKEN });
-    expect(parseBoothLink(`  http://leos-mac.local:8787/some/path?x=1&t=${TOKEN}#/booth \n`)).toEqual({ ok: true, server: "http://leos-mac.local:8787", token: TOKEN });
+    expect(parseBoothLink(`  http://booth-mac.local:8787/some/path?x=1&t=${TOKEN}#/booth \n`)).toEqual({ ok: true, server: "http://booth-mac.local:8787", token: TOKEN });
   });
 
   it("reads a bare address as http, with or without a token", () => {
     expect(parseBoothLink("192.168.0.6:8787")).toEqual({ ok: true, server: "http://192.168.0.6:8787", token: null });
     expect(parseBoothLink(`10.0.0.5/?t=${TOKEN}`)).toEqual({ ok: true, server: "http://10.0.0.5", token: TOKEN });
-    expect(parseBoothLink("https://leos-mac.local:8443")).toEqual({ ok: true, server: "https://leos-mac.local:8443", token: null });
+    expect(parseBoothLink("https://booth-mac.local:8443")).toEqual({ ok: true, server: "https://booth-mac.local:8443", token: null });
   });
 
   it.each([

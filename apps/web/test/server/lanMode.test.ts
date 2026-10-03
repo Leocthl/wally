@@ -8,7 +8,7 @@ import { createLanOptions, ipv4Addresses, lanUrls, launchFromEnv, machineNames, 
 const iface = (address: string, family: string | number, internal = false): NetworkInterfaceInfo =>
   ({ address, netmask: "255.255.255.0", family, mac: "00:00:00:00:00:00", internal, cidr: `${address}/24` }) as unknown as NetworkInterfaceInfo;
 
-const net = (lists: Record<string, NetworkInterfaceInfo[] | undefined>, hostname = "Leos-Mac.local"): NetworkInfo => ({ interfaces: () => lists, hostname: () => hostname });
+const net = (lists: Record<string, NetworkInterfaceInfo[] | undefined>, hostname = "Booth-Mac.local"): NetworkInfo => ({ interfaces: () => lists, hostname: () => hostname });
 
 describe("launchFromEnv", () => {
   it.each([
@@ -49,8 +49,8 @@ describe("ipv4Addresses", () => {
 
 describe("machineNames", () => {
   it.each([
-    ["Leos-Mac.local", "leos-mac", ["leos-mac.local", "leos-mac"]],
-    ["Leos-Mac", "leos-mac", ["leos-mac", "leos-mac.local"]],
+    ["Booth-Mac.local", "booth-mac", ["booth-mac.local", "booth-mac"]],
+    ["Booth-Mac", "booth-mac", ["booth-mac", "booth-mac.local"]],
     ["booth.lan", "booth.lan", ["booth.lan", "booth.lan.local"]],
     ["  ", null, []],
   ] as const)("%s", (hostname, base, all) => {
@@ -64,7 +64,7 @@ describe("lanUrls", () => {
   const lists = { en0: [iface("192.168.1.23", "IPv4")], en5: [iface("169.254.3.3", "IPv4")] };
 
   it("lists the addresses others can use, then the .local name once", () => {
-    expect(lanUrls(net(lists), 8791, "abc")).toEqual(["http://192.168.1.23:8791/?t=abc", "http://leos-mac.local:8791/?t=abc"]);
+    expect(lanUrls(net(lists), 8791, "abc")).toEqual(["http://192.168.1.23:8791/?t=abc", "http://booth-mac.local:8791/?t=abc"]);
   });
 
   it("leaves tunnels, link-local and wireless-direct interfaces out of the links but keeps them as allowed hosts", () => {
@@ -77,13 +77,13 @@ describe("lanUrls", () => {
       en5: [iface("169.254.3.3", "IPv4")],
     };
     expect(phoneAddresses(net(lists))).toEqual(["192.168.1.23", "192.168.2.1"]);
-    expect(lanUrls(net(lists), 8787, "t")).toEqual(["http://192.168.1.23:8787/?t=t", "http://192.168.2.1:8787/?t=t", "http://leos-mac.local:8787/?t=t"]);
+    expect(lanUrls(net(lists), 8787, "t")).toEqual(["http://192.168.1.23:8787/?t=t", "http://192.168.2.1:8787/?t=t", "http://booth-mac.local:8787/?t=t"]);
     expect(ipv4Addresses(net(lists))).toEqual(expect.arrayContaining(["10.14.0.2", "169.254.3.3", "100.100.0.1", "172.17.0.1"]));
     expect(createLanOptions({ port: 8787, network: net(lists), token: "t" }).hostAllowed("10.14.0.2")).toBe(true);
   });
 
   it("still offers the .local name with no address, and nothing without a name", () => {
-    expect(lanUrls(net({}), 8787, "t")).toEqual(["http://leos-mac.local:8787/?t=t"]);
+    expect(lanUrls(net({}), 8787, "t")).toEqual(["http://booth-mac.local:8787/?t=t"]);
     expect(lanUrls(net({}, ""), 8787, "t")).toEqual([]);
   });
 });
@@ -92,8 +92,8 @@ describe("createLanOptions", () => {
   const lan = createLanOptions({ port: 8787, network: net({ en0: [iface("192.168.1.23", "IPv4")] }), token: "tok" });
 
   it("allows loopback, the addresses and the names of the machine, any case, and nothing else", () => {
-    for (const ok of ["127.0.0.1", "localhost", "[::1]", "192.168.1.23", "leos-mac", "leos-mac.local", "LEOS-MAC.LOCAL"]) expect(lan.hostAllowed(ok), ok).toBe(true);
-    for (const no of ["192.168.1.24", "evil.example", "leos-mac.evil.example", "0.0.0.0", ""]) expect(lan.hostAllowed(no), no).toBe(false);
+    for (const ok of ["127.0.0.1", "localhost", "[::1]", "192.168.1.23", "booth-mac", "booth-mac.local", "BOOTH-MAC.LOCAL"]) expect(lan.hostAllowed(ok), ok).toBe(true);
+    for (const no of ["192.168.1.24", "evil.example", "booth-mac.evil.example", "0.0.0.0", ""]) expect(lan.hostAllowed(no), no).toBe(false);
   });
 
   it("makes a new token per setup and draws a QR code that is SVG", () => {

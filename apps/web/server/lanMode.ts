@@ -57,7 +57,7 @@ export function phoneAddresses(net: NetworkInfo): readonly string[] {
   return addresses(net, (name, address) => !NOT_FOR_PHONES.test(name) && !isLinkLocal(address));
 }
 
-/** os.hostname() and its Bonjour form, lower case: "Leos-Mac.local" gives leos-mac and leos-mac.local. */
+/** os.hostname() and its Bonjour form, lower case: "Booth-Mac.local" gives booth-mac and booth-mac.local. */
 export function machineNames(net: NetworkInfo): { readonly base: string | null; readonly all: readonly string[] } {
   const raw = net.hostname().trim().toLowerCase();
   const base = raw.replace(/\.local$/, "");

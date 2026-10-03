@@ -68,6 +68,15 @@
 | capacitor-swift-pm (Capacitor and Cordova xcframeworks for iOS) | 8.5 | MIT, Apache-2.0 (Cordova) | iOS shell, resolved by SwiftPM | in use |
 | Gradle wrapper (`gradlew` scripts and `gradle-wrapper.jar`, Gradle 8.14.3), committed under `apps/mobile/android/` | 8.14 | Apache-2.0 | builds the Android shell | in use |
 
+## Test vectors (copied unchanged into `packages/core/test/golden/w3c/`)
+| Vectors | Source | Licence | Use |
+|---|---|---|---|
+| eddsa-jcs-2022 key pair and signed example | W3C vc-di-eddsa (Recommendation, 15 May 2025), github.com/w3c/vc-di-eddsa | W3C Software and Document License | conformance test of the credential proof |
+| Ed25519 TEST 1 to 3 | RFC 8032 section 7.1 | IETF Trust Legal Provisions (trustee.ietf.org/license-info) | conformance test of signing and verifying |
+| JSON canonicalization examples | RFC 8785 sections 3.2.2 to 3.2.4 and appendix B | IETF Trust Legal Provisions | conformance test of canonical JSON |
+
+- Published public test values, not secrets. Each file names its source, date fetched and licence at the top.
+
 ## Fonts
 | Font | Author | Licence | Use |
 |---|---|---|---|

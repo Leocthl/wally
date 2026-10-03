@@ -78,7 +78,7 @@ packages/harness                            lane D
 - **Label the rail SIMULATED** wherever it appears. Say "not found", never "does not have", about HKT or others.
 - **Fail closed** on every error path. Judge output can tighten a decision, never loosen it.
 - **Planner isolation**: planner code imports nothing from rail-sim or signing code and holds no card material.
-- **Secrets**: `.env`, `.keys/`, `data/raw/`, model weights never committed. No PAN/CVV in code, fixtures, logs, prompts or screenshots. A human types the card in the real-card test.
+- **Secrets**: `.env`, `.keys/`, `data/raw/`, model weights never committed. No PAN/CVV in code, fixtures, logs, prompts or screenshots (the I8 guard tests feed in the card networks' published test number, which is not a card). A human types the card in the real-card test.
 - **Credits**: a new dependency or model enters `THIRD_PARTY.md` in the same commit [F16]. The team must be able to explain every core module (02).
 - **Code style**: TypeScript strict, immutable updates (return new objects), money as integer minor units, validate at boundaries against `schemas/`, files under 400 lines typical and 800 max.
 - **Commits**: `<type>: <description>` with type feat, fix, refactor, docs, test, chore, perf or ci. No attribution lines.

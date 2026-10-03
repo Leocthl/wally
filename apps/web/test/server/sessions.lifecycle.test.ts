@@ -196,7 +196,7 @@ describe.skipIf(!REAL)("a wallet that cannot be made", () => {
     const booth = await boot({
       logger: { info: () => undefined, error: (m) => void errors.push(m) },
       visitorStore: () => {
-        throw new Error("disk is full at /Users/leo/.data");
+        throw new Error("disk is full at /home/user/.data");
       },
     });
     const [a] = phonesOf(booth, 1) as [Phone];

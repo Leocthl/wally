@@ -14,7 +14,7 @@ import { emptyClient, mountBare } from "./helpers/proofHarness";
 const TOKEN = "0123456789abcdef0123456789abcdef";
 const LINK = `http://192.168.0.6:8787/?t=${TOKEN}`;
 const SVG = (mark: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect fill="white" width="10" height="10"/><!--${mark}--></svg>`;
-const LAN: LanInfo = { lan: true, token: TOKEN, urls: [LINK, `http://leos-mac.local:8787/?t=${TOKEN}`], qrSvg: [SVG("a"), SVG("b")] };
+const LAN: LanInfo = { lan: true, token: TOKEN, urls: [LINK, `http://booth-mac.local:8787/?t=${TOKEN}`], qrSvg: [SVG("a"), SVG("b")] };
 
 const httpInfo = (kind: "http" | "local"): ApiInfo => ({ kind, judge: { provider: "laya", note: "test" }, planner: { provider: "local", note: "test" }, replayed: false, realCapture: null, features: { ask: false, alternatives: false, compile: "rules", family: false } });
 const liveClient = () => emptyClient({ kind: "http", info: async () => httpInfo("http") });

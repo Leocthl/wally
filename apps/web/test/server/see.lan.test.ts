@@ -14,7 +14,7 @@ const TOKEN = "0123456789abcdef0123456789abcdef";
 const PHONE_URL = "http://192.168.1.23:8787";
 const iface = (address: string, family: "IPv4" | "IPv6", internal = false): NetworkInterfaceInfo =>
   ({ address, netmask: "255.255.255.0", family, mac: "00:00:00:00:00:00", internal, cidr: `${address}/24` }) as NetworkInterfaceInfo;
-const NETWORK: NetworkInfo = { interfaces: () => ({ lo0: [iface("127.0.0.1", "IPv4", true)], en0: [iface("192.168.1.23", "IPv4")] }), hostname: () => "Leos-Mac.local" };
+const NETWORK: NetworkInfo = { interfaces: () => ({ lo0: [iface("127.0.0.1", "IPv4", true)], en0: [iface("192.168.1.23", "IPv4")] }), hostname: () => "Booth-Mac.local" };
 const FROM_PHONE = { incoming: { socket: { remoteAddress: "192.168.1.50" } } };
 const RESULT: SeeResult = { source: "chips", attributes: { kind: "tee", colors: [], pattern: null, fit: null, style: [] }, palette: [], matches: [] };
 

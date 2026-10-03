@@ -28,7 +28,7 @@ const NETWORK: NetworkInfo = {
     bridge100: [iface("172.20.10.1", "IPv4")],
     en5: [iface("169.254.7.7", "IPv4")],
   }),
-  hostname: () => "Leos-Mac.local",
+  hostname: () => "Booth-Mac.local",
 };
 
 /** The peer address Node would report on the socket (read by the real getConnInfo). */
@@ -178,13 +178,13 @@ describe("LAN mode on: Host", () => {
     ["192.168.1.23:9999", 200],
     ["172.20.10.1:8787", 200],
     ["169.254.7.7:8787", 200],
-    ["leos-mac.local:8787", 200],
-    ["Leos-Mac.local:8787", 200],
-    ["leos-mac:8787", 200],
+    ["booth-mac.local:8787", 200],
+    ["Booth-Mac.local:8787", 200],
+    ["booth-mac:8787", 200],
     ["192.168.1.24:8787", 403],
     ["10.0.0.5:8787", 403],
     ["evil.example:8787", 403],
-    ["leos-mac.local.evil.example:8787", 403],
+    ["booth-mac.local.evil.example:8787", 403],
     ["192.168.1.23@evil.example:8787", 403],
   ])("Host %s -> %i", async (host, status) => {
     const res = await call(build(true), `http://${host.split("@").pop() ?? host}/api/info`, { headers: { host, "x-wally-token": TOKEN } });
@@ -201,7 +201,7 @@ describe("LAN mode on: POST Origin", () => {
     [null, {}, 200],
     [PHONE_URL, { "sec-fetch-site": "same-origin" }, 200],
     ["http://192.168.1.23:8787", {}, 200],
-    ["http://leos-mac.local:8787", { host: "leos-mac.local:8787" }, 200],
+    ["http://booth-mac.local:8787", { host: "booth-mac.local:8787" }, 200],
     ["http://127.0.0.1:5173", {}, 200],
     ["capacitor://localhost", { "sec-fetch-site": "cross-site" }, 200],
     ["http://localhost", {}, 200],
@@ -307,7 +307,7 @@ describe("GET /api/lan", () => {
     const body = (await res.json()) as { lan: boolean; token: string; urls: string[]; qrSvg: string[] };
     expect(body.lan).toBe(true);
     expect(body.token).toBe(TOKEN);
-    expect(body.urls).toEqual([`http://192.168.1.23:8787/?t=${TOKEN}`, `http://172.20.10.1:8787/?t=${TOKEN}`, `http://leos-mac.local:8787/?t=${TOKEN}`]);
+    expect(body.urls).toEqual([`http://192.168.1.23:8787/?t=${TOKEN}`, `http://172.20.10.1:8787/?t=${TOKEN}`, `http://booth-mac.local:8787/?t=${TOKEN}`]);
     expect(body.qrSvg).toHaveLength(body.urls.length);
     for (const svg of body.qrSvg) {
       expect(svg.startsWith("<svg")).toBe(true);

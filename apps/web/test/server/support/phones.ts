@@ -21,7 +21,7 @@ export const MAC_LOOPBACK_HOST = `127.0.0.1:${PORT}`;
 const iface = (address: string): NetworkInterfaceInfo =>
   ({ address, netmask: "255.255.255.0", family: "IPv4", mac: "00:00:00:00:00:00", internal: false, cidr: `${address}/24` }) as NetworkInterfaceInfo;
 
-export const NETWORK: NetworkInfo = { interfaces: () => ({ en0: [iface("192.168.0.6")] }), hostname: () => "Leos-Mac.local" };
+export const NETWORK: NetworkInfo = { interfaces: () => ({ en0: [iface("192.168.0.6")] }), hostname: () => "Booth-Mac.local" };
 
 /** LAN options whose socket peer is whatever the test puts in the x-test-peer header. */
 export function testLan(extra: Partial<LanOptions> = {}): LanOptions {
