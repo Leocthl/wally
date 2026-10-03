@@ -43,6 +43,49 @@ describe("Cancel this budget: the hold", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
+  it("the release after the hold does not answer the dialog it opened (pointerdown starts the press, the dialog opens under the finger)", () => {
+    const onConfirm = vi.fn();
+    render(<CancelBudget disabled={false} onConfirm={onConfirm} />);
+    fireEvent.pointerDown(button(), { pointerId: 3, pointerType: "touch" });
+    act(() => void vi.advanceTimersByTime(HOLD_MS));
+    const open = dialog()!;
+    const keep = within(open).getByRole("button", { name: "Keep it" });
+    const confirm = within(open).getByRole("button", { name: "Cancel budget" });
+    // The thumb lifts: the pointer goes up over the dialog, and the touch screen sends its click at that spot.
+    fireEvent.pointerUp(keep, { pointerId: 3, pointerType: "touch" });
+    fireEvent.click(keep, { detail: 1 });
+    fireEvent.click(confirm, { detail: 1 });
+    fireEvent.click(document.querySelector(".w-scrim")!, { detail: 1 });
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(dialog()).not.toBeNull();
+    expect(onConfirm).not.toHaveBeenCalled();
+    // A press of its own is an answer again.
+    fireEvent.pointerDown(keep, { pointerId: 4, pointerType: "touch" });
+    fireEvent.pointerUp(keep, { pointerId: 4, pointerType: "touch" });
+    fireEvent.click(keep, { detail: 1 });
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(dialog()).toBeNull();
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("holding Enter past the hold does not keep clicking the dialog's focused button", () => {
+    const onConfirm = vi.fn();
+    render(<CancelBudget disabled={false} onConfirm={onConfirm} />);
+    button().focus();
+    fireEvent.keyDown(button(), { key: "Enter", code: "Enter" });
+    act(() => void vi.advanceTimersByTime(HOLD_MS));
+    const confirm = within(dialog()!).getByRole("button", { name: "Cancel budget" });
+    expect(confirm).toHaveFocus();
+    // The key is still down: its repeats would each click the focused button. They are not an answer.
+    for (let i = 0; i < 3; i += 1) expect(fireEvent.keyDown(confirm, { key: "Enter", code: "Enter", repeat: true })).toBe(false);
+    fireEvent.keyUp(confirm, { key: "Enter", code: "Enter" });
+    expect(onConfirm).not.toHaveBeenCalled();
+    // A fresh press of Enter is a decision.
+    expect(fireEvent.keyDown(confirm, { key: "Enter", code: "Enter" })).toBe(true);
+    fireEvent.click(confirm);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
   it("cancels when the pointer leaves before the hold completes", () => {
     render(<CancelBudget disabled={false} onConfirm={() => undefined} />);
     fireEvent.pointerDown(button());

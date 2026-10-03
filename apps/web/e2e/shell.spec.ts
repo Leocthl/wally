@@ -92,6 +92,37 @@ test("cancels the budget: hold, confirm, the card stops working and a new budget
   await expect(page.getByRole("heading", { level: 1, name: "Describe your budget" })).toBeVisible();
 });
 
+test("lifting the finger after a touch hold does not answer the dialog it opened", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "real touch events are sent on the phone project");
+  await page.locator('main [data-scenario="revoke"]').click();
+  await expect(page.locator('.oc[data-card-state="ACTIVE"]')).toBeVisible();
+  const button = page.getByRole("button", { name: "Hold to cancel this budget" });
+  await button.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  const box = await button.boundingBox();
+  if (!box) throw new Error("no hold button");
+  // What the page is sent after the finger goes up, in order, and whether the click landed in the dialog's overlay.
+  await page.evaluate(() => {
+    const seen = ((window as unknown as { __seen: string[] }).__seen = []);
+    for (const type of ["pointerup", "click"]) {
+      window.addEventListener(type, (e) => seen.push(`${type}:${(e.target as Element).closest(".w-overlay") ? "overlay" : "page"}`), true);
+    }
+  });
+  const cdp = await page.context().newCDPSession(page);
+  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ ...at, id: 1 }] });
+  const dialog = page.getByRole("alertdialog", { name: "Cancel this budget?" });
+  await expect(dialog).toBeVisible(); // the hold completed under the finger
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.waitForTimeout(800); // the touch screen's click, and then some
+  const seen = await page.evaluate(() => (window as unknown as { __seen: string[] }).__seen);
+  expect(seen).toContain("click:overlay"); // the release did send a click into the dialog's overlay, which must not count
+  await expect(dialog).toBeVisible();
+  await expect(page.getByText("This budget is cancelled")).toHaveCount(0);
+  // The next tap is the person's own and answers it.
+  await dialog.getByRole("button", { name: "Keep it" }).tap();
+  await expect(dialog).toHaveCount(0);
+});
+
 test("the Ask sheet opens on every tab and closes with Escape", async ({ page }) => {
   for (const tab of ["Budget", "Wally", "Receipts", "Proof"]) {
     await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: tab }).click();
