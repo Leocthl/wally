@@ -1,0 +1,1079 @@
+{
+  "summary": {
+    "n": 29,
+    "started": "2026-10-03T04:20:09.085Z",
+    "finished": "2026-10-03T04:21:21.917Z",
+    "host": "Apple M5 Pro 48 GB",
+    "server": {
+      "build": "b10964-b29c606e2",
+      "vision": true,
+      "imageMaxTokens": "512",
+      "cacheRam": "0",
+      "footprintMbBefore": 2323,
+      "footprintMbAfter": 2385
+    },
+    "loadAverage1": {
+      "min": 4.6,
+      "max": 6.14
+    },
+    "model": {
+      "validAnswers": 29,
+      "kindStrict": 25,
+      "kindLenient": 28,
+      "colorFirstExact": 25,
+      "colorFirstAccepted": 27,
+      "colorInList": 27,
+      "latencyMs": {
+        "p50": 2148,
+        "p95": 2449,
+        "max": 2501,
+        "min": 902
+      }
+    },
+    "palette": {
+      "firstAccepted": 21,
+      "inFirstTwo": 25
+    },
+    "notes": [
+      "Prompt wording was tuned on these same photos in four passes, so there is no held-out set. Plain wording: kind 22 of 29. A legend of the kind words: kind 25 of 29. Plus the colour, pattern and fit words: main colour exact 22 to 25 of 29. Plus the style words: no change. A wording that told the model it could answer not_clothing made it do so for 23 of 29 clothes; the final wording names that word only with its meaning.",
+      "Picture token budget, tried on the kind-legend wording: 256, 512 and 1024 tokens gave kind 24, 25 and 25 of 29 with median latency 1.7, 2.3 and 2.9 s. 512 is the booth setting.",
+      "Memory: llama-server keeps a RAM prompt cache (default 8192 MiB). With pictures it grew by about 175 MB per picture (4.2 GB after 24 pictures); the booth runs with --cache-ram 0, which stays at 2.2 GB after 24 pictures. Text-only planner smoke, same load, alternating servers: median 2.12 s with the cache off against 1.96 s with the default, then 2.19 s against 2.15 s (n=12 each).",
+      "Kind misses: three outfit shots where the product is a lower garment (jeans, cargo pants) but a top is the biggest piece in the picture, and one camisole read as a shirt. The page lets the person correct the kind with one tap.",
+      "Colour plates are the code-only path (CIELAB k-means on the page, no model): they name the product colour first for the share shown above, and within the first two for the second share. They are the fallback, not the headline."
+    ]
+  },
+  "rows": [
+    {
+      "n": 1,
+      "expectedKind": "tee",
+      "expectedColor": "orange",
+      "kind": "tee",
+      "colors": [
+        "orange"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "orange",
+          "share": 0.41
+        },
+        {
+          "color": "grey",
+          "share": 0.298
+        },
+        {
+          "color": "red",
+          "share": 0.104
+        },
+        {
+          "color": "brown",
+          "share": 0.099
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 902
+    },
+    {
+      "n": 2,
+      "expectedKind": "tee",
+      "expectedColor": "black",
+      "kind": "tee",
+      "colors": [
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.603
+        },
+        {
+          "color": "grey",
+          "share": 0.226
+        },
+        {
+          "color": "white",
+          "share": 0.096
+        },
+        {
+          "color": "beige",
+          "share": 0.075
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2409
+    },
+    {
+      "n": 3,
+      "expectedKind": "tee",
+      "expectedColor": "olive",
+      "kind": "tee",
+      "colors": [
+        "olive"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "olive",
+          "share": 0.504
+        },
+        {
+          "color": "brown",
+          "share": 0.234
+        },
+        {
+          "color": "beige",
+          "share": 0.119
+        },
+        {
+          "color": "white",
+          "share": 0.115
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2162
+    },
+    {
+      "n": 4,
+      "expectedKind": "jacket",
+      "expectedColor": "green",
+      "kind": "jacket",
+      "colors": [
+        "green",
+        "black"
+      ],
+      "pattern": "check",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.61
+        },
+        {
+          "color": "brown",
+          "share": 0.206
+        },
+        {
+          "color": "white",
+          "share": 0.115
+        },
+        {
+          "color": "denim",
+          "share": 0.069
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2224
+    },
+    {
+      "n": 5,
+      "expectedKind": "hoodie",
+      "expectedColor": "grey",
+      "kind": "hoodie",
+      "colors": [
+        "grey"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.744
+        },
+        {
+          "color": "grey",
+          "share": 0.123
+        },
+        {
+          "color": "white",
+          "share": 0.096
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2317
+    },
+    {
+      "n": 6,
+      "expectedKind": "hoodie",
+      "expectedColor": "yellow",
+      "kind": "hoodie",
+      "colors": [
+        "yellow",
+        "white"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "brown",
+          "share": 0.459
+        },
+        {
+          "color": "grey",
+          "share": 0.314
+        },
+        {
+          "color": "black",
+          "share": 0.15
+        },
+        {
+          "color": "blue",
+          "share": 0.077
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2473
+    },
+    {
+      "n": 7,
+      "expectedKind": "jacket",
+      "expectedColor": "denim",
+      "kind": "jacket",
+      "colors": [
+        "blue",
+        "denim"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": false,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "denim",
+          "share": 0.366
+        },
+        {
+          "color": "grey",
+          "share": 0.237
+        },
+        {
+          "color": "brown",
+          "share": 0.191
+        },
+        {
+          "color": "navy",
+          "share": 0.177
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2501
+    },
+    {
+      "n": 8,
+      "expectedKind": "jeans",
+      "expectedColor": "brown",
+      "kind": "hoodie",
+      "colors": [
+        "blue",
+        "grey",
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": false,
+      "kindLenientOk": true,
+      "colorFirstExact": false,
+      "colorFirstOk": false,
+      "colorInList": false,
+      "paletteTop": [
+        {
+          "color": "grey",
+          "share": 0.323
+        },
+        {
+          "color": "brown",
+          "share": 0.243
+        },
+        {
+          "color": "white",
+          "share": 0.179
+        },
+        {
+          "color": "blue",
+          "share": 0.166
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2414
+    },
+    {
+      "n": 9,
+      "expectedKind": "jeans",
+      "expectedColor": "brown",
+      "kind": "shirt",
+      "colors": [
+        "blue",
+        "yellow",
+        "cream"
+      ],
+      "pattern": "plain",
+      "kindOk": false,
+      "kindLenientOk": true,
+      "colorFirstExact": false,
+      "colorFirstOk": false,
+      "colorInList": false,
+      "paletteTop": [
+        {
+          "color": "brown",
+          "share": 0.293
+        },
+        {
+          "color": "grey",
+          "share": 0.269
+        },
+        {
+          "color": "navy",
+          "share": 0.228
+        },
+        {
+          "color": "white",
+          "share": 0.189
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2379
+    },
+    {
+      "n": 10,
+      "expectedKind": "trousers",
+      "expectedColor": "olive",
+      "kind": "shirt",
+      "colors": [
+        "olive",
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": false,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "brown",
+          "share": 0.45
+        },
+        {
+          "color": "grey",
+          "share": 0.313
+        },
+        {
+          "color": "white",
+          "share": 0.159
+        },
+        {
+          "color": "black",
+          "share": 0.078
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2315
+    },
+    {
+      "n": 11,
+      "expectedKind": "tee",
+      "expectedColor": "blue",
+      "kind": "tee",
+      "colors": [
+        "blue"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "brown",
+          "share": 0.304
+        },
+        {
+          "color": "denim",
+          "share": 0.224
+        },
+        {
+          "color": "cream",
+          "share": 0.18
+        },
+        {
+          "color": "beige",
+          "share": 0.173
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2148
+    },
+    {
+      "n": 12,
+      "expectedKind": "tee",
+      "expectedColor": "pink",
+      "kind": "tee",
+      "colors": [
+        "pink"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "grey",
+          "share": 0.565
+        },
+        {
+          "color": "brown",
+          "share": 0.184
+        },
+        {
+          "color": "olive",
+          "share": 0.111
+        },
+        {
+          "color": "black",
+          "share": 0.108
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": false,
+      "reason": "ok",
+      "latencyMs": 2229
+    },
+    {
+      "n": 13,
+      "expectedKind": "other",
+      "expectedColor": "red",
+      "kind": "shirt",
+      "colors": [
+        "red"
+      ],
+      "pattern": "plain",
+      "kindOk": false,
+      "kindLenientOk": false,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "red",
+          "share": 0.301
+        },
+        {
+          "color": "white",
+          "share": 0.256
+        },
+        {
+          "color": "black",
+          "share": 0.224
+        },
+        {
+          "color": "beige",
+          "share": 0.11
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2035
+    },
+    {
+      "n": 14,
+      "expectedKind": "dress",
+      "expectedColor": "cream",
+      "kind": "dress",
+      "colors": [
+        "cream"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.842
+        },
+        {
+          "color": "grey",
+          "share": 0.103
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2095
+    },
+    {
+      "n": 15,
+      "expectedKind": "dress",
+      "expectedColor": "black",
+      "kind": "dress",
+      "colors": [
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.398
+        },
+        {
+          "color": "grey",
+          "share": 0.391
+        },
+        {
+          "color": "white",
+          "share": 0.171
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2266
+    },
+    {
+      "n": 16,
+      "expectedKind": "sweater",
+      "expectedColor": "black",
+      "kind": "sweater",
+      "colors": [
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.468
+        },
+        {
+          "color": "grey",
+          "share": 0.271
+        },
+        {
+          "color": "white",
+          "share": 0.145
+        },
+        {
+          "color": "beige",
+          "share": 0.085
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2208
+    },
+    {
+      "n": 17,
+      "expectedKind": "sneakers",
+      "expectedColor": "white",
+      "kind": "sneakers",
+      "colors": [
+        "white"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.896
+        },
+        {
+          "color": "grey",
+          "share": 0.104
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2126
+    },
+    {
+      "n": 18,
+      "expectedKind": "sneakers",
+      "expectedColor": "green",
+      "kind": "sneakers",
+      "colors": [
+        "green",
+        "white",
+        "beige"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.389
+        },
+        {
+          "color": "green",
+          "share": 0.368
+        },
+        {
+          "color": "grey",
+          "share": 0.187
+        },
+        {
+          "color": "brown",
+          "share": 0.056
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2289
+    },
+    {
+      "n": 19,
+      "expectedKind": "sneakers",
+      "expectedColor": "beige",
+      "kind": "sneakers",
+      "colors": [
+        "beige",
+        "brown",
+        "grey"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.366
+        },
+        {
+          "color": "olive",
+          "share": 0.295
+        },
+        {
+          "color": "beige",
+          "share": 0.208
+        },
+        {
+          "color": "black",
+          "share": 0.081
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": false,
+      "reason": "ok",
+      "latencyMs": 2194
+    },
+    {
+      "n": 20,
+      "expectedKind": "tee",
+      "expectedColor": "navy",
+      "kind": "tee",
+      "colors": [
+        "blue"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": false,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "grey",
+          "share": 0.384
+        },
+        {
+          "color": "black",
+          "share": 0.256
+        },
+        {
+          "color": "white",
+          "share": 0.209
+        },
+        {
+          "color": "beige",
+          "share": 0.122
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2124
+    },
+    {
+      "n": 21,
+      "expectedKind": "tee",
+      "expectedColor": "green",
+      "kind": "tee",
+      "colors": [
+        "green",
+        "white",
+        "pink"
+      ],
+      "pattern": "print",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.749
+        },
+        {
+          "color": "beige",
+          "share": 0.103
+        },
+        {
+          "color": "black",
+          "share": 0.084
+        },
+        {
+          "color": "olive",
+          "share": 0.053
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": false,
+      "reason": "ok",
+      "latencyMs": 2107
+    },
+    {
+      "n": 22,
+      "expectedKind": "polo",
+      "expectedColor": "light_blue",
+      "kind": "polo",
+      "colors": [
+        "light_blue",
+        "navy"
+      ],
+      "pattern": "logo",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "light_blue",
+          "share": 0.535
+        },
+        {
+          "color": "white",
+          "share": 0.16
+        },
+        {
+          "color": "beige",
+          "share": 0.137
+        },
+        {
+          "color": "black",
+          "share": 0.104
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2124
+    },
+    {
+      "n": 23,
+      "expectedKind": "shirt",
+      "expectedColor": "light_blue",
+      "kind": "shirt",
+      "colors": [
+        "light_blue"
+      ],
+      "pattern": "logo",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "light_blue",
+          "share": 0.607
+        },
+        {
+          "color": "black",
+          "share": 0.164
+        },
+        {
+          "color": "cream",
+          "share": 0.147
+        },
+        {
+          "color": "beige",
+          "share": 0.073
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2113
+    },
+    {
+      "n": 24,
+      "expectedKind": "sweater",
+      "expectedColor": "light_blue",
+      "kind": "sweater",
+      "colors": [
+        "light_blue"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.324
+        },
+        {
+          "color": "light_blue",
+          "share": 0.315
+        },
+        {
+          "color": "grey",
+          "share": 0.141
+        },
+        {
+          "color": "black",
+          "share": 0.126
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2131
+    },
+    {
+      "n": 25,
+      "expectedKind": "jacket",
+      "expectedColor": "navy",
+      "kind": "jacket",
+      "colors": [
+        "navy",
+        "cream",
+        "white"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "light_blue",
+          "share": 0.302
+        },
+        {
+          "color": "grey",
+          "share": 0.246
+        },
+        {
+          "color": "black",
+          "share": 0.201
+        },
+        {
+          "color": "olive",
+          "share": 0.128
+        }
+      ],
+      "paletteFirstOk": false,
+      "paletteInTwo": false,
+      "reason": "ok",
+      "latencyMs": 2114
+    },
+    {
+      "n": 26,
+      "expectedKind": "tee",
+      "expectedColor": "blue",
+      "kind": "tee",
+      "colors": [
+        "blue"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "denim",
+          "share": 0.884
+        },
+        {
+          "color": "white",
+          "share": 0.096
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2010
+    },
+    {
+      "n": 27,
+      "expectedKind": "tee",
+      "expectedColor": "white",
+      "kind": "tee",
+      "colors": [
+        "white",
+        "black"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "white",
+          "share": 0.995
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2086
+    },
+    {
+      "n": 28,
+      "expectedKind": "tee",
+      "expectedColor": "grey",
+      "kind": "tee",
+      "colors": [
+        "grey"
+      ],
+      "pattern": "plain",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "grey",
+          "share": 0.9
+        },
+        {
+          "color": "white",
+          "share": 0.097
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2089
+    },
+    {
+      "n": 29,
+      "expectedKind": "tee",
+      "expectedColor": "black",
+      "kind": "tee",
+      "colors": [
+        "black",
+        "light_blue"
+      ],
+      "pattern": "logo",
+      "kindOk": true,
+      "kindLenientOk": true,
+      "colorFirstExact": true,
+      "colorFirstOk": true,
+      "colorInList": true,
+      "paletteTop": [
+        {
+          "color": "black",
+          "share": 0.894
+        },
+        {
+          "color": "white",
+          "share": 0.095
+        }
+      ],
+      "paletteFirstOk": true,
+      "paletteInTwo": true,
+      "reason": "ok",
+      "latencyMs": 2137
+    }
+  ]
+}

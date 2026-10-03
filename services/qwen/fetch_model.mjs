@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Download and verify ONLY the pinned Qwen3.5 GGUF files into services/qwen/.cache. Node 22+, no packages.
+ * Download and verify ONLY the pinned Qwen3.5 GGUF files into services/qwen/.cache (or QWEN_CACHE_DIR). Node 22+, no packages.
  * Called by setup.sh; safe to re-run (a verified file is never downloaded again).
  *
- *   node fetch_model.mjs            both models (9b and 4b)
+ *   node fetch_model.mjs            both models and the 9b vision projector (9b, 4b, 9b-vision)
  *   node fetch_model.mjs 9b         one model
+ *   node fetch_model.mjs 9b-vision  only the 9b model's vision projector (the photo feature)
  *
  * Safety rules enforced here:
- *   - exact file names from MODELS below, no wildcard, no vision projector (mmproj), no other file
+ *   - exact file names from MODELS below, no wildcard, no other file (the one projector is the 9b model's)
  *   - the Hub metadata of the revision is read first; the run stops if the file is missing, larger than its
  *     cap, or the selected files together exceed TOTAL_CAP_BYTES
  *   - every file is checked against the SHA-256 in the Hub's LFS metadata of that exact commit
@@ -22,7 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const CACHE = join(HERE, '.cache');
+const CACHE = process.env.QWEN_CACHE_DIR || join(HERE, '.cache'); // an empty value means unset, as in serve.sh
 const REV_FILE = join(HERE, 'MODEL_REVISION');
 const SHA_FILE = join(HERE, 'MODEL_SHA256');
 const HUB = 'https://huggingface.co';
@@ -32,6 +33,8 @@ const META_TIMEOUT_MS = 30_000;
 export const MODELS = {
   '9b': { repo: 'bartowski/Qwen_Qwen3.5-9B-GGUF', file: 'Qwen_Qwen3.5-9B-Q4_K_M.gguf', maxBytes: 7_000_000_000 },
   '4b': { repo: 'bartowski/Qwen_Qwen3.5-4B-GGUF', file: 'Qwen_Qwen3.5-4B-Q4_K_M.gguf', maxBytes: 3_500_000_000 },
+  // The 9b model's multimodal projector (f16), same repo and commit as the 9b weights: lets the server read a picture.
+  '9b-vision': { repo: 'bartowski/Qwen_Qwen3.5-9B-GGUF', file: 'mmproj-Qwen_Qwen3.5-9B-f16.gguf', maxBytes: 1_000_000_000 },
 };
 /** Brief: download nothing bigger than 12 GB in total. */
 const TOTAL_CAP_BYTES = 12_000_000_000;
@@ -129,7 +132,7 @@ async function fetchOne(key, meta) {
 
 async function main() {
   const keys = process.argv.slice(2).length > 0 ? process.argv.slice(2) : Object.keys(MODELS);
-  const unknown = keys.filter((k) => !(k in MODELS));
+  const unknown = keys.filter((k) => !Object.hasOwn(MODELS, k));
   if (unknown.length > 0) fail(`unknown model key(s) ${unknown.join(', ')}; known: ${Object.keys(MODELS).join(', ')}`);
   mkdirSync(CACHE, { recursive: true });
   const revisions = readRevisions();

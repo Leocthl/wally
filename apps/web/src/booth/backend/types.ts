@@ -19,10 +19,12 @@ import type {
   ScenarioId,
   SealRequest,
   SealResult,
+  SeeResult,
   TraceListener,
   Unsubscribe,
   VerifyOutcome,
 } from "../../api/types";
+import type { SeeInput } from "./validate";
 
 export type { ExportView, PublicKeysView };
 
@@ -37,6 +39,8 @@ export interface BoothBackend {
   ask(req: AskRequest): Promise<RunSummary>;
   suggestAlternatives(req: AlternativesRequest): Promise<RunSummary>;
   compileRules(req: CompileRulesRequest): Promise<CompileResult>;
+  /** Show Wally a photo (the input is checked by parseSeeRequest). Reads, buys and seals nothing. */
+  see(input: SeeInput): Promise<SeeResult>;
   getLog(): Promise<LogView>;
   verify(): Promise<VerifyOutcome>;
   tamper(): Promise<LogView>;

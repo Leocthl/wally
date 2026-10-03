@@ -443,11 +443,12 @@ describe("runs that end for a known reason", () => {
     ]);
   }
 
-  it("a typed ask this device has no recording for says live asks need the booth server", async () => {
+  it("a typed ask this device has no recording for says it only knows the sample asks, and never mentions a server", async () => {
     const m = await mountRun();
     await ended(m, "UNKNOWN_REQUEST");
     expect(screen.getByRole("heading", { name: "Wally can't shop for that here" })).toBeInTheDocument();
-    expect(screen.getByText("Live asks need the booth server. Try one of the cards on Budget instead.")).toBeInTheDocument();
+    expect(screen.getByText("Wally only knows the sample asks here. Try one of the cards on Budget, or show a photo.")).toBeInTheDocument();
+    expect(document.body.textContent ?? "").not.toMatch(/booth server/i);
   });
 
   it("no cheaper pick says nothing cheaper fits what is left", async () => {

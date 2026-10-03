@@ -52,7 +52,7 @@ describe("Ask sheet: typed request", () => {
     const { user, sheet } = await openSheet(client);
     const field = within(sheet).getByRole("textbox", { name: /Tell Wally what you need/ });
     expect(field).toHaveAttribute("placeholder", "A plain cotton tee under HK$300");
-    expect(within(sheet).queryByText("Live asks need the booth server.")).toBeNull();
+    expect(within(sheet).queryByText(/booth server/i)).toBeNull();
     const send = within(sheet).getByRole("button", { name: "Send" });
     expect(send).toBeDisabled();
     await user.type(field, "a plain cotton tee");
@@ -77,26 +77,28 @@ describe("Ask sheet: typed request", () => {
   it("shows nothing extra when the booth cannot take a typed ask", async () => {
     const { sheet } = await openSheet(new AskClient("http", { ask: false }));
     expect(within(sheet).queryByRole("textbox", { name: /Tell Wally what you need/ })).toBeNull();
-    expect(within(sheet).queryByText("Live asks need the booth server.")).toBeNull();
+    expect(within(sheet).queryByText(/booth server/i)).toBeNull();
     expect(within(sheet).getByRole("textbox", { name: /Product description/ })).toBeInTheDocument();
   });
 
   it("shows nothing extra on the offline mock, which has no ask at all", async () => {
     const { sheet } = await openSheet(new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 }));
     expect(within(sheet).queryByRole("textbox", { name: /Tell Wally what you need/ })).toBeNull();
-    expect(within(sheet).queryByText("Live asks need the booth server.")).toBeNull();
+    expect(within(sheet).queryByText(/booth server/i)).toBeNull();
   });
 
-  it("says plainly that live asks need the booth server when the device knows the sample asks only", async () => {
+  it("on a device with no live planner the field says calmly what it does, and never mentions a server", async () => {
     const { sheet } = await openSheet(new AskClient("local", {}));
     expect(within(sheet).getByRole("textbox", { name: /Tell Wally what you need/ })).toBeInTheDocument();
-    expect(within(sheet).getByText("Live asks need the booth server.")).toBeInTheDocument();
+    expect(within(sheet).getByText("Wally looks through the demo shop for what you type.")).toBeInTheDocument();
+    expect(sheet.textContent ?? "").not.toMatch(/booth server/i);
   });
 
-  it("says it too when the device has no typed ask at all", async () => {
+  it("shows no field and no hint when the device has no typed ask at all", async () => {
     const { sheet } = await openSheet(new AskClient("local", { ask: false }));
     expect(within(sheet).queryByRole("textbox", { name: /Tell Wally what you need/ })).toBeNull();
-    expect(within(sheet).getByText("Live asks need the booth server.")).toBeInTheDocument();
+    expect(within(sheet).queryByText("Wally looks through the demo shop for what you type.")).toBeNull();
+    expect(sheet.textContent ?? "").not.toMatch(/booth server/i);
   });
 
   it("does not show the field when the client has no ask method, even if the booth says it can", async () => {
