@@ -204,6 +204,30 @@ describe("start over", () => {
   });
 });
 
+describe("start over on a page that was restored", () => {
+  it("is a clean start: new keys, a new log, kept again from its first purchase, and the resumed wiring is not used twice", async () => {
+    const { boot, clock, storage } = start();
+    const first = await boot();
+    await first.seal(sealRequest(clock, 300));
+    await first.runScenario("small");
+    first.flush();
+    const restored = await boot();
+    expect(restored.outcome).toBe("restored");
+    const before = (await restored.exportLog()).publicKeys;
+    await restored.reset();
+    expect(storage.items.has(SESSION_KEY)).toBe(false);
+    expect((await restored.exportLog()).publicKeys.engine).not.toEqual(before.engine);
+    await restored.runScenario("normal");
+    restored.flush();
+    const again = await boot();
+    expect(again.outcome).toBe("restored");
+    const snap = await again.snapshot();
+    expect(snap.cards.map((c) => c.limit_minor)).toEqual([25_900]);
+    expect(snap.log.entries.filter((e) => e.kind === "MANDATE_SEALED")).toHaveLength(1);
+    expect((await again.verify()).result.ok).toBe(true);
+  });
+});
+
 describe("what is never kept", () => {
   it("the tamper demo's changed copy: the stored log is the real one, and a reload shows no copy", async () => {
     const { boot, clock, storage } = start();
