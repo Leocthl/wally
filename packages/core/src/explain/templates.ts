@@ -175,7 +175,7 @@ const r10Unavailable: Fragment = (i, l) => {
     return zhOr(
       l,
       "Wally's listing checker reads English best and could not check this listing, so it asks you.",
-      "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。", // NEEDS-REVIEW zh-HK
+      "Wally 的商品檢查器最擅長讀英文，這次未能檢查這個商品，所以請你決定。", // NEEDS-REVIEW zh-HK
     );
   }
   const reason = unavailableReason(i, l);
