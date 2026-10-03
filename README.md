@@ -47,7 +47,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 | `python3 scripts/docs-check.py` | doc caps, F-IDs, style |
 
 ## Honest status
-- **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); the full pipeline stopped all 84 stop cases, a model-only gate let 43 through, rules without the judge 28; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
+- **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); what each layer adds: AI alone (our B0 baseline) let 43 of 84 stop cases through, rules only 28, rules plus judge 0 (an upper bound of about 4 in 100 [F96]), at the price of 5 of 66 honest buys blocked against 3; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
 - **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
 - **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68].
 - **Tests**: over 4,000 automated tests; core line coverage above 95%; exact numbers and the last green CI commit in [F91].
@@ -58,7 +58,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 - [00 Context](docs/00-context.md): event, decisions, IDs · [Facts register](docs/facts-register.md): every number
 - [01 Brief](docs/01-product-brief.md) · [02 Architecture](docs/02-architecture.md) · [03 Plan](docs/03-implementation-plan.md) · [04 Design](docs/04-design-language.md)
 - [05 Evidence](docs/05-evidence-plan.md) · [06 Demo](docs/06-demo-script.md) · [07 Pitch](docs/07-pitch.md) · [08 Risks](docs/08-risk-register.md)
-- [09 HKT ask](docs/09-hkt-delegation-api-ask.md): a proposal, not an HKT commitment · [10 Tests](docs/10-test-plan.md) · [CLAUDE.md](CLAUDE.md)
+- [09 HKT ask](docs/09-hkt-delegation-api-ask.md): a proposal, not an HKT commitment · [10 Tests](docs/10-test-plan.md) · [11 Explain the code](docs/11-explain-the-code.md) · [12 Hallway interviews](docs/12-hallway-interviews.md) · [CLAUDE.md](CLAUDE.md)
 
 ## Credits
 - **Laya** (judge) by Convai Innovations, Apache-2.0, run locally and unmodified [F11c].
@@ -67,4 +67,5 @@ pnpm demo                                            # http://127.0.0.1:8787
 - **AI coding assistants** were used, as the event rules allow; the team can explain every module [F16].
 
 ## Licence
-Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)). Built for HacKU 2026. No logos or brand assets used. Third-party code and models keep their own licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+- **Apache-2.0** ([LICENSE](LICENSE), [NOTICE](NOTICE)). Third-party code and models keep their own licences: [THIRD_PARTY.md](THIRD_PARTY.md).
+- Built for HacKU 2026. No logos or brand assets used.
