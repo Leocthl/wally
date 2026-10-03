@@ -226,6 +226,27 @@ test("Show Wally a photo works from the mount with the server gone: the photo ch
   }
 });
 
+test("typed Ask works from the mount with the server gone: no ask is sent, the fixed reader finds the items in the demo shop", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    await nav(page).getByRole("button", { name: "Ask", exact: true }).click();
+    const ask = page.getByRole("dialog", { name: /What should Wally try/ });
+    await ask.getByRole("textbox", { name: /Tell Wally what you need/ }).fill("black jeans under 400");
+    await ask.getByRole("button", { name: "Send", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "What Wally found" });
+    await expect(sheet.getByText("Showing matches from the demo shop. You pick; the rules still decide.")).toBeVisible();
+    await expect(sheet.locator("[data-listing]").first()).toHaveAttribute("data-listing", "lst_photoJeansBlack");
+    await sheet.getByRole("button", { name: "Close" }).first().click();
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
 test("the whole run stayed inside /wally/: no /api, nothing at the origin root, no failed response, no script error", () => {
   // blob: is the shopper's picture preview, held in memory on the page; it is never a network request.
   const outside = requested.filter((u) => u.protocol !== "blob:" && (u.origin !== server.origin || !u.pathname.startsWith(MOUNT)));
