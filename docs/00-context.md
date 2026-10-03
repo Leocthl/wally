@@ -168,7 +168,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | DMR2 | Reserve: escalation expires unanswered (S5) | DIR6 |
 
 - **Hands-on beats** (no DM ID): Ask Wally typed or spoken; See cheaper options after DM4; Needs your OK (DMR2); Cancel this budget (DMR1); Mum's budget and a refused ask [F93]; a phone joining by QR over the LAN (D17). Choreography in 06.
-- **Run-of-show [F42]**: hook + thesis; mandate → buy (DM1-DM2); three stops (DM3-DM5); proof + numbers (DM6-DM8); where it breaks (DM9); path to HKT.
+- **Run-of-show [F42]**: hook; demo (DM1-DM7, DM6 optional); evidence (DM8, where it breaks); market and moat; path to HKT (DM9); team.
 - **Flagged-seller fixture is SIMULATED.** No real individual's phone, FPS ID or page name enters the repo. Real Scameter lookups appear only as redacted, timestamped captures.
 
 ### Test IDs
@@ -212,7 +212,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 ## Positioning
 | Capability | Others (found) | HKT today (found) | Read |
 |---|---|---|---|
-| Scoped agent authority | Alipay single-use authorisation [F9]; Cloudflare allowance + allow list + max transaction [F10]; AP2 mandates [F12] | single-use card made by hand [F1] | catch-up |
+| Scoped agent authority | Alipay AI Wallet controls [F9]; Cloudflare allowance + allow list + max transaction [F10]; AP2 mandates [F12] | single-use card made by hand [F1] | catch-up |
 | Wallet-level agent controls | Alipay AI Wallet [F9] | none found | catch-up |
 | Agent identity | Cloudflare human-readable agent ID [F10]; AP2 credentials [F12] | pilot only [F8] | catch-up |
 | Prepaid accounts from age 11 | no bank agent programme found covers it [F7a, F7b] | yes [F2] | HKT edge |
