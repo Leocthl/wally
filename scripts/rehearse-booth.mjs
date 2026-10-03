@@ -254,7 +254,7 @@ async function typedAsk(page, text, allowed, trick = false) {
   const drawer = page.getByRole("dialog", { name: /What should Wally try/ });
   await expect(drawer).toBeVisible();
   const t0 = Date.now();
-  await drawer.getByRole("textbox", { name: trick ? "Product description" : "Tell Wally what you need" }).fill(text);
+  await drawer.getByRole("textbox", { name: trick ? "Product specifications" : "Tell Wally what you need" }).fill(text);
   await run(page, trick ? /\/api\/propose/ : /\/api\/ask/, () => drawer.getByRole("button", trick ? { name: "Send to Wally" } : { name: "Send", exact: true }).click());
   const got = await outcome(page);
   want(allowed.includes(got.kind), `one of: ${allowed.join(", ")}`, got.text);
