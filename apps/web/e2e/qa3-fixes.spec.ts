@@ -5,6 +5,11 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
+/** Set QA3_SHOTS_DIR to keep a picture of each state for a look. */
+const SHOTS = process.env["QA3_SHOTS_DIR"];
+const shot = async (page: Page, name: string): Promise<void> => {
+  if (SHOTS !== undefined) await page.screenshot({ path: `${SHOTS}/${name}.png` });
+};
 
 async function blocking(page: Page): Promise<string[]> {
   await page.waitForTimeout(400); // the sheet's entrance has finished before axe reads its colours
@@ -43,6 +48,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(dialog).toBeVisible();
       await expect(dialog.getByRole("button", { name: "Keep it" })).toBeFocused();
       expect(await blocking(page), "cancel question").toEqual([]);
+      await shot(page, `${scheme}-cancel-question`);
       await page.keyboard.press("Enter"); // the key a person presses on a question that just opened
       await expect(dialog).toHaveCount(0);
       await expect(page.getByText("This budget is cancelled")).toHaveCount(0);
@@ -66,6 +72,7 @@ for (const scheme of ["light", "dark"] as const) {
       await box.fill("x".repeat(3_700));
       await expect(count).toContainText("3,700 / 4,000 characters");
       expect(await blocking(page), "counter near the limit").toEqual([]);
+      await shot(page, `${scheme}-trick-counter-near`);
 
       await box.fill("x".repeat(3_999));
       await box.pressSequentially("ab"); // typed, so the box's own limit applies: one more character fits
@@ -73,6 +80,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(count).toContainText("4,000 / 4,000 characters");
       await expect(count).toContainText("Limit reached");
       expect(await blocking(page), "counter at the limit").toEqual([]);
+      await shot(page, `${scheme}-trick-counter-full`);
     });
   });
 }
