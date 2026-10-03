@@ -3,9 +3,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mountVerifier } from "../src/app";
 import { applyLang, currentLang, detectLang, initialLang, LANG_KEY, readStoredLang, storeLang } from "../src/lang";
 import { nextIndex } from "../src/render/lang-toggle";
+import { mountDeveloper, resetMode } from "./helpers";
 
 const html = document.documentElement;
 let root: HTMLElement;
@@ -26,7 +26,7 @@ function setLanguages(languages: readonly string[]): void {
 function mount(): void {
   root = document.createElement("div");
   document.body.replaceChildren(root);
-  mountVerifier(root);
+  mountDeveloper(root); // the status words pinned here are the technical page's; a test that blocks storage mounts in plain mode
 }
 
 beforeEach(() => {
@@ -42,6 +42,7 @@ afterEach(() => {
   document.body.replaceChildren();
   html.removeAttribute("data-lang");
   html.setAttribute("lang", "en");
+  resetMode();
 });
 
 describe("which language the page starts in", () => {

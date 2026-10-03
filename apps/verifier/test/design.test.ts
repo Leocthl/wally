@@ -4,8 +4,8 @@ import type { VerifyFailure } from "@wally/core/verify";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mountVerifier } from "../src/app";
 import { reasonText } from "../src/reasons";
+import { mountDeveloper, resetMode } from "./helpers";
 
 const ROOT = join(import.meta.dirname, "..");
 const read = (...parts: string[]): string => readFileSync(join(ROOT, ...parts), "utf8");
@@ -25,12 +25,13 @@ beforeEach(() => {
   window.localStorage.clear();
   root = document.createElement("div");
   document.body.replaceChildren(root);
-  mountVerifier(root);
+  mountDeveloper(root); // these tests pin the technical page; plain mode (the default) has its own tests
 });
 afterEach(() => {
   document.body.replaceChildren();
   window.localStorage.clear();
   document.documentElement.removeAttribute("data-lang");
+  resetMode();
 });
 
 describe("the page template", () => {
@@ -180,7 +181,7 @@ describe("words on screen", () => {
 
 describe("the page's own code keeps to the page's CSP", () => {
   it("never writes markup or a style attribute (inline style is blocked; the CSSOM is allowed)", () => {
-    const dirs = ["src", join("src", "render"), join("src", "demo")];
+    const dirs = ["src", join("src", "render"), join("src", "demo"), join("src", "plain")];
     const files = dirs.flatMap((dir) => readdirSync(join(ROOT, dir)).filter((n) => n.endsWith(".ts")).map((n) => join(dir, n)));
     expect(files.length).toBeGreaterThan(15);
     for (const file of files) {

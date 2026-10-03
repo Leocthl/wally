@@ -2,11 +2,19 @@
 // a PASS is never shown next to text it was not computed for. Tamper keeps the original log for Restore.
 import { DEMO } from "./demo";
 import type { Field } from "./inputs";
+import type { Mode } from "./mode";
+import { P } from "./plain/strings";
 import { runVerification, type RunResult } from "./run";
 import type { Bi } from "./strings";
 import { tamperLog, type TamperChange } from "./tamper";
 
 export type Source = "empty" | "demo" | "typed" | "tampered" | `file:${string}`;
+
+/** A one-line message, worded for each display mode: the state holds both, so a mode flip needs no new state. */
+export type Notice = Readonly<Record<Mode, Bi>>;
+
+/** A message that reads the same in both modes. */
+export const sameInBoth = (text: Bi): Notice => ({ developer: text, plain: text });
 
 export interface FieldState {
   readonly text: string;
@@ -24,7 +32,7 @@ export interface PageState {
   readonly checkpoint: FieldState;
   readonly tamper: TamperState | null;
   readonly result: RunResult | null;
-  readonly notice: Bi | null;
+  readonly notice: Notice | null;
 }
 
 const EMPTY: FieldState = { text: "", source: "empty" };
@@ -53,7 +61,7 @@ export function verify(state: PageState): PageState {
 export function tamper(state: PageState): PageState {
   if (state.tamper !== null) return state;
   const tampered = tamperLog(state.log.text);
-  if (!tampered.ok) return { ...state, notice: { en: tampered.message, zh: tampered.messageZh } };
+  if (!tampered.ok) return { ...state, notice: { developer: { en: tampered.message, zh: tampered.messageZh }, plain: P.nothingToChange } };
   const next: PageState = { ...state, log: { text: tampered.text, source: "tampered" }, tamper: { original: state.log, change: tampered.change } };
   return { ...next, result: check(next), notice: null };
 }
@@ -64,6 +72,6 @@ export function restore(state: PageState): PageState {
   return { ...next, result: check(next), notice: null };
 }
 
-export function withNotice(state: PageState, notice: Bi): PageState {
+export function withNotice(state: PageState, notice: Notice): PageState {
   return { ...state, notice };
 }
