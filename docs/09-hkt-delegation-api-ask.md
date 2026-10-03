@@ -6,7 +6,7 @@
 - **Not found in public sources as of 2026-10-02**: an issuing API for delegates (cards are made by hand [F1]); a role for software acting for a holder (T&C: platform-only, no disclosure of security details, no cancel after payment [F2]); a merchant lock or purpose [F1]; a loss rule for delegated purchases (dispute fee HK$150 [F3.dispute_fee]).
 
 ## Smallest pilot: today's Single Use Card, no new API
-- **Steps**: Wally approves a cart and names the limit; the holder makes the card by hand at that limit [F1] and pays; Wally checks the charge against the approved total and logs it.
+- **Steps**: Wally approves a cart and names the limit; the holder makes the card by hand at that limit [F1], pays and reports the charge; Wally checks it against the approved total and logs it.
 - **Card details**: only the holder and the merchant see them; no model, prompt or log does (I8).
 
 ## 90-day pilot card (ASSUMED [F97])
