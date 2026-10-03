@@ -130,8 +130,8 @@ describe("a zero never stands alone: the limit that goes with it", () => {
 describe("what counted as risky, in words from the categories present", () => {
   it("lists the kinds the run really had, in a fixed order, at most five", () => {
     const s = riskyKindsSentence(["within_budget", "wrong_merchant", "shipping_overflow", "price_drift", "flagged_seller", "injected_text", "replay", "velocity_burst"]);
-    expect(s?.en).toBe("They included going over the budget, listings that try to give Wally orders, a seller flagged as a scam, the wrong shop and a card used twice.");
-    expect(s?.zh).toBe("包括：超出預算、想指揮 Wally 的商品頁、被標記為詐騙的賣家、錯誤的商店及一張卡用兩次。");
+    expect(s?.en).toBe("They included going over the budget, listings that try to give Wally orders, a seller on the flagged-seller list, the wrong shop and a card used twice.");
+    expect(s?.zh).toBe("包括：超出預算、想指揮 Wally 的商品頁、在賣家名單上被標記的賣家、錯誤的商店及一張卡用兩次。");
   });
 
   it("drops duplicates and categories it has no words for, and is silent when nothing is left", () => {
@@ -142,7 +142,7 @@ describe("what counted as risky, in words from the categories present", () => {
 
   it("joins two with and, three with commas then and", () => {
     expect(riskyKindsSentence(["wrong_merchant", "replay"])?.en).toBe("They included the wrong shop and a card used twice.");
-    expect(riskyKindsSentence(["flagged_seller", "wrong_merchant", "replay"])?.en).toBe("They included a seller flagged as a scam, the wrong shop and a card used twice.");
+    expect(riskyKindsSentence(["flagged_seller", "wrong_merchant", "replay"])?.en).toBe("They included a seller on the flagged-seller list, the wrong shop and a card used twice.");
   });
 });
 

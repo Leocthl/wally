@@ -168,7 +168,7 @@ export function secondsOf(ms: number): string {
 const RISK_PHRASES: readonly { readonly categories: readonly string[]; readonly words: LabelPair }[] = [
   { categories: ["shipping_overflow", "fees"], words: label("going over the budget", "超出預算") }, // NEEDS-REVIEW zh-HK
   { categories: ["injected_text", "padded_listing"], words: label("listings that try to give Wally orders", "想指揮 Wally 的商品頁") }, // NEEDS-REVIEW zh-HK
-  { categories: ["flagged_seller"], words: label("a seller flagged as a scam", "被標記為詐騙的賣家") }, // NEEDS-REVIEW zh-HK
+  { categories: ["flagged_seller"], words: label("a seller on the flagged-seller list", "在賣家名單上被標記的賣家") }, // NEEDS-REVIEW zh-HK
   { categories: ["wrong_merchant"], words: label("the wrong shop", "錯誤的商店") }, // NEEDS-REVIEW zh-HK
   { categories: ["replay", "duplicate"], words: label("a card used twice", "一張卡用兩次") }, // NEEDS-REVIEW zh-HK
   { categories: ["price_drift"], words: label("a price that changes at checkout", "結帳時價格改變") }, // NEEDS-REVIEW zh-HK
