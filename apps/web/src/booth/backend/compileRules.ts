@@ -5,7 +5,7 @@
 // stops the Seal screen from working. Nothing here seals anything; confirmRequired is always true.
 import { DEFAULT_CATEGORIES, labelsFor, type Clamp, type CompileOutcome, type Note } from "@laisee/agent/compiler";
 import type { AskLocale, CompileLabel, CompileResult, CompileRulesRequest } from "../../api/types";
-import { chipsToRules, compileMandate, validUntilFor } from "../compile";
+import { chipsToRules, compileMandate, expiryClamps, validUntilFor } from "../compile";
 import { BoothError } from "./errors";
 
 /** The model reader, bound to its client by the host. It must not throw (compileMandateText never does). */
@@ -51,7 +51,8 @@ function fromRules(req: CompileRulesRequest, now: Date, why: readonly string[]):
   const rules = chipsToRules(compiled.chips);
   const validUntil = validUntilFor(compiled.chips, now);
   const labels: readonly CompileLabel[] = labelsFor(rules, validUntil, DEFAULT_CATEGORIES);
-  return { source: "rules", rules, validUntil, labels, notes: [...why, NO_MODEL_NOTE[req.locale]], clamped: [], confirmRequired: true };
+  const clamped = expiryClamps(compiled.chips, now).map(clampText);
+  return { source: "rules", rules, validUntil, labels, notes: [...why, NO_MODEL_NOTE[req.locale]], clamped, confirmRequired: true };
 }
 
 async function readByModel(model: ModelCompile, req: CompileRulesRequest, now: Date): Promise<CompileOutcome> {

@@ -4,6 +4,7 @@
 // the shopper switches the chip off, and a velocity limit is kept only when it is at least as strict as F32.
 import type { CompiledRules } from "@laisee/core/generated";
 import type { CompilerLimits } from "./config";
+import { capEnd, describeEndDate, resolveEndDate } from "./end-date";
 
 /** The answer as the model gave it, after a shape check; amounts in whole HK dollars. */
 export interface RawRules {
@@ -17,6 +18,9 @@ export interface RawRules {
   readonly sharePercent: number | null;
   readonly maxPurchases: number | null;
   readonly per: "hour" | "day" | "week" | "not_stated";
+  /** The calendar date the budget ends on, when the sentence names one: month 1 to 12, day 1 to 31 or null for the month's end. */
+  readonly endMonth: number | null;
+  readonly endDay: number | null;
 }
 
 export interface Clamp {
@@ -57,20 +61,48 @@ export function monthEndHk(now: Date): string {
 
 const hkd = (minor: number): string => (minor % MINOR_PER_HKD === 0 ? `HK$${minor / MINOR_PER_HKD}` : `HK$${(minor / MINOR_PER_HKD).toFixed(2)}`);
 
-function period(raw: RawRules, now: Date, limits: CompilerLimits): { readonly validUntil: string; readonly clamp: Clamp | null; readonly note: Note | null } {
+/** The clamp for a budget that would run past the longest period a sentence may set (also used by the fixed rules parser). */
+export function periodClamp(asked: string, maxDays: number): Clamp {
+  return { field: "valid_until", asked, applied: `${maxDays} days`, why: `a budget runs at most ${maxDays} days` };
+}
+
+interface Wish {
+  readonly endMs: number;
+  /** What the sentence asked for, in the shopper's terms, for the clamp. */
+  readonly asked: string;
+}
+
+/** "7 days" or "2 weeks": the budget runs that long from the seal. */
+function lasting(raw: RawRules, now: Date): Wish | null {
   const count = raw.periodCount;
-  if ((raw.period === "days" || raw.period === "weeks") && count !== null && count >= 1) {
-    const days = raw.period === "weeks" ? count * 7 : count;
-    const kept = Math.min(days, limits.maxPeriodDays);
-    const clamp = kept < days ? { field: "valid_until", asked: `${days} days`, applied: `${kept} days`, why: `a packet runs at most ${limits.maxPeriodDays} days` } : null;
-    return { validUntil: toTimestamp(now.getTime() + kept * DAY_MS), clamp, note: null };
-  }
-  const stated = raw.period === "this_month";
-  return {
-    validUntil: monthEndHk(now),
-    clamp: null,
-    note: stated ? null : { en: "No end date in the sentence: the packet ends at the end of this month (HK time).", zhHK: "句子沒有寫結束日期：預算在本月底（香港時間）結束。" },
-  };
+  if ((raw.period !== "days" && raw.period !== "weeks") || count === null || count < 1) return null;
+  const days = raw.period === "weeks" ? count * 7 : count;
+  return { endMs: now.getTime() + days * DAY_MS, asked: `${days} days` };
+}
+
+/** "until 31 Oct": the next time that date comes round, 23:59:59 Hong Kong time. A date that does not exist says nothing. */
+function dated(raw: RawRules, now: Date): Wish | null {
+  if (raw.endMonth === null) return null;
+  const end = { month: raw.endMonth, day: raw.endDay };
+  const resolved = resolveEndDate(end, now);
+  return resolved === null ? null : { endMs: resolved.endMs, asked: describeEndDate(end) };
+}
+
+const NO_END_DATE: Note = { en: "No end date in the sentence: the budget ends at the end of this month (HK time).", zhHK: "句子沒有寫結束日期：預算在本月底（香港時間）結束。" };
+
+/**
+ * When the budget ends. Of everything the sentence states (this month, a length, a date) the earliest end wins, so a
+ * sentence never lengthens a budget, and the result is cut to the longest period a sentence may set. When it states
+ * nothing the budget ends with this month, and a note says so.
+ */
+function period(raw: RawRules, now: Date, limits: CompilerLimits): { readonly validUntil: string; readonly clamp: Clamp | null; readonly note: Note | null } {
+  const thisMonth: Wish | null = raw.period === "this_month" ? { endMs: Date.parse(monthEndHk(now)), asked: "this month" } : null;
+  const stated = [thisMonth, lasting(raw, now), dated(raw, now)].filter((w): w is Wish => w !== null);
+  const [first, ...later] = stated;
+  if (first === undefined) return { validUntil: monthEndHk(now), clamp: null, note: NO_END_DATE };
+  const earliest = later.reduce((a, b) => (b.endMs < a.endMs ? b : a), first);
+  const kept = capEnd(earliest.endMs, now, limits.maxPeriodDays);
+  return { validUntil: toTimestamp(kept.endMs), clamp: kept.capped ? periodClamp(earliest.asked, limits.maxPeriodDays) : null, note: null };
 }
 
 function perPurchase(raw: RawRules, budgetMinor: number): { readonly value: CompiledRules["per_purchase"] | undefined; readonly clamps: readonly Clamp[] } {

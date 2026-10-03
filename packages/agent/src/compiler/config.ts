@@ -37,8 +37,8 @@ export const MAX_SENTENCE_CHARS = 280;
  */
 export const DEFAULT_COMPILER_TIMEOUT_MS = 10_000;
 
-/** Completion token cap. ASSUMED 120: the longest valid answer is about 80 tokens. */
-export const COMPILER_MAX_TOKENS = 120;
+/** Completion token cap. ASSUMED 160: the longest valid answer, every field set, is about 100 tokens. */
+export const COMPILER_MAX_TOKENS = 160;
 
 /** Fixed sampling seed; temperature is always 0. */
 export const COMPILER_SEED = 42;

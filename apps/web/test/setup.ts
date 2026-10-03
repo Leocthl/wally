@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { resetPressTracking } from "../src/ui/hooks/usePressGuard";
 
 export interface MediaState {
   reducedMotion: boolean;
@@ -31,4 +32,5 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  resetPressTracking(); // a press one test left unfinished is not down in the next
 });

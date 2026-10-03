@@ -9,6 +9,7 @@ import { E } from "../strings";
 import type { BaselineId, HarnessRun, Rate } from "../types";
 import { Verdict } from "./Bars";
 import { EvNum, EvScope } from "./EvNum";
+import { OverspendScope } from "./OverspendScope";
 import { chipsOf, WiringStamp } from "./RateChart";
 import { useReveal } from "../useReveal";
 
@@ -50,6 +51,7 @@ function Card({ metric, run, wiring }: { readonly metric: string; readonly run: 
       <EvScope chips={chipsOf([b0, b2])}>
         <Figure b="B0" rate={b0} order={0} />
         <Figure b="B2" rate={b2} order={1} />
+        {metric === "overspend_rate" ? <OverspendScope run={run} /> : null}
       </EvScope>
       <ul className="ev-verdicts"><Verdict against="B0" cmp={compareToB2(b2, b0)} /></ul>
     </article>

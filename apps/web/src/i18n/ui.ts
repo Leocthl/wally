@@ -354,6 +354,7 @@ const SHELL = {
   "seal.readCheck": label("Check each rule below and change what is wrong. Nothing is sealed until you say so.", "請檢查下面每項規則，有錯就改。你確認前唔會封存。"), // NEEDS-REVIEW
   "seal.readLeftOut": label("Left out of the suggestion", "未有放入建議"), // NEEDS-REVIEW
   "seal.notFound": label("Some rules weren't in your sentence. Check them below.", "句子未講齊所有規則，請喺下面檢查。"), // NEEDS-REVIEW
+  "seal.untilCapped": label("That date is too far away for one budget, so Until is set to the latest day a budget can run to.", "個日期太遠，一個預算去唔到咁耐，「有效至」已經設為最遲可揀嘅一日。"), // NEEDS-REVIEW
   "seal.rulesTitle": label("Rules Wally must follow", "Wally 必須遵守的規則"), // NEEDS-REVIEW
   "seal.rulesLead": label("These rules are what gets checked. The sentence is just for you.", "會被檢查的係呢啲規則；句子只係俾你參考。"), // NEEDS-REVIEW
   "seal.amount": label("Amount", "金額"), // NEEDS-REVIEW
@@ -538,6 +539,7 @@ export const UI = {
     back: label("Proof", "證明"), // NEEDS-REVIEW
     headlineTitle: label("In this run, the full pipeline against a model-only gate", "今次運行：完整流程對比純模型把關"), // NEEDS-REVIEW
     headlineNote: label("Where the full pipeline is worse is shown as plainly as where it is better.", "完整流程較差的地方，會和較好的地方一樣清楚列出。"), // NEEDS-REVIEW
+    overspendScope: label("{b} overspent in {k} of {n} scenarios. Target {id} counts only the {m} deterministic ones.", "{b} 在 {n} 個情境中有 {k} 個超支。目標 {id} 只計其中 {m} 個確定性情境。"), // NEEDS-REVIEW
     acceptanceShort: label("Targets", "目標"), // NEEDS-REVIEW
     numbersTitle: label("The numbers", "數字"), // NEEDS-REVIEW
     judgeSection: label("The judge on its own", "判斷器本身"), // NEEDS-REVIEW

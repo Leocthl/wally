@@ -1,5 +1,7 @@
 // "Cancel this budget": hold to confirm (useHold, the RevokeButton timing: early release cancels, Space or Enter hold
-// from the keyboard, steps under reduced motion), then one plain question in a dialog, then api.revoke.
+// from the keyboard, steps under reduced motion), then one plain question in a dialog, then api.revoke. The dialog opens
+// while the finger, mouse button or key is still down; Dialog ignores that press's release, the click after it and the
+// key's repeats (usePressGuard), so letting go never answers the question.
 import { useId, useState, type KeyboardEvent, type ReactElement } from "react";
 import { useHold } from "../../hooks/useHold";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
