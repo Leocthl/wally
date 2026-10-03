@@ -9,6 +9,9 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Keep this Mac awake for as long as the booth runs (macOS). The exec below keeps this PID, so caffeinate waits for the booth itself.
+if command -v caffeinate >/dev/null 2>&1; then caffeinate -dimsu -w $$ >/dev/null 2>&1 & fi
+
 step() { printf '\n== %s\n' "$1"; }
 warn() { printf 'WARN: %s\n' "$1" >&2; }
 
