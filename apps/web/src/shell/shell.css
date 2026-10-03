@@ -28,6 +28,7 @@
 .on-device-note { padding: max(var(--sp-1), var(--safe-top)) max(var(--gutter), var(--safe-right)) var(--sp-1) max(var(--gutter), var(--safe-left)); background: var(--c-info-tint); border-bottom: 1px solid var(--c-line); color: var(--c-ink-muted); font-size: var(--text-xs); line-height: var(--lh-snug); text-align: center; }
 .on-device-note .bi { align-items: center; gap: 0; }
 .on-device-note .bi__zh { font-size: inherit; }
+.on-device-note__ended { margin-top: var(--sp-1); }
 
 /* Top bar */
 .shell-bar {
@@ -119,6 +120,7 @@
 .shell-about__notes > summary::-webkit-details-marker { display: none; }
 .shell-about__notes > summary::after { content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-right: var(--sp-1); border-right: 2px solid var(--c-ink-muted); border-bottom: 2px solid var(--c-ink-muted); transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease-out); }
 .shell-about__notes[open] > summary::after { transform: rotate(-135deg); }
+.shell-about__remember { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .shell-about__notes-lead { margin-bottom: var(--sp-2); color: var(--c-ink-muted); font-size: var(--text-sm); }
 .shell-about__notes-list { display: grid; gap: var(--sp-1); margin: 0 0 var(--sp-3); font-size: var(--text-sm); line-height: var(--lh-snug); }
 .shell-about__notes-list dt { font-weight: var(--weight-semibold); }
