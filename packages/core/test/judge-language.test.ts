@@ -97,7 +97,7 @@ describe("R10.unavailable sentences", () => {
     expect(render("R10.unavailable", { status: "TIMEOUT" }, "en")).toBe("Escalated by R10. The judge gave no usable answer (timed out), so you decide.");
     expect(render("R10.unavailable", { status: "ERROR" }, "en")).toBe("Escalated by R10. The judge gave no usable answer (error), so you decide.");
     expect(render("R10.unavailable", { status: "ERROR", input_truncated: true }, "en")).toBe("Escalated by R10. The judge gave no usable answer (listing cut off), so you decide.");
-    expect(render("R10.unavailable", { status: "ERROR" }, "zh-HK")).toBe("R10 已轉交你確認。評審未能給出可用答案（錯誤），由你決定。");
+    expect(render("R10.unavailable", { status: "ERROR" }, "zh-HK")).toBe("R10 已轉交你確認。判斷器未能給出可用答案（錯誤），由你決定。");
   });
 
   it("a cut-off listing keeps its own sentence even when a reason is also recorded", () => {
