@@ -3,9 +3,9 @@
 // thanks, expiry), no clear pick, checker offline, the "Why?" sheet, EN and zh-HK, roles and focus.
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { Decision, TraceEvent } from "../src/api/types";
+import type { Decision, Mandate, TraceEvent } from "../src/api/types";
 import { ASK_EVENT } from "../src/screens/run/RunScreen";
-import { coreInjectionDecision, undecidedRun } from "./runTraces";
+import { coreInjectionDecision, languageSkipRun, undecidedRun } from "./runTraces";
 import { mountRun, type Mounted } from "./runMount";
 
 vi.setConfig({ testTimeout: 20_000 });
@@ -273,6 +273,51 @@ describe("needs your OK", () => {
     });
     expect(screen.getAllByText("Wally's checker is offline, so it asked you first.").length).toBeGreaterThan(0);
     expectPlainSurface(m);
+  });
+});
+
+describe("needs your OK because the listing checker reads English best", () => {
+  const EN = "Wally's listing checker reads English best and could not check this listing, so it asks you.";
+  const ZH = "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。";
+
+  async function askedAboutAChineseListing(locale: "en" | "zh-HK"): Promise<Mounted> {
+    const m = await mountRun({ locale });
+    await m.run("normal");
+    const base = await lastDecision(m);
+    await m.inject(languageSkipRun(base, (await m.mock.snapshot()).mandate as Mandate));
+    return m;
+  }
+
+  it("the sheet and the card behind it say so in plain words, with no mention of an offline checker", async () => {
+    const m = await askedAboutAChineseListing("en");
+    const dialog = await screen.findByRole("dialog", { name: "Needs your OK" });
+    expect(within(dialog).getByText(EN)).toBeInTheDocument();
+    expect(within(m.root()).getByText(EN)).toBeInTheDocument();
+    expect(dialog).not.toHaveTextContent(/offline/i);
+    expect(m.root()).not.toHaveTextContent(/offline/i);
+    expect(within(dialog).getByRole("button", { name: "Approve" })).toBeEnabled();
+    expect(within(dialog).getByRole("button", { name: "No thanks" })).toBeEnabled();
+    expectPlainSurface(m);
+  });
+
+  it("says the same idea in 繁", async () => {
+    const m = await askedAboutAChineseListing("zh-HK");
+    const dialog = await screen.findByRole("dialog", { name: "需要你確認" });
+    expect(within(dialog).getByText(ZH)).toBeInTheDocument();
+    expect(m.root()).not.toHaveTextContent("離線");
+    expectPlainSurface(m);
+  });
+
+  it("the Why sheet's listing row asks you, and its details carry the engine's sentence and the skipped checker", async () => {
+    const m = await askedAboutAChineseListing("en");
+    await m.user.keyboard("{Escape}");
+    await m.user.click(await screen.findByRole("button", { name: "Why is Wally asking?" }));
+    const sheet = await screen.findByRole("dialog", { name: "Why Wally asked you" });
+    expect(within(sheet).getByText("The checker reads English best and couldn't read this, so Wally asked you")).toBeInTheDocument();
+    await m.user.click(within(sheet).getByText("Details for nerds"));
+    const nerds = sheet.querySelector("details");
+    expect(nerds).toHaveTextContent(`Escalated by R10. ${EN}`);
+    expect(nerds).toHaveTextContent("skipped:unsupported_language");
   });
 });
 

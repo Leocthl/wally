@@ -163,9 +163,12 @@ function unavailableReason(i: TemplateInputs, l: Locale): string {
   return zhOr(l, "unknown status", "狀態不明"); // NEEDS-REVIEW zh-HK
 }
 
-/** The adapter did not ask its model because the listing is in a language the model does not read (a cut-off listing keeps its own line). */
-const isLanguageSkip = (i: TemplateInputs): boolean =>
-  field(i, "reason") === JUDGE_REASON_UNSUPPORTED_LANGUAGE && field(i, "input_truncated") !== true;
+/**
+ * The adapter did not ask its model because the listing is in a language the model does not read (a cut-off listing
+ * keeps its own line). Exported so the app's plain words pick the same branch as this sentence.
+ */
+export const isLanguageSkip = (inputs: TemplateInputs): boolean =>
+  field(inputs, "reason") === JUDGE_REASON_UNSUPPORTED_LANGUAGE && field(inputs, "input_truncated") !== true;
 
 const r10Unavailable: Fragment = (i, l) => {
   if (isLanguageSkip(i)) {

@@ -1,6 +1,7 @@
 // Plain words for a stop or a question, picked by the engine's own template id (never re-decided here). Figures are
 // the engine's recorded inputs, formatted at the edge; the UI never computes a difference or a new number. The
 // engine's full sentence, with the rule id and any probability, stays in the "Why?" sheet.
+import { isLanguageSkip } from "@wally/core/explain";
 import type { Decision } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import type { LabelPair } from "../../../i18n/label";
@@ -56,13 +57,18 @@ const BY_TEMPLATE: Readonly<Record<string, (i: Inputs, d: Decision) => LabelPair
   "R10.seller_risk": () => R.reasonR10Seller,
   "R10.scope": () => R.reasonR10Scope,
   "R10.escalate": () => R.reasonR10Unsure,
-  "R10.unavailable": () => R.reasonR10Offline,
+  "R10.unavailable": (i) => (isLanguageSkip(i) ? R.reasonR10Language : R.reasonR10Offline),
   "R11.expired": (i) => (i["choice"] === "DENY" ? R.youSaidNo : R.nobodyAnswered),
   "R12.price_drift": () => R.reasonR12,
 };
 
 export function templateOf(decision: Decision): string | undefined {
   return decision.explanation?.template_id;
+}
+
+/** The checker did not answer because of a fault (it is down, timed out, cut the listing off): Wally "sleeps". Reading English best is not a fault. */
+export function checkerIsOffline(decision: Decision): boolean {
+  return templateOf(decision) === "R10.unavailable" && !isLanguageSkip(decision.explanation?.inputs ?? {});
 }
 
 /** The plain reason for a DENY or an ESCALATE, from the decision's own template and recorded inputs. */
