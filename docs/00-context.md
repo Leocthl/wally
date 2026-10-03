@@ -241,7 +241,7 @@ verify    verifyChain(entries, publicKeys, headCheckpoint) → pass | first fail
 | **Rail** | Card issuing layer; SIMULATED, mirrors Single Use Card semantics [F1] |
 | **Log / Verifier** | Signed hash-chained decision log / offline page that checks it |
 | **Delegator** | The person who seals the packet |
-| **Operator** | Whoever runs the engine (us); the log must be checkable without trusting them |
+| **Operator** | Whoever runs the Wally software: us in a pilot, the wallet or issuer once it embeds Wally; the log must be checkable without trusting them |
 | **Wally** | The product, and the friendly wallet character in the app |
 | **Lai see (利是)** | HK red packet: fixed amount, sealed, given once. Pitch analogy only, no longer branding (D14) |
 | **Provenance chip** | UI tag showing OBSERVED / SIMULATED / MEASURED / ASSUMED beside every number |
