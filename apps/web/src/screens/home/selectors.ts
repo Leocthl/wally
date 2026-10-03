@@ -65,6 +65,11 @@ export function cardGroups(state: BoothState): CardGroups {
   return { active: newest.filter((c) => c.state === "ACTIVE"), past: newest.filter((c) => c.state !== "ACTIVE") };
 }
 
+/** A purchase went all the way through in this budget: a one-off card was charged. */
+export function hasCompletedPurchase(state: BoothState): boolean {
+  return currentEntries(state).some((e) => e.kind === "CARD_EVENT" && e.payload.event === "AUTHORISED");
+}
+
 /** Escalations still waiting for an answer, the oldest (first to expire) first. */
 export function openEscalations(state: BoothState): readonly EscalationView[] {
   return state.escalations

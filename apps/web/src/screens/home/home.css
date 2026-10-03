@@ -72,14 +72,16 @@
 .home-try--pills .home-try__icon { width: 2rem; height: 2rem; margin: 0; border-radius: 50%; }
 .home-try--pills .home-try__title { font-size: var(--text-sm); }
 
-/* The "What do you need?" row under the budget: one control that opens Ask; the camera and the microphone are drawn on it. */
+/* The way in, right under Wally's hello: the "What do you need?" row (and, when the photo lane offers it, its row under it). */
+.home-ask { display: grid; gap: var(--sp-3); min-width: 0; }
+.home-ask > .home-photo { margin-top: 0; }
+/* The "What do you need?" row: one control that opens Ask; the camera and the microphone are drawn on it. */
 .home-composer {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
   min-height: var(--tap-xl);
-  margin-top: calc(-1 * var(--sp-3));
   padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4);
   border: 1.5px solid var(--c-line-strong);
   border-radius: var(--r-pill);

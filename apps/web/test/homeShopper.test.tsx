@@ -1,4 +1,4 @@
-// Home as a shopper's screen: Wally's greeting and the budget, then "What do you need?", Ideas for you, Recent, Manage this budget,
+// Home as a shopper's screen: Wally's greeting, "What do you need?" and the budget, then Ideas for you, Recent, Manage this budget,
 // and last the booth's scenario cards in a disclosure (Demo scenarios, for judges) that is open on the booth Mac and with ?booth=1.
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -23,12 +23,13 @@ const profile = (patch: Parameters<typeof mergeProfile>[1]) => ({ [PROFILE_KEY]:
 const ideaIds = () => [...document.querySelectorAll<HTMLElement>("main [data-idea]")].map((b) => b.dataset["idea"]);
 
 describe("the order of Home", () => {
-  it("is the greeting and budget, the composer, Ideas for you, Recent, the demo scenarios, and Manage this budget last", async () => {
+  it("is the greeting, the composer, the budget card, Ideas for you, Recent, the demo scenarios, and Manage this budget last", async () => {
     await bootApp("#/budget");
     const at = (el: Element): Element => el;
     const parts = [
-      at(document.querySelector(".home-hero")!),
+      at(document.querySelector(".home-hero__greet")!),
       at(composer()),
+      at(document.querySelector(".home-hero__card")!),
       at(screen.getByRole("heading", { name: "Ideas for you" })),
       at(document.querySelector("[data-recent-empty]")!),
       at(disclosure()),
@@ -42,9 +43,10 @@ describe("the order of Home", () => {
     expect(document.getElementById("budget-console")?.nextElementSibling).toBeNull();
   });
 
-  it("puts the composer right under the budget hero", async () => {
+  it("puts the composer right under Wally's greeting, above the budget card", async () => {
     await bootApp("#/budget");
-    expect(document.querySelector(".home-hero")?.nextElementSibling).toBe(composer());
+    expect(document.querySelector(".home-hero__greet")?.nextElementSibling).toBe(composer().parentElement);
+    expect(composer().parentElement?.nextElementSibling).toBe(document.querySelector(".home-hero__card"));
   });
 
   it("keeps Wally's greeting and the budget card exactly as they were", async () => {

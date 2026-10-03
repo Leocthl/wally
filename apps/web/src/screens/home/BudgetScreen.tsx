@@ -1,12 +1,14 @@
-// Budget (#/budget, also #/ and #/booth), a shopper's home: Wally's greeting and the budget card, the "What do you need?" row,
-// Ideas for you, a waiting "Needs your OK", the one-off cards, Recent, the booth's scenario cards in a disclosure (Demo scenarios,
-// for judges), and Manage this budget. Everything reads the booth state through the selectors, never its own copy.
-import { useCallback, useEffect, type ReactElement } from "react";
+// Budget (#/budget, also #/ and #/booth), a shopper's home: Wally's greeting, a waiting "Needs your OK" and the "What do you need?"
+// row (the way in, right under the hello), the budget card, Ideas for you, the one-off cards, Recent, the Add to Home Screen card
+// (after a first purchase), the booth's scenario cards in a disclosure (Demo scenarios), and Manage this budget. Everything reads
+// the booth state through the selectors, never its own copy.
+import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
 import { navigate, PARAM, routeHref, useRouteParam } from "../../hooks/useRoute";
 import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
 import { IosInstallHint } from "../../pwa/InstallUi";
+import { countThisVisit } from "../../pwa/visits";
 import { useProfile } from "../../state/useProfile";
 import { Card, Skeleton } from "../../ui/Surface";
 import { useLocale } from "../../ui/locale";
@@ -25,7 +27,7 @@ import { useFamilyRunner } from "./familyRun";
 import { Ideas } from "./IdeasSection";
 import type { Idea } from "./ideas";
 import { RecentSection } from "./RecentSection";
-import { cardGroups, decisionTitle, openEscalations, recentDecisions } from "./selectors";
+import { cardGroups, decisionTitle, hasCompletedPurchase, openEscalations, recentDecisions } from "./selectors";
 import { PhotoCardSlot } from "./slots";
 import { TRY_ITEMS } from "./tryCatalog";
 import { rankTryItems } from "./tryRank";
@@ -89,6 +91,7 @@ export function BudgetScreen(): ReactElement {
   const asker = useAsker();
   const focus = useRouteParam(PARAM.focus);
   const { profile } = useProfile();
+  const [visits] = useState(countThisVisit);
   const loaded = state.packet !== null && state.mandate !== null;
   // A person who told Wally their taste sees their picks first among the scenario cards; the lead says so.
   const personal = rankTryItems(TRY_ITEMS, profile).forYou.size > 0;
@@ -119,6 +122,8 @@ export function BudgetScreen(): ReactElement {
   const cards = cardGroups(state);
   // A cancelled budget cannot approve anything, so nothing is waiting for an answer there.
   const waiting = active ? openEscalations(state) : [];
+  // The Add to Home Screen card has earned its place after a first purchase went through, or when the person comes back.
+  const installReady = visits >= 2 || hasCompletedPurchase(state);
 
   const cancel = async (): Promise<void> => {
     if (await attempt(booth, () => booth.api.revoke())) toast.show({ message: t(UI["console.cancelled"]), tone: "info" });
@@ -126,14 +131,24 @@ export function BudgetScreen(): ReactElement {
 
   return (
     <div className="home">
-      <IosInstallHint />
-      <BudgetHero packet={packet} mandate={mandate} />
-      {closed ? <Closed why={closed} /> : <Composer />}
-      {closed ? null : <PhotoCardSlot />}
-      {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
+      {/* The way in sits right under Wally's hello, above the figures: a question that is waiting comes first, then "What do you need?"
+          (or, once the budget is over, the one card that starts a new one). */}
+      <BudgetHero packet={packet} mandate={mandate}>
+        {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
+        {closed ? (
+          <Closed why={closed} />
+        ) : (
+          <div className="home-ask">
+            <Composer />
+            <PhotoCardSlot />
+          </div>
+        )}
+      </BudgetHero>
       {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
       <CardsSection active={cards.active} past={cards.past} />
       <RecentSection rows={recentDecisions(state)} />
+      {/* Add to Home Screen waits for a first purchase or a second visit, and sits below the purchases, never above the greeting. */}
+      <IosInstallHint ready={installReady} />
       {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
       <DemoScenarios lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
         <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
