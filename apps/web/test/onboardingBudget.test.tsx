@@ -59,10 +59,13 @@ describe("a budget that is over", () => {
     expect(snap.packet?.budget_minor).toBe(50_000);
   });
 
-  it("says nothing about new receipts when there was no budget before", async () => {
+  it("says nothing about new receipts when there was no budget before, not even once the seal has made one", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("button", { name: "Review budget" }));
     await screen.findByRole("heading", { level: 1, name: "Check and seal" });
+    expect(screen.queryByText("Sealing starts a new budget and new receipts.")).toBeNull();
+    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
     expect(screen.queryByText("Sealing starts a new budget and new receipts.")).toBeNull();
   });
 

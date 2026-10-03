@@ -58,12 +58,14 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
   const family = useFamilySeal(form.amount, { startOwn: true });
   const [view, setView] = useState<View>("pick");
   const [showErrors, setShowErrors] = useState(false);
+  // Whether sealing replaces a budget, as it was when the person went to Check and seal: the seal itself makes a budget appear,
+  // and the note must not show up in the middle of sealing the first one.
+  const [replacing, setReplacing] = useState(false);
   const errors = validate(form, now);
   const until = untilOf(draft, now);
   const { mandate, packet } = booth.state;
   // Ready means a budget Wally can shop in now. One that is cancelled, ended or all used is not that: the form is offered.
   const live = mandate !== null && packet !== null && packet.status === "ACTIVE" && !booth.state.revoked;
-  const replacing = mandate !== null;
   const mine = ceremony.sealing || ceremony.sealedForm !== null;
   const skipping: SkipControl = { onSkip: skip.onSkip, busy: skip.busy || ceremony.sealing };
   // Skip uses the ready-made budget when there is none; with one held it seals nothing. Said wherever Skip could be mistaken for "use mine".
@@ -75,6 +77,7 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
       focusFirstProblem(errors);
       return;
     }
+    setReplacing(mandate !== null);
     setView("review");
   };
   const seal = async (): Promise<void> => {

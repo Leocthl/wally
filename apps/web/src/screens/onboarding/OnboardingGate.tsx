@@ -64,6 +64,10 @@ export function OnboardingGate({ children, onRetry }: OnboardingGateProps): Reac
   const { phase, finishTour } = useOnboarding();
   const route = useRoute();
   const onBudget = route.name === "budget";
+  // The marks point at the real Budget screen, which is a skeleton until the budget has arrived (a live booth tells the page
+  // about a new seal a moment after the call returns): the tour starts when there is something to point at.
+  const { state } = useBoothContext();
+  const budgetShown = state.mandate !== null && state.packet !== null;
 
   // The tour points at the Budget screen: take the visitor there (a replay can start from any screen), show it once they are
   // there, and end it if they leave (the back button, a link): it does not start again on the way back.
@@ -90,7 +94,7 @@ export function OnboardingGate({ children, onRetry }: OnboardingGateProps): Reac
   return (
     <>
       {children}
-      {phase === "tour" && onBudget ? (
+      {phase === "tour" && onBudget && budgetShown ? (
         <ErrorBoundary resetKey="tour" fallback={() => <LetThrough end={finishTour} />}>
           <Suspense fallback={null}>
             <CoachTour />
