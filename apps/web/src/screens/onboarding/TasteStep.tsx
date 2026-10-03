@@ -43,7 +43,7 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
     >
       <div className="onb-body">
         <p className="onb-lead">{t(OB.taste.lead)}</p>
-        <section className="onb-block" aria-labelledby="onb-styles">
+        <div className="onb-block">
           <h2 className="onb-label" id="onb-styles">{t(OB.taste.styles)}</h2>
           <ChipGroup
             label={t(OB.taste.styles)}
@@ -51,8 +51,8 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
             selected={taste.styles}
             onChange={(styles) => onTaste(mergeProfile(taste, { styles }))}
           />
-        </section>
-        <section className="onb-block" aria-labelledby="onb-colours">
+        </div>
+        <div className="onb-block">
           <h2 className="onb-label" id="onb-colours">{t(OB.taste.colours)}</h2>
           <SwatchGrid
             label={t(OB.taste.colours)}
@@ -60,14 +60,14 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
             selected={taste.colours}
             onChange={(colours) => onTaste(mergeProfile(taste, { colours }))}
           />
-        </section>
-        <section className="onb-block" aria-labelledby="onb-sizes">
+        </div>
+        <div className="onb-block">
           <h2 className="onb-label" id="onb-sizes">{t(OB.taste.sizes)}</h2>
           <SizeRow label={t(OB.taste.top)} options={SIZE_LETTERS} value={taste.sizes.top} onChange={(top) => onTaste(mergeProfile(taste, { sizes: { ...taste.sizes, top } }))} />
           <SizeRow label={t(OB.taste.bottom)} options={SIZE_LETTERS} value={taste.sizes.bottom} onChange={(bottom) => onTaste(mergeProfile(taste, { sizes: { ...taste.sizes, bottom } }))} />
           <SizeRow label={t(OB.taste.shoe)} options={SHOE_SIZES} value={taste.sizes.shoe} onChange={(shoe) => onTaste(mergeProfile(taste, { sizes: { ...taste.sizes, shoe } }))} />
-        </section>
-        <section className="onb-block" aria-labelledby="onb-shop">
+        </div>
+        <div className="onb-block">
           <h2 className="onb-label" id="onb-shop">{t(OB.taste.shopFor)}</h2>
           {state.mandate === null ? <p className="onb-hint">{t(OB.taste.shopForHint)}</p> : null}
           <ChipGroup
@@ -76,7 +76,7 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
             selected={taste.shopFor}
             onChange={(shopFor) => onTaste(mergeProfile(taste, { shopFor }))}
           />
-        </section>
+        </div>
       </div>
     </StepFrame>
   );

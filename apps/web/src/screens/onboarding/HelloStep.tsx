@@ -46,10 +46,10 @@ export function HelloStep({ nickname, onNickname, onNext, dir, skip }: HelloStep
         }}
       >
         <p className="onb-lead">{t(OB.hello.lead)}</p>
-        <section className="onb-block" aria-labelledby="onb-lang">
+        <div className="onb-block">
           <h2 className="onb-label" id="onb-lang">{t(UI.language)}</h2>
           <LanguageSwitch size="md" />
-        </section>
+        </div>
         <TextField
           label={t(OB.hello.nickname)}
           hint={t(OB.hello.nicknameHint)}

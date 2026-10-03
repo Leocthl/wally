@@ -53,7 +53,7 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
       <ScopeChip prov={SIMULATED} className="onb-scope" />
       <p className="onb-lead">{t(OB.budget.lead)}</p>
 
-      <section className="onb-block" aria-labelledby={amountHeading}>
+      <div className="onb-block">
         <h2 className="onb-label" id={amountHeading}>{t(OB.budget.howMuch)}</h2>
         <PresetPicker value={draft.amount} onChange={(amount) => set({ amount })} labelledBy={amountHeading} />
         {draft.amount === "custom" ? (
@@ -77,9 +77,9 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
         ) : family.notes.amount ? (
           <p className="onb-note" role="status"><Icon name="alert" size={16} /> {family.notes.amount}</p>
         ) : null}
-      </section>
+      </div>
 
-      <section className="onb-block" aria-labelledby={lengthHeading}>
+      <div className="onb-block">
         <h2 className="onb-label" id={lengthHeading}>{t(OB.budget.howLong)}</h2>
         <Segmented<HowLong>
           label={t(OB.budget.howLong)}
@@ -107,9 +107,9 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
           </p>
         ) : null}
         {capped ? <p className="onb-note" role="status"><Icon name="info" size={16} /> {t(OB.budget.cutShort)}</p> : null}
-      </section>
+      </div>
 
-      <section className="onb-block" aria-labelledby="onb-what">
+      <div className="onb-block">
         <h2 className="onb-label" id="onb-what">{t(UI["seal.what"])}</h2>
         <div data-field="categories">
           <ChipGroup
@@ -121,11 +121,11 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
           />
         </div>
         {err("categories") ? <span className="w-field__error" id={categoriesError}><Icon name="alert" size={16} />{err("categories")}</span> : null}
-      </section>
+      </div>
 
-      <section className="onb-block onb-switch">
+      <div className="onb-block onb-switch">
         <Switch label={t(UI["seal.verifiedOnly"])} description={t(UI["seal.verifiedHint"])} checked={draft.verifiedOnly} onChange={(verifiedOnly) => set({ verifiedOnly })} />
-      </section>
+      </div>
 
       {family.choice}
     </div>
