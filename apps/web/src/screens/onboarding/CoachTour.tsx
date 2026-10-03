@@ -100,8 +100,9 @@ export default function CoachTour(): ReactElement | null {
     finishTour();
   }, [finishTour]);
   const open = mark !== null;
-  useFocusTrap(open, card, end);
+  // The page is made inert first, so on the way out it is given back before the trap returns focus to the element that opened it.
   useInertPage(open, card);
+  useFocusTrap(open, card, end);
 
   // Escape ends the tour wherever focus is (the trap only hears the card).
   useEffect(() => {
