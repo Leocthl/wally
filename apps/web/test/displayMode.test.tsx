@@ -15,9 +15,9 @@ beforeEach(() => {
   setUrl("");
 });
 afterEach(() => {
+  vi.restoreAllMocks(); // first: a mocked setItem must not break the clear below
   window.localStorage.clear();
   setUrl("");
-  vi.restoreAllMocks();
 });
 
 describe("modeFromSearch", () => {
