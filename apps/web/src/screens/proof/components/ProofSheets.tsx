@@ -68,8 +68,12 @@ export interface ExportView {
 
 type Exporter = () => Promise<ExportView>;
 
-/** The client's export, when it has one; ApiClient itself does not promise it. */
+/**
+ * The client's export, when it has one; ApiClient itself does not promise it. The files only feed the offline checker, and
+ * the iOS and Android shells have neither that page nor a working download, so there the export is not offered.
+ */
 export function exporterOf(api: ApiClient): Exporter | null {
+  if (isNative()) return null;
   const fn = (api as unknown as { readonly exportLog?: unknown }).exportLog;
   return typeof fn === "function" ? () => (fn as () => Promise<unknown>).call(api).then(readExport) : null;
 }
