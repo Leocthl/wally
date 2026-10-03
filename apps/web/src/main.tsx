@@ -16,10 +16,10 @@ import "./pwa/register";
  */
 const root = document.getElementById("root");
 if (!root) throw new Error("missing #root element");
-void pickClient().then(({ api, onDevice }) =>
+void pickClient().then(({ api, onDevice, sessionEnded }) =>
   createRoot(root).render(
     <StrictMode>
-      {onDevice ? <OnDeviceNote /> : null}
+      {onDevice ? <OnDeviceNote sessionEnded={sessionEnded === true} /> : null}
       <App api={api} />
     </StrictMode>,
   ),

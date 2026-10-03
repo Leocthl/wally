@@ -26,6 +26,7 @@ import type {
   ScenarioId,
   SealRequest,
   SealResult,
+  SeeResult,
   TraceEvent,
   TraceListener,
   Unsubscribe,
@@ -37,12 +38,15 @@ import { compileRules, type ModelCompile } from "./compileRules";
 import { BoothError } from "./errors";
 import { mapEvent, RunTracker } from "./events";
 import { createFamilyKit, familySealRequest, familySummary, PARENT_EXPORT_NOTE, refusedStep, type FamilyKit } from "./family";
+import { withPhotoPicks } from "./planner";
 import { ScenarioRunner } from "./runner";
 import type { ScenarioEntry, ScenarioTable } from "./scenarioTable";
+import { see, type PictureReader } from "./see";
 import { openSession, type Session, type SessionDeps } from "./session";
 import type { Step } from "./step";
 import { tamperCopy, type TamperedCopy } from "./tamper";
 import type { BackendLogger, BoothBackend, ExportView } from "./types";
+import type { SeeInput } from "./validate";
 
 export const VERIFY_CHECKS: readonly VerifyFailure[] = ["SCHEMA", "SEQ", "PREV_HASH", "PAYLOAD_HASH", "ENTRY_HASH", "SIGNATURE", "PAYLOAD_SIGNATURE", "TRUNCATED"];
 
@@ -63,6 +67,8 @@ export interface BackendDeps {
   readonly judgeOfflineNote?: string;
   /** The note on exported public keys. Default: the server's. */
   readonly keysNote?: string;
+  /** Show Wally a photo: reads one picture into typed words with the local model. Default null: the colour plates and the chips only. */
+  readonly pictureReader?: PictureReader | null;
 }
 
 const iso = (d: Date): string => d.toISOString().replace(".000Z", "Z");
@@ -196,7 +202,7 @@ export class OrchestratorBackend implements BoothBackend {
     const restore = this.#holdOut(old, kit);
     let session: Session;
     try {
-      session = await openSession(deps, req, kit);
+      session = await openSession({ ...deps, planner: withPhotoPicks(deps.planner, this.#d.catalogue.shop) }, req, kit);
     } catch (err) {
       restore();
       throw err;
@@ -294,7 +300,16 @@ export class OrchestratorBackend implements BoothBackend {
   }
 
   ask(req: AskRequest): Promise<RunSummary> {
-    return this.#op((session) => this.#runner(session).ask(req.requestText, this.#d.ask));
+    if (req.listingId === undefined) return this.#op((session) => this.#runner(session).ask(req.requestText, this.#d.ask));
+    // Show Wally a photo: the shopper picked this item from the matches (see). It goes through the pipeline as any cart does.
+    const entry = this.#d.catalogue.shop.get(req.listingId);
+    if (entry === undefined) return Promise.reject(new BoothError(404, "UNKNOWN_LISTING", "That item is not in the photo shelf."));
+    return this.#op((session) => this.#runner(session).pick(req.requestText, entry.listing));
+  }
+
+  /** Needs no session and seals nothing: it reads a picture (or the chips) and ranks simulated shop items. Not queued, so a slow model never holds a run. */
+  see(input: SeeInput): Promise<SeeResult> {
+    return see(input, { shop: this.#d.catalogue.shop, reader: this.#d.pictureReader ?? null, logger: this.#d.logger });
   }
 
   suggestAlternatives(req: AlternativesRequest): Promise<RunSummary> {

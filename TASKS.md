@@ -2,6 +2,7 @@
 
 ## Top 10 do-first
 1. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
+1b. **Persist (done on main)**: human check left: reload on a real phone (Safari and Chrome) and in the iOS and Android shells.
 2. **X-01, X-18** Public repo: a private remote exists (pushed through 78d0257, CI green); making it public needs the team's explicit yes (licence: Apache-2.0, chosen 2026-10-03); then the freeze guard. Audit findings are fixed before it goes public.
 3. **M-12** Voice input and the result-screen polish sit on `lane/ui-polish-b`; merge to `main`, then re-run the suite and the axe scan.
 4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.

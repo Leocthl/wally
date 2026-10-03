@@ -1,0 +1,1033 @@
+{
+  "fixture": "shop/judge",
+  "provenance": "SIMULATED",
+  "schema": "photo-shelf-judge",
+  "note": "Recorded from live Laya on 2026-10-03 (model typed-decisions, option-order rotations averaged) for the SIMULATED photo-shelf listings, with the real cart the cart builder makes for each and the demo mandate M0. MEASURED(1) raw probabilities on SIMULATED listings; R10 applies the thresholds. Served by the on-device replay judge, keyed by the SHA-256 of the listing text.",
+  "data": {
+    "records": [
+      {
+        "listing": "lst_photoTeeWhite",
+        "text_sha256": "7fd549a4143cefa77a1cf59fba1b15d1c0672ce0e17b2ea3d86af404064b2509",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 276,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.75205,
+              "out_of_scope": 0.24795
+            },
+            "injection_risk": {
+              "clean": 0.673933,
+              "suspicious": 0.186867,
+              "injection": 0.1392
+            },
+            "seller_risk": {
+              "low_risk": 0.70525,
+              "high_risk": 0.29475
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.67935,
+              "escalate": 0.32065
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeBlack",
+        "text_sha256": "5ef063778780d8d9f77b1682a7924cd2213e9bb977f15376a59d57f9ffd27cf1",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 125,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.75795,
+              "out_of_scope": 0.24205
+            },
+            "injection_risk": {
+              "clean": 0.705933,
+              "suspicious": 0.1616,
+              "injection": 0.1325
+            },
+            "seller_risk": {
+              "low_risk": 0.63635,
+              "high_risk": 0.36365
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6819,
+              "escalate": 0.3181
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeNavy",
+        "text_sha256": "92abc72ae47df8040940808aee6b8f1ee56bf2983d167fdf63493ffa4a3334fa",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 127,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7798,
+              "out_of_scope": 0.2202
+            },
+            "injection_risk": {
+              "clean": 0.699567,
+              "suspicious": 0.169033,
+              "injection": 0.131433
+            },
+            "seller_risk": {
+              "low_risk": 0.6535,
+              "high_risk": 0.3465
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.7018,
+              "escalate": 0.2982
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeGrey",
+        "text_sha256": "155ee9489ed11ed9181ae77149967a9b311a97845bc91f5552c12693cdb735a1",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 127,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7581,
+              "out_of_scope": 0.2419
+            },
+            "injection_risk": {
+              "clean": 0.675867,
+              "suspicious": 0.1862,
+              "injection": 0.1379
+            },
+            "seller_risk": {
+              "low_risk": 0.7236,
+              "high_risk": 0.2764
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.69275,
+              "escalate": 0.30725
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeBlue",
+        "text_sha256": "e94924c138c9ff882cc8bb996cbe543b8f059281490c9e65f52900fb00dfd93c",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 123,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.769,
+              "out_of_scope": 0.231
+            },
+            "injection_risk": {
+              "clean": 0.682133,
+              "suspicious": 0.182667,
+              "injection": 0.135167
+            },
+            "seller_risk": {
+              "low_risk": 0.71985,
+              "high_risk": 0.28015
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.69445,
+              "escalate": 0.30555
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeCreamPrint",
+        "text_sha256": "3e633d3d6be1e3efcc3b04fb0f63d907a21c34165ebe98955a3e8289b37546da",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 132,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7633,
+              "out_of_scope": 0.2367
+            },
+            "injection_risk": {
+              "clean": 0.701767,
+              "suspicious": 0.167267,
+              "injection": 0.130967
+            },
+            "seller_risk": {
+              "low_risk": 0.66295,
+              "high_risk": 0.33705
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6952,
+              "escalate": 0.3048
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTeeOrange",
+        "text_sha256": "664778bdc7b107c8dc0109ee75471d294fed691431c165ea2fa712aee4e20ffe",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.76235,
+              "out_of_scope": 0.23765
+            },
+            "injection_risk": {
+              "clean": 0.694867,
+              "suspicious": 0.1703,
+              "injection": 0.134833
+            },
+            "seller_risk": {
+              "low_risk": 0.6635,
+              "high_risk": 0.3365
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6929,
+              "escalate": 0.3071
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoShirtLightBlue",
+        "text_sha256": "37253666d9085e8d51fb61a67114b71dc9ec60bb7767bf1587ce51da73f1d5d3",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 123,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.76895,
+              "out_of_scope": 0.23105
+            },
+            "injection_risk": {
+              "clean": 0.6999,
+              "suspicious": 0.169867,
+              "injection": 0.130267
+            },
+            "seller_risk": {
+              "low_risk": 0.6466,
+              "high_risk": 0.3534
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6682,
+              "escalate": 0.3318
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoShirtBlueCheck",
+        "text_sha256": "b6efe93c16d684ba1baeacb1f18b236f807b6ecd1afb5fe9032ec7737a11e351",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 130,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.76665,
+              "out_of_scope": 0.23335
+            },
+            "injection_risk": {
+              "clean": 0.673933,
+              "suspicious": 0.190433,
+              "injection": 0.135667
+            },
+            "seller_risk": {
+              "low_risk": 0.7272,
+              "high_risk": 0.2728
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6814,
+              "escalate": 0.3186
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoPoloNavy",
+        "text_sha256": "5dec7b6b740a433cdbc80cc500b6d22cf6255009e5293768ea20a33a6154345a",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 132,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7726,
+              "out_of_scope": 0.2274
+            },
+            "injection_risk": {
+              "clean": 0.708333,
+              "suspicious": 0.165267,
+              "injection": 0.126433
+            },
+            "seller_risk": {
+              "low_risk": 0.64175,
+              "high_risk": 0.35825
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6958,
+              "escalate": 0.3042
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSweaterBlack",
+        "text_sha256": "317fafcd1567882218dfbd0687639edc672f348ae47785ff937883ee4b04453f",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 121,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.73315,
+              "out_of_scope": 0.26685
+            },
+            "injection_risk": {
+              "clean": 0.699367,
+              "suspicious": 0.1724,
+              "injection": 0.128167
+            },
+            "seller_risk": {
+              "low_risk": 0.65,
+              "high_risk": 0.35
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.68045,
+              "escalate": 0.31955
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSweaterBeige",
+        "text_sha256": "8bf1b9836933f9341fc80af391a6c5d667d318cbf72205e91c51ed2a3af33fbe",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 126,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.78235,
+              "out_of_scope": 0.21765
+            },
+            "injection_risk": {
+              "clean": 0.691033,
+              "suspicious": 0.1786,
+              "injection": 0.130367
+            },
+            "seller_risk": {
+              "low_risk": 0.7232,
+              "high_risk": 0.2768
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.70035,
+              "escalate": 0.29965
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoHoodieNavy",
+        "text_sha256": "2e2b04f3e0c3ca14c02503a3753c9e653c57c4f9cdd2e9eccf91a7b3b6b56ca2",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 127,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.75785,
+              "out_of_scope": 0.24215
+            },
+            "injection_risk": {
+              "clean": 0.703267,
+              "suspicious": 0.1677,
+              "injection": 0.129033
+            },
+            "seller_risk": {
+              "low_risk": 0.72085,
+              "high_risk": 0.27915
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.71445,
+              "escalate": 0.28555
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoHoodieGrey",
+        "text_sha256": "466d0e938c7ed177a6833d1affdd46a6308897ab0c56d4fb6d41063a33b22098",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 129,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.74725,
+              "out_of_scope": 0.25275
+            },
+            "injection_risk": {
+              "clean": 0.695267,
+              "suspicious": 0.1696,
+              "injection": 0.135133
+            },
+            "seller_risk": {
+              "low_risk": 0.64565,
+              "high_risk": 0.35435
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6735,
+              "escalate": 0.3265
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoHoodieBlackLogo",
+        "text_sha256": "7d61daa607b4728e480481c4649b32c83ad37200dbfcebc2b5a30712c0f3e5d4",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 134,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.6782,
+              "out_of_scope": 0.3218
+            },
+            "injection_risk": {
+              "clean": 0.650867,
+              "suspicious": 0.201533,
+              "injection": 0.1476
+            },
+            "seller_risk": {
+              "low_risk": 0.71745,
+              "high_risk": 0.28255
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6518,
+              "escalate": 0.3482
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoHoodieYellow",
+        "text_sha256": "9bfcafdac010f5ac829a857ca614665350a177849afaaedc18fae9a5d70a85f4",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 133,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7498,
+              "out_of_scope": 0.2502
+            },
+            "injection_risk": {
+              "clean": 0.664833,
+              "suspicious": 0.190767,
+              "injection": 0.1444
+            },
+            "seller_risk": {
+              "low_risk": 0.6968,
+              "high_risk": 0.3032
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6682,
+              "escalate": 0.3318
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoJacketDenim",
+        "text_sha256": "c0c85297ae66105c7eba0c56491133f22ff8c548e2662571d38a2d32955ffb42",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 141,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.78865,
+              "out_of_scope": 0.21135
+            },
+            "injection_risk": {
+              "clean": 0.6881,
+              "suspicious": 0.181033,
+              "injection": 0.130867
+            },
+            "seller_risk": {
+              "low_risk": 0.73875,
+              "high_risk": 0.26125
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.70915,
+              "escalate": 0.29085
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoJacketNavy",
+        "text_sha256": "44a0882f3ea9e361a0faff5f4d9a6761a37a7cd94d9fcb290e4d2923c7dfe4e4",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.79215,
+              "out_of_scope": 0.20785
+            },
+            "injection_risk": {
+              "clean": 0.7148,
+              "suspicious": 0.158333,
+              "injection": 0.126867
+            },
+            "seller_risk": {
+              "low_risk": 0.65775,
+              "high_risk": 0.34225
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.71455,
+              "escalate": 0.28545
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoJacketGreenCheck",
+        "text_sha256": "12eec9342eebf0c3aff0316b01ecb9651aedf5b3beb042056696cbbe3904565b",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 127,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7916,
+              "out_of_scope": 0.2084
+            },
+            "injection_risk": {
+              "clean": 0.697167,
+              "suspicious": 0.171467,
+              "injection": 0.131367
+            },
+            "seller_risk": {
+              "low_risk": 0.7362,
+              "high_risk": 0.2638
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.69625,
+              "escalate": 0.30375
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoJeansDenim",
+        "text_sha256": "1fb0ed7c8d2346a333107f9330016cbf232b0aeb4f6d053ad56538b1e1c2b736",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 126,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.79005,
+              "out_of_scope": 0.20995
+            },
+            "injection_risk": {
+              "clean": 0.6692,
+              "suspicious": 0.184667,
+              "injection": 0.1461
+            },
+            "seller_risk": {
+              "low_risk": 0.6213,
+              "high_risk": 0.3787
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.67435,
+              "escalate": 0.32565
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoJeansBlack",
+        "text_sha256": "02976e219ec9a788eb353f5c1ffb1a5af9e4eaadefbdfdf800a6577a83230e5d",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 126,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7776,
+              "out_of_scope": 0.2224
+            },
+            "injection_risk": {
+              "clean": 0.6717,
+              "suspicious": 0.185567,
+              "injection": 0.142733
+            },
+            "seller_risk": {
+              "low_risk": 0.71365,
+              "high_risk": 0.28635
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6998,
+              "escalate": 0.3002
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTrousersBeige",
+        "text_sha256": "aa294f901c24c3ff44fae4602ad01f43b5573a882d75923840db86cf7e2b6399",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7863,
+              "out_of_scope": 0.2137
+            },
+            "injection_risk": {
+              "clean": 0.6901,
+              "suspicious": 0.175833,
+              "injection": 0.134
+            },
+            "seller_risk": {
+              "low_risk": 0.6317,
+              "high_risk": 0.3683
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6746,
+              "escalate": 0.3254
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoTrousersOlive",
+        "text_sha256": "dea9b93ab33a89772d87327903ea30dba067de6e2956dfd9c45fc504422a170b",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 125,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7932,
+              "out_of_scope": 0.2068
+            },
+            "injection_risk": {
+              "clean": 0.697267,
+              "suspicious": 0.1747,
+              "injection": 0.128033
+            },
+            "seller_risk": {
+              "low_risk": 0.7229,
+              "high_risk": 0.2771
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.7258,
+              "escalate": 0.2742
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoShortsNavy",
+        "text_sha256": "6f0b3162964448ac2d987e5a6b7b4962f21533d32799d3a6aadce157ab54ff18",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7871,
+              "out_of_scope": 0.2129
+            },
+            "injection_risk": {
+              "clean": 0.693467,
+              "suspicious": 0.1762,
+              "injection": 0.130267
+            },
+            "seller_risk": {
+              "low_risk": 0.7404,
+              "high_risk": 0.2596
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.7274,
+              "escalate": 0.2726
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoDressBlack",
+        "text_sha256": "edf767c851b64ea8eecf9a0a12c7527b7d989a33aa99c4d737c9308456e1ea86",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 125,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.76445,
+              "out_of_scope": 0.23555
+            },
+            "injection_risk": {
+              "clean": 0.697367,
+              "suspicious": 0.177,
+              "injection": 0.125667
+            },
+            "seller_risk": {
+              "low_risk": 0.6402,
+              "high_risk": 0.3598
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6612,
+              "escalate": 0.3388
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoDressCream",
+        "text_sha256": "a9a80eb1d1be8ee43d2ef60697a506c2bee6eaa5091f00f0df96ceccf09e0874",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 126,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.78125,
+              "out_of_scope": 0.21875
+            },
+            "injection_risk": {
+              "clean": 0.693,
+              "suspicious": 0.175833,
+              "injection": 0.131167
+            },
+            "seller_risk": {
+              "low_risk": 0.7183,
+              "high_risk": 0.2817
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.70565,
+              "escalate": 0.29435
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSkirtDenim",
+        "text_sha256": "c15a41216be7905442f34455ab940d3b173d7b8a6f2daab7b62fe8d53283983c",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 121,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7649,
+              "out_of_scope": 0.2351
+            },
+            "injection_risk": {
+              "clean": 0.711067,
+              "suspicious": 0.162667,
+              "injection": 0.126267
+            },
+            "seller_risk": {
+              "low_risk": 0.6322,
+              "high_risk": 0.3678
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6816,
+              "escalate": 0.3184
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSneakersWhite",
+        "text_sha256": "772b4ad54248f0e41b846c7acf29f16ed20005593559f36fe953ff4e8f8bcd0a",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 121,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.69425,
+              "out_of_scope": 0.30575
+            },
+            "injection_risk": {
+              "clean": 0.680667,
+              "suspicious": 0.1771,
+              "injection": 0.1422
+            },
+            "seller_risk": {
+              "low_risk": 0.6682,
+              "high_risk": 0.3318
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.68975,
+              "escalate": 0.31025
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSneakersGreen",
+        "text_sha256": "1fdf0525fc04a98c9ef18db8dbf6fe980d86b7c89bda0e632a83dded751cdd5e",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7068,
+              "out_of_scope": 0.2932
+            },
+            "injection_risk": {
+              "clean": 0.6865,
+              "suspicious": 0.175067,
+              "injection": 0.138433
+            },
+            "seller_risk": {
+              "low_risk": 0.6693,
+              "high_risk": 0.3307
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.69975,
+              "escalate": 0.30025
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoBootsBrown",
+        "text_sha256": "4ccf8a326b14f6c8165e61f50e6af3d2aa17b827c70274da36aebe83c4fcaec6",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 122,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.75375,
+              "out_of_scope": 0.24625
+            },
+            "injection_risk": {
+              "clean": 0.6739,
+              "suspicious": 0.183833,
+              "injection": 0.142333
+            },
+            "seller_risk": {
+              "low_risk": 0.66855,
+              "high_risk": 0.33145
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.69455,
+              "escalate": 0.30545
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksWhite",
+        "text_sha256": "17195443ff72a18400c3ba28726515488ef2c67116c78531d4ca0a08ccd92f70",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 128,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.7285,
+              "out_of_scope": 0.2715
+            },
+            "injection_risk": {
+              "clean": 0.691267,
+              "suspicious": 0.171433,
+              "injection": 0.1373
+            },
+            "seller_risk": {
+              "low_risk": 0.6468,
+              "high_risk": 0.3532
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6869,
+              "escalate": 0.3131
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksBlack",
+        "text_sha256": "30b518d19ecacb1798168a5222dcacf52397e6de138417b9e2ed9074fdea0fe1",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 184,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.6913,
+              "out_of_scope": 0.3087
+            },
+            "injection_risk": {
+              "clean": 0.692767,
+              "suspicious": 0.171333,
+              "injection": 0.135867
+            },
+            "seller_risk": {
+              "low_risk": 0.7617,
+              "high_risk": 0.2383
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.6947,
+              "escalate": 0.3053
+            }
+          }
+        }
+      },
+      {
+        "listing": "lst_photoSocksNavyStripes",
+        "text_sha256": "6505cbea25d5f41252efb81676c2fd0915da2f3864f07268455f936cb6e1c038",
+        "record": {
+          "provider": "replay",
+          "model": "typed-decisions",
+          "version": "recorded@55cf4c4e",
+          "status": "OK",
+          "latency_ms": 253,
+          "shadow": false,
+          "answers": {
+            "scope_fit": {
+              "in_scope": 0.72865,
+              "out_of_scope": 0.27135
+            },
+            "injection_risk": {
+              "clean": 0.6985,
+              "suspicious": 0.1698,
+              "injection": 0.1317
+            },
+            "seller_risk": {
+              "low_risk": 0.674,
+              "high_risk": 0.326
+            },
+            "escalate_or_proceed": {
+              "proceed": 0.70085,
+              "escalate": 0.29915
+            }
+          }
+        }
+      }
+    ]
+  }
+}

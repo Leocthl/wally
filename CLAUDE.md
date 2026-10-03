@@ -56,7 +56,8 @@ packages/harness                            lane D
 ## Known gaps (say them, never hide them)
 - **Judge**: held-out, the F38 floor of 90% legitimate approved is not met at judge level, and the seller gate is inert [F36]; alone it lets 8/40 attack items through (held-out 6/20), while the end-to-end harness meets F38 [F69].
 - **Sentence reader**: reads one end date after an end word (until, by, before; 前, 至), never the year; a longer budget is cut to the month-length cap, and "N days" is capped only on the model path [F60].
-- **Live link**: Pages serves on-device mode only (recorded planner and judge answers, sample asks, keys in the page); the offline verifier page is not cached by the service worker.
+- **Live link**: Pages serves on-device mode only (recorded planner and judge answers, sample asks, keys in the page); the service worker precaches the offline verifier page on the static build, not on the booth build.
+- **Kept session**: on-device mode keeps its session in localStorage (`wally:session:v1`: the two throwaway demo keys, the log and its head), so a reload carries on; restored only if keys, chain, head and budget verify [F106]. Not kept: a family budget, a session over the size cap [F107]. One tab at a time (last writer wins). Any script on the origin can read the keys.
 - **Keys**: the web API holds the delegator demo key, and Mum's for a family budget; on-device mode makes every key in the page; a did:key cannot be rotated.
 - **Log**: proves tamper, reorder, truncation (with the checkpoint), signatures, and consent and money for what is logged. Not omissions, a re-fold, or the shopper's intent.
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.

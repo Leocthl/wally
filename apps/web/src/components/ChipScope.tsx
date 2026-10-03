@@ -18,9 +18,11 @@ export interface ChipScopeProps {
   readonly place?: "start" | "end";
   /** Extra class for the chip row, e.g. to turn the chip into a stamp. */
   readonly chipsClassName?: string;
+  /** "span" where the scope sits inside a button or a paragraph (a div there is invalid markup). */
+  readonly as?: "div" | "span";
 }
 
-export function ChipScope({ provs, children, className, place = "start", chipsClassName }: ChipScopeProps): ReactElement {
+export function ChipScope({ provs, children, className, place = "start", chipsClassName, as: Tag = "div" }: ChipScopeProps): ReactElement {
   const outer = useContext(ChipScopeContext);
   const keys = [...outer, ...provs.map(chipText)];
   const chips = (
@@ -32,11 +34,11 @@ export function ChipScope({ provs, children, className, place = "start", chipsCl
   );
   return (
     <ChipScopeContext.Provider value={keys}>
-      <div className={`chip-scope ${className ?? ""}`.trim()} data-chip-scope>
+      <Tag className={`chip-scope ${className ?? ""}`.trim()} data-chip-scope>
         {place === "start" ? chips : null}
         {children}
         {place === "end" ? chips : null}
-      </div>
+      </Tag>
     </ChipScopeContext.Provider>
   );
 }

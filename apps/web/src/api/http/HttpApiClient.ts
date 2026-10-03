@@ -20,6 +20,8 @@ import type {
   ScenarioId,
   SealRequest,
   SealResult,
+  SeeRequest,
+  SeeResult,
   TraceListener,
   Unsubscribe,
   VerifyOutcome,
@@ -126,6 +128,11 @@ export class HttpApiClient implements ApiClient {
   /** Not a run: nothing streams, so it neither waits for the event stream nor for events. */
   compileRules(req: CompileRulesRequest): Promise<CompileResult> {
     return this.#request<CompileResult>("/api/compile", { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, body: JSON.stringify(req) });
+  }
+
+  /** Show Wally a photo. Not a run: nothing streams, so it neither waits for the event stream nor for events. */
+  see(req: SeeRequest): Promise<SeeResult> {
+    return this.#request<SeeResult>("/api/see", { method: "POST", headers: { accept: "application/json", "content-type": "application/json" }, body: JSON.stringify(req) });
   }
 
   /** The stored log, keys and checkpoint for the offline verifier. A plain read: no run, no events. */

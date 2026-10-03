@@ -7,7 +7,7 @@ import { browserStores, captureTokenFromUrl, readServer, readToken, TOKEN_HEADER
 import { HttpApiClient } from "../http/HttpApiClient";
 import { isNative } from "../../pwa/native";
 import type { ApiClient } from "../types";
-import { LocalApiClient } from "./LocalApiClient";
+import { PersistentLocalApiClient } from "./persist/PersistentLocalApiClient";
 
 /** How long the start-up probe of /api/info may take before the page runs on its own (UI only, ASSUMED). */
 export const PROBE_TIMEOUT_MS = 1_500;
@@ -64,8 +64,12 @@ export function mockForced(search: string): boolean {
   return new URLSearchParams(search).get("api") === "mock";
 }
 
-/** The client for this page load, and whether the on-device note should show. */
-export async function pickClient(): Promise<{ readonly api: ApiClient; readonly onDevice: boolean }> {
+/**
+ * The client for this page load, and whether the on-device note should show. On the device the session is kept across
+ * reloads (persist/PersistentLocalApiClient): `sessionEnded` is true when a stored session was refused and the page
+ * started a new one, which the note says once.
+ */
+export async function pickClient(): Promise<{ readonly api: ApiClient; readonly onDevice: boolean; readonly sessionEnded?: boolean }> {
   captureTokenFromUrl();
   if (mockForced(window.location.search)) {
     // Loaded only on request: the booth build never carries the double in its first chunk.
@@ -77,6 +81,9 @@ export async function pickClient(): Promise<{ readonly api: ApiClient; readonly 
   const server = isNative() ? readServer(stores) : null; // a browser page talks to the origin it came from
   const token = readToken(stores);
   const choice = await selectApi({ search: window.location.search, env: typeof env === "string" ? env : undefined, server, probe: (s) => probeInfo(s, token) });
-  if (choice.kind !== "http") return { api: new LocalApiClient(), onDevice: true };
+  if (choice.kind !== "http") {
+    const api = await PersistentLocalApiClient.open({ report: (line) => console.warn(line) }); // for whoever opens the inspector; the shopper gets the calm note
+    return { api, onDevice: true, sessionEnded: api.sessionEnded };
+  }
   return { api: new HttpApiClient({ ...(server === null ? {} : { baseUrl: server }), ...(token === null ? {} : { token }) }), onDevice: false };
 }

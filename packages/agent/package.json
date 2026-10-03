@@ -8,7 +8,8 @@
   "exports": {
     "./judge": "./src/judge/index.ts",
     "./planner": "./src/planner/index.ts",
-    "./compiler": "./src/compiler/index.ts"
+    "./compiler": "./src/compiler/index.ts",
+    "./vision": "./src/vision/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { useState, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../src/ui/Button";
+import { focusables } from "../src/ui/hooks/useFocusTrap";
 import { Dialog, Sheet } from "../src/ui/Overlay";
 import { TOAST_MS, ToastProvider, useToast } from "../src/ui/Toast";
 
@@ -123,5 +124,89 @@ describe("Toast", () => {
       vi.useRealTimers();
       document.body.removeAttribute("data-reloaded");
     }
+  });
+});
+
+describe("two sheets in a hand-over (the Ask sheet closes while another sheet opens)", () => {
+  afterEach(() => {
+    document.body.style.overflow = "";
+  });
+
+  function HandOver(): ReactElement {
+    const [first, setFirst] = useState(true);
+    const [second, setSecond] = useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setFirst(true)}>Open first</button>
+        <Sheet open={first} onClose={() => setFirst(false)} title="First sheet">
+          <button type="button" onClick={() => { setFirst(false); setSecond(true); }}>Hand over</button>
+        </Sheet>
+        <Sheet open={second} onClose={() => setSecond(false)} title="Second sheet">
+          <button type="button">Inside second</button>
+        </Sheet>
+      </>
+    );
+  }
+
+  it("keeps the page locked until the last sheet is gone, then gives back what was there before", async () => {
+    document.body.style.overflow = "auto";
+    render(<HandOver />);
+    expect(document.body.style.overflow).toBe("hidden");
+    await userEvent.click(screen.getByRole("button", { name: "Hand over" }));
+    await screen.findByRole("dialog", { name: "Second sheet" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "First sheet" })).toBeNull());
+    expect(document.body.style.overflow).toBe("hidden"); // the first sheet's exit must not unlock the page under the second
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(document.body.style.overflow).toBe("auto");
+  });
+
+  it("leaves focus in the new sheet, not on the opener behind it", async () => {
+    render(<HandOver />);
+    await userEvent.click(screen.getByRole("button", { name: "Hand over" }));
+    const second = await screen.findByRole("dialog", { name: "Second sheet" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "First sheet" })).toBeNull());
+    expect(second.contains(document.activeElement)).toBe(true);
+  });
+});
+
+describe("the Tab wrap sees only what Tab can reach", () => {
+  function Roving(): ReactElement {
+    return (
+      <Sheet open onClose={() => undefined} title="Roving">
+        <button type="button">first</button>
+        <div role="radiogroup" aria-label="cards">
+          <button type="button" role="radio" aria-checked="true" tabIndex={0}>card one</button>
+          <button type="button" role="radio" aria-checked="false" tabIndex={-1}>card two</button>
+          <button type="button" role="radio" aria-checked="false" tabIndex={-1}>card three</button>
+        </div>
+        <details>
+          <summary>More details</summary>
+          <button type="button">hidden chip</button>
+        </details>
+      </Sheet>
+    );
+  }
+
+  it("does not count roving buttons that Tab skips, nor the controls inside a closed disclosure, but does count the disclosure's summary", async () => {
+    render(<Roving />);
+    const dialog = screen.getByRole("dialog", { name: "Roving" });
+    const reachable = focusables(dialog).map((el) => el.textContent?.trim() ?? el.getAttribute("aria-label"));
+    expect(reachable).toEqual(expect.arrayContaining(["first", "card one", "More details"]));
+    expect(reachable).not.toContain("card two");
+    expect(reachable).not.toContain("card three");
+    expect(reachable).not.toContain("hidden chip");
+  });
+
+  it("wraps from the last reachable control, which is the disclosure here", async () => {
+    render(<Roving />);
+    const dialog = screen.getByRole("dialog", { name: "Roving" });
+    const items = focusables(dialog);
+    const last = items[items.length - 1];
+    last?.focus();
+    expect(last?.tagName).toBe("SUMMARY");
+    await userEvent.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).toBe(items[0]);
   });
 });

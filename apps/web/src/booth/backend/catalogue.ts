@@ -10,6 +10,7 @@ import { ENGINE_CONFIG } from "@wally/core/config";
 import type { Clock } from "@wally/core/ports";
 import { formatIssues, validateCart, validateListingRecord, validateScameterCapture, type Validator } from "@wally/core/schema";
 import type { DerivedListing, ScenarioTable } from "./scenarioTable";
+import { buildShop, type Shop } from "./shop";
 
 export class CatalogueError extends Error {
   constructor(message: string) {
@@ -23,6 +24,11 @@ export interface Catalogue {
   readonly listings: ReadonlyMap<string, ListingRecord>;
   /** Scameter captures by capture_ref, with their age in ms relative to the reference cart. */
   readonly captures: ReadonlyMap<string, { readonly capture: ScameterCapture; readonly ageMs: number }>;
+  /**
+   * The photo shelf (shop.ts): SIMULATED items found by showing Wally a picture. Never part of `listings`, so the Ask
+   * shelf, the booth scenarios and the recorded planner sets cannot see them.
+   */
+  readonly shop: Shop;
 }
 
 /** F22 shape: subtotal HK$520 against HK$541 left is HK$21 under; shipping then tips it over. */
@@ -42,6 +48,8 @@ export interface CatalogueSources {
   readonly referenceCart: FixtureFile;
   /** data/fixtures/scameter/*.json */
   readonly captures: readonly FixtureFile[];
+  /** data/photo-shelf: the photo shelf (items.json) and the captures only it uses (scameter/*.json). Optional. */
+  readonly shop?: { readonly items: FixtureFile; readonly captures: readonly FixtureFile[] };
 }
 
 function readEnvelope<T>(file: FixtureFile, schema: string, validate: Validator<T>): T {
@@ -76,11 +84,30 @@ export function buildCatalogue(sources: CatalogueSources, table: ScenarioTable):
   const derived = table.derivedListings.map((d) => derive(byId, d));
   const listings = new Map([...byId, ...derived.map((l) => [l.id, l] as const)]);
   const reference = readEnvelope(sources.referenceCart, "cart", validateCart).proposed_at;
-  const captures = sources.captures.map((f) => readEnvelope(f, "scameter-capture", validateScameterCapture));
+  const shared = sources.captures.map((f) => readEnvelope(f, "scameter-capture", validateScameterCapture));
+  const own = (sources.shop?.captures ?? []).map((f) => readEnvelope(f, "scameter-capture", validateScameterCapture));
+  const clash = own.find((c) => shared.some((other) => other.capture_ref === c.capture_ref));
+  if (clash !== undefined) throw new CatalogueError(`shop capture ${clash.capture_ref} repeats a fixture capture`);
+  const captures = [...shared, ...own];
   const ages = captures.map((c) => [c.capture_ref, { capture: c, ageMs: Math.max(0, Date.parse(reference) - Date.parse(c.captured_at)) }] as const);
-  const catalogue: Catalogue = { listings, captures: new Map(ages) };
+  const shop: Shop = sources.shop === undefined ? new Map() : buildShop(sources.shop.items, new Set(captures.map((c) => c.capture_ref)));
+  const catalogue: Catalogue = { listings, captures: new Map(ages), shop };
   checkTable(catalogue, table);
+  checkShopApart(catalogue);
   return catalogue;
+}
+
+/**
+ * The photo shelf must stay apart from the listings the Ask shelf, the scenarios and the recorded planner sets are built from:
+ * a shelf item sharing an id or a url with one of them would take that listing's place when it is picked (the planner is fixed
+ * by the listing id), so a clash is a start-up error, not a quiet override.
+ */
+function checkShopApart(catalogue: Catalogue): void {
+  const urls = new Set([...catalogue.listings.values()].map((l) => l.url));
+  for (const { listing } of catalogue.shop.values()) {
+    if (catalogue.listings.has(listing.id)) throw new CatalogueError(`photo shelf item ${listing.id} has the id of a scenario listing`);
+    if (urls.has(listing.url)) throw new CatalogueError(`photo shelf item ${listing.id} has the url of a scenario listing`);
+  }
 }
 
 function checkTable(catalogue: Catalogue, table: ScenarioTable): void {

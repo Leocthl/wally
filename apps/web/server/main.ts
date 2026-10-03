@@ -9,6 +9,7 @@ import { BRAND } from "../src/brand";
 import { composeBooth } from "./compose";
 import { selectPlanner } from "./booth/plannerSelect";
 import { REPO_ROOT, settingsFromEnv } from "./booth/settings";
+import { probeVision } from "./booth/visionProbe";
 import type { LanOptions } from "./http/lan";
 import type { Logger } from "./http/routes";
 import { createLanOptions, launchFromEnv } from "./lanMode";
@@ -34,13 +35,15 @@ async function main(): Promise<void> {
   const lan = launch.lan ? createLanOptions({ port: settings.port }) : undefined;
   const planner = await selectPlanner(settings); // once, here: nothing switches planner during a run
   logger.info(`planner ${planner.provider} (${planner.chosenBy}): ${planner.detail}`);
-  const booth = composeBooth({ env: process.env, logger, planner, ...(lan === undefined ? {} : { lan }), extraRoutes: (app) => registerStaticRoutes(app, roots) });
+  const see = await probeVision(settings); // once, here, like the planner: start Qwen first if the photo entry should use the model
+  logger.info(`photo reader: ${see === "model" ? "the local model reads pictures" : "colour plates and item-type chips only (the local model does not read pictures)"}`);
+  const booth = composeBooth({ env: process.env, logger, planner, see, ...(lan === undefined ? {} : { lan }), extraRoutes: (app) => registerStaticRoutes(app, roots) });
   await booth.start();
   const info = await booth.backend.info();
   const server = serve({ fetch: booth.app.fetch, hostname: launch.host, port: booth.settings.port }, (addr) => {
     logger.info(`${BRAND.name} booth on http://127.0.0.1:${addr.port}/#/booth (rail SIMULATED; verifier at /verifier/)`);
     if (lan !== undefined) logLan(lan, launch.host, addr.port);
-    logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}, sentence reader ${info.features.compile}`);
+    logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}, sentence reader ${info.features.compile}, photo reader ${info.features.see ?? "palette"}`);
   });
   const stop = (): void => {
     void booth.close().finally(() => server.close(() => process.exit(0)));

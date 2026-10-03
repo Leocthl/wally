@@ -19,6 +19,7 @@ import {
   parseRevokeRequest,
   parseScenarioId,
   parseSealRequest,
+  parseSeeRequest,
 } from "./validate";
 
 export interface Logger {
@@ -32,6 +33,8 @@ export interface RouteOptions {
   readonly backend: () => BoothBackend;
   readonly hub: SseHub;
   readonly maxBodyBytes: number;
+  /** POST /api/see carries a picture, so it has its own, larger cap (base64 of 6 MB). */
+  readonly maxSeeBodyBytes: number;
   readonly maxListingTextChars: number;
   readonly logger: Logger;
   /** Default loopback only. */
@@ -108,6 +111,14 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
     const compiled = await be().compileRules(parseCompileRequest(await body(c)));
     c.header("cache-control", "no-store");
     return c.json(compiled);
+  });
+  // Show Wally a photo: a picture (or the chips) in, typed words and four similar simulated shop items out. Not a run: no trace events,
+  // so no X-Event-Seq. The picture is read in memory for this call only.
+  app.post("/api/see", async (c) => {
+    const input = parseSeeRequest(await readJsonObject(c.req.raw, opts.maxSeeBodyBytes));
+    const seen = await be().see(input);
+    c.header("cache-control", "no-store");
+    return c.json(seen);
   });
   app.post("/api/verify", async (c) => {
     parseEmptyBody(await body(c));

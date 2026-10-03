@@ -8,6 +8,7 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { devices, expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { NAVY_PICTURE } from "../support/pictures";
 import { startPagesServer, type PagesServer } from "./staticServer";
 
 const MOUNT = "/wally/";
@@ -138,6 +139,16 @@ test("a Try asking card runs a purchase on-device and shows the one-off card", a
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
 });
 
+test("a reload under /wally/ keeps the session: the budget and the card are still there, kept in this page's own storage", async () => {
+  await page.reload();
+  await expect(onDeviceNote(page)).toContainText("On-device mode: recorded answers, nothing leaves your phone");
+  await expect(onDeviceNote(page)).not.toContainText("session ended");
+  await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
+  await expect(page.locator('[data-card-state="USED"]')).toHaveCount(1);
+  expect(await page.evaluate(() => window.localStorage.getItem("wally:session:v1"))).not.toBeNull();
+  expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
+});
+
 test("every screen opens from the mount: the lazy chunks of Wally, Receipts, Proof, Evidence, Seal and Presenter load", async () => {
   // Hash routes only: the document stays /wally/, so each screen's chunk is the proof that relative dynamic imports resolve.
   for (const route of ["wally", "receipts", "proof", "evidence", "seal", "presenter", "budget"]) {
@@ -201,8 +212,97 @@ test("with the server gone, a reload still shows the app, from the service worke
   }
 });
 
+test("Show Wally a photo works from the mount with the server gone: the photo chunk comes from the worker and a pick buys on-device", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    // Nothing reads the picture on the device: the colour plates and the type chips do the work.
+    await page.locator('main input[data-slot="photo-file"]').setInputFiles({ name: "look.png", mimeType: "image/png", buffer: NAVY_PICTURE });
+    const sheet = page.getByRole("dialog", { name: "Show Wally a photo" });
+    await expect(sheet.locator('[data-slot="photo-sees"]')).toHaveText("Wally sees the colours. What is it?");
+    await sheet.getByRole("radio", { name: "hoodie" }).click();
+    const cards = sheet.getByRole("radiogroup", { name: "Similar in the shop" }).getByRole("radio");
+    await expect(cards).toHaveCount(4);
+    await cards.first().click();
+    await sheet.getByRole("button", { name: "Ask Wally to buy this" }).click();
+    await expect(page.locator('[data-screen="wally"]')).toContainText("Navy relaxed hoodie");
+    await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$379.");
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
+test("typed Ask works from the mount with the server gone: no ask is sent, the fixed reader finds the items in the demo shop", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    await nav(page).getByRole("button", { name: "Ask", exact: true }).click();
+    const ask = page.getByRole("dialog", { name: /What should Wally try/ });
+    await ask.getByRole("textbox", { name: /Tell Wally what you need/ }).fill("black jeans under 400");
+    await ask.getByRole("button", { name: "Send", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "What Wally found" });
+    await expect(sheet.getByText("Showing matches from the demo shop. You pick; the rules still decide.")).toBeVisible();
+    await expect(sheet.locator("[data-listing]").first()).toHaveAttribute("data-listing", "lst_photoJeansBlack");
+    await sheet.getByRole("button", { name: "Close" }).first().click();
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
+test("with the server gone, Open the offline checker still opens, from the service worker, and checks its demo log", async () => {
+  await page.goto(`${app}#/budget`);
+  await expect(onDeviceNote(page)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  // The worker installs the checker page with the shell: it is in this version's cache before the network goes.
+  const cached = () =>
+    page.evaluate(async () => {
+      const names = (await caches.keys()).filter((n) => n.startsWith("wally-shell-"));
+      const cache = await caches.open(names[0] ?? "");
+      return (await cache.keys()).some((r) => new URL(r.url).pathname.endsWith("/wally/verifier/index.html"));
+    });
+  await expect.poll(cached).toBe(true);
+  server.setDown(true);
+  await context.setOffline(true);
+  try {
+    await page.reload();
+    await nav(page).getByRole("link", { name: "Proof", exact: true }).click();
+    const link = page.getByRole("link", { name: "Open the offline checker" });
+    await expect(link).toBeVisible();
+    await link.click();
+    await expect(page).toHaveURL(`${app}verifier/`);
+    await expect(page.locator("html")).toHaveAttribute("data-mode", "plain");
+    await expect(page.locator('[data-outcome="idle"]')).toBeVisible();
+    await page.getByRole("button", { name: /^Try the sample receipts/ }).click();
+    await page.getByRole("button", { name: /^Check the receipts/ }).click();
+    await expect(page.locator('#result [data-outcome="pass"]')).toContainText("untouched");
+
+    // All three addresses of the page come from the worker: with the slash, with index.html, and without the slash (a redirect it makes itself).
+    for (const [path, lands] of [["verifier/", "verifier/"], ["verifier/index.html", "verifier/index.html"], ["verifier", "verifier/"]] as const) {
+      const response = await page.goto(`${app}${path}`);
+      expect(response?.fromServiceWorker(), path).toBe(true);
+      await expect(page, path).toHaveURL(`${app}${lands}`);
+      await expect(page.locator('[data-outcome="idle"]'), path).toBeVisible();
+    }
+    // And the way back into the app works offline too.
+    await page.goto(`${app}#/proof`);
+    await expect(nav(page)).toBeVisible();
+  } finally {
+    await context.setOffline(false);
+    server.setDown(false);
+  }
+});
+
 test("the whole run stayed inside /wally/: no /api, nothing at the origin root, no failed response, no script error", () => {
-  const outside = requested.filter((u) => u.origin !== server.origin || !u.pathname.startsWith(MOUNT));
+  // blob: is the shopper's picture preview, held in memory on the page; it is never a network request.
+  const outside = requested.filter((u) => u.protocol !== "blob:" && (u.origin !== server.origin || !u.pathname.startsWith(MOUNT)));
   expect(outside.map((u) => u.href)).toEqual([]);
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
   expect(server.seen.filter((p) => !p.startsWith(MOUNT))).toEqual([]);
