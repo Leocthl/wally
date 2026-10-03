@@ -8,18 +8,20 @@ import { registerLan, type LanOptions } from "./http/lan";
 import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger, type RouteOptions } from "./http/routes";
 import { SseHub } from "./http/sse";
 import { MAX_SEE_BODY_BYTES } from "./http/validate";
+import { LISTING_TEXT_HARD_CAP } from "../src/booth/scenarios";
 
 /**
  * ASSUMED: request body cap. The largest real body is a visitor listing of MAX_LISTING_TEXT_CHARS characters; JSON
- * escapes at most 6 bytes per UTF-16 unit (\uXXXX), so 20,000 characters fit in 120,000 bytes plus the envelope.
+ * escapes at most 6 bytes per UTF-16 unit (\uXXXX), so 4,000 characters fit in 24,000 bytes plus the envelope.
  */
 export const MAX_BODY_BYTES = 128 * 1024;
 /**
- * ASSUMED: longest "Try to trick the agent" text. Large enough for a padding attack (Laya keeps about 940 state tokens
- * per row and drops the rest [F26], a few thousand characters), well under the judge adapter's 50,000-character state
- * limit [F54], and equal to the UI's own cap (LISTING_TEXT_HARD_CAP in src/booth/scenarios.ts).
+ * Longest "Try to trick the agent" text: the listing record's own text limit (schemas/listing-record.schema.json, 4,000
+ * characters), the one constant the page and the on-device client use too (LISTING_TEXT_HARD_CAP in src/booth/scenarios.ts).
+ * Still enough for a padding attack (Laya keeps about 940 state tokens per row and drops the rest [F26], a few thousand
+ * characters), and a longer text is a calm 400 TEXT_TOO_LONG here instead of a run the listing check would end.
  */
-export const MAX_LISTING_TEXT_CHARS = 20_000;
+export const MAX_LISTING_TEXT_CHARS = LISTING_TEXT_HARD_CAP;
 
 export interface HttpAppOptions {
   readonly backend: () => BoothBackend;

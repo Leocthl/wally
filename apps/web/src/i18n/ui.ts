@@ -222,6 +222,10 @@ const SHELL = {
   "shell.trickExample.gift_card": label("Gift card bundle", "禮品卡組合"), // NEEDS-REVIEW
   "shell.trickExample.padded": label("A long padded listing", "超長填充描述"), // NEEDS-REVIEW
   "shell.trickStandIn": label("Offline demo: a keyword check reads this text, not the live model.", "離線示範：由關鍵字檢查讀取文字，唔係即時模型。"), // NEEDS-REVIEW
+  "shell.trickCount": (used: string, max: string): LabelPair => label(`${used} / ${max} characters`, `${used} / ${max} 字`), // NEEDS-REVIEW
+  "shell.trickCountNear": (max: string): LabelPair => label(`Close to the limit of ${max} characters.`, `就快去到 ${max} 字上限。`), // NEEDS-REVIEW
+  "shell.trickCountFull": label("Limit reached", "已去到上限"), // NEEDS-REVIEW
+  "shell.trickCountFullSay": (max: string): LabelPair => label(`Limit reached: ${max} characters at most.`, `已去到上限：最多 ${max} 字。`), // NEEDS-REVIEW
   "shell.modeTitle": label("How this demo runs", "示範點樣運作"), // NEEDS-REVIEW
   "shell.modeHttp": label("Live, on the booth laptop", "即時運行，喺展位手提電腦"), // NEEDS-REVIEW
   "shell.modeLocal": label("In this browser, real rules, recorded answers", "喺呢個瀏覽器運行：真規則，錄製答案"), // NEEDS-REVIEW
