@@ -7,6 +7,7 @@ import { sha256Hex } from "@wally/core/crypto";
 import type { JudgeRecord } from "@wally/core/ports";
 import { formatIssues, validateJudgeRecord, validateListingRecord } from "@wally/core/schema";
 import type { Shop } from "../../booth/backend/shop";
+import type { TrickExample } from "../../booth/trickExamples";
 
 export class RecordingLoadError extends Error {
   constructor(message: string) {
@@ -78,5 +79,36 @@ export function shopRecordingsFrom(file: unknown, shop: Shop): readonly ReplayRe
   });
   const missing = [...shop.keys()].filter((id) => !recordings.some((r) => r.source.endsWith(`#${id}`)));
   if (missing.length > 0) throw new RecordingLoadError(`${source}: no judge answer for ${missing.join(", ")}`);
+  return recordings;
+}
+
+/**
+ * Judge answers for the three recorded "Try to trick Wally" examples (data/trick-examples/judge.json), recorded from live Laya
+ * by scripts/record-trick-judge.ts. One record per example, keyed by the SHA-256 of the example's text; a record made for
+ * other text is a load error (re-record), so an edited example can never be judged by a stale answer, and an example with no
+ * record is a load error too.
+ */
+export function trickRecordingsFrom(file: unknown, examples: readonly TrickExample[]): readonly ReplayRecording[] {
+  const source = "trick-examples/judge.json";
+  if (file === null || typeof file !== "object" || (file as { provenance?: unknown }).provenance !== "SIMULATED" || (file as { schema?: unknown }).schema !== "trick-examples-judge") {
+    throw new RecordingLoadError(`${source}: not a SIMULATED trick-examples-judge fixture`);
+  }
+  const rows = (envelopeData(file, source) as { records?: unknown }).records;
+  if (!Array.isArray(rows)) throw new RecordingLoadError(`${source}: records must be a list`);
+  const recordings = rows.map((row, index): ReplayRecording => {
+    const where = `${source} record ${index}`;
+    if (row === null || typeof row !== "object" || Array.isArray(row)) throw new RecordingLoadError(`${where}: not an object`);
+    const entry = row as { example?: unknown; text_sha256?: unknown; record?: unknown };
+    const example = examples.find((e) => e.id === entry.example);
+    if (example === undefined) throw new RecordingLoadError(`${where}: no such example`);
+    const fingerprint = sha256Hex(example.text);
+    if (entry.text_sha256 !== fingerprint) throw new RecordingLoadError(`${where}: recorded for other text than ${example.id} has now; run scripts/record-trick-judge.ts`);
+    const record = validateJudgeRecord(entry.record);
+    if (!record.ok) throw new RecordingLoadError(`${where}: ${formatIssues(record.errors)}`);
+    if (record.value.status !== "OK" || record.value.answers === undefined) throw new RecordingLoadError(`${where}: a recording must be an OK record with answers`);
+    return { fingerprint, record: { ...record.value, provider: "replay", version: labelled(record.value.version) }, source: `${source}#${example.id}` };
+  });
+  const missing = examples.filter((e) => !recordings.some((r) => r.source.endsWith(`#${e.id}`)));
+  if (missing.length > 0) throw new RecordingLoadError(`${source}: no judge answer for ${missing.map((e) => e.id).join(", ")}`);
   return recordings;
 }

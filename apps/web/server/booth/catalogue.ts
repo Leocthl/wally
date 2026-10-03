@@ -3,7 +3,8 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { ReplayRecording } from "@wally/agent/judge";
-import { shopRecordingsFrom } from "../../src/api/local/recordings";
+import { shopRecordingsFrom, trickRecordingsFrom } from "../../src/api/local/recordings";
+import { TRICK_EXAMPLES } from "../../src/booth/trickExamples";
 import { buildCatalogue, CatalogueError, type Catalogue, type CatalogueSources, type FixtureFile } from "../../src/booth/backend/catalogue";
 import type { ScenarioTable } from "../../src/booth/backend/scenarioTable";
 
@@ -66,4 +67,11 @@ export function loadCatalogue(fixturesDir: string, table: ScenarioTable): Catalo
 export function loadShopRecordings(fixturesDir: string, catalogue: Catalogue): readonly ReplayRecording[] {
   if (catalogue.shop.size === 0) return [];
   return shopRecordingsFrom(readJson(join(shopDirFor(fixturesDir), "judge.json")).raw, catalogue.shop);
+}
+
+/** data/trick-examples, next to data/fixtures: the recorded judge answers for the "Try to trick Wally" examples (replay judge only). */
+export const trickDirFor = (fixturesDir: string): string => join(dirname(fixturesDir), "trick-examples");
+
+export function loadTrickRecordings(fixturesDir: string): readonly ReplayRecording[] {
+  return trickRecordingsFrom(readJson(join(trickDirFor(fixturesDir), "judge.json")).raw, TRICK_EXAMPLES);
 }

@@ -35,7 +35,7 @@ export interface LocalComposeOptions {
 export function composeLocalBackend(opts: LocalComposeOptions = {}): OrchestratorBackend {
   const bundle = loadBundle();
   const clock = opts.clock ?? SYSTEM_CLOCK;
-  const judge = new LocalReplayJudge({ recordings: [...bundle.judgeRecordings, ...bundle.shopRecordings] });
+  const judge = new LocalReplayJudge({ recordings: [...bundle.judgeRecordings, ...bundle.shopRecordings, ...bundle.trickRecordings] });
   const planner = replayPlannerFactory(bundle.plannerRecords, bundle.table);
   const makeKeys = opts.keys ?? ephemeralKeys;
   const sessionDeps = (): SessionDeps => {

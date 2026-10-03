@@ -27,7 +27,7 @@ import { oneAtATime, type PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
-import { loadCatalogue, loadShopRecordings } from "./booth/catalogue";
+import { loadCatalogue, loadShopRecordings, loadTrickRecordings } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
@@ -129,11 +129,11 @@ function pictureReader(settings: BoothSettings, see: SeeMode): PictureReader | n
   return oneAtATime((bytes) => describeImage(bytes, { client, model: settings.plannerModel }));
 }
 
-/** The replay judge serves the fixture recordings and, with a photo shelf, that shelf's recorded answers too. Other providers load nothing. */
+/** The replay judge serves the fixture recordings, the photo shelf's recorded answers and the "Try to trick Wally" examples'. Other providers load nothing. */
 function replayRecordings(settings: BoothSettings, catalogue: Catalogue): { readonly recordings: readonly ReplayRecording[] } | undefined {
   const parsed = parseJudgeEnv(settings.judgeEnv);
   if (!parsed.ok || parsed.settings.provider !== "replay") return undefined;
-  return { recordings: [...loadReplayRecordings(), ...loadShopRecordings(settings.fixturesDir, catalogue)] };
+  return { recordings: [...loadReplayRecordings(), ...loadShopRecordings(settings.fixturesDir, catalogue), ...loadTrickRecordings(settings.fixturesDir)] };
 }
 
 function makeJudge(opts: ComposeOptions, settings: BoothSettings, catalogue: Catalogue): JudgePort {

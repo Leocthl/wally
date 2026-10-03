@@ -9,13 +9,15 @@ import boothTable from "../../../../../data/scenarios/booth.json";
 import type { FixtureText } from "../../booth/backend/ask";
 import { buildCatalogue, type Catalogue, type FixtureFile } from "../../booth/backend/catalogue";
 import { parseScenarioTable, type ScenarioTable } from "../../booth/backend/scenarioTable";
-import { judgeRecordingsFrom, shopRecordingsFrom } from "./recordings";
+import { TRICK_EXAMPLES } from "../../booth/trickExamples";
+import { judgeRecordingsFrom, shopRecordingsFrom, trickRecordingsFrom } from "./recordings";
 
 const LISTINGS = import.meta.glob<unknown>("@fixtures/listings/*.json", { eager: true, import: "default" });
 const CAPTURES = import.meta.glob<unknown>("@fixtures/scameter/*.json", { eager: true, import: "default" });
 const SHOP_ITEMS = import.meta.glob<unknown>("../../../../../data/photo-shelf/items.json", { eager: true, import: "default" });
 const SHOP_CAPTURES = import.meta.glob<unknown>("../../../../../data/photo-shelf/scameter/*.json", { eager: true, import: "default" });
 const SHOP_JUDGE = import.meta.glob<unknown>("../../../../../data/photo-shelf/judge.json", { eager: true, import: "default" });
+const TRICK_JUDGE = import.meta.glob<unknown>("../../../../../data/trick-examples/judge.json", { eager: true, import: "default" });
 const JUDGE = import.meta.glob<unknown>("@fixtures/judge/*.json", { eager: true, import: "default" });
 const PLANNER_FIXTURES = import.meta.glob<string>("@fixtures/planner/*.json", { eager: true, query: "?raw", import: "default" });
 const PLANNER_SCENARIOS = import.meta.glob<string>("../../../../../data/scenarios/planner/*.json", { eager: true, query: "?raw", import: "default" });
@@ -29,6 +31,8 @@ export interface LocalBundle {
   readonly judgeRecordings: readonly ReplayRecording[];
   /** Recorded judge answers for the photo shelf (shop/judge.json), kept apart from `judgeRecordings` (the fixtures set). */
   readonly shopRecordings: readonly ReplayRecording[];
+  /** Recorded judge answers for the three "Try to trick Wally" examples (trick-examples/judge.json). */
+  readonly trickRecordings: readonly ReplayRecording[];
 }
 
 const fileName = (path: string): string => path.slice(path.lastIndexOf("/") + 1);
@@ -70,5 +74,6 @@ export function loadBundle(): LocalBundle {
   const plannerTexts = [...sorted(PLANNER_FIXTURES), ...sorted(PLANNER_SCENARIOS)].map(([name, text]) => ({ name, text }));
   const shopJudge = Object.values(SHOP_JUDGE)[0];
   const shopRecordings = catalogue.shop.size === 0 ? [] : shopRecordingsFrom(shopJudge, catalogue.shop);
-  return { table, catalogue, plannerRecords: plannerRecords(), plannerTexts, judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS), shopRecordings };
+  const trickRecordings = trickRecordingsFrom(Object.values(TRICK_JUDGE)[0], TRICK_EXAMPLES);
+  return { table, catalogue, plannerRecords: plannerRecords(), plannerTexts, judgeRecordings: judgeRecordingsFrom(JUDGE, LISTINGS), shopRecordings, trickRecordings };
 }
