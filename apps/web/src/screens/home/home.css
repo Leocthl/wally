@@ -61,6 +61,9 @@
 .home-try__icon--neutral { background: var(--c-surface-sunken); color: var(--c-ink); }
 .home-try__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
 .home-try__desc { font-size: var(--text-sm); color: var(--c-ink-muted); line-height: var(--lh-snug); }
+/* "For you": a quiet tag on the cards that fit the person's taste (screens/home/tryRank.ts). */
+.home-try__for-you { margin-top: var(--sp-1); }
+.home-try__card[data-for-you] { border-color: var(--c-primary); }
 /* Pills: the same scenarios as one-tap shortcuts (Ask sheet). */
 .home-try--pills { gap: var(--sp-3); }
 .home-try--pills .home-try__grid { display: flex; flex-wrap: wrap; }
@@ -68,6 +71,46 @@
 .home-try--pills .home-try__card { display: inline-flex; align-items: center; gap: var(--sp-2); width: auto; min-height: var(--tap); padding: var(--sp-1) var(--sp-4) var(--sp-1) var(--sp-1); border-radius: var(--r-pill); }
 .home-try--pills .home-try__icon { width: 2rem; height: 2rem; margin: 0; border-radius: 50%; }
 .home-try--pills .home-try__title { font-size: var(--text-sm); }
+
+/* The "What do you need?" row under the budget: one control that opens Ask; the camera and the microphone are drawn on it. */
+.home-composer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--tap-xl);
+  margin-top: calc(-1 * var(--sp-3));
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-4);
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  color: var(--c-ink-muted);
+  box-shadow: var(--shadow-1);
+  font: inherit;
+  font-size: var(--text-lg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.home-composer:active { border-color: var(--c-primary); }
+.home-composer__lead { display: inline-grid; place-items: center; flex: none; color: var(--c-primary-ink); }
+.home-composer__text { flex: 1; min-width: 0; }
+.home-composer__tools { display: inline-flex; flex: none; gap: var(--sp-1); }
+.home-composer__tool { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--c-primary-tint); color: var(--c-primary-ink); }
+
+/* Ideas for you: the same cards as Try asking, with the reason an idea is here under its name. */
+.home-idea[data-idea-reason] { border-color: var(--c-primary); }
+.home-idea[data-idea-reason] .home-idea__why { color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+
+/* Demo scenarios (for judges): the booth's scenario cards in a disclosure at the bottom. */
+.home-demo { border-radius: var(--r-lg); background: var(--c-surface-sunken); }
+.home-demo__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: var(--tap-lg); padding: 0 var(--sp-4); border-radius: var(--r-lg); font-weight: var(--weight-semibold); line-height: var(--lh-snug); cursor: pointer; list-style: none; }
+.home-demo__summary::-webkit-details-marker { display: none; }
+.home-demo__chevron { flex: none; color: var(--c-ink-muted); transition: transform var(--dur-base) var(--ease-out); }
+.home-demo[open] .home-demo__chevron { transform: rotate(90deg); }
+.home-demo__body { display: grid; gap: var(--sp-4); padding: 0 var(--sp-4) var(--sp-4); min-width: 0; }
+.home-demo__body > * { min-width: 0; }
+.home-demo__body .home-block__lead { margin-top: 0; }
 
 /* One-off cards */
 .console-tickets { display: grid; gap: var(--sp-3); }
@@ -102,6 +145,8 @@
 .console-dialog__icon { display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--c-stop-tint); color: var(--c-stop-ink); }
 
 @media (hover: hover) and (pointer: fine) {
+  .home-composer:hover { border-color: var(--c-primary); }
+  .home-idea[data-idea-reason]:hover { border-color: var(--c-primary); }
   .home-section__action:hover { background: var(--c-primary-tint); }
   .home-try__card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
 }

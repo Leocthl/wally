@@ -2,6 +2,7 @@
   "name": "@wally/mobile",
   "version": "0.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Wally native wrappers (Capacitor): iOS and Android shells around the apps/web build, on-device mode",
   "type": "module",
   "scripts": {

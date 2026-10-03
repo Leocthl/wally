@@ -2,7 +2,7 @@
 // when nothing is sealed (docs/06: "preset mandate sealed on load"), and wraps every call so a failure shows a message
 // and mints nothing (I5). The UI never learns whether the client is the mock or the HTTP client beyond ApiInfo.
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactElement, type ReactNode } from "react";
-import type { ApiClient, ApiInfo, ProposeRequest, ScenarioId, SealRequest, VerifyOutcome } from "../api/types";
+import type { ApiClient, ApiInfo, BoothSnapshot, ProposeRequest, ScenarioId, SealRequest, VerifyOutcome } from "../api/types";
 import { m0Request } from "../booth/compile";
 import { initialState, reduce, type BoothAction, type BoothState } from "../state/booth";
 
@@ -57,18 +57,46 @@ function useGuard(): { readonly busy: boolean; readonly error: string | null; re
   return { busy: pending > 0, error, guard, clearError: useCallback(() => setError(null), []) };
 }
 
-export function BoothProvider({ api, children }: { readonly api: ApiClient; readonly children: ReactNode }): ReactElement {
+export interface BoothProviderProps {
+  readonly api: ApiClient;
+  /**
+   * Seal the ready-made budget when nothing is sealed (default). The first run turns it off while a new visitor sets up their
+   * own. When it turns on later (setup ended some way other than a sealed budget) the booth is read again and the
+   * ready-made budget is sealed then if there is still none, so leaving the first run never leaves Budget empty.
+   */
+  readonly autoSeal?: boolean;
+  readonly children: ReactNode;
+}
+
+export function BoothProvider({ api, autoSeal = true, children }: BoothProviderProps): ReactElement {
   const [state, dispatch] = useReducer(reduce, undefined, initialState);
   const [info, setInfo] = useState<ApiInfo | null>(null);
   const [verifyOutcome, setVerifyOutcome] = useState<VerifyOutcome | null>(null);
   const { busy, error, guard, clearError } = useGuard();
   const started = useRef(false);
+  const loaded = useRef(false);
+  const sealTried = useRef(false);
+  const wantSeal = useRef(autoSeal);
+  useEffect(() => {
+    wantSeal.current = autoSeal;
+  }, [autoSeal]);
 
   useEffect(() => api.subscribe((e) => dispatch(e as BoothAction)), [api]);
 
   // A verdict belongs to one log: a new seal (a new log) or a reset starts without one.
   const logId = state.packet?.log_id;
   useEffect(() => setVerifyOutcome(null), [logId]);
+
+  /** The ready-made budget, tried at most once per connection: only when the booth holds none (`known` is that reading, or it is read now). */
+  const sealIfEmpty = useCallback(
+    async (known: BoothSnapshot | null): Promise<void> => {
+      if (sealTried.current) return;
+      sealTried.current = true;
+      const snap = known ?? (await api.snapshot());
+      if (!snap.mandate) await api.seal(m0Request(new Date()));
+    },
+    [api],
+  );
 
   useEffect(() => {
     if (started.current) return;
@@ -77,9 +105,15 @@ export function BoothProvider({ api, children }: { readonly api: ApiClient; read
       const [i, snap] = await Promise.all([api.info(), api.snapshot()]);
       setInfo(i);
       dispatch({ type: "snapshot", snapshot: snap });
-      if (!snap.mandate) await api.seal(m0Request(new Date()));
+      loaded.current = true;
+      if (wantSeal.current) await sealIfEmpty(snap);
     });
-  }, [api, guard]);
+  }, [api, guard, sealIfEmpty]);
+
+  // autoSeal turned on after the booth had loaded: seal the ready-made budget now, if the booth still holds none.
+  useEffect(() => {
+    if (autoSeal && loaded.current) void guard(() => sealIfEmpty(null));
+  }, [autoSeal, guard, sealIfEmpty]);
 
   const showLog = useCallback(async () => dispatch({ type: "log.view", view: await api.getLog() }), [api]);
 

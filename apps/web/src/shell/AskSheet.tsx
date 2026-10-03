@@ -7,6 +7,7 @@ import { BRAND } from "../brand";
 import { LISTING_TEXT_HARD_CAP } from "../booth/scenarios";
 import { useBoothContext } from "../hooks/useBooth";
 import { UI } from "../i18n/ui";
+import { useAskExample } from "../state/useProfile";
 import { Button, IconButton } from "../ui/Button";
 import { TextArea, TextField } from "../ui/Form";
 import { Icon } from "../ui/icons";
@@ -61,6 +62,7 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
 function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly busy: boolean; readonly onSent: () => void }): ReactElement {
   const { t } = useLocale();
   const { info } = useBoothContext();
+  const example = useAskExample();
   const [text, setText] = useState("");
   const voice = useVoiceInput({ value: text, onText: setText, maxLength: ASK_MAX_CHARS });
   const trimmed = text.trim();
@@ -78,7 +80,7 @@ function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly 
         variant="pill"
         label={t(UI["shell.askFieldLabel"](BRAND.name))}
         hideLabel
-        placeholder={t(UI["shell.askExample"])}
+        placeholder={example}
         hint={onDevice ? t(UI["shell.askLiveHint"]) : undefined}
         enterKeyHint="send"
         maxLength={ASK_MAX_CHARS}

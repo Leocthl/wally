@@ -40,7 +40,9 @@ test.beforeAll(async ({ browser }) => {
   if (!existsSync(join(ROOT, "index.html"))) throw new Error("apps/web/dist-pages is missing: run `pnpm pages:build` (or `pnpm --filter @wally/web e2e:pages`, which builds first)");
   server = await startPagesServer({ root: ROOT, mount: MOUNT, port: PORT });
   app = `${server.origin}${MOUNT}`;
-  context = await browser.newContext({ ...devices["Pixel 7"] });
+  // The first run is off for this walk (it has its own spec): the flag is in storage when the page opens.
+  const onboarded = { cookies: [], origins: [{ origin: server.origin, localStorage: [{ name: "wally:onboarded", value: "1" }] }] };
+  context = await browser.newContext({ ...devices["Pixel 7"], storageState: onboarded });
   context.on("request", (r) => requested.push(new URL(r.url())));
   context.on("response", (r) => (r.status() >= 400 ? badResponses.push(`${r.status()} ${r.url()}`) : undefined));
   page = await context.newPage();

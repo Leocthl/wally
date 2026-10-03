@@ -24,6 +24,18 @@ export const MOOD_POSE: Readonly<Record<HeroMood, WallyState>> = {
   ended: "offline",
 };
 
+export type Greeting = "none" | "intro" | "introNamed" | "named";
+
+/**
+ * What the bubble says before the mood line. A fresh budget introduces Wally (by name to a person who gave one); a budget
+ * in use greets a person who gave a name; a cancelled or ended one speaks only the mood.
+ */
+export function greetingFor(mood: HeroMood, nickname: string): Greeting {
+  if (mood === "fresh") return nickname === "" ? "intro" : "introNamed";
+  if (nickname === "") return "none";
+  return mood === "going" || mood === "waiting" || mood === "usedUp" ? "named" : "none";
+}
+
 export interface Shares {
   /** Each 0 to 1 of the budget; together at most 1. */
   readonly left: number;

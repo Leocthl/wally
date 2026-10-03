@@ -96,6 +96,14 @@ test("lifting the finger after a touch hold does not answer the dialog it opened
   test.skip(!isMobile, "real touch events are sent on the phone project");
   await page.locator('main [data-scenario="revoke"]').click();
   await expect(page.locator('.oc[data-card-state="ACTIVE"]')).toBeVisible();
+  // The Cancel the budget card scrolls to Manage this budget, smoothly: measure the button once the page has stopped moving.
+  await expect(page.locator("#budget-console")).toBeFocused();
+  await page.waitForFunction(() => {
+    const w = window as unknown as { __y?: number; __still?: number };
+    w.__still = w.__y === window.scrollY ? (w.__still ?? 0) + 1 : 0;
+    w.__y = window.scrollY;
+    return w.__still >= 8;
+  });
   const button = page.getByRole("button", { name: "Hold to cancel this budget" });
   await button.evaluate((el) => el.scrollIntoView({ block: "center" }));
   const box = await button.boundingBox();

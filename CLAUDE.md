@@ -64,7 +64,7 @@ packages/harness                            lane D
 - **LAN, voice, devices**: plain http with one shared token [F92]; voice needs the browser's speech service; checked on a simulator and an emulator only.
 - **Judge language**: a listing with at least 10% CJK letters is not scored: it escalates `R10.unavailable` (reason `unsupported_language`) and the shopper decides; English with one Chinese sentence under the share still scores about 0.15 higher, and other non-Latin scripts are not gated [F104].
 - **Plain words**: the zh-HK strings in the plain views are drafts (NEEDS-REVIEW); the tamper demo is shared booth state, shown with a banner and Restore on every load until it is put back.
-- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, public repo and licence.
+- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, the public flip (the licence is Apache-2.0, chosen 2026-10-03).
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.

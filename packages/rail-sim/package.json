@@ -2,6 +2,7 @@
   "name": "@wally/rail-sim",
   "version": "0.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "RailPort implementation and merchant stub, SIMULATED (lane A)",
   "type": "module",
   "exports": {
