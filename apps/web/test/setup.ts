@@ -14,7 +14,14 @@ if (hasStorage) {
   const clearStorage = Storage.prototype.clear;
   Storage.prototype.clear = function clear(this: Storage): void {
     clearStorage.call(this);
-    if (this === window.localStorage) this.setItem(ONBOARDED_KEY, "1");
+    // A test may have made setItem throw (blocked storage): clear itself must not.
+    if (this === window.localStorage) {
+      try {
+        this.setItem(ONBOARDED_KEY, "1");
+      } catch {
+        /* storage is blocked in this test */
+      }
+    }
   };
 }
 
@@ -32,7 +39,11 @@ export function setReducedMotion(on: boolean): void {
 beforeEach(() => {
   if (hasStorage) {
     profileStore.refresh(); // a test that made the page's storage fail must not leave its copy to the next
-    window.localStorage.setItem(ONBOARDED_KEY, "1");
+    try {
+      window.localStorage.setItem(ONBOARDED_KEY, "1");
+    } catch {
+      /* a test left setItem throwing: that test sets its own state */
+    }
   }
   media.reducedMotion = false;
   vi.stubGlobal("matchMedia", (query: string) => ({
