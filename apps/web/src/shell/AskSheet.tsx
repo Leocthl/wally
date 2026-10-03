@@ -138,7 +138,7 @@ export interface AskSheetProps {
 
 export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement {
   const { t } = useLocale();
-  const { busy } = useBoothContext();
+  const { busy, state } = useBoothContext();
   const run = useScenarioRunner();
   const propose = useProposer();
   // The shell's own asker decides between Wally's live planner and the fixed keyword reader; an asker given by the host (a test
@@ -173,7 +173,7 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
         {/* The judges' console: the trick box and every scenario, folded away for a shopper (open on the booth Mac and with ?booth=1). */}
         <DemoScenarios lead={t(OB.home.demoLead)}>
           <TrickBox onSend={send} busy={busy} />
-          <TryAsking onRun={pick} busy={busy} variant="pills" />
+          <TryAsking onRun={pick} busy={busy} variant="pills" budgetCategories={state.mandate?.rules.categories} />
         </DemoScenarios>
       </div>
     </Sheet>

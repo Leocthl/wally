@@ -163,7 +163,7 @@ export function BudgetScreen(): ReactElement {
       <div className="home-col home-col--test">
         {/* On a phone Manage this budget is the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
         <DemoScenarios panel={desktop} lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
-          <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} variant={desktop ? "tabs" : "cards"} />
+          <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} variant={desktop ? "tabs" : "cards"} budgetCategories={mandate.rules.categories} />
           <div className="home-block__foot"><ResetDemo /></div>
         </DemoScenarios>
         {desktop ? null : manage}

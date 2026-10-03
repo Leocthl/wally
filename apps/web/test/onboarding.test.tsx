@@ -269,7 +269,9 @@ describe("the four steps", () => {
     await user.click(nextButton());
     await buyStep();
     expect(screen.getByText("The demo shop stocks only some of these.")).toBeInTheDocument();
-    expect(screen.getByText("Saved on this device only. Wally never sends it anywhere.")).toBeInTheDocument();
+    // The picks are kept on the device; the line does not promise that the budget's rules, which they start, never leave it.
+    expect(screen.getByText("Your picks are saved on this device only.")).toBeInTheDocument();
+    expect(screen.queryByText(/never sends it anywhere/)).toBeNull();
     expect(screen.getByRole("group", { name: "Kinds of purchase" })).toHaveAccessibleDescription(/Leave all four ticked for any category/);
   });
 
@@ -387,12 +389,17 @@ describe("Your first budget", () => {
     expect(screen.getByRole("radio", { name: "HK$800" })).toBeChecked();
   });
 
-  it("keeps the form when the ticks go to none and back to all four after Back, which is the same budget", async () => {
-    const { user } = await toBudget();
+  it("keeps the form when the ticks go from none to all four after Back, which is the same budget", async () => {
+    const { user } = await openFirstRun();
+    await hello();
+    await user.click(nextButton());
+    await buyStep();
+    // None ticked starts the form on all four, as all four ticked does; the form is then edited.
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
+    await user.click(nextButton());
     await user.click(await screen.findByRole("radio", { name: "HK$1,200" }));
     await user.click(screen.getByRole("button", { name: "Back" }));
     await buyStep();
-    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
     for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) await user.click(kindChip(name));
     await user.click(nextButton());
     expect(await screen.findByRole("radio", { name: "HK$1,200" })).toBeChecked();

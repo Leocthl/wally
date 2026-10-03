@@ -90,7 +90,7 @@ export class ScenarioRunner {
     return entry.run === "buy" ? this.#buyRun(entry, runId) : this.#cardRun(entry, runId);
   }
 
-  /** Try to trick the agent: the visitor's text becomes the description of a fixed SIMULATED listing. */
+  /** Product specifications: the visitor's text becomes the description of a fixed SIMULATED listing. */
   custom(text: string): Promise<RunSummary> {
     const { table, catalogue, clock } = this.#d;
     return this.run("custom", async (runId) => {

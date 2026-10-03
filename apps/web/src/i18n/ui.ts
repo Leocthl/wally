@@ -333,6 +333,10 @@ const SHELL = {
   "home.sc.injected.d": label("The listing tells Wally to ignore the rules. Wally won't.", "商品資料叫 Wally 唔理規則，Wally 唔會聽。"), // NEEDS-REVIEW
   "home.sc.off_category": label("Earbuds on a clothes budget", "用買衫預算買耳機"), // NEEDS-REVIEW
   "home.sc.off_category.d": label("Not something your rules allow.", "你的規則唔容許。"), // NEEDS-REVIEW
+  // The same card on a budget that names electronics (a first budget with all four kinds does): R6 lets the earbuds through, and the
+  // listing check, which is fitted on clothes, may not be sure they fit. It must not say the rules stop them.
+  "home.sc.off_category.allowed": label("Earbuds your rules allow", "你規則容許嘅耳機"), // NEEDS-REVIEW zh-HK
+  "home.sc.off_category.allowed.d": label("The listing check is fitted on clothes, so Wally may ask you first.", "商品檢查係按衫類調校，所以 Wally 可能會先問你。"), // NEEDS-REVIEW zh-HK
   "home.sc.unverified": label("A seller Wally can't verify", "Wally 核實唔到的賣家"), // NEEDS-REVIEW
   "home.sc.unverified.d": label("Wally asks you first. No answer in time means no.", "Wally 會先問你；逾時未覆即當拒絕。"), // NEEDS-REVIEW
   "home.sc.overshoot": label("Shop charges more", "商店多收錢"), // NEEDS-REVIEW

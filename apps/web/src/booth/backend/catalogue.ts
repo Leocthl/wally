@@ -164,7 +164,7 @@ export function overflowListing(base: ListingRecord, remainingMinor: number): Li
   return { ...base, items: [{ ...first, unit_price_minor: price }, ...rest], provenance: "SIMULATED" };
 }
 
-/** Try to trick the agent: the derived visitor listing with the visitor's text as its description (only the judge reads it). */
+/** Product specifications: the derived visitor listing with the visitor's text as its description (only the judge reads it). */
 export function visitorListing(base: ListingRecord, text: string, now: Date): ListingRecord {
   return { ...base, text, observed_at: iso(now.getTime()), provenance: "SIMULATED" };
 }

@@ -52,7 +52,7 @@ function limited(planner: PlannerPort, listings: readonly ListingRecord[]): Plan
 /**
  * Typed Ask on a live planner (the Laya rule planner or local Qwen): the planner is asked over the whole shelf, and its pick,
  * or its cheaper pick after a budget stop, is checked against the price limit in the request. Only a listing set that is the
- * whole shelf is checked: a fixed booth button, a photo pick and the Try to trick listing are fixtures, and the recorded
+ * whole shelf is checked: a fixed booth button, a photo pick and the Product specifications listing are fixtures, and the recorded
  * source (the on-device page) answers only the sample requests, so none of them can meet a limit.
  */
 export function withAskLimit(inner: PlannerFactory, ask: AskSource): PlannerFactory {

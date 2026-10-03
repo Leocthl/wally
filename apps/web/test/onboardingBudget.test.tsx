@@ -213,6 +213,18 @@ describe("the hint on What can Wally buy for you?", () => {
     await waitFor(() => expect(hint()).toBe(HELD));
   });
 
+  it("has its own lead then: the ticks do not change that budget, so the lead does not say they bound it", async () => {
+    await toBuy({ sealed: true });
+    const lead = (): string => document.querySelector("[data-onboarding] .onb-lead")?.textContent ?? "";
+    await waitFor(() => expect(lead()).toBe("Tick the kinds of purchase you want Wally's help with. Fixed rules check every buy against your budget."));
+    expect(lead()).not.toMatch(/this budget may cover/);
+  });
+
+  it("has the form's lead while the first budget is still to be made", async () => {
+    await toBuy();
+    expect(document.querySelector("[data-onboarding] .onb-lead")?.textContent).toBe("Tick the kinds of purchase this budget may cover. Fixed rules check every buy against them.");
+  });
+
   it("goes back to the form hint for a budget that is over, because the form is offered then", async () => {
     const api = instantMock();
     await api.seal(m0Request(new Date()));

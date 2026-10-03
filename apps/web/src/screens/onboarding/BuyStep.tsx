@@ -28,8 +28,9 @@ export function BuyStep({ ticked, onTicked, onBack, onNext, dir, skip }: BuyStep
   const { t } = useLocale();
   const { state } = useBoothContext();
   const hintId = useId();
-  // A booth that already holds a live budget has no form to start: the ticks only change what Wally shows first.
-  const hint = holdsLiveBudget(state) ? OB.buy.hintHeld : ticked.length === 0 ? OB.buy.hintNone : OB.buy.hintForm;
+  // A booth that already holds a live budget has no form to start: the ticks only change what Wally shows first, and the step says so.
+  const held = holdsLiveBudget(state);
+  const hint = held ? OB.buy.hintHeld : ticked.length === 0 ? OB.buy.hintNone : OB.buy.hintForm;
   return (
     <StepFrame
       step="buy"
@@ -45,7 +46,7 @@ export function BuyStep({ ticked, onTicked, onBack, onNext, dir, skip }: BuyStep
       }
     >
       <div className="onb-body">
-        <p className="onb-lead">{t(OB.buy.lead)}</p>
+        <p className="onb-lead">{t(held ? OB.buy.leadHeld : OB.buy.lead)}</p>
         <div className="onb-block">
           <ChipGroup
             label={t(OB.buy.group)}
@@ -57,7 +58,7 @@ export function BuyStep({ ticked, onTicked, onBack, onNext, dir, skip }: BuyStep
           <p className="onb-hint" id={hintId} aria-live="polite" data-buy-hint>{t(hint)}</p>
         </div>
         <p className="onb-note" data-buy-note><Icon name="info" size={16} /> <span>{t(OB.buy.shopNote)}</span></p>
-        <p className="onb-privacy"><Icon name="lock" size={16} /> {t(OB.privacy)}</p>
+        <p className="onb-privacy"><Icon name="lock" size={16} /> {t(OB.buy.saved)}</p>
       </div>
     </StepFrame>
   );

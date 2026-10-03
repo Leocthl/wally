@@ -7,7 +7,7 @@ import { OB, ASK_EXAMPLES } from "../src/i18n/onboarding";
 import { greetingFor } from "../src/screens/home/heroModel";
 import { mergeProfile, ONBOARDED_KEY, PROFILE_KEY, serialiseProfile } from "../src/state/profile";
 import { bootApp, go, press } from "./helpers/app";
-import { hello, skip, skipTour, skipToTour } from "./helpers/firstRun";
+import { buyStep, hello, kindChip, skip, skipTour, skipToTour } from "./helpers/firstRun";
 
 vi.setConfig({ testTimeout: 30_000 });
 
@@ -71,6 +71,27 @@ describe("About", () => {
     await skipTour(h.user);
     expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
     expect((await h.api.snapshot()).packet?.budget_minor).toBe(80_000);
+  });
+
+  it("the tour again starts What can Wally buy for you? from the kinds that were kept, not from all four", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: mei });
+    await h.user.click(aboutButton());
+    await h.user.click(await screen.findByRole("button", { name: /Take the tour again/ }));
+    await hello();
+    await h.user.click(screen.getByRole("button", { name: /^Next/ }));
+    await buyStep();
+    expect(kindChip("Shoes")).toHaveAttribute("aria-pressed", "true");
+    for (const name of ["Groceries and food", "Clothes", "Gadgets and electronics"] as const) expect(kindChip(name), name).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("the tour again starts from all four for someone who never narrowed anything", async () => {
+    const h = await bootWith({ [PROFILE_KEY]: serialiseProfile(mergeProfile(null, { nickname: "Mei" })) });
+    await h.user.click(aboutButton());
+    await h.user.click(await screen.findByRole("button", { name: /Take the tour again/ }));
+    await hello();
+    await h.user.click(screen.getByRole("button", { name: /^Next/ }));
+    await buyStep();
+    for (const name of ["Groceries and food", "Clothes", "Shoes", "Gadgets and electronics"] as const) expect(kindChip(name), name).toHaveAttribute("aria-pressed", "true");
   });
 
   it("the tour again on a replay starts from any screen and ends on Budget", async () => {

@@ -31,6 +31,8 @@ export const OB = {
   buy: {
     title: label("What can Wally buy for you?", "Wally 可以幫你買啲咩？"), // NEEDS-REVIEW zh-HK
     lead: label("Tick the kinds of purchase this budget may cover. Fixed rules check every buy against them.", "揀呢個預算可以買嘅類別。每次購買都會由固定規則對照檢查。"), // NEEDS-REVIEW zh-HK
+    // The booth already holds a live budget (the live booth seals one when it starts): the ticks cannot change it, so the lead does not say they do.
+    leadHeld: label("Tick the kinds of purchase you want Wally's help with. Fixed rules check every buy against your budget.", "揀你想 Wally 幫手買嘅類別。每次購買都會由固定規則對照你嘅預算檢查。"), // NEEDS-REVIEW zh-HK
     group: label("Kinds of purchase", "購買類別"), // NEEDS-REVIEW zh-HK
     // Under the chips. A first budget is still to be made: the ticks start its rules. Nothing ticked reads as any category, and says so.
     hintForm: label("Optional. Leave all four ticked for any category. You can change this on the next step.", "可選填。四樣都揀晒即係任何類別都得。下一步仍然可以改。"), // NEEDS-REVIEW zh-HK
@@ -39,6 +41,8 @@ export const OB = {
     hintHeld: label("Your budget is already set up, so this only changes what Wally shows first.", "你嘅預算已經設定好，所以呢度只會影響 Wally 先顯示嘅內容。"), // NEEDS-REVIEW zh-HK
     // Said on every visit to the step: the budget's rules reach further than the sample shop does.
     shopNote: label("The demo shop stocks only some of these.", "示範商店只有其中部分貨品。"), // NEEDS-REVIEW zh-HK
+    // The picks are kept in the profile, on this device. (The budget's rules, which they start, are signed and sent when it is locked in.)
+    saved: label("Your picks are saved on this device only.", "你嘅選擇只會儲存喺呢部裝置。"), // NEEDS-REVIEW zh-HK
     kind: {
       groceries: label("Groceries and food", "雜貨同食品"), // NEEDS-REVIEW zh-HK
       apparel: label("Clothes", "衣物"), // NEEDS-REVIEW zh-HK
