@@ -58,7 +58,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 - [00 Context](docs/00-context.md): event, decisions, IDs · [Facts register](docs/facts-register.md): every number
 - [01 Brief](docs/01-product-brief.md) · [02 Architecture](docs/02-architecture.md) · [03 Plan](docs/03-implementation-plan.md) · [04 Design](docs/04-design-language.md)
 - [05 Evidence](docs/05-evidence-plan.md) · [06 Demo](docs/06-demo-script.md) · [07 Pitch](docs/07-pitch.md) · [08 Risks](docs/08-risk-register.md)
-- [09 HKT ask](docs/09-hkt-delegation-api-ask.md): a proposal, not an HKT commitment · [10 Tests](docs/10-test-plan.md) · [CLAUDE.md](CLAUDE.md)
+- [09 HKT ask](docs/09-hkt-delegation-api-ask.md): a proposal, not an HKT commitment · [10 Tests](docs/10-test-plan.md) · [11 Explain the code](docs/11-explain-the-code.md) · [12 Hallway interviews](docs/12-hallway-interviews.md) · [CLAUDE.md](CLAUDE.md)
 
 ## Credits
 - **Laya** (judge) by Convai Innovations, Apache-2.0, run locally and unmodified [F11c].
