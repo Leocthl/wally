@@ -2,8 +2,9 @@
 // Jev (optional). One request carries the four typed questions as k option-order rotations; the answers are
 // averaged back into canonical order. One attempt, no retries, a deadline from the caller (F34). Any failure,
 // timeout, malformed answer or truncated input comes back as a TIMEOUT or ERROR record, which R10 escalates (I5).
+// So does a listing that is mostly CJK: the checkpoint is English-derived, so it is not asked (language.ts).
 import type { JudgeProvider } from "@wally/core/generated";
-import type { JudgeInput, JudgeRecord } from "@wally/core/ports";
+import { JUDGE_VERSION_UNSUPPORTED_LANGUAGE, type JudgeInput, type JudgeRecord } from "@wally/core/ports";
 import {
   DEFAULT_LAYA_MODEL,
   HEALTH_PATH,
@@ -16,6 +17,7 @@ import { createDeadline, type Deadline } from "./deadline";
 import { emitDiagnostic, type DiagnosticReason, type DiagnosticSink } from "./diagnostics";
 import { errorMessage, isRecord } from "./guards";
 import { sendRequest, type FetchLike } from "./http";
+import { isUnsupportedLanguage } from "./language";
 import { planRows } from "./plan";
 import { failureRecord, okRecord, type RecordBase } from "./record";
 import { buildJudgeState } from "./state";
@@ -41,6 +43,12 @@ export interface SystemOneJudgeOptions {
   readonly windowing?: WindowingOptions | false | undefined;
   /** Question wording. Default: the shipped JUDGE_QUESTION_DEFS. The judge:tune experiment passes its variants. */
   readonly questions?: JudgeQuestionDefs | undefined;
+  /**
+   * Default true: a listing that is mostly CJK (language.ts) is not sent to the English-derived checkpoint. The record is
+   * an ERROR carrying JUDGE_VERSION_UNSUPPORTED_LANGUAGE, which R10 escalates. false is for the tools that measure the raw
+   * checkpoint (judge:fit, judge:tune, judge:record); a product composition leaves it on.
+   */
+  readonly languageGate?: boolean | undefined;
   readonly fetchImpl?: FetchLike | undefined;
   readonly onDiagnostic?: DiagnosticSink | undefined;
   /** Monotonic milliseconds; tests may inject. Default performance.now. */
@@ -71,6 +79,9 @@ export class SystemOneJudge implements WarmableJudge {
     try {
       if (!usableTimeout(opts.timeoutMs)) return this.#finish(callFailure("TIMEOUT", "invalid_timeout", "timeoutMs is not a positive number"), elapsed(), null);
       if (opts.signal?.aborted === true) return this.#finish(callFailure("TIMEOUT", "aborted", "the caller had already aborted"), elapsed(), null);
+      if (this.#options.languageGate !== false && isUnsupportedLanguage(input.listingText)) {
+        return this.#finish(callFailure("ERROR", "unsupported_language", "the listing is mostly CJK text and the checkpoint reads English best"), elapsed(), null);
+      }
       deadline = createDeadline(opts.timeoutMs, opts.signal);
       const outcome = await this.#run(input, deadline);
       return this.#finish(outcome.call, elapsed(), outcome.version);
@@ -186,7 +197,9 @@ export class SystemOneJudge implements WarmableJudge {
     const configured = this.#options.model.length > 0 ? this.#options.model : DEFAULT_LAYA_MODEL;
     const hosted = parsed?.model ?? configured;
     const model = this.provider === "jev" ? hosted : (parsed?.routingModel ?? configured);
-    const version = this.provider === "jev" ? (parsed?.model ?? UNKNOWN_VERSION) : (checkpoint ?? this.#checkpoint ?? UNKNOWN_VERSION);
+    const reported = this.provider === "jev" ? (parsed?.model ?? UNKNOWN_VERSION) : (checkpoint ?? this.#checkpoint ?? UNKNOWN_VERSION);
+    // A call that never reached the model has no version to report; the marker says why (ports.ts judgeSkipReason).
+    const version = !outcome.ok && outcome.reason === "unsupported_language" ? JUDGE_VERSION_UNSUPPORTED_LANGUAGE : reported;
     return { provider: this.provider, model, version, latencyMs, shadow: false };
   }
 

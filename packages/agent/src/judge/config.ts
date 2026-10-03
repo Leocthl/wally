@@ -48,3 +48,13 @@ export const DEFAULT_MAX_WINDOWS = 4;
 
 /** Model and version strings read from a server are clipped to this length before they reach a record. ASSUMED, no register row yet. */
 export const MAX_NAME_CHARS = 80;
+
+/**
+ * Language gate (language.ts): a listing whose letters are at least this share CJK is not sent to the English-derived
+ * checkpoint [F26]. ASSUMED, no register row yet (to be added by the lead). Basis, MEASURED on live Laya (checkpoint
+ * 55cf4c4e, 2026-10-03, benign SIMULATED text): English listings score injection risk 0.30 to 0.36 against the 0.39
+ * limit [F36]; Chinese listings 0.45 to 0.73. English plus one Chinese sentence scored 0.41 to 0.46 at a 10.8% share, and
+ * a few Chinese words stayed at 0.31 to 0.39 at 7.5%. So false injection scores start at about a tenth, not at a third.
+ * Known gap: a long English listing with one Chinese sentence can sit under this share and still scores about 0.15 higher.
+ */
+export const CJK_SHARE_PERCENT = 10;

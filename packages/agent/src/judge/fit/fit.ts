@@ -44,8 +44,9 @@ export async function runFit(options: FitOptions): Promise<FitOutput> {
   const corpus = loadCorpus(options.corpusDir ?? DEFAULT_CORPUS_DIR);
   const mandate = loadMandate();
   const thresholds = loadThresholds();
+  // languageGate off: the fit measures the raw checkpoint on the whole corpus, zh-HK cases included (corpus README).
   const make = (rotations: boolean, windowing = false) =>
-    new SystemOneJudge({ provider: "laya", baseUrl: options.baseUrl, model: options.model, rotations, windowing: windowing ? DEFAULT_WINDOWING : false });
+    new SystemOneJudge({ provider: "laya", baseUrl: options.baseUrl, model: options.model, rotations, windowing: windowing ? DEFAULT_WINDOWING : false, languageGate: false });
   const common = { timeoutMs: options.timeoutMs, mandate };
 
   log(`warming up the server (first call after a restart is slow)`);
