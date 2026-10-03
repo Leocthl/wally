@@ -1,0 +1,8 @@
+# ADR-0010: Story after the panel review: delegate software, a neutral layer, an honest moat
+
+- **Status**: Accepted 2026-10-03 (pitch lane). Links: D2, D13, F94-F103, [01](../01-product-brief.md), [07](../07-pitch.md), [09](../09-hkt-delegation-api-ask.md).
+- **Context**: Three fresh-eyes reviews scored the build high and the business story low: no customer, no moat, no regulatory or liability position, and a scam hook that did not reach an agent product.
+- **Decision**: Hook is "the pipe is live, the brake is not", with the scam figure as the reason for a seller check, shown with its 2026 trend [F4, F5b]. The customer is a wallet or issuer that embeds Wally; the shopper pays nothing; the fee is a guess [F98]. Wally is delegate software inside the licensed wallet, exposure capped at the sealed budget [F100]; three loss options go to HKT Compliance. The smallest pilot needs no new API [F97].
+- **Moat**: no unique primitive. AP2 already defines signed budgets; we found no enforcer shipped with it [F12, F103]. Our claim is the composition across rails: an enforcer, a cart-sized card, a listing screen and an offline decision log. We state what would prove us wrong: a wallet or rail ships all of it, or no second rail adopts the budget.
+- **Consequences**: The deck and docs say "not found", never "does not have". Market anchors are labelled vendor figures or projections, and not Hong Kong figures [F94, F95]. The hallway tally [F99] is the first demand data; its result is spoken at 4:15 because the submitted deck freezes at 13:00 [F18].
+- **Rejected**: claiming nobody defines signed budgets (false for AP2); a bottom-up market size (no Hong Kong data); a price stated as fact; the Alipay weekly peak quoted alone (the 300 million to date sits beside it).

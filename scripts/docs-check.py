@@ -11,7 +11,8 @@ ADD_DIR = os.path.join(ROOT, "docs/_register-additions")
 CAPS = {
     "docs/01-product-brief.md": 600, "docs/02-architecture.md": 1800, "docs/03-implementation-plan.md": 1200,
     "docs/04-design-language.md": 1000, "docs/05-evidence-plan.md": 800, "docs/06-demo-script.md": 700,
-    "docs/07-pitch.md": 900, "docs/10-test-plan.md": 500, "docs/09-hkt-delegation-api-ask.md": 520,
+    "docs/07-pitch.md": 1200, "docs/10-test-plan.md": 500, "docs/09-hkt-delegation-api-ask.md": 700,
+    "docs/11-explain-the-code.md": 600, "docs/12-hallway-interviews.md": 350,
 }
 LINE_CAPS = {"CLAUDE.md": 120, "README.md": 80}
 BANNED = ["robust", "seamless", "leverage", "ensure", "crucial", "comprehensive", "delve", "not just",

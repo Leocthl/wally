@@ -261,8 +261,8 @@ sequenceDiagram
 - **AP2 analogues** [F12]: MandateCredential = Intent mandate; Cart = Cart mandate; Decision and CardRecord = payment evidence. PacketState is folded from the log, never stored.
 - **Packet accounting**: an APPROVE holds its limit in `committed_minor` until its card is logged, a later decision resolves it, or the packet ends; `VOIDED`/`EXPIRED` release a card, `AUTHORISED` moves the charge to spent; an over-committed log throws `PacketFoldError`.
 - **Resolution**: an answer, R11 expiry or R12 drift makes a new Decision with `resolves`; an answer must bind to the escalated cart, the pinned delegator and a verified signature, else DENY R11.
-- **Idempotency**: a decision id digests cart id, cart fingerprint, time and outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart whose fingerprint matches a live APPROVE (card ACTIVE or USED, unexpired) or an open ESCALATE; `allowRepeat` decides afresh (booth scenario buttons only).
-- **Family budget** (D17): a credential may carry `parent`. `seal(credential, { parentCredential })` verifies the parent against the pinned parent key, then `checkChildWithinParent` allows only narrowing (budget after siblings' shares, categories, merchants, seller check, per-purchase terms, velocity, end date), else `EXCEEDS_PARENT` and nothing logged. The parent credential is not in the child's log, so the offline verifier cannot check the link.
+- **Idempotency**: a decision id digests cart id, fingerprint, time and outcome; mint is keyed by `decision.id`, `authorise` by the executor's key. `submit` returns the earlier decision (`duplicate: true`) for a cart matching a live APPROVE or an open ESCALATE; `allowRepeat` decides afresh (booth buttons only).
+- **Family budget** (D17): a credential may carry `parent`; `seal(credential, { parentCredential })` verifies it against the pinned parent key and `checkChildWithinParent` allows only narrowing, else `EXCEEDS_PARENT` and nothing logged. The parent is not in the child's log, so the offline verifier cannot check the link.
 
 ## 7. Rule catalogue
 
@@ -284,10 +284,11 @@ seller_risk          low_risk | high_risk                 P(high_risk) >= T_sell
 escalate_or_proceed  proceed | escalate                   P(escalate) >= T_esc                  -> ESCALATE R10.escalate
 ```
 
-- **Gate**: built in code from the first three questions; `escalate_or_proceed` carries no signal [F50]. Held-out (SIMULATED): 35/47 legitimate carts approved, 2/14 injected; the seller gate is inert. The F38 floor is not met at judge level; the harness meets it end to end [F36, F69].
+- **Gate**: built in code from the first three questions; `escalate_or_proceed` carries no signal [F50]. Held-out (SIMULATED): 35/47 legitimate carts approved, 2/14 injected; the seller gate is inert. Judge level misses the F38 floor; the harness meets it end to end [F36, F69].
 - **Providers**: `SystemOneJudge` for `laya` (default [F11c]) and `jev` (optional [F11b]); `replay` for CI and the booth fallback. No LLM judge.
 - **Request**: `model: typed-decisions`, wording v5, rotations averaged back [F26]. Listing text sits only in `listing.description`, NFKC-normalised, never in instructions.
 - **Failure**: `assess` never throws; timeout F34, no retry; TIMEOUT, ERROR or `usage.truncated` (Laya drops a long state's tail [F26]) → ESCALATE `R10.unavailable`. Windowing off [F55]; limits [F54].
+- **Language gate**: a listing with at least 10% CJK letters (Han, kana, Hangul, Bopomofo, after NFKC) is not sent to the English-derived checkpoint [F26, F104]. The adapter returns ERROR, no answers and version `skipped:unsupported_language`; R10 escalates `R10.unavailable` with reason `unsupported_language` in its recorded inputs, and the template says the checker reads English best. `fit`, `tune` and `record` run with the gate off; `replay` is not gated.
 - **Mode**: `JUDGE_MODE` (default `enforce`); `shadow` marks R10 SKIPPED.
 
 ```text
@@ -311,7 +312,7 @@ POST {LAYA_BASE_URL | JEV_BASE_URL}/v1/systemone          exact shape: services/
 
 - **Idempotent**: `mint` by `decision.id`; `authorise` by key (a retry returns the first event); the executor logs the rail's own record, not the merchant's claim.
 - **Refusals** are typed (§18): the executor refuses unless decision and card are in the log, with at most 3 merchant calls per checkout [F53]. Stub mode `preauth` charges above the quote [F2]: a false block, tolerance asked in 09.
-- **Calibration (T-R1)**: one human-typed real decline [F40] is pending (05); until then sim-only.
+- **Calibration (T-R1)**: one real decline [F40] is pending (05); until then sim-only.
 
 ## 11. Crypto
 
@@ -387,14 +388,14 @@ docs/
 
 - **JSON Schema first**: generated types; ajv validators compiled ahead of time (no `eval`, strict CSP on the verifier); `gen-types --check` guards stale output.
 - **Append-only JSONL**, no database; a restart on an existing log is refused (`LOG_EXISTS`); `pnpm demo:reset` starts clean. Models run over loopback HTTP outside the TypeScript packages (ADR-0006, ADR-0008, ADR-0009).
-- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); `local` on-device (the real stack and signers in the page, recorded answers, so typed text escalates); `mock` (tests). LAN mode adds a pairing token (§15). The service worker skips `/api`.
+- **Modes**: `http` (Mac with Laya and Qwen; the page probes `/api/info` for 1.5 s [F65], else falls back); `local` on-device (real stack and signers in the page, recorded answers, so typed text escalates). LAN mode adds a pairing token (§15).
 
 ## 14. Planner
 
 - **Providers** (`PLANNER_PROVIDER`): `rule`, `local`, `replay`; the booth server defaults to `auto`: `local` if Qwen's `/health` answers in 1.5 s [F64], else `rule` if Laya's does, else `replay`, chosen once at start. All return no proposal on failure (I5), read structured fields only, set no money (I4).
 - **`rule`**: the Laya decision loop in a deterministic harness, not a generative LLM: typed choices (item, variant, next action) logged with probabilities; small margins abstain [F47]; step cap [F46].
 - **`local`**: Qwen3.5-9B reads English, Chinese or Cantonese and returns one grammar-constrained JSON answer; enums come from the supplied catalogue; code clamps quantity and guards near-ties [F58]. On 25 calls: wrong item in 0/26 scenarios; author-written cases, no held-out set [F68]. Qwen never gates a decision (ADR-0009).
-- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60]. **Wiring**: Seal's "Read my sentence" calls `POST /api/compile`; only the shopper seals.
+- **Compiler**: the model fills typed fields, code computes money and dates, the shopper confirms; failure falls back to the rule-based compile [F60].
 
 ## 15. Env config
 
@@ -422,12 +423,11 @@ POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escal
 ```
 
 - **No variable is required**; no key. Secrets in `.env` only (gitignored).
-- **LAN mode** (off by default): `/api/*` needs the pairing token [F92] (header `X-Wally-Token` or cookie `wally_t`) except `/api/health` and `/api/lan`; a page on the Mac needs none and alone reads `/api/lan` (token, links, QR).
-- **LAN guards** [F92]: Host must be loopback or the Mac's own address or name; a POST Origin must be the page's own, loopback or a native shell.
+- **LAN mode** (off by default): `/api/*` needs the pairing token [F92] (header `X-Wally-Token` or cookie `wally_t`) except `/api/health` and `/api/lan`; a page on the Mac needs none and alone reads `/api/lan` (token, links, QR). Host must be loopback or the Mac's own address or name; a POST Origin must be the page's own, loopback or a native shell.
 
 ## 16. Latency budget
 
-- **Planner** 20 s [F33], local 9B p50 1,735 ms, p95 2,593 ms [F68]. **Judge** 1,500 ms per call [F34], p95 345 ms [F26]; a loaded host can time it out [F69]. **Cart proposed → verdict + mint** p95 <= 3,000 ms [F35]; B2 live p50 159.7 ms, p95 388.9 ms [F69].
+- **Planner** 20 s [F33], local 9B p95 2,593 ms [F68]. **Judge** 1,500 ms per call [F34], p95 345 ms [F26]; a loaded host can time it out [F69]. **Cart proposed → verdict + mint** p95 <= 3,000 ms [F35]; B2 live p95 388.9 ms [F69].
 
 ## 17. Real vs simulated
 
@@ -438,7 +438,6 @@ POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escal
 | Judge, planner | REAL local models [F11c, F27]; `replay` and on-device recordings labelled |
 | Scameter | manual REAL captures + SIMULATED flagged fixture [F6] |
 | Decline test, shop probe, listings | REAL human-run captures, still pending [F39, F40]; fixtures SIMULATED |
-| Harness numbers | MEASURED(n), simulated rail [F69] |
 
 ## 18. Interfaces
 
