@@ -18,7 +18,7 @@
 | Reported | trust score (1 to 5, "I would let Wally shop for me again"); cancel rate |
 | Exit | the targets met on the pilot log, which anyone can verify offline |
 
-- **Our results so far**, 150 SIMULATED scenarios, seed 7 [F69]: 0/120 over-limit mints; 61/66 honest buys approved (92.4%); p95 388.9 ms.
+- **Our results so far**, 150 SIMULATED scenarios [F69]: 0/120 over-limit mints; 61/66 honest buys approved; p95 388.9 ms.
 
 ## Proposed API (replaces the hand step)
 | Method | Purpose |
@@ -31,14 +31,14 @@
 - Names are illustrative. `ttl` 30 min [F30] (ASSUMED). Our merchant lock and purpose are SIMULATED.
 
 ## Rails, one sentence each
-- **Single Use Card (Mastercard prepaid), today**: made by hand, one use [F1]; the pilot runs here.
+- **Single Use Card, today**: made by hand, one use [F1]; the pilot runs here.
 - **Mastercard Agent Pay**: Hong Kong's first live agentic transaction ran through issuing banks [F7a]; if HKT's issuer joins, the adapter takes an agent token instead of a hand-made card.
 - **FPS**: a payer can pre-authorise a named payee with a limit (eDDA); no delegate feature found [F102]; ask HKT.
 - **UnionPay**: an agentic payment protocol was published in 2026; no single-use credential found [F102]; ask HKT.
 - The engine, credential and log stay the same on any rail; only the `RailPort` adapter changes [F19].
 
 ## Phase 2: spend Club Points first
-- A points budget makes a wrong buy cost points, not cash. The Club by HKT Innovation Award ties here [F15]. Whether a delegate can redeem Club Points: not found; ask HKT.
+- A points budget makes a wrong buy cost points, not cash; the Club by HKT Innovation Award ties here [F15]. Can a delegate redeem Club Points? Not found; ask HKT.
 
 ## Loss allocation: three options for HKT Compliance
 - **Operator** = the party running the Wally software: the Wally team in the pilot, the wallet or issuer once it embeds Wally.
@@ -51,7 +51,7 @@
 - **Position**: Wally is delegate software inside the licensed wallet and holds no value; HKT Payment Limited is the SVF licensee [F100]. Exposure is capped at the sealed budget (I2).
 - **Terms** [F2]: sharing security details is barred and HKT may stop payments on suspected third-party use, so delegated use needs an addendum: a named, revocable delegate role; credentials to the executor only; a written loss rule.
 - **Data**: shopper data stays on the device or the booth Mac; PDPO and the PCPD agentic AI guidance apply [F101].
-- **Route**: HKT's Sandbox++ pilot covers who the agent is; ours covers what it may spend [F8]. Then this pilot.
+- **Route**: HKT's Sandbox++ pilot covers who the agent is; ours covers what it may spend [F8]. Order: scope and addendum, sandbox slot, 90 days by hand, then the API.
 
 ## Our side
-- **Rail**: SIMULATED; our software accesses no HKT system. **Sources**: public pages, READ-BY-CLAUDE until captured [F1, F2, F3]. Corrections welcome.
+- **Rail**: SIMULATED; our software accesses no HKT system. **Sources**: public pages, READ-BY-CLAUDE until captured [F1, F2, F3].
