@@ -76,7 +76,7 @@ describe("the common ways to say a budget in Chinese", () => {
     ["港幣 800 元買鞋", { budgetMinor: 80_000, categories: ["footwear"], verifiedOnly: true }],
     ["港幣$600買衫同鞋", { budgetMinor: 60_000, categories: ["apparel", "footwear"], verifiedOnly: true }],
     ["一千二蚊買衫", { budgetMinor: 120_000, categories: ["apparel"], verifiedOnly: true }],
-    ["二千五百蚊買衫", { budgetMinor: 250_000, categories: ["apparel"], verifiedOnly: true }],
+    ["一千五百蚊買衫", { budgetMinor: 150_000, categories: ["apparel"], verifiedOnly: true }],
     ["兩百五十蚊買鞋", { budgetMinor: 25_000, categories: ["footwear"], verifiedOnly: true }],
     ["HK$800 買衫，兩星期內", { budgetMinor: 80_000, categories: ["apparel"], verifiedOnly: true, days: 14 }],
     ["HK$800 買衫，一個星期", { budgetMinor: 80_000, categories: ["apparel"], verifiedOnly: true, days: 7 }],

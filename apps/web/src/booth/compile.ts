@@ -53,6 +53,8 @@ const DAY_MS = 24 * HOUR_MS;
 const HKT_OFFSET_MS = 8 * HOUR_MS;
 /** The longest a sentence may make a budget run [ASSUMED, compiler config]. */
 const MAX_PERIOD_DAYS = DEFAULT_COMPILER_LIMITS.maxPeriodDays;
+/** The most a budget may be, in minor units: one card's limit [F1], the figure the compiler, the first run and the seal check all use. */
+const MAX_BUDGET_MINOR = DEFAULT_COMPILER_LIMITS.ceilingMinor;
 const BP_PER_WHOLE = 10_000;
 /** Whole-packet share written as "half". */
 const HALF_BP = 5_000;
@@ -72,6 +74,7 @@ const money = (m: RegExpMatchArray | null, group = 1): number | null => {
 const MSG = {
   budgetMissing: label("No HK$ amount found. Write the budget, for example HK$800.", "找不到港幣金額。請寫明預算金額，例如 HK$800。"),
   budgetZero: label("The budget must be more than zero.", "預算金額必須大於零。"),
+  budgetTooBig: label("That amount is too large for one budget.", "金額太大，超過一個預算可以設定的上限。"), // NEEDS-REVIEW
   categoryMissing: label("No known category. Try clothes, shoes, electronics or groceries.", "找不到已知類別。可試衣服、鞋、電子產品或雜貨。"),
   daysBad: label("Days must be a whole number of at least one.", "日數必須是至少一的整數。"),
   daysTooMany: label("That is more days than a budget can run.", "日數多過一個預算可以維持的長度。"), // NEEDS-REVIEW
@@ -84,10 +87,12 @@ function budgetChip(sentence: string): RuleChip {
   const skip = /(?:ask|confirm|check)[^.;]*?(?:above|over)\s+HK\$\s?[\d,.]+|no single purchase\s+(?:above|over)\s+HK\$\s?[\d,.]+/gi;
   // The first amount left once the limit clauses are set aside, in HK$ or in the words people say it in (800蚊, 八百蚊, 港幣800).
   const amountMinor = readAmounts(withoutZhLimits(sentence.replace(skip, " ")))[0]?.minor ?? null;
-  const valid = amountMinor !== null && amountMinor > 0;
+  const valid = amountMinor !== null && amountMinor > 0 && amountMinor <= MAX_BUDGET_MINOR;
+  // An amount above the ceiling is refused, not cut: the sentence is not read half-way, and no row is filled from it.
+  const error = amountMinor === 0 ? MSG.budgetZero : amountMinor !== null && amountMinor > MAX_BUDGET_MINOR ? MSG.budgetTooBig : MSG.budgetMissing;
   return {
     kind: "budget", rule: "R3", label: label("Budget", "預算"), value: { kind: "budget", amountMinor }, valid, prov: SIMULATED,
-    ...(valid ? {} : { error: amountMinor === 0 ? MSG.budgetZero : MSG.budgetMissing }),
+    ...(valid ? {} : { error }),
   };
 }
 
