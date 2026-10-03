@@ -23,12 +23,14 @@ export interface ChipGroupProps<Id extends string> {
   readonly selected: readonly string[];
   readonly onChange: (next: readonly Id[]) => void;
   readonly className?: string;
+  /** The id of a message about the group (an error), read with it when focus arrives. */
+  readonly describedBy?: string | undefined;
 }
 
 /** Pills you can switch on and off: the style and what-you-shop-for pickers. */
-export function ChipGroup<Id extends string>({ label, options, selected, onChange, className }: ChipGroupProps<Id>): ReactElement {
+export function ChipGroup<Id extends string>({ label, options, selected, onChange, className, describedBy }: ChipGroupProps<Id>): ReactElement {
   return (
-    <div className={cx("onb-chips", className)} role="group" aria-label={label}>
+    <div className={cx("onb-chips", className)} role="group" aria-label={label} aria-describedby={describedBy}>
       {options.map((o) => {
         const on = selected.includes(o.id);
         return (

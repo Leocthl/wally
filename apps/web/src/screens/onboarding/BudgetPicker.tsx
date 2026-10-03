@@ -31,14 +31,17 @@ export interface BudgetPickerProps {
   readonly capped: boolean;
   readonly now: Date;
   readonly family: FamilySeal;
+  /** Enter in the typed amount: go on to Check and seal. */
+  readonly onSubmit: () => void;
 }
 
 const HOW_LONG_LABEL = { month: OB.budget.thisMonth, twoWeeks: OB.budget.twoWeeks, date: OB.budget.pickDate } as const;
 
-export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped, now, family }: BudgetPickerProps): ReactElement {
+export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped, now, family, onSubmit }: BudgetPickerProps): ReactElement {
   const { t, locale } = useLocale();
   const amountHeading = useId();
   const lengthHeading = useId();
+  const categoriesError = useId();
   const set = (patch: Partial<BudgetDraft>): void => onDraft({ ...draft, ...patch });
   const err = (field: keyof FormErrors): string | undefined => {
     const key = errors[field];
@@ -63,7 +66,13 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
             leading={<span className="onb-unit">HK$</span>}
             error={family.notes.amount ?? err("amount")}
             data-field="amount"
+            enterKeyHint="go"
             onChange={(e) => set({ custom: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              onSubmit();
+            }}
           />
         ) : family.notes.amount ? (
           <p className="onb-note" role="status"><Icon name="alert" size={16} /> {family.notes.amount}</p>
@@ -102,13 +111,16 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
 
       <section className="onb-block" aria-labelledby="onb-what">
         <h2 className="onb-label" id="onb-what">{t(UI["seal.what"])}</h2>
-        <ChipGroup
-          label={t(UI["seal.what"])}
-          options={CATEGORY_SLUGS.map((id) => ({ id, label: categoryName(id, t) }))}
-          selected={draft.categories}
-          onChange={(categories) => set({ categories })}
-        />
-        {err("categories") ? <span className="w-field__error" data-field="categories"><Icon name="alert" size={16} />{err("categories")}</span> : null}
+        <div data-field="categories">
+          <ChipGroup
+            label={t(UI["seal.what"])}
+            options={CATEGORY_SLUGS.map((id) => ({ id, label: categoryName(id, t) }))}
+            selected={draft.categories}
+            onChange={(categories) => set({ categories })}
+            describedBy={err("categories") ? categoriesError : undefined}
+          />
+        </div>
+        {err("categories") ? <span className="w-field__error" id={categoriesError}><Icon name="alert" size={16} />{err("categories")}</span> : null}
       </section>
 
       <section className="onb-block onb-switch">

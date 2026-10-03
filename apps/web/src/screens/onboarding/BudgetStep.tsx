@@ -1,6 +1,7 @@
-// Step three, Your first budget. A booth that already holds a budget (the live booth pre-seals HK$800) skips the form and
-// says "Your budget is ready". With none, the person picks an amount, how long and what Wally can buy, then goes through
-// the Seal screen's own Check and seal moment (ReviewStep, the lock, the haptic): this file never signs anything itself.
+// Step three, Your first budget. A booth that already holds a live budget (the live booth pre-seals HK$800) skips the form and
+// says "Your budget is ready". With none, or one that is over (cancelled, ended, all used), the person picks an amount, how
+// long and what Wally can buy, then goes through the Seal screen's own Check and seal moment (ReviewStep, the lock, the
+// haptic): this file never signs anything itself. Sealing over a budget that is over says so, as the Seal screen does.
 import { useMemo, useState, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
 import { OB } from "../../i18n/onboarding";
@@ -13,7 +14,7 @@ import { Skeleton } from "../../ui/Surface";
 import { CantReach } from "../../shell/Connection";
 import { RulesSummary, ReviewStep } from "../seal/SealSteps";
 import { SealLock } from "../seal/SealLock";
-import { formFromRules, isValid, toSealRequest, validate } from "../seal/sealModel";
+import { formFromRules, isValid, toSealRequest, validate, type FormErrors } from "../seal/sealModel";
 import { useFamilySeal } from "../seal/FamilyChoice";
 import { useSealCeremony } from "../seal/useSealCeremony";
 import "../seal/seal.css";
@@ -36,26 +37,42 @@ export interface BudgetStepProps {
 
 type View = "pick" | "review";
 
+/** The fields in the order they are on the form. */
+const FIELD_ORDER = ["amount", "until", "categories"] as const;
+
+/** Moves focus to the first thing that needs fixing: the field itself, or the first choice of a group. */
+function focusFirstProblem(errors: FormErrors): void {
+  const name = FIELD_ORDER.find((field) => errors[field] !== undefined);
+  const field = name === undefined ? document.querySelector<HTMLElement>("[data-field]") : document.querySelector<HTMLElement>(`[data-field="${name}"]`);
+  const target = field?.matches("input, button, select, textarea") ? field : field?.querySelector<HTMLElement>("input, button");
+  target?.focus();
+}
+
 export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip }: BudgetStepProps): ReactElement {
   const booth = useBoothContext();
   const { t, locale } = useLocale();
   const now = useMemo(() => new Date(), []);
   const ceremony = useSealCeremony();
   const form = formOf(draft, now);
-  const family = useFamilySeal(form.amount);
+  // A first budget starts on the person's own money, even when the budget now held is Mum's and over.
+  const family = useFamilySeal(form.amount, { startOwn: true });
   const [view, setView] = useState<View>("pick");
   const [showErrors, setShowErrors] = useState(false);
   const errors = validate(form, now);
   const until = untilOf(draft, now);
   const { mandate, packet } = booth.state;
-  const held = mandate !== null && packet !== null && (packet.status === "ACTIVE" || packet.status === "EXHAUSTED");
+  // Ready means a budget Wally can shop in now. One that is cancelled, ended or all used is not that: the form is offered.
+  const live = mandate !== null && packet !== null && packet.status === "ACTIVE" && !booth.state.revoked;
+  const replacing = mandate !== null;
   const mine = ceremony.sealing || ceremony.sealedForm !== null;
   const skipping: SkipControl = { onSkip: skip.onSkip, busy: skip.busy || ceremony.sealing };
+  // Skip uses the ready-made budget when there is none; with one held it seals nothing. Said wherever Skip could be mistaken for "use mine".
+  const skipNote = mandate === null ? <p className="onb-skipnote">{t(OB.budget.skipNote)}</p> : null;
 
   const review = (): void => {
     setShowErrors(true);
     if (!isValid(errors) || family.over) {
-      document.querySelector<HTMLElement>("[data-field] input, [data-field] button, [data-field]")?.focus();
+      focusFirstProblem(errors);
       return;
     }
     setView("review");
@@ -90,13 +107,13 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
     }
     return (
       <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={null}>
-        <ReviewStep form={ceremony.sealedForm ?? form} sealing={ceremony.sealing} sealed={ceremony.sealedForm !== null} replacing={false} onEdit={() => setView("pick")} onSeal={() => void seal()} />
+        <ReviewStep form={ceremony.sealedForm ?? form} sealing={ceremony.sealing} sealed={ceremony.sealedForm !== null} replacing={replacing} onEdit={() => setView("pick")} onSeal={() => void seal()} />
       </StepFrame>
     );
   }
 
   // A budget is already there (the live booth seals one when it starts): nothing to ask.
-  if (held && mandate !== null) {
+  if (live && mandate !== null) {
     return (
       <StepFrame key="ready" step="budget" wally="approved" title={t(OB.budget.readyTitle)} dir={dir} skip={skipping} actions={<div className="onb-actions__row">{backButton}<span className="onb-actions__grow">{continueButton}</span></div>}>
         <div className="onb-body" data-ready>
@@ -109,7 +126,7 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
 
   if (booth.info === null) {
     return (
-      <StepFrame key="loading" step="budget" wally="idle" title={t(OB.budget.title)} dir={dir} skip={skipping} actions={null}>
+      <StepFrame key="loading" step="budget" wally="idle" title={t(OB.budget.title)} dir={dir} skip={skipping} actions={<div className="onb-actions__row">{backButton}</div>}>
         {booth.error !== null ? (
           <CantReach onRetry={onRetry} />
         ) : (
@@ -125,8 +142,8 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
 
   if (view === "review") {
     return (
-      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={null}>
-        <ReviewStep form={form} sealing={false} replacing={false} onEdit={() => setView("pick")} onSeal={() => void seal()} />
+      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={skipNote}>
+        <ReviewStep form={form} sealing={false} replacing={replacing} onEdit={() => setView("pick")} onSeal={() => void seal()} />
       </StepFrame>
     );
   }
@@ -145,12 +162,11 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
             {backButton}
             <Button size="lg" className="onb-actions__grow" iconEnd={<Icon name="chevronRight" size={20} />} onClick={review} data-next>{t(OB.budget.review)}</Button>
           </div>
-          {/* Skip seals the ready-made budget only when there is none; a budget that is over stays as it is. */}
-          {mandate === null ? <p className="onb-skipnote">{t(OB.budget.skipNote)}</p> : null}
+          {skipNote}
         </>
       }
     >
-      <BudgetPicker draft={draft} onDraft={onDraft} errors={errors} showErrors={showErrors} until={until.day} capped={until.capped} now={now} family={family} />
+      <BudgetPicker draft={draft} onDraft={onDraft} errors={errors} showErrors={showErrors} until={until.day} capped={until.capped} now={now} family={family} onSubmit={review} />
     </StepFrame>
   );
 }

@@ -3,6 +3,7 @@
 // rules or the planner.
 import type { ReactElement } from "react";
 import { OB } from "../../i18n/onboarding";
+import { useBoothContext } from "../../hooks/useBooth";
 import { mergeProfile, type Profile } from "../../state/profile";
 import { COLOUR_IDS, SHOE_SIZES, SHOP_IDS, SIZE_LETTERS, STYLE_IDS } from "../../state/taste";
 import { Button } from "../../ui/Button";
@@ -24,6 +25,8 @@ export interface TasteStepProps {
 
 export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteStepProps): ReactElement {
   const { t } = useLocale();
+  // What they shop for fills in the first budget's form; a booth that already holds a budget has no such form.
+  const { state } = useBoothContext();
   return (
     <StepFrame
       step="taste"
@@ -66,7 +69,7 @@ export function TasteStep({ taste, onTaste, onBack, onNext, dir, skip }: TasteSt
         </section>
         <section className="onb-block" aria-labelledby="onb-shop">
           <h2 className="onb-label" id="onb-shop">{t(OB.taste.shopFor)}</h2>
-          <p className="onb-hint">{t(OB.taste.shopForHint)}</p>
+          {state.mandate === null ? <p className="onb-hint">{t(OB.taste.shopForHint)}</p> : null}
           <ChipGroup
             label={t(OB.taste.shopFor)}
             options={SHOP_IDS.map((id) => ({ id, label: categoryName(id, t) }))}
