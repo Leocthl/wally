@@ -23,7 +23,7 @@ const TABLE: readonly (readonly [string, unknown, EventKey, string, string])[] =
   ["CARD_EVENT VOIDED", cardEvent("VOIDED"), "cancelled", "Card cancelled", "卡已取消"],
   ["CARD_EVENT EXPIRED", cardEvent("EXPIRED"), "cardExpired", "Card expired", "卡已過期"],
   ["MANDATE_REVOKED", { kind: "MANDATE_REVOKED", payload: {} }, "revoked", "You cancelled the budget", "你已取消預算"],
-  ["PACKET_EXPIRED", { kind: "PACKET_EXPIRED", payload: {} }, "ended", "Budget ended", "預算已完結"],
+  ["PACKET_EXPIRED", { kind: "PACKET_EXPIRED", payload: {} }, "ended", "Budget ended", "預算已到期"],
   ["anything else", { kind: "SOMETHING_NEW", payload: {} }, "other", "A receipt", "一張收據"],
 ];
 

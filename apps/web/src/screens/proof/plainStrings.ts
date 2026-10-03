@@ -112,7 +112,7 @@ export const PLAIN = {
     voided: label("Card cancelled", "卡已取消"), // NEEDS-REVIEW
     cardExpired: label("Card expired", "卡已過期"), // NEEDS-REVIEW
     revoked: label("You cancelled the budget", "你已取消預算"), // NEEDS-REVIEW
-    ended: label("Budget ended", "預算已完結"), // NEEDS-REVIEW
+    ended: label("Budget ended", "預算已到期"), // NEEDS-REVIEW
     other: label("A receipt", "一張收據"), // NEEDS-REVIEW
   },
 
@@ -131,6 +131,6 @@ export const PLAIN = {
     DUPLICATE: label("Something that can only happen once happened twice.", "只可發生一次的事發生了兩次。"), // NEEDS-REVIEW
     CONSENT: label("Wally went ahead without your signed OK where one was needed.", "需要你簽署確認的地方，Wally 沒有取得就繼續。"), // NEEDS-REVIEW
     OVERSPEND: label("The money does not add up: a card or charge went past what was approved or what the budget allows.", "金額不符：有卡或扣款超出已批准或預算容許的數目。"), // NEEDS-REVIEW
-    AFTER_REVOKE: label("A card was made or approved after the budget was cancelled or ended, or outside its dates.", "預算取消或完結後，或在有效日期以外，仍發卡或批准。"), // NEEDS-REVIEW
+    AFTER_REVOKE: label("A card was made or approved after the budget was cancelled or ended, or outside its dates.", "預算取消或到期後，或在有效日期以外，仍發卡或批准。"), // NEEDS-REVIEW
   },
 } as const;

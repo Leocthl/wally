@@ -55,7 +55,7 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
   },
   OVERSPEND: {
     en: "The money does not add up: a limit, a per-purchase cap, a charge or the total goes past what was approved or sealed.",
-    zh: "金額不符：上限、每次購買上限、扣款或總額超出已批准或封存的數目。", // NEEDS-REVIEW zh-HK
+    zh: "金額不符：上限、每次購買上限、扣款或總額超出已批准或已鎖定的數目。", // NEEDS-REVIEW zh-HK
   },
   AFTER_REVOKE: {
     en: "A purchase was approved or a card made outside the budget's validity, or after the budget was cancelled or ended.",

@@ -73,7 +73,7 @@ describe("event labels", () => {
       ["CARD_EVENT VOIDED", voided, "voided", "Card cancelled", "卡已取消"],
       ["CARD_EVENT EXPIRED", withCardEvent(voided, "EXPIRED"), "cardExpired", "Card expired", "卡已過期"],
       ["MANDATE_REVOKED", revoked, "revoked", "You cancelled the budget", "你已取消預算"],
-      ["PACKET_EXPIRED", { ...sealed, kind: "PACKET_EXPIRED", payload: { expired_at: "2026-10-31T16:00:00Z" } } as unknown as LogEntry, "ended", "Budget ended", "預算已完結"],
+      ["PACKET_EXPIRED", { ...sealed, kind: "PACKET_EXPIRED", payload: { expired_at: "2026-10-31T16:00:00Z" } } as unknown as LogEntry, "ended", "Budget ended", "預算已到期"],
     ];
     for (const [name, entry, key, en, zh] of cases) {
       expect(eventKey(entry), name).toBe(key);
@@ -161,7 +161,7 @@ const REASONS: Readonly<Record<string, readonly [string, string]>> = {
   DUPLICATE: ["Something that can only happen once happened twice.", "只可發生一次的事發生了兩次。"],
   CONSENT: ["Wally went ahead without your signed OK where one was needed.", "需要你簽署確認的地方，Wally 沒有取得就繼續。"],
   OVERSPEND: ["The money does not add up: a card or charge went past what was approved or what the budget allows.", "金額不符：有卡或扣款超出已批准或預算容許的數目。"],
-  AFTER_REVOKE: ["A card was made or approved after the budget was cancelled or ended, or outside its dates.", "預算取消或完結後，或在有效日期以外，仍發卡或批准。"],
+  AFTER_REVOKE: ["A card was made or approved after the budget was cancelled or ended, or outside its dates.", "預算取消或到期後，或在有效日期以外，仍發卡或批准。"],
 };
 
 describe("plain reasons", () => {

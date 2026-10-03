@@ -59,7 +59,7 @@ const REASONS: Readonly<Record<VerifyFailure, Bi>> = {
   },
   AFTER_REVOKE: {
     en: "A card was made or approved after the budget was cancelled or ended, or outside its dates.",
-    zh: "預算取消或完結後，或在有效日期以外，仍發卡或批准。", // NEEDS-REVIEW zh-HK
+    zh: "預算取消或到期後，或在有效日期以外，仍發卡或批准。", // NEEDS-REVIEW zh-HK
   },
 };
 

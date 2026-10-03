@@ -58,7 +58,7 @@ export const S = {
   modeHint: { en: "For engineers: receipt ids, fingerprints and the exact codes.", zh: "給工程師：收據編號、指紋及確切代碼。" }, // NEEDS-REVIEW zh-HK
   demoBadge: {
     en: "SIMULATED demo log and throwaway test keys, not the booth keys.",
-    zh: "模擬示範紀錄及一次性測試公鑰，並非攤位所用的金鑰。", // NEEDS-REVIEW zh-HK
+    zh: "模擬示範紀錄及一次性測試公鑰，並非展位所用的金鑰。", // NEEDS-REVIEW zh-HK
   },
   footer: {
     en: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.",

@@ -33,7 +33,7 @@ export const DM9: readonly Dm9Column[] = [
       label("Merchant non-delivery: the merchant.", "商戶不交貨：由商戶承擔。"), // NEEDS-REVIEW zh-HK
       label("Rail or issuer error: open, asked of HKT.", "發卡層或發卡機構出錯：未定，已向 HKT 提問。"), // NEEDS-REVIEW zh-HK
     ],
-    foot: label("At most the sealed amount is at risk (I2, R3). Refunds go through the merchant; the dispute fee follows the loss [F2, F3.dispute_fee]. Not legal advice; the wallet's terms govern.", "最多只會損失已封定的金額（I2、R3）。退款經商戶處理；爭議費用隨損失承擔 [F2, F3.dispute_fee]。並非法律意見，以錢包條款為準。"), // NEEDS-REVIEW zh-HK
+    foot: label("At most the sealed amount is at risk (I2, R3). Refunds go through the merchant; the dispute fee follows the loss [F2, F3.dispute_fee]. Not legal advice; the wallet's terms govern.", "最多只會損失已鎖定的金額（I2、R3）。退款經商戶處理；爭議費用隨損失承擔 [F2, F3.dispute_fee]。並非法律意見，以錢包條款為準。"), // NEEDS-REVIEW zh-HK
   },
   {
     id: "path",
