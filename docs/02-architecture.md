@@ -408,6 +408,7 @@ QWEN_MODEL=9b|4b (serve)   QWEN_MODELS="9b 4b" (setup: which weights to fetch)  
 JEV_BASE_URL=  JEV_MODEL=jev-1.13.0 [F11b]  TYPESAFE_API_KEY=      optional: hosted jev
 RAIL_MODE=sim    KEY_DIR=./.keys    LOG_DIR=./.data/logs    PORT=8787    VITE_API=local (on-device build)
 HOST=127.0.0.1 (default). Any non-loopback HOST, or the --lan flag, turns LAN mode on
+WALLY_SESSIONS=on|off (default: on with LAN mode, off without)    WALLY_PUBLIC_URL=https://... (practice copy: a second QR under the pairing one, on the Mac only)
 ```
 
 ```text
@@ -424,6 +425,7 @@ POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escal
 
 - **No variable is required**; no key. Secrets in `.env` only (gitignored).
 - **LAN mode** (off by default): `/api/*` needs the pairing token [F92] (header `X-Wally-Token` or cookie `wally_t`) except `/api/health` and `/api/lan`; a page on the Mac needs none and alone reads `/api/lan` (token, links, QR). Host must be loopback or the Mac's own address or name; a POST Origin must be the page's own, loopback or a native shell.
+- **Practice wallets** (`WALLY_SESSIONS`, on with LAN mode): a client past the pairing token gets its own wallet on its first `/api/*` call, named by cookie `wally_s` (HttpOnly, SameSite=Strict) or header `X-Wally-Session` (native shells keep no cookie). The Mac (loopback Host and peer) keeps the shared booth wallet. A wallet has its own demo keys, in-memory log, orchestrator and event stream, with the preset budget sealed at once; Laya and Qwen are shared and runs take turns at them, 2 at a time [F109]: with 12 phones the judge answered in 381 ms at p95, against 1,352 ms without turns [F112]; a wallet takes 9 ms to make [F111]. At most 12 wallets [F108]: one with a page open, or used in the last 5 s, is never dropped for room, the least recently used of the rest goes, and with none to drop the next visitor gets a 503 and runs on the device; 45 idle minutes [F108]; 200 log entries at most [F110], since each request reads the whole log [F113]. `/api/info` says `sessions: "shared" | "private"`; reset, tamper, cancel and the exported log are per wallet; `/api/health`, `/api/lan` and the app files are global.
 
 ## 16. Latency budget
 

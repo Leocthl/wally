@@ -50,7 +50,7 @@
 - [ ] `pnpm demo`, open `/?booth=1` (no first run; a fresh phone taps Skip, Skip tour). About names the planner.
 - [ ] `pnpm demo:reset`: HK$800 [F20], no cards, SIMULATED note on every screen
 - [ ] Network off: the booth runs. Stop Laya once, see Needs your OK (`R10.unavailable`), restart, warm up
-- [ ] LAN (`pnpm demo:lan`): phones reach the Mac (else a hotspot); firewall Allow once
+- [ ] LAN: `WALLY_PUBLIC_URL=https://wally-dev.vercel.app pnpm demo:lan`. A judge who scans the Wi-Fi code gets their own HK$800 practice wallet; the second code (works anywhere) opens the practice copy. Reset and `pnpm demo:reset` touch only the Mac's wallet. Rehearse with `node scripts/sessions-crowd.mjs --port 8787`; `curl -s http://127.0.0.1:8787/api/lan` counts live wallets. Phones reach the Mac (else a hotspot); firewall Allow once
 - [ ] On power; notifications off; mirrored
 - [ ] Video on laptop and phone; `?api=local` page ready; four rehearsals [F41]; submit before Sun 13:00 HKT [F16, F18]
 
