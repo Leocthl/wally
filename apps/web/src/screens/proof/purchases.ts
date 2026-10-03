@@ -78,6 +78,18 @@ function purchaseItem(id: string, steps: readonly Receipt[]): readonly ReceiptIt
 }
 
 /**
+ * A question nobody answered before the budget was cancelled or ended can never be answered: its row says it stopped, as the
+ * Wally screen says it, instead of waiting for an OK that cannot come.
+ */
+function withClosedQuestions(items: readonly ReceiptItem[]): readonly ReceiptItem[] {
+  return items.map((item, at) => {
+    if (item.kind !== "purchase" || item.purchase.state !== "needsOk") return item;
+    const over = items.slice(at + 1).some((later) => later.kind === "single" && (later.receipt.state === "revoked" || later.receipt.state === "expired"));
+    return over ? { ...item, purchase: { ...item.purchase, state: "stopped" } } : item;
+  });
+}
+
+/**
  * Receipts in log order to rows in order of their newest receipt (oldest first; the screen puts the newest on top). A row is a
  * purchase when its receipts hang on a decision, and a single receipt otherwise.
  */
@@ -95,7 +107,7 @@ export function groupPurchases(receipts: readonly Receipt[]): readonly ReceiptIt
     groups.set(id, [...(groups.get(id) ?? []), r]);
   }
   const items = [...loose.map(toItem), ...[...groups].flatMap(([id, steps]) => purchaseItem(id, steps))];
-  return items.sort((a, b) => a.seq - b.seq);
+  return withClosedQuestions(items.sort((a, b) => a.seq - b.seq));
 }
 
 /** Newest row first. */

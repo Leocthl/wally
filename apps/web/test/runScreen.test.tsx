@@ -550,6 +550,69 @@ describe("after a no: where the screen leads", () => {
   });
 });
 
+describe("a question the budget outlived, and an answer that lost the race", () => {
+  it("cancelling the budget closes the open question: the sheet is gone, there is no Approve, and the screen says why", async () => {
+    const m = await mountRun();
+    await m.run("unverified");
+    expect(screen.getByRole("dialog", { name: "Needs your OK" })).toBeInTheDocument();
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "No thanks" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Review and answer" })).toBeNull();
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Stopped before paying");
+    expect(alert).toHaveTextContent("You cancelled this budget, so this question is closed.");
+    expect(alert).toHaveTextContent("Wally couldn't check this seller recently.");
+    expect(screen.queryByText(/is still in your budget/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Start a new budget" })).toBeInTheDocument();
+    expect(screen.queryByRole("timer")).toBeNull();
+  });
+
+  it("a budget that has ended closes it too, in its own words", async () => {
+    const m = await mountRun();
+    await m.run("unverified");
+    await m.inject([{ type: "packet", packet: { ...(await m.mock.snapshot()).packet!, status: "EXPIRED" } }]);
+    expect(screen.getByRole("alert")).toHaveTextContent("This budget has ended, so this question is closed.");
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  });
+
+  it("reads in 繁", async () => {
+    const m = await mountRun({ locale: "zh-HK" });
+    await m.run("unverified");
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("你已取消預算，所以呢條問題已經結束。");
+  });
+
+  it("an answer that arrives after another screen answered says so, instead of a failure or a No it never gave", async () => {
+    const closed = Object.assign(new Error("This escalation is no longer open (answered, or stopped by R11)."), { code: "ESCALATION_CLOSED", status: 409 });
+    const m = await mountRun({ extend: { answerEscalation: async () => Promise.reject(closed) } });
+    await m.run("unverified");
+    const dialog = screen.getByRole("dialog", { name: "Needs your OK" });
+    await act(async () => {
+      await m.user.click(within(dialog).getByRole("button", { name: "Approve" }));
+    });
+    expect(await screen.findByText("Already answered on another screen.")).toBeInTheDocument();
+    expect(document.querySelector("[data-run-answered-elsewhere]")).not.toBeNull();
+    // Not a failure: no red banner, and the screen never claims a No.
+    expect(screen.queryByText(/stopped by R11/)).toBeNull();
+    expect(screen.queryByText("You said no, so Wally stopped it.")).toBeNull();
+  });
+
+  it("any other failure still shows as one", async () => {
+    const m = await mountRun({ extend: { answerEscalation: async () => Promise.reject(new Error("the booth fell over")) } });
+    await m.run("unverified");
+    await act(async () => {
+      await m.user.click(within(screen.getByRole("dialog", { name: "Needs your OK" })).getByRole("button", { name: "Approve" }));
+    });
+    expect(document.querySelector("[data-run-answered-elsewhere]")).toBeNull();
+  });
+});
+
 describe("Pay now", () => {
   it("is offered only on the card the pay button would pay (the newest open one), and pays that card", async () => {
     const m = await mountRun();

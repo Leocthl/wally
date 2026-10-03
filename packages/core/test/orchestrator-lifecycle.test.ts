@@ -166,6 +166,48 @@ describe("revoke (A-24, T-S4)", () => {
   });
 });
 
+describe("a question left open when the budget is over (the view, not the log)", () => {
+  it("reads CLOSED once the budget is cancelled, so the screen offers no answer; the log gains nothing from it", async () => {
+    const r = await sealed();
+    const esc = await escalate(r);
+    expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "OPEN" })]);
+    await r.orchestrator.revoke(r.revocation());
+    const after = await r.orchestrator.snapshot();
+    expect(after.escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "CLOSED" })]);
+    // Only the revocation was written: no decision, no answer, no card.
+    expect(await r.kinds()).toEqual(["MANDATE_SEALED", "DECISION", "MANDATE_REVOKED"]);
+    expect(after.cards).toEqual([]);
+  });
+
+  it("keeps the state a question was answered with, even when the budget is cancelled afterwards", async () => {
+    const r = await sealed();
+    const esc = await escalate(r);
+    await r.orchestrator.answerEscalation(r.answer(esc.id, "DENY"));
+    await r.orchestrator.revoke(r.revocation());
+    expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "DENIED" })]);
+  });
+
+  it("reads CLOSED when the budget ends with the question still open, and not before", async () => {
+    const r = await sealed();
+    r.clock.set(new Date(Date.parse(String(r.credential.validUntil)) - 30_000));
+    const esc = await escalate(r);
+    expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "OPEN" })]);
+    r.clock.set(r.credential.validUntil);
+    expect(await r.orchestrator.tick()).toMatchObject({ ok: true, packetExpired: true, expiredEscalations: [] });
+    expect((await r.orchestrator.snapshot()).escalations).toEqual([expect.objectContaining({ decisionId: esc.id, state: "CLOSED" })]);
+    expect((await r.kinds()).filter((k) => k === "DECISION")).toHaveLength(1);
+  });
+
+  it("a later answer to a closed question still cannot approve anything (I6): no card is made", async () => {
+    const r = await sealed();
+    const esc = await escalate(r);
+    await r.orchestrator.revoke(r.revocation());
+    const result = await r.orchestrator.answerEscalation(r.answer(esc.id, "APPROVE"));
+    expect(result.ok === true ? result.card : null).toBeNull();
+    expect((await r.orchestrator.snapshot()).cards).toEqual([]);
+  });
+});
+
 describe("checkout (executor, R12)", () => {
   it("is callable repeatedly on one card: the exact charge, then the replay declined CARD_USED", async () => {
     const r = await sealed();

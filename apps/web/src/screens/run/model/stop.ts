@@ -18,6 +18,9 @@ export function isBudgetStop(decision: Decision): boolean {
 /** The lead sentence: how a question ended, when it did; else the rule's own plain reason. */
 export function leadFor(answer: Answer | undefined, decision: Decision): { readonly lead: LabelPair; readonly reason?: LabelPair } {
   if (answer === "no") return { lead: R.youSaidNo };
+  // A question the budget outlived: said as it is, with the reason it was asked kept under it.
+  if (answer === "cancelled") return { lead: R.questionClosedCancelled, reason: plainReason(decision) };
+  if (answer === "ended") return { lead: R.questionClosedEnded, reason: plainReason(decision) };
   if (answer === "expired") return { lead: R.nobodyAnswered };
   if (answer === "yesButRule") return { lead: R.hardRuleAnyway, reason: plainReason(decision) };
   return { lead: plainReason(decision) };

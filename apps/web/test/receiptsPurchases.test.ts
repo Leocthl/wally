@@ -131,6 +131,17 @@ describe("groupPurchases", () => {
     expect(order[0]).toBe("asked");
   });
 
+  it("calls a question the budget outlived stopped, and leaves one that is still open as Needs your OK", async () => {
+    const open = purchases((await itemsAfter("unverified")).items)[0]!;
+    expect(open.state).toBe("needsOk");
+    const cancelled = purchases((await itemsAfter("unverified", "REVOKE")).items)[0]!;
+    expect(cancelled.state).toBe("stopped");
+    expect(cancelled.steps.map((s) => s.event)).toEqual(["asked"]);
+    // Answered before the budget ended: the answer decides, as before.
+    const answered = purchases((await itemsAfter("unverified", "YES", "REVOKE")).items)[0]!;
+    expect(answered.state).toBe("paid");
+  });
+
   it("never throws on an empty log, and leaves receipts of a decision it cannot find as rows of their own", async () => {
     expect(groupPurchases([])).toEqual([]);
     const { receipts } = await itemsAfter("normal");

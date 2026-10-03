@@ -4,6 +4,7 @@ import type {
   BoothSnapshot, CardBeat, CardEvent, CardRecord, Cart, Decision, EscalationView, JudgeRecord, LogEntry, LogView, Mandate,
   PacketState, PlannerTraceInfo, RunOutcome, ScenarioId, Stage, StageStatus, TraceEvent,
 } from "../api/types";
+import { closedBudget } from "./closedBudget";
 import { storedEntries } from "./storedEntries";
 
 export interface StageView {
@@ -162,7 +163,17 @@ function inBudget(state: BoothState, logId: string): BoothState {
   return held === undefined || held === logId ? state : initialState();
 }
 
+/** A question nobody answered before the budget was cancelled or ended is over: no screen should offer to answer it. */
+function closeOpenQuestions(state: BoothState): BoothState {
+  if (closedBudget(state) === null || !state.escalations.some((e) => e.state === "OPEN")) return state;
+  return { ...state, escalations: state.escalations.map((e): EscalationView => (e.state === "OPEN" ? { ...e, state: "CLOSED" } : e)) };
+}
+
 export function reduce(state: BoothState, action: BoothAction): BoothState {
+  return closeOpenQuestions(reduceAction(state, action));
+}
+
+function reduceAction(state: BoothState, action: BoothAction): BoothState {
   switch (action.type) {
     case "snapshot":
       return fromSnapshot(action.snapshot);

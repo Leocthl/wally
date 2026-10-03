@@ -99,7 +99,11 @@ export interface EscalationView {
   readonly decisionId: string;
   readonly templateId: TemplateId;
   readonly ruleId: string;
-  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED";
+  /**
+   * CLOSED is a question nobody answered when the budget was cancelled or ended: it is shown as over, so no screen offers an
+   * answer to it. It is a view only; no decision or log entry is written for it.
+   */
+  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED" | "CLOSED";
   readonly openedAt: string;
   readonly expiresAt: string;
   readonly totalMinor: number;

@@ -76,6 +76,9 @@ const RUN = {
   why: label("Why?", "點解？"), // NEEDS-REVIEW
   rulesDecided: label("Fixed rules decided this, not the AI.", "由固定規則決定，唔係 AI。"), // NEEDS-REVIEW
   youSaidNo: label("You said no, so Wally stopped it.", "你揀咗唔要，Wally 已攔截。"), // NEEDS-REVIEW
+  questionClosedCancelled: label("You cancelled this budget, so this question is closed.", "你已取消預算，所以呢條問題已經結束。"), // NEEDS-REVIEW
+  questionClosedEnded: label("This budget has ended, so this question is closed.", "呢個預算已到期，所以呢條問題已經結束。"), // NEEDS-REVIEW
+  alreadyAnswered: label("Already answered on another screen.", "已經喺另一個畫面回覆咗。"), // NEEDS-REVIEW
   nobodyAnswered: label("Nobody answered in time, so Wally stopped it.", "冇人及時回覆，Wally 已攔截。"), // NEEDS-REVIEW
   hardRuleAnyway: label("You said yes, but a fixed rule still stops this.", "你揀咗批准，但固定規則仍然攔截。"), // NEEDS-REVIEW
 

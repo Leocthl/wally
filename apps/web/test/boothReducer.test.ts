@@ -93,6 +93,38 @@ describe("booth reducer", () => {
     expect(state.log.entries).toHaveLength(1);
   });
 
+  it("closes a question nobody answered when the budget is cancelled, and leaves answered ones as they were", async () => {
+    const state = await play(async (c) => {
+      await c.runScenario("unverified");
+      await c.revoke();
+    });
+    expect(state.revoked).toBe(true);
+    expect(state.escalations.map((e) => e.state)).toEqual(["CLOSED"]);
+    const answered = await play(async (c) => {
+      const run = await c.runScenario("unverified");
+      await c.answerEscalation({ decisionId: run.decisionId ?? "", choice: "DENY" });
+      await c.revoke();
+    });
+    expect(answered.escalations.map((e) => e.state)).toEqual(["DENIED"]);
+  });
+
+  it("closes an open question that arrives in a snapshot of a cancelled or ended budget", async () => {
+    const clock = new FakeClock();
+    const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
+    await client.seal(m0SealRequest(clock.now()));
+    await client.runScenario("unverified");
+    const snap = await client.snapshot();
+    expect(snap.escalations.map((e) => e.state)).toEqual(["OPEN"]);
+    expect(fromSnapshot(snap).escalations.map((e) => e.state)).toEqual(["OPEN"]);
+    for (const status of ["REVOKED", "EXPIRED"] as const) {
+      const over = reduce(initialState(), { type: "snapshot", snapshot: { ...snap, packet: { ...snap.packet!, status } } });
+      expect(over.escalations.map((e) => e.state), status).toEqual(["CLOSED"]);
+    }
+    // All used is not over: the budget can be topped up, and the question stands.
+    const used = reduce(initialState(), { type: "snapshot", snapshot: { ...snap, packet: { ...snap.packet!, status: "EXHAUSTED" } } });
+    expect(used.escalations.map((e) => e.state)).toEqual(["OPEN"]);
+  });
+
   it("starts over when a new seal brings a different log: earlier log, cards, escalations and runs do not carry over", async () => {
     const clock = new FakeClock();
     const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });

@@ -48,7 +48,8 @@ export interface EscalationView {
   readonly decisionId: string;
   readonly templateId: TemplateId;
   readonly ruleId: string;
-  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED";
+  /** CLOSED: nobody answered before the budget was cancelled or ended, so there is nothing left to answer. */
+  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED" | "CLOSED";
   readonly openedAt: string;
   readonly expiresAt: string;
   readonly totalMinor: number;

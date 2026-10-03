@@ -15,7 +15,7 @@ import { Calm } from "./components/Calm";
 import { History } from "./components/History";
 import { NeedsOk } from "./components/NeedsOk";
 import { Progress } from "./components/Progress";
-import { RepeatNote } from "./components/RepeatNote";
+import { AnsweredElsewhere, RepeatNote } from "./components/RepeatNote";
 import { Stopped } from "./components/Stopped";
 import { WhySheet } from "./components/WhySheet";
 import { logSeqOf } from "./model/chain";
@@ -107,6 +107,8 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
   const [why, setWhy] = useState(false);
   const [paying, setPaying] = useState(false);
   const [answering, setAnswering] = useState<"APPROVE" | "DENY" | null>(null);
+  // The question whose answer from this screen lost a race: it was settled somewhere else, and the screen says so.
+  const [answeredElsewhere, setAnsweredElsewhere] = useState<string | null>(null);
 
   const result = model.kind === "result" ? model.result : undefined;
   const freshHere = result !== undefined && fresh === `${result.key}:${result.kind}`;
@@ -131,7 +133,10 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
       const id = result?.escalation?.decisionId;
       if (!id) return;
       setAnswering(choice);
-      void booth.answer(id, choice).finally(() => setAnswering(null));
+      void booth
+        .answer(id, choice)
+        .then((outcome) => setAnsweredElsewhere(outcome === "closed" ? id : null))
+        .finally(() => setAnswering(null));
     },
     [booth, result?.escalation?.decisionId],
   );
@@ -164,6 +169,7 @@ export function RunScreen({ onAsk, now }: RunScreenProps = {}): ReactElement {
         {model.kind === "idle" ? <Calm kind="idle" onAsk={ask} closed={closed} onNewBudget={newBudget} /> : null}
         {model.kind === "working" ? <Progress run={model.run} info={booth.info} /> : null}
         {result?.repeat ? <RepeatNote kind={result.kind} /> : null}
+        {answeredElsewhere !== null && result?.chain?.root.id === answeredElsewhere ? <AnsweredElsewhere /> : null}
         {result ? (
           <ResultView
             result={result}

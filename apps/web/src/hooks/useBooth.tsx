@@ -17,7 +17,8 @@ export interface Booth {
   propose(req: ProposeRequest): Promise<void>;
   seal(req: SealRequest): Promise<void>;
   revoke(): Promise<void>;
-  answer(decisionId: string, choice: "APPROVE" | "DENY"): Promise<void>;
+  /** "closed": the question was already answered, or ended, somewhere else (a 409): no error to show, the screen says so itself. */
+  answer(decisionId: string, choice: "APPROVE" | "DENY"): Promise<AnswerOutcome>;
   reset(): Promise<void>;
   verify(): Promise<void>;
   tamper(): Promise<void>;
@@ -25,6 +26,13 @@ export interface Booth {
   /** Runs any ApiClient call under the same busy and error handling (the presenter script uses it). */
   exec(task: () => Promise<unknown>): Promise<void>;
   clearError(): void;
+}
+
+export type AnswerOutcome = "answered" | "closed" | "failed";
+
+/** The booth refused an answer because the question is no longer open: another screen answered first, or R11 stopped it. */
+function isClosedQuestion(err: unknown): boolean {
+  return typeof err === "object" && err !== null && "code" in err && (err as { readonly code?: unknown }).code === "ESCALATION_CLOSED";
 }
 
 const BoothContext = createContext<Booth | null>(null);
@@ -124,7 +132,19 @@ export function BoothProvider({ api, autoSeal = true, children }: BoothProviderP
       propose: (req) => guard(() => api.propose(req)),
       seal: (req) => guard(() => api.seal(req)),
       revoke: () => guard(() => api.revoke()),
-      answer: (decisionId, choice) => guard(() => api.answerEscalation({ decisionId, choice })),
+      answer: async (decisionId, choice) => {
+        let outcome: AnswerOutcome = "failed";
+        await guard(async () => {
+          try {
+            await api.answerEscalation({ decisionId, choice });
+            outcome = "answered";
+          } catch (err) {
+            if (!isClosedQuestion(err)) throw err;
+            outcome = "closed"; // not a failure to report: the question was settled while this screen was waiting
+          }
+        });
+        return outcome;
+      },
       reset: () => guard(async () => {
         setVerifyOutcome(null);
         await api.reset();
