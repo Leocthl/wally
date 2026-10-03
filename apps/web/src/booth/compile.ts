@@ -74,7 +74,11 @@ const MSG = {
   budgetZero: label("The budget must be more than zero.", "預算金額必須大於零。"),
   categoryMissing: label("No known category. Try clothes, shoes, electronics or groceries.", "找不到已知類別。可試衣服、鞋、電子產品或雜貨。"),
   daysBad: label("Days must be a whole number of at least one.", "日數必須是至少一的整數。"),
+  daysTooMany: label("That is more days than a budget can run.", "日數多過一個預算可以維持的長度。"), // NEEDS-REVIEW
 };
+
+/** A hundred years: past this a number of days is not a length, and date arithmetic with it would leave what a Date can hold. */
+const MAX_READABLE_DAYS = 36_500;
 
 function budgetChip(sentence: string): RuleChip {
   const skip = /(?:ask|confirm|check)[^.;]*?(?:above|over)\s+HK\$\s?[\d,.]+|no single purchase\s+(?:above|over)\s+HK\$\s?[\d,.]+/gi;
@@ -87,8 +91,8 @@ function budgetChip(sentence: string): RuleChip {
   };
 }
 
-const expiry = (value: ExpiryValue, valid = true): RuleChip => ({
-  kind: "expiry", rule: "R2", label: label("Expires", "到期"), value, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.daysBad }),
+const expiry = (value: ExpiryValue, valid = true, error: LabelPair = MSG.daysBad): RuleChip => ({
+  kind: "expiry", rule: "R2", label: label("Expires", "到期"), value, valid, prov: SIMULATED, ...(valid ? {} : { error }),
 });
 
 const THIS_MONTH = /\bthis\s+month\b|今個月|呢個月|這個月|这个月|本月/i;
@@ -112,6 +116,8 @@ function lengthInDays(sentence: string): number | null {
 function expiryChip(sentence: string, now: Date): RuleChip {
   const days = lengthInDays(sentence);
   if (days !== null && days < 1) return expiry({ kind: "expiry", mode: "days", days }, false);
+  // An absurd count (99999999999 days, 400 digits) is not a length: said, not guessed, and never handed to date arithmetic.
+  if (days !== null && days > MAX_READABLE_DAYS) return expiry({ kind: "expiry", mode: "days", days: MAX_READABLE_DAYS }, false, MSG.daysTooMany);
   const date = statedDate(sentence, now);
   if (date !== null && (days === null || date.endMs < now.getTime() + days * DAY_MS)) return expiry(date.value);
   return expiry(days !== null ? { kind: "expiry", mode: "days", days } : { kind: "expiry", mode: "month_end" });
@@ -123,11 +129,21 @@ function categoryChip(sentence: string): RuleChip {
   return { kind: "category", rule: "R6", label: label("Category", "類別"), value: { kind: "category", slugs }, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.categoryMissing }) };
 }
 
-/** "any" when the sentence says any seller will do, "verified" when it asks for verified ones, null when it says neither (English or Chinese). */
+/** A word that turns "unverified sellers" round, in the few words before it: "never unverified sellers", "avoid any seller". */
+const TURNED_AWAY = /\b(?:never|no|not|avoid|except|exclude|without|skip|don'?t|do not)\b[^.;,]{0,24}$/i;
+
+function saysAnySeller(sentence: string): boolean {
+  return [...sentence.matchAll(/\b(any|unverified)\s+sellers?\b/gi)].some((m) => !TURNED_AWAY.test(sentence.slice(Math.max(0, m.index - 36), m.index)));
+}
+
+/**
+ * "verified" when the sentence asks for verified sellers anywhere (the stricter reading stands when it also says "any seller"),
+ * "any" when it says any seller will do and does not turn that away, null when it says neither (English or Chinese).
+ */
 export function sellerWords(sentence: string): "any" | "verified" | null {
   const zh = zhSellers(sentence);
-  if (/\b(any|unverified)\s+sellers?\b/i.test(sentence) || zh === "any") return "any";
-  return /\bverified\b/i.test(sentence) || zh === "verified" ? "verified" : null;
+  if (/\bverified\b/i.test(sentence) || zh === "verified") return "verified";
+  return saysAnySeller(sentence) || zh === "any" ? "any" : null;
 }
 
 /** The sentence ends the budget at the month's end: "this month", 今個月, 本月. */

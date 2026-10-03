@@ -82,6 +82,10 @@ const AMOUNT_FORMS: readonly RegExp[] = [
   new RegExp(`(${ZH_NUM})\\s?${SUFFIX}`, "g"),
 ];
 
+/** 塊 is also the measure word for a piece (一塊蛋糕): a small number before it is a count, not dollars. */
+const MEASURE_WORD_END = /[塊块]$/;
+const MEASURE_WORD_MAX_COUNT_MINOR = 1_000; // under HK$10 before 塊 reads as "one piece", "two pieces"
+
 /** Every amount in the sentence, in order, as minor units. Digits and Chinese numerals, before or after the currency word. */
 export function readAmounts(text: string): readonly Amount[] {
   const found = AMOUNT_FORMS.flatMap((form) =>
@@ -89,7 +93,8 @@ export function readAmounts(text: string): readonly Amount[] {
       const raw = m[1] ?? "";
       const dollars = /^\d/.test(raw) ? raw.replaceAll(",", "") : String(zhInteger(raw) ?? "");
       const minor = dollars === "" ? null : dollarsToMinor(dollars);
-      return minor === null ? [] : [{ minor, at: m.index ?? 0, end: (m.index ?? 0) + m[0].length }];
+      if (minor === null || (MEASURE_WORD_END.test(m[0]) && minor < MEASURE_WORD_MAX_COUNT_MINOR)) return [];
+      return [{ minor, at: m.index ?? 0, end: (m.index ?? 0) + m[0].length }];
     }),
   );
   // The same amount can be matched by two forms (HK$800蚊): keep the one that starts first and drop what overlaps it.
@@ -104,7 +109,7 @@ const OVER = "(?:超過|超过|多過|多过|多於|多于|高過|高过|高於|
 /** "超過 HK$300 要問我", "多過300蚊就要問我": the amount above which Wally asks first. */
 const ASK_CLAUSE = new RegExp(`${OVER}\\s?(${AMOUNT_ZH})[^。；;，,.]{0,6}?(?:問我|问我|確認|确认|先問|先问|詢問|询问|通知我|問一問|问一问)`, "g");
 /** "單次最多 HK$200", "每次唔好超過200蚊": the most one purchase may cost. */
-const CAP_CLAUSE = new RegExp(`(?:單次|单次|每次|單筆|单笔|每筆|每笔|每單|每单|一次)\\s?(?:最多|唔好超過|唔好多過|不要超過|不要超过|不超過|不超过|上限|最高|限)\\s?(${AMOUNT_ZH})`, "g");
+const CAP_CLAUSE = new RegExp(`(?:單次|单次|每次|單筆|单笔|每筆|每笔|每單|每单|一次|每件|每樣|每个|每個|單件|单件|一件|每張|每张)\\s?(?:最多|唔好超過|唔好多過|不要超過|不要超过|不超過|不超过|上限|最高|限)\\s?(${AMOUNT_ZH})`, "g");
 
 function firstAmount(clause: string): number | null {
   return readAmounts(clause)[0]?.minor ?? null;
@@ -157,11 +162,15 @@ export function zhCategories(text: string): readonly string[] {
 
 // ---- which sellers ----
 
-const ZH_ANY_SELLER = /任何賣家|任何卖家|任何商家|任何店|不限賣家|不限卖家|唔限賣家|隨便邊個賣家|唔使驗證|唔使认证|不用驗證|不用验证|無需驗證|未驗證賣家|未验证卖家/;
-const ZH_VERIFIED = /已驗證|已验证|認證賣家|认证卖家|驗證賣家|验证卖家|認證商家|认证商家|只限認證|只限认证|只限驗證|只限验证/;
+const ZH_ANY_SELLER = /任何賣家|任何卖家|任何商家|任何店|不限賣家|不限卖家|唔限賣家|隨便邊個賣家|唔使驗證|唔使认证|不用驗證|不用验证|無需驗證/;
+// 未驗證賣家 (unverified sellers) is not a request for verified ones: the 未 in front turns it round.
+const ZH_VERIFIED = /已驗證|已验证|認證賣家|认证卖家|(?<!未)驗證賣家|(?<!未)验证卖家|認證商家|认证商家|只限認證|只限认证|只限驗證|只限验证/;
 
-/** "any" only when the sentence says any seller will do; "verified" when it asks for verified ones; null when it says neither. */
+/**
+ * "verified" when the sentence asks for verified sellers anywhere, even if it also says "any seller" (the stricter reading stands);
+ * "any" only when it says any seller will do and asks for verified ones nowhere; null when it says neither.
+ */
 export function zhSellers(text: string): "any" | "verified" | null {
-  if (ZH_ANY_SELLER.test(text)) return "any";
-  return ZH_VERIFIED.test(text) ? "verified" : null;
+  if (ZH_VERIFIED.test(text)) return "verified";
+  return ZH_ANY_SELLER.test(text) ? "any" : null;
 }

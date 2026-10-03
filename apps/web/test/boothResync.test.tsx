@@ -19,6 +19,10 @@ class Flaky extends MockApiClient {
   snapshots = 0;
   /** Called inside each snapshot read: an event that arrives while the page is reading the booth. */
   duringRead: (() => void) | null = null;
+  /** The next snapshot read never answers (a hung connection). */
+  hangNext = false;
+  /** Held reads wait here until it is opened. */
+  gate: Promise<void> | null = null;
 
   constructor(kind: ApiKind = "http") {
     super({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
@@ -29,6 +33,11 @@ class Flaky extends MockApiClient {
   override async snapshot(): Promise<BoothSnapshot> {
     this.snapshots += 1;
     if (this.snapshotFails) throw new ApiRequestError(0, "NETWORK", "The booth server cannot be reached.");
+    if (this.hangNext) {
+      this.hangNext = false;
+      return new Promise<BoothSnapshot>(() => undefined);
+    }
+    if (this.gate !== null) await this.gate;
     const answer = this.replacement ?? (await super.snapshot());
     this.duringRead?.();
     return answer;
@@ -70,8 +79,8 @@ function Probe(): React.ReactElement {
   );
 }
 
-const open = async (api: Flaky) => {
-  render(<BoothProvider api={api}><Probe /></BoothProvider>);
+const open = async (api: Flaky, resyncTimeoutMs?: number) => {
+  render(<BoothProvider api={api} {...(resyncTimeoutMs === undefined ? {} : { resyncTimeoutMs })}><Probe /></BoothProvider>);
   await waitFor(() => expect(screen.getByTestId("budget")).toHaveTextContent("80000"));
 };
 
@@ -151,6 +160,67 @@ describe("a page left open while the booth restarted", () => {
     };
     act(() => api.reconnect());
     await waitFor(() => expect(api.snapshots).toBe(base + 3));
+    expect(screen.getByTestId("error")).toHaveTextContent("no error");
+  });
+
+  it("leaves a run that is under way alone when the phone only wakes: the stream is fine, and the page is waiting for that call", async () => {
+    const api = new Flaky("http");
+    await open(api);
+    let finish: () => void = () => undefined;
+    const slow = new Promise<void>((resolve) => void (finish = resolve));
+    act(() => void booth?.exec(() => slow));
+    await waitFor(() => expect(booth?.busy).toBe(true));
+    const before = api.snapshots;
+    act(() => void window.dispatchEvent(new Event("online")));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(api.snapshots).toBe(before); // a call is pending: nothing is re-read behind it
+    await act(async () => finish());
+    await waitFor(() => expect(booth?.busy).toBe(false));
+    act(() => void window.dispatchEvent(new Event("online")));
+    await waitFor(() => expect(api.snapshots).toBeGreaterThan(before));
+  });
+
+  it("a read that failed does not use up the wake: the next one tries at once", async () => {
+    const api = new Flaky("http");
+    await open(api);
+    api.snapshotFails = true;
+    const before = api.snapshots;
+    act(() => void window.dispatchEvent(new Event("online")));
+    await waitFor(() => expect(api.snapshots).toBe(before + 1));
+    api.snapshotFails = false;
+    api.replacement = await restarted(api);
+    act(() => void window.dispatchEvent(new Event("online"))); // well within the two seconds a good read would have held back
+    await waitFor(() => expect(screen.getByTestId("budget")).toHaveTextContent("30000"));
+  });
+
+  it("a trigger that comes in while a read is under way is not lost: it reads once more", async () => {
+    const api = new Flaky();
+    await open(api);
+    const other = await restarted(api); // made before the gate closes: it reads the booth too
+    const before = api.snapshots;
+    let open_: () => void = () => undefined;
+    api.gate = new Promise<void>((resolve) => void (open_ = resolve));
+    act(() => api.reconnect());
+    await waitFor(() => expect(api.snapshots).toBe(before + 1));
+    act(() => api.reconnect()); // while the first read waits at the gate
+    api.replacement = other;
+    api.gate = null;
+    await act(async () => open_());
+    await waitFor(() => expect(screen.getByTestId("budget")).toHaveTextContent("30000"));
+    expect(api.snapshots).toBeGreaterThanOrEqual(before + 2);
+  });
+
+  it("a read that never answers is given up on, so the next trigger can read", async () => {
+    const api = new Flaky();
+    await open(api, 60);
+    const before = api.snapshots;
+    api.hangNext = true;
+    act(() => api.reconnect());
+    await waitFor(() => expect(api.snapshots).toBe(before + 1));
+    await new Promise((r) => setTimeout(r, 120)); // past the give-up time
+    api.replacement = await restarted(api);
+    act(() => api.reconnect());
+    await waitFor(() => expect(screen.getByTestId("budget")).toHaveTextContent("30000"));
     expect(screen.getByTestId("error")).toHaveTextContent("no error");
   });
 

@@ -20,7 +20,8 @@
 
 /* The bar wraps instead of pushing the language switch and About off the screen when the text is large. The brand name goes
    when the bar is narrow for the size of the text (em follows the text size; the rem media query in shell.css does not). */
-.shell-bar .shell-bar__inner { flex-wrap: wrap; container: shellbar / inline-size; }
+.shell-bar { container: shellbar / inline-size; }
+.shell-bar .shell-bar__inner { flex-wrap: wrap; }
 /* The brand takes what the others leave (a zero basis, so it never forces a second row by its own width). */
 .shell-bar .shell-brand { flex: 1 1 0; min-width: var(--tap); }
 @container shellbar (max-width: 19.25em) {
