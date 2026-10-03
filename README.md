@@ -1,6 +1,7 @@
 # Wally
 
 - A sealed-budget wallet for AI shopping agents. The card rail is **SIMULATED**. Not affiliated with HKT, Tap & Go or Mastercard.
+- **Live demo**: https://wally-dev.vercel.app opens the on-device app in any browser: the real engine and rules with recorded model answers, no server. The booth Mac runs the live models.
 - **Built** during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
 
 ## What it does
