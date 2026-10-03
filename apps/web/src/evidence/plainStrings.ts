@@ -1,7 +1,7 @@
 // Static words of the plain Evidence screen, EN then zh-HK. Sentences that depend on the numbers live in explainPlain.ts
 // and explainCards.ts. {slots} take figures that wear the run's chip. The three layers are always named the same way:
 // rules only (the hard rules R1-R8 and R12 with the card limit: no seller check, no listing check), Wally (the same plus the
-// seller check and the listing check) and AI alone (for reference).
+// seller check and the listing check) and a bare AI judge (our weak baseline, for reference).
 // Every zh-HK line is a draft for the native read.
 import { label } from "../i18n/label";
 
@@ -18,8 +18,8 @@ export const P = {
   rulesDesc: label("Your budget, what it can buy, the dates and the one-off card limit. No seller check, and nobody reads the listing.", "你的預算、可買的類別、日期和一次性卡的上限。沒有賣家檢查，也沒有人閱讀商品頁。"), // NEEDS-REVIEW zh-HK
   wally: label("Wally", "Wally"),
   wallyDesc: label("The same, plus a seller check and a check that reads each listing.", "同樣的規則和上限，再加上賣家檢查和閱讀每個商品頁的檢查。"), // NEEDS-REVIEW zh-HK
-  alone: label("AI alone", "單靠 AI"), // NEEDS-REVIEW zh-HK
-  aloneDesc: label("For reference: an AI model decides and pays with a card on file. No rules.", "供參考：由 AI 模型決定，用已儲存的卡付款，沒有規則。"), // NEEDS-REVIEW zh-HK
+  alone: label("Bare AI judge", "單靠 AI 判斷器"), // NEEDS-REVIEW zh-HK
+  aloneDesc: label("Our weak baseline, for reference: an AI model decides alone and pays with a card on file. No rules, no card limit.", "我們的弱基線，供參考：由 AI 模型獨自決定，用已儲存的卡付款，沒有規則，也沒有卡的上限。"), // NEEDS-REVIEW zh-HK
 
   count: label("{k} of {n}", "{k}／{n}"), // NEEDS-REVIEW zh-HK
   tapDetails: label("Tap for details", "按一下看詳情"), // NEEDS-REVIEW zh-HK

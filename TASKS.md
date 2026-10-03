@@ -4,7 +4,7 @@
 1. **D-03, D-04** Kill tests, human only: real-card decline (a human types the card [F1]) and shop probe [F39]; also Tap & Go reference screenshots for the look.
 1b. **Persist (done on main)**: human check left: reload on a real phone (Safari and Chrome) and in the iOS and Android shells.
 2. **X-01** Public repo: the private remote has `main` pushed; making it public needs the team's explicit yes (licence: Apache-2.0, chosen 2026-10-03). The 2026-10-03 audit found no secret or brand material; two owner decisions are open: the personal email on every commit, and whether the organiser-pack digests (F13 to F19) may be public.
-3. **D-17, D-18, D-30** Film and deck refresh (the demo half re-shot on the current build, the photo slide, the live link); then a human listens to the narration and watches every join, and types the four names into slide 18.
+3. **D-17, D-18, D-30** Film and deck refresh (the demo half re-shot on the current build, the photo slide, the live link); then a human listens to the narration and watches every join, and types the four names into slide 12.
 4. **D-12, D-13, D-14, D-24** Manual-route stopwatch, evidence map, HKT ask page, scoring map.
 5. **D-15, D-16, D-17, D-18, D-25** Deck, demo script run, rehearsals, 3-minute video, submission package; form opens Sat, deadline Sun 13:00 HKT [F18].
 6. **D-26, D-27, X-19** Freeze procedure, booth kit, credits check.
@@ -176,7 +176,7 @@
 | D-26 | Freeze procedure (03 §Freeze): final commit before Sun 13:00 HKT [F16]; README Credits and `THIRD_PARTY.md` final; nothing pushed after | [TEAM] | 0.5h | D-25, X-18 | M6 | [ ] |
 | D-27 | Booth kit: F45 clock card, "try to trick the agent" prompt card, QR to the public repo, rota that keeps one person at the booth through the exhibition [F14] | [TEAM] | 0.5h | D-16 | M5 | [ ] |
 | D-28 | Baseline definitions in `packages/harness` (05 §Replay harness): B0 model-only gate (Laya answers `budget_fit` {within_budget, over_budget} plus the judge questions and is trusted; no arithmetic, no rail limit); B1 rules R1-R8 and R12 plus the rail limit, no judge (no R9, R10); B2 full pipeline. Tests first: B1 and B2 never mint above the limit | [TEAM] | 1h | D-08, B-14 | M3 | [x] |
-| D-29 | Hallway tally at the 13:30 exhibition (12): 30 people, five questions, three quotes; say the result at 4:15 and add it to the notes of deck slide 17 [F99] | [TEAM] | 1h | D-27 | M6 | [ ] |
-| D-30 | Deck hand-offs: type the four names into slide 18; after the app screenshots change run `tools/swap-shots.sh` in the deck folder (one map file, `shots/map.json`); re-check slides 2, 3, 11 and 13 to 17 against the register [F42, F70] | [TEAM] | 1h | D-15 | M6 | [ ] |
+| D-29 | Hallway tally at the 13:30 exhibition (12): 30 people, five questions, three quotes; say the result at 4:15 and add it to the notes of deck slide 11 [F99] | [TEAM] | 1h | D-27 | M6 | [ ] |
+| D-30 | Deck hand-offs: type the four names into slide 12; after the app screenshots change run `tools/swap-shots.sh` in the deck folder (one map file, `shots/map.json`); re-check slides 2, 3, 6, 9, 10, 11 and backups 13, 14, 22 to 29 against the register [F42, F70] | [TEAM] | 1h | D-15 | M6 | [ ] |
 | D-31 | Re-capture in a browser the pages behind F94, F95 and F100 to F103 (and the grid pages); a lawyer reads the F100 and F101 readings before any pilot; send 09 only after OBSERVED | [TEAM] | 1.5h | D-06 | M5 | [ ] |
-| D-32 | Repo licence: Apache-2.0, `LICENSE` and `NOTICE` merged (daf44e6); the Q&A and slide 22 say so (07); the repo stays private until the team says yes | [TEAM] | 0.25h | X-01 | M5 | [x] |
+| D-32 | Repo licence: Apache-2.0, `LICENSE` and `NOTICE` merged (daf44e6); the Q&A (backup 33) and the credits (backup 30) say so (07); the repo stays private until the team says yes | [TEAM] | 0.25h | X-01 | M5 | [x] |

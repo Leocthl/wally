@@ -33,7 +33,7 @@
 ## Replay harness
 - `packages/harness` runs the real components (cart builder, engine, orchestrator, executor, rail-sim); the judge is live Laya or a labelled recording replayed offline.
 - **Seeded**: same seed, same scenarios; 150-200 [F37], 16 categories with legitimate controls; the generator sets every label.
-- **Baselines** (D-28; one recorded planner output per scenario). **B0** model-only gate ("AI alone" in the pitch): Laya answers `budget_fit` plus the judge questions and is trusted; a card on file pays (no limit, single use, lock or log). **B1** R1-R8, R12 and the rail limit, no judge. **B2** the real orchestrator: R1-R12, judge, rail limit, executor, signed log; a simulated shopper answers escalations.
+- **Baselines** (D-28; one recorded planner output per scenario). **B0** model-only gate ("bare AI judge" in the pitch): Laya answers `budget_fit` plus the judge questions and is trusted; a card on file pays (no limit, single use, lock or log). **B1** R1-R8, R12 and the rail limit, no judge. **B2** the real orchestrator: R1-R12, judge, rail limit, executor, signed log; a simulated shopper answers escalations.
 - **Injection set**: hand-written, SIMULATED, English; tuning and held-out parts split before tuning [F36].
 
 ```yaml
@@ -68,7 +68,7 @@ judge_down:        ERROR, then ESCALATE R10.unavailable (I5, F34)              #
 - **Targets** [F38]: T-H1, 0 over-limit mints in deterministic scenarios; T-H2, at least 90% of legitimate scenarios approved after the shopper's answer, without timeouts. Misses are reported, not retuned. T-H2 moves with host load [F34]: quote it from a quiet host. Final run (seed 7, da2c814): both met [F69].
 
 ## Evidence screen
-- **Plain view** (`#/evidence`, DM8): leads with rules only vs Wally (rules plus the listing check); AI alone is last and quiet. Every zero carries its Wilson upper bound [F96]; the 5 of 66 false alarms sit on the Approved card; the chip reads "Measured on N scripted test purchases, in a simulated shop"; no test counts are printed.
+- **Plain view** (`#/evidence`, DM8): leads with rules only vs Wally (rules plus the listing check); bare AI judge is last and quiet. Every zero carries its Wilson upper bound [F96]; the 5 of 66 false alarms sit on the Approved card; the chip reads "Measured on N scripted test purchases, in a simulated shop"; no test counts are printed.
 
 ## Manual-route comparison
 - **Routes**: M, the holder by hand (read total incl. shipping, check the packet, make a Single Use Card [F1.issuance]); A, the agent flow.

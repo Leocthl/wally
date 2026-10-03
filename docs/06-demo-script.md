@@ -39,12 +39,12 @@
 | 1:35-2:30 | DM3, DM4, DM5 | Step x3 |
 | 2:30-2:38 | DM6 HK$120 [F23], cut first | Step |
 | 2:38-3:00 | DM7 Proof checks itself, change one receipt, put it back | Step |
-| 3:00-3:30 | DM8 rules only vs Wally, where it breaks | deck 11-12 |
-| 3:30-4:15 | Who pays, who does what | deck 13-14 |
-| 4:15-4:45 | DM9 path to HKT in plain words; hallway result | deck 15-17 |
-| 4:45-5:00 | Team | deck 18-19 |
+| 3:00-3:30 | DM8 rules only vs Wally, where it breaks | deck 9 |
+| 3:30-4:15 | Who pays, who does what | deck 10 |
+| 4:15-4:45 | DM9 path to HKT in plain words; hallway result | deck 11 |
+| 4:45-5:00 | Team | deck 12 |
 
-- **Q&A**: DMR1 (Cancel), DMR2 (let an escalation expire [F31]) on request. Slides 4-10 are stills if the app fails. **Behind**: cut DM6, then DM8 to one chart.
+- **Q&A**: DMR1 (Cancel), DMR2 (let an escalation expire [F31]) on request. Slides 4, 5, 8 are stills if the app fails. **Behind**: cut DM6, then DM8 to one chart.
 
 ## Pre-demo checklist
 - [ ] `pnpm booth`: starts Laya and Qwen, one warm-up each (slow first call [F26]), then the booth; the Mac stays awake while it runs. Open `/?booth=1` (no first run; a fresh phone taps Skip, Skip tour). About names the planner.

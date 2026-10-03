@@ -31,7 +31,7 @@ test("plain by default: the headline, the key to the layers, and one card per id
   await expect(page.locator('[data-plain-card="limit"]')).not.toBeVisible();
   // Open the plain folds only: "How we know" is the developer view, and has the engineers' words on purpose.
   await page.locator("details[data-fold]").evaluateAll((all) => all.forEach((d) => ((d as HTMLDetailsElement).open = true)));
-  await expect(page.locator('[data-plain-card="layers"] dt')).toHaveText(["Rules only", "Wally", "AI alone"]);
+  await expect(page.locator('[data-plain-card="layers"] dt')).toHaveText(["Rules only", "Wally", "Bare AI judge"]);
   for (const id of ["limit", "risky", "tricks", "honest", "speed", "wrong"]) await expect(page.locator(`[data-plain-card="${id}"]`)).toBeAttached();
   const visible = (await page.locator("main").innerText()).replace(/\s+/g, " ");
   expect(visible).not.toMatch(/\b(B0|B1|B2|CI|p50|p95|T-H\d|F38|seed|commit|deterministic|pipeline|JSON)\b|MEASURED\(/);

@@ -131,19 +131,19 @@ describe("plain is the default", () => {
     const c = show(run(realistic()));
     expect(text(card(c, "hero"))).toContain("Rules and the card limit already keep spending under the limit. The listing check is what stops trick listings that rules alone let through.");
     const key = card(c, "layers");
-    expect([...key.querySelectorAll("dt")].map(text)).toEqual(["Rules only", "Wally", "AI alone"]);
+    expect([...key.querySelectorAll("dt")].map(text)).toEqual(["Rules only", "Wally", "Bare AI judge"]);
     // Rules only is the hard rules R1-R8 and R12 with the card limit: no seller check (R9), no listing check (R10).
     expect(text(key)).toContain("Your budget, what it can buy, the dates and the one-off card limit. No seller check, and nobody reads the listing.");
     expect(text(key)).toContain("The same, plus a seller check and a check that reads each listing.");
-    expect(text(key)).toContain("For reference: an AI model decides");
+    expect(text(key)).toContain("Our weak baseline, for reference: an AI model decides alone");
   });
 
   it("never headlines an AI on its own: it is the last row of a card and absent from the headline", () => {
     const c = show(run(realistic()));
-    expect(text(card(c, "hero").querySelector("h2"))).not.toMatch(/AI alone|AI on its own|model/i);
+    expect(text(card(c, "hero").querySelector("h2"))).not.toMatch(/Bare AI judge|AI alone|AI on its own|model/i);
     for (const id of ["limit", "risky", "tricks", "honest"]) {
       const names = [...card(c, id).querySelectorAll(".evp-bar__name")].map(text);
-      expect(names, id).toEqual(["Rules only", "Wally", "AI alone"]);
+      expect(names, id).toEqual(["Rules only", "Wally", "Bare AI judge"]);
     }
   });
 
@@ -164,7 +164,7 @@ describe("the cards read the loaded counts", () => {
     expect(text(limit.querySelector(".evp-big"))).toBe("0 of 150 purchases");
     expect(text(limit)).toContain("Rules alone already stop this. Rules only and Wally both had none, so the listing check adds nothing here.");
     expect(text(limit)).toContain("None went over on our own test set, but the true rate could still be up to about 2 in a hundred.");
-    expect([...limit.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 0 of 150", "Wally 0 of 150", "AI alone 9 of 150"]);
+    expect([...limit.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 0 of 150", "Wally 0 of 150", "Bare AI judge 9 of 150"]);
   });
 
   it("stopped before paying: 84 of 84, what rules alone did, the limit, and what counted as risky", () => {
@@ -174,7 +174,7 @@ describe("the cards read the loaded counts", () => {
     expect(text(risky)).toContain("Rules alone stopped about seven in ten of them.");
     expect(text(risky)).toContain("None got through on our own test set, but the true rate could still be up to about 4 in a hundred.");
     expect(text(risky)).toContain("They included going over the budget, listings that try to give Wally orders and the wrong shop.");
-    expect([...risky.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 56 of 84", "Wally 84 of 84", "AI alone 41 of 84"]);
+    expect([...risky.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 56 of 84", "Wally 84 of 84", "Bare AI judge 41 of 84"]);
   });
 
   it("trick listings: rules alone let every one through, Wally none, and how small that set is", () => {
@@ -183,7 +183,7 @@ describe("the cards read the loaded counts", () => {
     expect(text(tricks)).toContain("Rules alone let every one of them through.");
     expect(text(tricks)).toContain("Wally let none through on our own test set. With so few listings, the true rate could still be up to about 23 in a hundred.");
     expect(text(tricks)).toContain("no fixed rule would stop, so only the listing check can");
-    expect([...tricks.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 0 of 13", "Wally 13 of 13", "AI alone 9 of 13"]);
+    expect([...tricks.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 0 of 13", "Wally 13 of 13", "Bare AI judge 9 of 13"]);
   });
 
   it("approved: 61 of 66, and the 5 blocked by mistake are on this card, not only in the miss card", () => {
@@ -191,7 +191,7 @@ describe("the cards read the loaded counts", () => {
     expect(text(honest.querySelector(".evp-big"))).toBe("61 of 66 honest purchases");
     expect(text(honest)).toContain("Wally let about nine in ten honest purchases through and blocked 5 by mistake.");
     expect(text(honest)).toContain("Rules only blocked 3 by mistake. The listing check adds some false alarms.");
-    expect([...honest.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 63 of 66", "Wally 61 of 66", "AI alone 48 of 66"]);
+    expect([...honest.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 63 of 66", "Wally 61 of 66", "Bare AI judge 48 of 66"]);
   });
 
   it("speed: the typical time, nearly every decision, and where the time goes", () => {
@@ -199,7 +199,7 @@ describe("the cards read the loaded counts", () => {
     expect(text(speed.querySelector(".evp-big"))).toBe("0.16 seconds for a typical decision");
     expect(text(speed)).toContain("Nearly every decision took under 0.39 seconds.");
     expect(text(speed)).toContain("Rules alone are faster: reading the listing is what takes the time.");
-    expect([...speed.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only under 0.01", "Wally 0.16", "AI alone 0.21"]);
+    expect([...speed.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only under 0.01", "Wally 0.16", "Bare AI judge 0.21"]);
   });
 
   it("where Wally still gets it wrong: the false alarms and the listing check on its own", () => {
@@ -289,10 +289,10 @@ describe("what the file does not carry is left out, never guessed", () => {
     const raw = realistic();
     const b = raw["baselines"] as Record<string, Json>;
     const c = show(run({ ...raw, baselines: { B0: b["B0"], B2: b["B2"] } }));
-    expect([...card(c, "limit").querySelectorAll(".evp-bar__name")].map(text)).toEqual(["Wally", "AI alone"]);
+    expect([...card(c, "limit").querySelectorAll(".evp-bar__name")].map(text)).toEqual(["Wally", "Bare AI judge"]);
     expect(text(card(c, "limit"))).not.toContain("Rules");
     expect(card(c, "hero")).not.toHaveTextContent("Rules and the card limit already keep");
-    expect([...card(c, "layers").querySelectorAll("dt")].map(text)).toEqual(["Wally", "AI alone"]);
+    expect([...card(c, "layers").querySelectorAll("dt")].map(text)).toEqual(["Wally", "Bare AI judge"]);
   });
 
   it("without the trick-listing counts: no trick card", () => {
