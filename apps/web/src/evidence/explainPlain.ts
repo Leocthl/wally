@@ -136,7 +136,7 @@ export type ZeroKind = "limit" | "risky" | "tricks" | "blocked";
 const ZERO_LIMIT: Readonly<Record<ZeroKind, LabelPair>> = {
   limit: label("None went over on our own test set, but the true rate could still be up to about {x} in a hundred.", "在我們自己的測試中沒有任何一宗超出上限，但真實比率仍可能高達約每一百宗有 {x} 宗。"), // NEEDS-REVIEW zh-HK
   risky: label("None got through on our own test set, but the true rate could still be up to about {x} in a hundred.", "在我們自己的測試中沒有任何一宗漏網，但真實比率仍可能高達約每一百宗有 {x} 宗。"), // NEEDS-REVIEW zh-HK
-  tricks: label("Wally let none through on our own test set. With this few listings, the true rate could still be up to about {x} in a hundred.", "在我們自己的測試中，Wally 沒有讓任何一個漏網。由於商品頁數量不多，真實比率仍可能高達約每一百個有 {x} 個。"), // NEEDS-REVIEW zh-HK
+  tricks: label("Wally let none through on our own test set. With so few listings, the true rate could still be up to about {x} in a hundred.", "在我們自己的測試中，Wally 沒有讓任何一個漏網。由於商品頁數量不多，真實比率仍可能高達約每一百個有 {x} 個。"), // NEEDS-REVIEW zh-HK
   blocked: label("None was blocked by mistake on our own test set, but the true rate could still be up to about {x} in a hundred.", "在我們自己的測試中沒有任何正常購買被錯誤攔截，但真實比率仍可能高達約每一百宗有 {x} 宗。"), // NEEDS-REVIEW zh-HK
 };
 

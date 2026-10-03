@@ -126,7 +126,7 @@ describe("the cards read the loaded counts", () => {
     const tricks = card(c, "tricks");
     expect(text(tricks.querySelector(".evp-big"))).toBe("13 of 13 trick listings");
     expect(text(tricks)).toContain("Rules alone let every one of them through.");
-    expect(text(tricks)).toContain("Wally let none through on our own test set. With this few listings, the true rate could still be up to about 23 in a hundred.");
+    expect(text(tricks)).toContain("Wally let none through on our own test set. With so few listings, the true rate could still be up to about 23 in a hundred.");
     expect(text(tricks)).toContain("no fixed rule would stop, so only the listing check can");
     expect([...tricks.querySelectorAll(".evp-bar")].map((r) => text(r))).toEqual(["Rules only 0 of 13", "Wally 13 of 13", "AI alone 9 of 13"]);
   });

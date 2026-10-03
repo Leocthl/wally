@@ -120,7 +120,7 @@ describe("a zero never stands alone: the limit that goes with it", () => {
   it("is said in words with the limit as a figure, per kind of zero", () => {
     expect(en(zeroLimit("limit", 150))).toBe("None went over on our own test set, but the true rate could still be up to about 2 in a hundred.");
     expect(en(zeroLimit("risky", 84))).toBe("None got through on our own test set, but the true rate could still be up to about 4 in a hundred.");
-    expect(en(zeroLimit("tricks", 13))).toBe("Wally let none through on our own test set. With this few listings, the true rate could still be up to about 23 in a hundred.");
+    expect(en(zeroLimit("tricks", 13))).toBe("Wally let none through on our own test set. With so few listings, the true rate could still be up to about 23 in a hundred.");
     expect(en(zeroLimit("blocked", 66))).toBe("None was blocked by mistake on our own test set, but the true rate could still be up to about 6 in a hundred.");
     expect(zeroLimit("risky", 84).slots).toEqual({ x: 4 });
     expect(zh(zeroLimit("risky", 84))).toBe("在我們自己的測試中沒有任何一宗漏網，但真實比率仍可能高達約每一百宗有 4 宗。");

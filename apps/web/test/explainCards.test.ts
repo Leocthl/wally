@@ -69,7 +69,7 @@ describe("trick listings (counts are the trick listings stopped; rules alone can
   it("rules alone let every one through, Wally none, with the limit that a small set leaves", () => {
     expect(en(tricksSentences({ wally: { k: 13, n: 13 }, rules: { k: 0, n: 13 } }))).toEqual([
       "Rules alone let every one of them through.",
-      "Wally let none through on our own test set. With this few listings, the true rate could still be up to about 23 in a hundred.",
+      "Wally let none through on our own test set. With so few listings, the true rate could still be up to about 23 in a hundred.",
     ]);
   });
 
