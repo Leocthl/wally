@@ -330,7 +330,15 @@ describe("timers and close", () => {
   it("beats every 5 seconds by default: a tick reads the whole log, and twelve wallets at 1 s used 60% of a core", async () => {
     expect(SESSION_TICK_MS).toBe(5_000);
     vi.useFakeTimers();
-    const { registry, made } = setup({ tickMs: undefined });
+    const made: Fake[] = [];
+    const registry = new SessionRegistry({
+      booth: BOOTH,
+      create: async () => {
+        const visitor = fakeVisitor();
+        made.push(visitor);
+        return visitor;
+      },
+    });
     await idOf(registry);
     const page = made[0]?.hub.connect();
     await vi.advanceTimersByTimeAsync(4_900);
