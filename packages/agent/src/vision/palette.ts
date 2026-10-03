@@ -18,7 +18,7 @@ export interface PixelImage {
   readonly height: number;
 }
 
-/** Working grid: at most about this many samples per side. The colour plates' numbers (grid, clusters, ring, backdrop and centre weights) are F96's. */
+/** Working grid: at most about this many samples per side. The colour plates' numbers (grid, clusters, ring, backdrop and centre weights) are F105's. */
 const GRID = 48;
 const CLUSTERS = 6;
 const ITERATIONS = 12;

@@ -13,7 +13,7 @@ import type { BackendLogger } from "./types";
 export type PictureReader = (bytes: Uint8Array) => Promise<Described>;
 
 /**
- * One picture is read at a time [F96]: the model server has two slots and the planner and the judge share them, so a
+ * One picture is read at a time [F105]: the model server has two slots and the planner and the judge share them, so a
  * flood of pictures would delay a purchase. A picture that arrives while another is being read is not read at all; it
  * comes back as "busy", which see() turns into the colour plates and the chips. The guard is free again when the read
  * ends, whether it answered, failed or threw.

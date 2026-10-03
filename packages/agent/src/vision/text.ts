@@ -2,7 +2,7 @@
 // read by fixed keyword tables into the same words the picture reader answers with (kind, colours, pattern, fit, style)
 // and a price limit. No model and no randomness, so it works offline, on the on-device build and in the native shells,
 // and gives the same answer every time. The text is untrusted: it can only ever come out as words from the lists and one
-// whole number, so "ignore your rules" is just text that matches nothing. Only the start of a long text is read [F96].
+// whole number, so "ignore your rules" is just text that matches nothing. Only the start of a long text is read [F105].
 import { COLOR_TERMS, FIT_TERMS, KIND_TERMS, PATTERN_TERMS, STYLE_TERMS, UNSOLD_WORDS, type Term } from "./text-words";
 import { readPriceLimit } from "./text-money";
 import { MAX_COLORS, MAX_STYLES, type Color, type Fit, type Kind, type Pattern, type Style } from "./vocab";

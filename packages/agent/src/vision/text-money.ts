@@ -4,9 +4,9 @@
 // from the text survives. Plain regular expressions without look-behind (older Safari refuses to parse those) and
 // without nested repeats, so a long text cannot make them slow.
 
-/** The most a limit may be, in whole dollars [F96]: a limit above this is not a price a shopper types. */
+/** The most a limit may be, in whole dollars [F105]: a limit above this is not a price a shopper types. */
 export const MAX_LIMIT_DOLLARS = 99_999;
-/** A bare amount with no limit word ("tee $120") must be at least this many dollars, so "2 dollars" or "兩塊" is not a price [F96]. */
+/** A bare amount with no limit word ("tee $120") must be at least this many dollars, so "2 dollars" or "兩塊" is not a price [F105]. */
 export const MIN_BARE_DOLLARS = 20;
 
 const DIGITS: Readonly<Record<string, number>> = { 零: 0, 〇: 0, 一: 1, 二: 2, 兩: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };

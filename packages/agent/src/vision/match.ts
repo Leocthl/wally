@@ -30,7 +30,7 @@ export interface MatchQuery {
   /** null or "unknown": no preference. */
   readonly fit: Fit | null;
   readonly style: readonly Style[];
-  /** The most the shopper said they would pay for the item (its price, not the shipping), integer minor units; null or absent: no limit [F96]. */
+  /** The most the shopper said they would pay for the item (its price, not the shipping), integer minor units; null or absent: no limit [F105]. */
   readonly maxPriceMinor?: number | null;
 }
 
@@ -46,14 +46,14 @@ export interface Scored {
   readonly colorFit: number;
 }
 
-/** Points out of 100 [F96]. ASSUMED weights: with colours equally near, the right kind ranks ahead of a close one; a much better colour can still lift a close kind. */
+/** Points out of 100 [F105]. ASSUMED weights: with colours equally near, the right kind ranks ahead of a close one; a much better colour can still lift a close kind. */
 export const WEIGHTS = { kind: 50, closeKind: 25, color: 30, pattern: 8, fit: 6, style: 6 } as const;
-/** [F96] Lab distance at which a colour stops counting; the score falls off as (1 - distance / this) squared. */
+/** [F105] Lab distance at which a colour stops counting; the score falls off as (1 - distance / this) squared. */
 export const COLOR_FALLOFF = 50;
-/** [F96] A colour fit at or above this reads as "same colour", at or above the lower one as "close colour". */
+/** [F105] A colour fit at or above this reads as "same colour", at or above the lower one as "close colour". */
 export const SAME_COLOR_FIT = 0.8;
 export const CLOSE_COLOR_FIT = 0.2;
-/** Weights of the first, second and third colour of the picture [F96]. */
+/** Weights of the first, second and third colour of the picture [F105]. */
 const COLOR_RANK_WEIGHTS: readonly number[] = [1, 0.5, 0.25];
 export const DEFAULT_LIMIT = 4;
 

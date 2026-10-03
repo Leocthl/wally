@@ -2,7 +2,7 @@
   "fixture": "shop/items",
   "provenance": "SIMULATED",
   "schema": "photo-shelf",
-  "note": "SIMULATED photo shelf: 33 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. Prices, weights and limits: [F96]. No real shop, brand or person; times are placeholders [F59].",
+  "note": "SIMULATED photo shelf: 33 invented items from four invented shops, found by showing Wally a picture. They are not on the Ask shelf and not in any scenario. Prices, weights and limits: [F105]. No real shop, brand or person; times are placeholders [F59].",
   "data": {
     "observed_at": "2026-10-03T02:30:00Z",
     "merchants": {

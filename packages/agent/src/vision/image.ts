@@ -1,5 +1,5 @@
 // What a picture is, read from its first bytes only (never from a file name or a claimed type): a JPEG the model server's
-// decoder can read, and its size in pixels. The limits keep a huge or hostile file away from the model server [F96]. No
+// decoder can read, and its size in pixels. The limits keep a huge or hostile file away from the model server [F105]. No
 // decoding happens here, so nothing about the picture is kept; the page re-encodes every picture to a small JPEG before it
 // leaves the phone.
 //

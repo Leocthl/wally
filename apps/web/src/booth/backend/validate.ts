@@ -110,13 +110,13 @@ export function parseAskRequest(body: JsonObject): AskRequest {
 
 // ---------- Show Wally a photo (POST /api/see) ----------
 
-/** The most colour entries the page sends: its palette keeps four [F96]. */
+/** The most colour entries the page sends: its palette keeps four [F105]. */
 export const MAX_PALETTE_ENTRIES = 6;
-/** JPEG only: the page always sends one (see vision/image.ts for why PNG and WebP are refused) [F96]. */
+/** JPEG only: the page always sends one (see vision/image.ts for why PNG and WebP are refused) [F105]. */
 const IMAGE_MIMES: readonly ImageMime[] = ["image/jpeg"];
 /** base64 of the largest accepted picture. */
 const MAX_IMAGE_BASE64_CHARS = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;
-/** The body cap of POST /api/see: the base64 picture plus a little for the rest of the object [F96]. Every other route keeps F64's 128 KiB. */
+/** The body cap of POST /api/see: the base64 picture plus a little for the rest of the object [F105]. Every other route keeps F64's 128 KiB. */
 export const MAX_SEE_BODY_BYTES = MAX_IMAGE_BASE64_CHARS + 16 * 1024;
 
 /** A request to see(), checked: a decoded picture (or none), the page's colour plates and the shopper's chips. */
@@ -130,7 +130,7 @@ export interface SeeInput {
   readonly maxPriceMinor: number | null;
 }
 
-/** The most a price limit may be, in minor units: HK$99,999 [F96], the same bound the words are read with. */
+/** The most a price limit may be, in minor units: HK$99,999 [F105], the same bound the words are read with. */
 const MAX_LIMIT_MINOR = MAX_LIMIT_DOLLARS * 100;
 
 const isObject = (value: unknown): value is JsonObject => value !== null && typeof value === "object" && !Array.isArray(value);
