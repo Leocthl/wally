@@ -143,7 +143,7 @@ test.describe("390x844 phone, light", () => {
     await sheet.getByRole("radio", { name: "dress" }).click();
     const cards = sheet.getByRole("radiogroup", { name: "Similar in the shop" }).getByRole("radio");
     await expect(cards.first()).toContainText("dress");
-    await sheet.getByText("More details").click();
+    await sheet.getByText("Change what Wally looks for").click();
     await sheet.getByRole("button", { name: "relaxed" }).click();
     await expect(sheet.getByRole("button", { name: "relaxed" })).toHaveAttribute("aria-pressed", "true");
     await settled(page);
@@ -218,6 +218,94 @@ for (const scheme of ["dark", "light"] as const) {
     });
   });
 }
+
+test.describe("typed words on the device (no live planner)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: "light" });
+
+  async function openAsk(page: Page, button = "Ask"): Promise<void> {
+    await page.addInitScript(() => window.localStorage.setItem("wally:demo-open", "0"));
+    await page.goto("/?api=local#/budget");
+    await expect(page.getByRole("meter")).toBeVisible();
+    await page.getByRole("button", { name: button, exact: true }).click();
+    await settled(page);
+  }
+
+  test("a typed request becomes matches from the demo shop, a pick and a purchase", async ({ page }) => {
+    phoneOnly();
+    await openAsk(page);
+    await shot(page, "13-ask-sheet-shopper");
+    expect(await blocking(page), "Ask sheet, shopper view").toEqual([]);
+    expect(await smallTargets(page), "Ask sheet, shopper view").toEqual([]);
+    expect(await sidewaysScroll(page), "Ask sheet, shopper view").toBeNull();
+    const field = page.getByRole("textbox", { name: /Tell Wally what you need/ });
+    await field.fill("white tee under HK$150");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "What Wally found" });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByText("Showing matches from the demo shop. You pick; the rules still decide.")).toBeVisible();
+    const cards = sheet.getByRole("radiogroup", { name: "Similar in the shop" }).getByRole("radio");
+    await expect(cards.first()).toContainText("White tee");
+    await expect(cards.first()).toContainText("SIMULATED");
+    await expect(sheet.locator('[data-slot="photo-limit"]')).toContainText("HK$150");
+    await settled(page);
+    await shot(page, "14-words-matches");
+    expect(await blocking(page), "words sheet with matches").toEqual([]);
+    expect(await smallTargets(page), "words sheet with matches").toEqual([]);
+    expect(await sidewaysScroll(page), "words sheet with matches").toBeNull();
+    await cards.first().click();
+    await sheet.getByRole("button", { name: "Ask Wally to buy this" }).click();
+    await expect(page).toHaveURL(/#\/wally$/);
+    const wally = page.locator('[data-screen="wally"]');
+    await expect(wally).toContainText("White tee", { timeout: 15_000 });
+    await expect(wally).toContainText("one-off card");
+  });
+
+  test("a product the shop does not sell offers the kinds Wally can shop for, in 繁體 too", async ({ page }) => {
+    phoneOnly();
+    await page.addInitScript(() => window.localStorage.setItem("wally:lang", "zh-HK"));
+    await openAsk(page, "問 Wally");
+    await page.getByRole("textbox", { name: /話俾 Wally 知你想買乜/ }).fill("AirPods");
+    await page.getByRole("button", { name: "傳送", exact: true }).click();
+    const sheet = page.getByRole("dialog", { name: "Wally 搵到嘅款式" });
+    await expect(sheet.locator('[data-notice="not_sold"]')).toContainText("示範商店買唔到呢類貨品");
+    await expect(sheet.getByRole("radiogroup", { name: "揀款式" })).toBeVisible();
+    await settled(page);
+    await shot(page, "15-words-not-sold-zh");
+    expect(await blocking(page), "words sheet, nothing sold").toEqual([]);
+    await sheet.getByRole("radio", { name: "波鞋" }).click();
+    await expect(sheet.locator("[data-listing]").first()).toBeVisible();
+  });
+
+  test("a shop chip is the same as typing the word", async ({ page }) => {
+    phoneOnly();
+    await openAsk(page);
+    await page.locator('[data-slot="shop-chips"]').getByRole("button", { name: "socks" }).click();
+    const sheet = page.getByRole("dialog", { name: "What Wally found" });
+    await expect(sheet.locator('[data-listing^="lst_photoSocks"]').first()).toBeVisible();
+    await settled(page);
+    await shot(page, "16-words-socks");
+  });
+
+  test("the judges' console is folded away, and Try to trick Wally says it needs the booth Mac and runs a recorded example", async ({ page }) => {
+    phoneOnly();
+    await openAsk(page);
+    const folded = page.getByRole("dialog").locator("details.home-demo");
+    await expect(folded).not.toHaveAttribute("open", "");
+    await folded.locator("summary").click();
+    await expect(folded).toHaveAttribute("open", "");
+    await expect(page.getByText("Typing your own listing needs the booth Mac.")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: /Product description/ })).toBeDisabled();
+    await folded.scrollIntoViewIfNeeded();
+    await settled(page);
+    await shot(page, "17-ask-sheet-judges");
+    expect(await blocking(page), "Ask sheet, judges' console open").toEqual([]);
+    expect(await smallTargets(page), "Ask sheet, judges' console open").toEqual([]);
+    expect(await sidewaysScroll(page), "Ask sheet, judges' console open").toBeNull();
+    await page.getByRole("button", { name: "Gift card bundle" }).click();
+    await expect(page).toHaveURL(/#\/wally$/);
+    await expect(page.locator('[data-screen="wally"]')).toContainText(/Stopped before paying|The listing tried to give Wally orders/, { timeout: 15_000 });
+  });
+});
 
 test.describe("reduced motion", () => {
   test.use({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
