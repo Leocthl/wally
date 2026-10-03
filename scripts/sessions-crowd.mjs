@@ -40,6 +40,15 @@ function prng(seed) {
   };
 }
 
+function parseJson(text) {
+  if (text === "") return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 /** A phone: pairing token header, a cookie jar, timing per kind of call. */
 class Phone {
   constructor(index, base, token) {
@@ -74,12 +83,7 @@ class Phone {
     const text = await res.text();
     const ms = performance.now() - started;
     this.timings.push({ label, ms });
-    let json = null;
-    try {
-      json = text === "" ? null : JSON.parse(text);
-    } catch {
-      json = null;
-    }
+    const json = parseJson(text);
     if (res.status >= 400) this.errors.push({ label, status: res.status, code: json?.error?.code });
     return { status: res.status, json, ms, headers: res.headers, text };
   }
