@@ -90,12 +90,14 @@ const expiry = (value: ExpiryValue, valid = true): RuleChip => ({
   kind: "expiry", rule: "R2", label: label("Expires", "到期"), value, valid, prov: SIMULATED, ...(valid ? {} : { error: MSG.daysBad }),
 });
 
+const THIS_MONTH = /\bthis\s+month\b|今個月|呢個月|這個月|这个月|本月/i;
+
 /** The date the sentence names, unless "this month" in the same sentence ends the budget sooner. */
 function statedDate(sentence: string, now: Date): { readonly endMs: number; readonly value: ExpiryValue } | null {
   const end = readEndDate(sentence);
   const resolved = end === null ? null : resolveEndDate(end, now);
   if (end === null || resolved === null) return null;
-  if (/\bthis\s+month\b/i.test(sentence) && resolved.endMs > Date.parse(monthEndHk(now))) return null;
+  if (THIS_MONTH.test(sentence) && resolved.endMs > Date.parse(monthEndHk(now))) return null;
   return { endMs: resolved.endMs, value: { kind: "expiry", mode: "date", day: resolved.hkDay, asked: describeEndDate(end) } };
 }
 

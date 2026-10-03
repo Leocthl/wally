@@ -158,6 +158,8 @@ describe("a date the sentence names ends the budget there (the fixed rules parse
     expect(untilOf("HK$800 for clothes for 7 days, until 31 Oct")).toBe("2026-10-10T02:00:00Z");
     expect(expiryOf("HK$800 for clothes for 30 days, until 20 Oct")).toMatchObject({ mode: "date", day: "2026-10-20" });
     expect(untilOf("HK$800 for clothes this month until 3 Nov")).toBe(MONTH_END);
+    expect(untilOf("今個月 HK$800 for clothes，11月3日前")).toBe(MONTH_END);
+    expect(untilOf("呢個月 HK$800 for clothes，10月20日前")).toBe("2026-10-20T15:59:59Z");
     expect(untilOf("HK$800 for clothes this month until 20 Oct")).toBe("2026-10-20T15:59:59Z");
   });
 
