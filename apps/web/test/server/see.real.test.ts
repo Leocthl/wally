@@ -6,8 +6,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { startMockLlama, type MockLlama } from "../../../../packages/agent/test/support/qwen/mock-llama";
 import { MemoryLogStore } from "@wally/core/testing";
 import { seededRandom } from "@wally/rail-sim";
-import { LocalReplayJudge } from "../../src/api/local/replayJudge";
-import { loadBundle } from "../../src/api/local/bundle";
 import type { RunSummary, SeeResult } from "../../src/api/types";
 import { ephemeralKeys } from "../../server/booth/keys";
 import { probeVision } from "../../server/booth/visionProbe";
@@ -17,7 +15,6 @@ import { bootReal, orchestratorIsReal } from "./support/realStack";
 
 const REAL = await orchestratorIsReal();
 const BASE = "http://127.0.0.1:8787";
-const BUNDLE = loadBundle();
 const SEEN = { kind: "hoodie", colors: ["navy"], pattern: "plain", fit: "relaxed", style: ["streetwear"] };
 
 let llama: MockLlama;
@@ -41,8 +38,6 @@ async function boot(see: "model" | "palette", env: Readonly<Record<string, strin
     tickMs: null,
     warmUp: false,
     see,
-    // The server's replay judge reads the fixture recordings only; the photo shelf's recorded answers come from the bundle.
-    judge: new LocalReplayJudge({ recordings: [...BUNDLE.judgeRecordings, ...BUNDLE.shopRecordings] }),
   });
   await booth.start();
   booths.push(booth);
@@ -132,6 +127,9 @@ describe.skipIf(!REAL)("Show Wally a photo on the real stack", () => {
     expect(run).toMatchObject({ scenario: "custom", outcome: "APPROVE" });
     const snap = await booth.backend.snapshot();
     expect(snap.cards).toMatchObject([{ limit_minor: 37_900, state: "USED" }]);
+    // The composed replay judge (JUDGE_PROVIDER=replay) holds the photo shelf's recorded answers: no R10.unavailable stop.
+    const decision = (await booth.backend.getLog()).entries.find((e) => e.kind === "DECISION");
+    expect(JSON.stringify(decision)).not.toContain("R10.unavailable");
     expect((await booth.backend.getLog()).entries.filter((e) => e.kind === "DECISION")).toHaveLength(1);
     expect(llama.requests()).toHaveLength(0); // no model decided anything
   });

@@ -4,7 +4,7 @@
 // judge then answers ERROR and the engine escalates (R10.unavailable, I5), and /api/info says so.
 import { join } from "node:path";
 import { compileMandateText } from "@wally/agent/compiler";
-import { createJudgeFromEnv, isWarmable, JudgeConfigError } from "@wally/agent/judge";
+import { createJudgeFromEnv, isWarmable, JudgeConfigError, loadReplayRecordings, parseJudgeEnv, type ReplayRecording } from "@wally/agent/judge";
 import { createChatClient, createPlanner, loadReplayRecords } from "@wally/agent/planner";
 import { describeImage } from "@wally/agent/vision";
 import { engine as defaultEngine } from "@wally/core/engine";
@@ -27,7 +27,7 @@ import type { PictureReader } from "../src/booth/backend/see";
 import type { SessionDeps } from "../src/booth/backend/session";
 import { m0Request } from "../src/booth/compile";
 import { createHttpApp } from "./app";
-import { loadCatalogue } from "./booth/catalogue";
+import { loadCatalogue, loadShopRecordings } from "./booth/catalogue";
 import { plannerFixtureTexts } from "./booth/fixtureTexts";
 import { loadDemoKeys, type DemoKeys } from "./booth/keys";
 import { settledChoice } from "./booth/plannerSelect";
@@ -125,10 +125,17 @@ function pictureReader(settings: BoothSettings, see: SeeMode): PictureReader | n
   return (bytes) => describeImage(bytes, { client, model: settings.plannerModel });
 }
 
-function makeJudge(opts: ComposeOptions, settings: BoothSettings): JudgePort {
+/** The replay judge serves the fixture recordings and, with a photo shelf, that shelf's recorded answers too. Other providers load nothing. */
+function replayRecordings(settings: BoothSettings, catalogue: Catalogue): { readonly recordings: readonly ReplayRecording[] } | undefined {
+  const parsed = parseJudgeEnv(settings.judgeEnv);
+  if (!parsed.ok || parsed.settings.provider !== "replay") return undefined;
+  return { recordings: [...loadReplayRecordings(), ...loadShopRecordings(settings.fixturesDir, catalogue)] };
+}
+
+function makeJudge(opts: ComposeOptions, settings: BoothSettings, catalogue: Catalogue): JudgePort {
   if (opts.judge !== undefined) return opts.judge;
   try {
-    return createJudgeFromEnv(settings.judgeEnv);
+    return createJudgeFromEnv(settings.judgeEnv, replayRecordings(settings, catalogue));
   } catch (err) {
     if (err instanceof JudgeConfigError) throw new Error(`judge configuration: ${err.message}`, { cause: err });
     throw err;
@@ -141,7 +148,7 @@ export function composeBooth(opts: ComposeOptions): Booth {
   const clock = opts.clock ?? SYSTEM_CLOCK;
   const table = loadScenarioTable(join(settings.scenariosDir, "booth.json"));
   const catalogue = loadCatalogue(settings.fixturesDir, table);
-  const judge = makeJudge(opts, settings);
+  const judge = makeJudge(opts, settings, catalogue);
   const choice = opts.planner ?? settledChoice(settings);
   const recorded = replayRecords(settings); // the live planners fall back to these for the fixed booth buttons
   const records = choice.provider === "replay" ? recorded : [];

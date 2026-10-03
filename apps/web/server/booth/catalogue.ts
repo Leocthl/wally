@@ -2,6 +2,8 @@
 // hands the parsed files to the portable builder (src/booth/backend/catalogue.ts), shared with the on-device client.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import type { ReplayRecording } from "@wally/agent/judge";
+import { shopRecordingsFrom } from "../../src/api/local/recordings";
 import { buildCatalogue, CatalogueError, type Catalogue, type CatalogueSources, type FixtureFile } from "../../src/booth/backend/catalogue";
 import type { ScenarioTable } from "../../src/booth/backend/scenarioTable";
 
@@ -49,4 +51,14 @@ export function loadCatalogue(fixturesDir: string, table: ScenarioTable): Catalo
     ...(shop === undefined ? {} : { shop }),
   };
   return buildCatalogue(sources, table);
+}
+
+/**
+ * For the replay judge only: the recorded Laya answers for the photo shelf (data/fixtures/shop/judge.json), so a photo pick
+ * is judged like any listing when Laya is down. Nothing without a shelf; a shelf with no usable answers file is a start-up
+ * error (the answers must match each item's text), never a silent "no recording".
+ */
+export function loadShopRecordings(fixturesDir: string, catalogue: Catalogue): readonly ReplayRecording[] {
+  if (catalogue.shop.size === 0) return [];
+  return shopRecordingsFrom(readJson(join(fixturesDir, "shop", "judge.json")).raw, catalogue.shop);
 }
