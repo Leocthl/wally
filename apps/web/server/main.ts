@@ -11,7 +11,8 @@ import { selectPlanner } from "./booth/plannerSelect";
 import { REPO_ROOT, settingsFromEnv } from "./booth/settings";
 import type { LanOptions } from "./http/lan";
 import type { Logger } from "./http/routes";
-import { createLanOptions, launchFromEnv } from "./lanMode";
+import { createLanOptions, launchFromEnv, publicUrlFromEnv } from "./lanMode";
+import { MAX_VISITOR_SESSIONS, SESSION_IDLE_TTL_MS } from "./sessions";
 import { registerStaticRoutes } from "./static";
 
 const logger: Logger = {
@@ -28,10 +29,17 @@ function logLan(lan: LanOptions, host: string, port: number): void {
   else logger.info(`Phones on the same Wi-Fi open one of these (or scan the QR in About or Presenter):\n${urls.map((u) => `  ${u}`).join("\n")}`);
 }
 
+function logWallets(on: boolean, lan: boolean): void {
+  if (on && lan) logger.info(`Every phone gets its own practice wallet (up to ${MAX_VISITOR_SESSIONS}, dropped after ${SESSION_IDLE_TTL_MS / 60_000} idle minutes). The Mac keeps the shared booth wallet.`);
+  else if (lan) logger.info("Practice wallets are OFF (WALLY_SESSIONS): every phone shares the booth wallet.");
+}
+
 async function main(): Promise<void> {
   const settings = settingsFromEnv(process.env);
   const launch = launchFromEnv(process.env, process.argv.slice(2));
-  const lan = launch.lan ? createLanOptions({ port: settings.port }) : undefined;
+  const publicUrl = publicUrlFromEnv(process.env);
+  if (publicUrl.note !== null) logger.error(publicUrl.note);
+  const lan = launch.lan ? createLanOptions({ port: settings.port, ...(publicUrl.url === undefined ? {} : { publicUrl: publicUrl.url }) }) : undefined;
   const planner = await selectPlanner(settings); // once, here: nothing switches planner during a run
   logger.info(`planner ${planner.provider} (${planner.chosenBy}): ${planner.detail}`);
   const booth = composeBooth({ env: process.env, logger, planner, ...(lan === undefined ? {} : { lan }), extraRoutes: (app) => registerStaticRoutes(app, roots) });
@@ -40,6 +48,7 @@ async function main(): Promise<void> {
   const server = serve({ fetch: booth.app.fetch, hostname: launch.host, port: booth.settings.port }, (addr) => {
     logger.info(`${BRAND.name} booth on http://127.0.0.1:${addr.port}/#/booth (rail SIMULATED; verifier at /verifier/)`);
     if (lan !== undefined) logLan(lan, launch.host, addr.port);
+    logWallets(booth.sessions !== null, lan !== undefined);
     logger.info(`judge ${info.judge.provider}, planner ${info.planner.provider}${info.replayed ? " (REPLAYED: recorded outputs)" : ""}, sentence reader ${info.features.compile}`);
   });
   const stop = (): void => {

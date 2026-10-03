@@ -3,7 +3,7 @@
 // Otherwise the page asks the booth server for /api/info and uses it when it answers as the server (live mode: Laya
 // judge, Qwen or rule planner). No answer, a static host, a timeout, a missing pairing token or an odd answer: on-device
 // mode, with a visible note. The mock is a UI-test double only: the page never falls back to it, and runs it only for ?api=mock.
-import { browserStores, captureTokenFromUrl, readServer, readToken, TOKEN_HEADER } from "../http/connection";
+import { browserStores, captureTokenFromUrl, readServer, readToken, sessionAware, TOKEN_HEADER } from "../http/connection";
 import { HttpApiClient } from "../http/HttpApiClient";
 import { isNative } from "../../pwa/native";
 import type { ApiClient } from "../types";
@@ -52,7 +52,8 @@ export async function probeInfo(server: string | null = null, token: string | nu
   const headers: Record<string, string> = { accept: "application/json" };
   if (token !== null) headers[TOKEN_HEADER] = token;
   const deadline = timeoutMs ?? (server === null ? PROBE_TIMEOUT_MS : REMOTE_PROBE_TIMEOUT_MS);
-  const res = await fetch(`${server ?? ""}/api/info`, { headers, signal: AbortSignal.timeout(deadline) });
+  // sessionAware: a native shell keeps the practice-wallet id the answer carries, for the client that follows the probe.
+  const res = await sessionAware((input, init) => fetch(input, init))(`${server ?? ""}/api/info`, { headers, signal: AbortSignal.timeout(deadline) });
   return res.ok ? ((await res.json()) as unknown) : null;
 }
 

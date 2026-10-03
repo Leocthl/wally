@@ -24,7 +24,7 @@ import type {
   Unsubscribe,
   VerifyOutcome,
 } from "../types";
-import { TOKEN_HEADER } from "./connection";
+import { sessionAware, TOKEN_HEADER } from "./connection";
 import { ApiRequestError, errorFromBody } from "./errors";
 import { EventStream } from "./eventStream";
 
@@ -64,7 +64,7 @@ export class HttpApiClient implements ApiClient {
   constructor(opts: HttpApiClientOptions = {}) {
     this.#base = (opts.baseUrl ?? "").replace(/\/+$/, "");
     const plain = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
-    this.#fetch = opts.token === undefined ? plain : withToken(plain, opts.token);
+    this.#fetch = sessionAware(opts.token === undefined ? plain : withToken(plain, opts.token));
     this.#timeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
     this.#eventWaitMs = opts.eventWaitMs ?? DEFAULT_EVENT_WAIT_MS;
     this.#stream = new EventStream({ url: `${this.#base}/api/events`, fetch: this.#fetch });

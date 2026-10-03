@@ -14,4 +14,6 @@ export const ABOUT = {
   } satisfies Readonly<Record<string, LabelPair>>,
   notes: label("Technical notes", "技術備註"), // NEEDS-REVIEW
   notesLead: label("What the booth says about itself, in English.", "展位自述，英文原文。"), // NEEDS-REVIEW
+  // Said once, only on a phone that has a practice wallet of its own on the booth Mac (info.sessions is "private").
+  privateWallet: label("This is your own practice wallet on the booth Mac. Other visitors cannot see it.", "呢個係你喺展位 Mac 上嘅專屬練習錢包，其他訪客睇唔到。"), // NEEDS-REVIEW
 } as const;

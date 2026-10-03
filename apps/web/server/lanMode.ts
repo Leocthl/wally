@@ -78,6 +78,33 @@ export interface LanSetup {
   readonly token?: string;
   readonly qr?: (text: string) => string;
   readonly remoteAddress?: LanOptions["remoteAddress"];
+  /** WALLY_PUBLIC_URL, already checked by publicUrlFromEnv: the practice copy offered beside the pairing links. */
+  readonly publicUrl?: string;
+}
+
+/** ASSUMED: longest practice-copy link shown. A QR code of more than this gets hard to scan off a laptop screen. */
+const MAX_PUBLIC_URL_CHARS = 200;
+
+/**
+ * WALLY_PUBLIC_URL, the link to the practice copy that works anywhere (the booth runbook sets https://wally-dev.vercel.app).
+ * Unset: not shown. Anything but a plain http(s) link without a password in it: not shown, and the operator is told why.
+ */
+export function publicUrlFromEnv(env: Env): { readonly url: string | undefined; readonly note: string | null } {
+  const raw = env["WALLY_PUBLIC_URL"]?.trim();
+  if (raw === undefined || raw === "") return { url: undefined, note: null };
+  const refuse = (why: string): { readonly url: undefined; readonly note: string } => ({ url: undefined, note: `WALLY_PUBLIC_URL is not shown: ${why}` });
+  if (raw.length > MAX_PUBLIC_URL_CHARS || /\s/.test(raw)) return refuse(`it must be one link of at most ${MAX_PUBLIC_URL_CHARS} characters, without spaces`);
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return refuse("it is not a link (start it with https://)");
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return refuse("it must start with https:// or http://");
+  if (url.username !== "" || url.password !== "") return refuse("it must not hold a user name or password");
+  if (url.hostname === "") return refuse("it has no host name");
+  const bare = url.pathname === "/" && url.search === "" && url.hash === "";
+  return { url: bare ? url.origin : url.href, note: null };
 }
 
 const socketAddress: LanOptions["remoteAddress"] = (c) => {
@@ -104,5 +131,6 @@ export function createLanOptions(setup: LanSetup): LanOptions {
     urls: () => lanUrls(net, setup.port, token),
     qrSvg: setup.qr ?? renderQr,
     remoteAddress: setup.remoteAddress ?? socketAddress,
+    ...(setup.publicUrl === undefined ? {} : { publicUrl: setup.publicUrl }),
   };
 }

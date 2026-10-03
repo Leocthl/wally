@@ -45,6 +45,23 @@ function useCopied(): readonly [boolean, () => void] {
   return [copied, () => setCopied(true)];
 }
 
+/** The practice copy (WALLY_PUBLIC_URL): a second code and its link, for a phone that is not on this Wi-Fi. */
+function PracticeCopy({ url, qrSvg, id }: { readonly url: string; readonly qrSvg: string; readonly id: string }): ReactElement {
+  const { t } = useLocale();
+  return (
+    <div className="lan-phone__public" role="group" aria-labelledby={id}>
+      <h4 id={id} className="lan-phone__subtitle">{t(UI.lan.publicTitle)}</h4>
+      <div className="lan-phone__public-body">
+        <img className="lan-phone__qr lan-phone__qr--small" src={svgDataUrl(qrSvg)} alt={t(UI.lan.publicQrAlt)} width={120} height={120} />
+        <div className="lan-phone__text">
+          <p className="lan-phone__note">{t(UI.lan.publicNote)}</p>
+          <a className="lan-phone__url" href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps): ReactElement | null {
   const { t } = useLocale();
   const { api } = useBoothContext();
@@ -89,6 +106,7 @@ export function PhoneQr({ variant = "sheet", load = fetchLanInfo }: PhoneQrProps
           </div>
         </div>
       )}
+      {lan.publicUrl !== undefined && lan.publicQrSvg !== undefined ? <PracticeCopy url={lan.publicUrl} qrSvg={lan.publicQrSvg} id={`lan-public-${variant}`} /> : null}
     </section>
   );
 }

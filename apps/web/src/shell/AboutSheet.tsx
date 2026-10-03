@@ -61,6 +61,8 @@ function ModeInfo({ info, developer }: { readonly info: ApiInfo; readonly develo
           </dl>
         </details>
       ) : null}
+      {/* A phone on the booth's Wi-Fi has a wallet of its own (server/sessions.ts); the booth Mac's is shared and says nothing. */}
+      {info.sessions === "private" ? <p className="shell-about__private">{t(ABOUT.privateWallet)}</p> : null}
     </>
   );
 }
