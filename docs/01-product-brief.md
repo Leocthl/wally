@@ -1,37 +1,46 @@
 # 01 Product brief
 
 ## Delegator
-- **Who** (D2): HK Gen Z shopper aged 21-30 [F24], one delegator, one packet.
-- **Decision**: whether a proposed cart gets a card.
-- **Rail**: SIMULATED, Single Use Card semantics [F1].
-- **Words**: the app says budget, rules, one-off card (D14); this file keeps engine terms; table in [04](04-design-language.md).
+- **Who** (D2): HK Gen Z shopper aged 21-30 [F24], one delegator. **Decision**: whether a proposed cart gets a card. **Rail**: SIMULATED, Single Use Card semantics [F1].
+- **Words**: the app says budget, rules, one-off card (D14); this file keeps engine terms ([04](04-design-language.md)).
+
+## Who pays and what it becomes
+- **Customer**: a wallet or issuer that embeds Wally as delegate controls plus proof; the shopper pays nothing (ASSUMED [F98]).
+- **Revenue guess**: a fee per active budget, or basis points on agent volume (ASSUMED [F98]).
+- **Wedge**: Hong Kong prepaid wallets, then card rails through the RailPort ([09](09-hkt-delegation-api-ask.md)).
+- **Anchors**, not Hong Kong figures: Alipay AI Pay, over 120 million transactions in one week [F94]; McKinsey, US$3 to 5 trillion of agentic commerce revenue by 2030 [F95].
+
+## Who does what
+| Player | Rail token | Budget limit | Signed budget | Offline proof | Injection screen | Any rail |
+|---|---|---|---|---|---|---|
+| AP2 [F12] | ● | ● | ● | ◐ | ○ | ● |
+| Visa [F7b] | ● | ● | ◐ | ○ | ○ | ◐ |
+| Mastercard [F7a] | ● | ◐ | ◐ | ◐ | ○ | ◐ |
+| Cloudflare [F10] | ● | ● | ○ | ○ | ○ | ◐ |
+| Alipay [F9] | ○ | ◐ | ○ | ○ | ○ | ○ |
+| OpenAI, Stripe | ● | ◐ | ○ | ○ | ○ | ◐ |
+| HKT card [F1] | ● | ◐ | ○ | ○ | ○ | ○ |
+| Wally | ◐ | ● | ● | ● | ◐ | ◐ |
+
+- ● found, ◐ partial or draft, ○ not found, in public pages read 2026-10-03 [F103]. Wally: rail SIMULATED, any rail design, delegator key a demo shortcut.
 
 ## Storyboard
 | Attempt | Cart | Outcome | Rule | Left |
 |---|---|---|---|---|
-| Seal M0 | packet HK$800 [F20] | sealed | R1 | HK$800 |
-| 1 | HK$259 [F21] | mint; overshoot declined, exact charge authorised, replay declined | all pass; rail `OVER_LIMIT`, `CARD_USED` | HK$541 |
-| 2 | HK$180, seller flagged [F28] | stop S2 | R9 | HK$541 [F21] |
-| 3 | HK$520 + HK$30 shipping = HK$550 [F22] | stop S1, no card | R3 | HK$541 [F21] |
-| 3b (live) | HK$150, injected listing [F28] | stop S3 | R10 | HK$541 [F21] |
+| Seal M0 | HK$800 [F20] | sealed | R1 | HK$800 |
+| 1 | HK$259 [F21] | mint; overshoot, replay declined | pass; rail `OVER_LIMIT`, `CARD_USED` | HK$541 |
+| 2 | HK$180, seller flagged [F28] | stop S2 | R9 | HK$541 |
+| 3 | HK$520 + HK$30 shipping = HK$550 [F22] | stop S1, no card | R3 | HK$541 |
+| 3b (live) | HK$150, injected listing [F28] | stop S3 | R10 | HK$541 |
 | 4 | HK$120 [F23] | mint | all pass | HK$421 |
 
 Amounts [F20-F23], rail and flagged seller: SIMULATED.
 
 ## Flows
-| Flow | The shopper | Engine |
-|---|---|---|
-| Seal | writes a sentence, edits rules | Qwen or fixed rules; R1 |
-| Ask Wally | types or speaks a request | planner, judge, engine |
-| Cheaper options | one tap after an R3 or R4 stop | planner replans |
-| Needs your OK | answers inside the window [F31] | signed answer; R11 |
-| Cancel this budget | holds to confirm | signed revoke, cards void |
-| Receipts, Proof | reads, verifies, exports | `verifyChain` |
+- **Seal** · **Ask Wally** (type or speak) · **Cheaper options** after an R3 or R4 stop · **Needs your OK** within the window [F31] · **Cancel this budget** (signed revoke) · **Receipts, Proof** (`verifyChain`).
 
 ## Example mandates
-- **M0**: "HK$800 this month for clothes, verified sellers only" [F20]. No per-purchase cap, so R3 binds.
-- **M1**: M0 plus a cap of half of what is left [F90].
-- **M2**: M0 over 7 days, and ask me above HK$300 [F90].
+- **M0** is the demo budget [F20], so R3 binds; **M1** and **M2** are variants [F90].
 
 ```
 all R1 proof = AgentDelegationCredential (VC 2.0), issuer = delegator did:key, signed at Seal
@@ -52,30 +61,27 @@ M2  R3 budget = HK$800 [F20]
 ## Stop catalogue
 | Trigger | Rules | Template IDs |
 |---|---|---|
-| **S1** Over budget incl. shipping/FX | R3, R4 before mint; R12 + rail decline after | `R3.over_remaining`, `R4.over_cap`, `R12.price_drift` |
-| **S2** Flagged or unverified seller | R9 (+ R10 seller score) | `R9.flagged`, `R9.unverified`, `R10.seller_risk` |
+| **S1** Over budget, shipping included | R3, R4 before mint; R12, rail decline after | `R3.over_remaining`, `R4.over_cap`, `R12.price_drift` |
+| **S2** Flagged or unverified seller | R9, R10 | `R9.flagged`, `R9.unverified`, `R10.seller_risk` |
 | **S3** Injected listing text | R10 | `R10.injection` |
 | **S4** Revoked before mint or use | R2; rail void | `R2.revoked` |
 | **S5** Escalation unanswered | R11 | `R4.ask_above`, `R10.scope`, `R11.expired` |
-| **S6** Velocity burst or expired mandate | R7, R2 | `R7.velocity`, `R2.expired` |
+| **S6** Velocity burst, expired mandate | R7, R2 | `R7.velocity`, `R2.expired` |
 
-- **Banner** = "Stopped by R<n>." + recorded inputs, e.g. "Total HK$550 is over the HK$541 left." [F21, F22]. The app shows a plain reason first and this sentence under "Details for nerds". Log entries: [00](00-context.md); rendering: [02](02-architecture.md) §8.
+- **Banner** = "Stopped by R<n>." + recorded inputs, e.g. "Total HK$550 is over the HK$541 left." [F21, F22]. Rendering: [02](02-architecture.md) §8.
 
 ## Loss rule v0
 | Cause | Bears the loss |
 |---|---|
 | Within the mandate, approved by the recorded rule | Delegator |
-| Breach proven by the log | Operator |
+| Breach proven by the log, or an injected listing the judge passed | Operator (whoever runs the Wally software) |
 | Merchant non-delivery | Merchant |
-| Injected listing that passed the judge | Operator |
 | Rail or issuer error | Open: ask HKT ([09](09-hkt-delegation-api-ask.md)) |
 
-- **Route**: refund only via the merchant [F2], then dispute within 60 days [F2]; fee HK$150 [F3] follows the loss.
-- **Max exposure**: the sealed packet (I2, R3). *Proposal, not legal advice; Tap & Go T&C govern [F2].*
+- **Route**: refund only via the merchant, dispute within 60 days [F2]; fee HK$150 follows the loss [F3]. **Max exposure**: the sealed packet (I2, R3). *Proposal, not legal advice; Tap & Go T&C govern [F2].*
 
 ## Family budget
-- **Chain** (optional, D17): Mum's budget caps a child's, one level: ceiling HK$1,000, child HK$800, a HK$1,500 ask refused [F93].
-- **Checks**: a child only narrows the parent (budget after siblings, categories, merchants, seller check, per-purchase terms, velocity, end date); a wider ask is refused `EXCEEDS_PARENT`, nothing logged.
+- **Chain** (optional, D17): Mum's ceiling HK$1,000 caps a child's HK$800; a HK$1,500 ask is refused `EXCEEDS_PARENT` [F93]. A child only narrows the parent's rules.
 - **Limits**: the offline page cannot check the parent link; Mum's key is a demo shortcut. Minors are not the headline (D2).
 
 ## Traceability
@@ -90,5 +96,3 @@ M2  R3 budget = HK$800 [F20]
 | E3 manual route | harness, Why trust Wally | T-H3 | DM8 |
 | E4 decision rule | templates, Why sheet | T-S1, T-I7 | DM1, DM4, DM7 |
 | E5 observed values | chips, capture sheet | T-H3, T-R1 | DM8 |
-
-- **DIR map**: 1 Seal; 2 R4; 3 R2; 4 S1; 5 S4; 6 S5; 7 Proof; 8 templates; 9 S3; 10 harness; 11 loss rule.
