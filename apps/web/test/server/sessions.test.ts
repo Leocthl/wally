@@ -344,13 +344,15 @@ describe("timers and close", () => {
 });
 
 describe("measuring", () => {
-  it("records how long the last and the slowest wallet took to make", async () => {
+  it("records how long the last and the slowest wallet took to make, on its own timer, not the wall clock", async () => {
     const timings = [40, 90, 20];
+    let elapsed = 0;
     const ctx = setup({
       create: async () => {
-        ctx.advance(timings.shift() ?? 0);
+        elapsed += timings.shift() ?? 0;
         return fakeVisitor();
       },
+      timer: () => elapsed,
     });
     for (let i = 0; i < 3; i += 1) await idOf(ctx.registry);
     expect(ctx.registry.stats()).toMatchObject({ live: 3, created: 3, lastCreateMs: 20, maxCreateMs: 90 });

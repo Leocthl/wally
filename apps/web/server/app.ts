@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import type { BoothBackend } from "./backend";
 import { BoothError, errorBody } from "./http/errors";
 import { registerLan, type LanOptions } from "./http/lan";
-import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger } from "./http/routes";
+import { errorResponse, registerApiRoutes, SILENT_LOGGER, type Logger, type RouteOptions } from "./http/routes";
 import { SseHub } from "./http/sse";
 
 /**
@@ -30,6 +30,8 @@ export interface HttpAppOptions {
   readonly hostAllowed?: (hostname: string) => boolean;
   /** LAN mode (http/lan.ts, server/lanMode.ts): pairing token, Origin and CORS rules for phones. Off by default. */
   readonly lan?: LanOptions;
+  /** Runs the rest of every /api request in a scope of its own, e.g. a visitor's private wallet (server/sessionScope.ts). */
+  readonly around?: RouteOptions["around"];
   /** Registered after the API routes, e.g. static files (Node composition only). */
   readonly extraRoutes?: (app: Hono) => void;
 }
@@ -47,6 +49,7 @@ export function createHttpApp(opts: HttpAppOptions): Hono {
     maxListingTextChars: opts.maxListingTextChars ?? MAX_LISTING_TEXT_CHARS,
     ...(hostAllowed === undefined ? {} : { hostAllowed }),
     ...(opts.lan === undefined ? {} : { lan: opts.lan }),
+    ...(opts.around === undefined ? {} : { around: opts.around }),
   });
   opts.extraRoutes?.(app);
   app.notFound((c) => c.json(errorBody("NOT_FOUND", "not found"), 404));

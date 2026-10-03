@@ -38,6 +38,8 @@ export interface RouteOptions {
   readonly hostAllowed?: (hostname: string) => boolean;
   /** LAN mode (http/lan.ts): a POST Origin may also be this page's own address or a native shell. Default off. */
   readonly lan?: LanOptions;
+  /** Runs the rest of every /api request once the guards passed, e.g. against the caller's private wallet (server/sessionScope.ts). Default: none. */
+  readonly around?: (c: Context, next: () => Promise<void>) => Promise<Response | void>;
 }
 
 export const EVENT_SEQ_HEADER = "x-event-seq";
@@ -79,7 +81,7 @@ export function registerApiRoutes(app: Hono, opts: RouteOptions): void {
   app.use("/api/*", async (c, next) => {
     const refused = guardRequest(c, opts.hostAllowed ?? isLoopbackHostname, opts.lan);
     if (refused !== null) return refused;
-    return next();
+    return opts.around === undefined ? next() : opts.around(c, next);
   });
 
   app.get("/api/health", (c) => c.json({ ok: true, rail: "SIMULATED" }));

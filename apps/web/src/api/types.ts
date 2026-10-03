@@ -235,6 +235,8 @@ export interface ApiInfo {
   readonly features: ApiFeatures;
   /** true when outputs are recorded, not live: the booth shows a "replayed" label (docs/06 Fallbacks). */
   readonly replayed: boolean;
+  /** Booth server with private practice wallets on: "private" = this visitor's wallet is their own, "shared" = the booth Mac's. Absent: one shared wallet. */
+  readonly sessions?: "shared" | "private";
   /** The one OBSERVED decline for the REAL toggle. null until data/real-card-test.md holds one. */
   readonly realCapture: RealCapture | null;
 }

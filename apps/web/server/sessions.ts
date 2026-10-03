@@ -52,8 +52,10 @@ export interface Who {
 export interface SessionRegistryOptions {
   readonly booth: SessionScope;
   readonly create: () => Promise<VisitorSession>;
-  /** Milliseconds; one source for idleness and for how long a wallet took to make. Default Date.now. */
+  /** Wall-clock milliseconds, for idleness. Default Date.now; the booth passes its own clock so a test can move time. */
   readonly now?: () => number;
+  /** Monotonic milliseconds, for how long a wallet took to make. Default performance.now; never the engine's clock, which a test may freeze. */
+  readonly timer?: () => number;
   readonly newId?: () => string;
   readonly maxVisitors?: number;
   readonly idleTtlMs?: number;
@@ -92,6 +94,7 @@ const shortId = (id: string): string => id.slice(0, 6);
 export class SessionRegistry {
   readonly #opts: SessionRegistryOptions;
   readonly #now: () => number;
+  readonly #mono: () => number;
   readonly #newId: () => string;
   readonly #max: number;
   readonly #ttl: number;
@@ -109,6 +112,7 @@ export class SessionRegistry {
   constructor(opts: SessionRegistryOptions) {
     this.#opts = opts;
     this.#now = opts.now ?? Date.now;
+    this.#mono = opts.timer ?? (() => performance.now());
     this.#newId = opts.newId ?? (() => newSessionId());
     this.#max = opts.maxVisitors ?? MAX_VISITOR_SESSIONS;
     this.#ttl = opts.idleTtlMs ?? SESSION_IDLE_TTL_MS;
@@ -238,7 +242,7 @@ export class SessionRegistry {
   }
 
   async #make(presented: string | null): Promise<Entry> {
-    const started = this.#now();
+    const started = this.#mono();
     let session: VisitorSession;
     try {
       session = await this.#opts.create();
@@ -250,12 +254,12 @@ export class SessionRegistry {
       session.close();
       throw unavailable();
     }
-    const finished = this.#now();
-    const entry: Entry = { id: this.#newId(), session, scope: { backend: session.backend, hub: session.hub }, lastSeen: finished };
+    const took = Math.round(this.#mono() - started);
+    const now = this.#now();
+    const entry: Entry = { id: this.#newId(), session, scope: { backend: session.backend, hub: session.hub }, lastSeen: now };
     this.#insert(entry);
-    const took = finished - started;
     this.#stats = { ...this.#stats, created: this.#stats.created + 1, lastCreateMs: took, maxCreateMs: Math.max(this.#stats.maxCreateMs ?? 0, took) };
-    if (presented !== null) this.#remember(presented, entry.id, finished);
+    if (presented !== null) this.#remember(presented, entry.id, now);
     this.#log.info(`practice wallet ${shortId(entry.id)} started in ${took} ms; ${this.#entries.size} live`);
     return entry;
   }
