@@ -1,5 +1,6 @@
 // What Wally checked, in words: one line per rule that ran, passed or stopped here. A failing rule says why from its
-// template and recorded inputs. Rule ids, thresholds and judge probabilities wait behind "Details".
+// template and recorded inputs (plain mode: in the Wally screen's words, with no rule id). Rule ids, thresholds and judge
+// probabilities wait behind "Details" ("Show the details" in plain mode).
 import type { ReactElement } from "react";
 import type { Decision } from "../../../api/types";
 import { ChipScope } from "../../../components/ChipScope";
@@ -11,6 +12,7 @@ import { UI } from "../../../i18n/ui";
 import { cx } from "../../../ui/cx";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
+import { PlainReason, reasonDecisionFor } from "../plainReceiptWords";
 import { TemplateSentence } from "../receiptWords";
 
 const R = UI.receipts;
@@ -44,7 +46,7 @@ const STATUS = {
   ask: { icon: "clock", words: R.checkAsk },
 } as const;
 
-export function ReceiptChecks({ decision, prov, api }: { readonly decision: Decision; readonly prov: Prov; readonly api: string }): ReactElement {
+export function ReceiptChecks({ decision, prov, api, plain = false }: { readonly decision: Decision; readonly prov: Prov; readonly api: string; readonly plain?: boolean }): ReactElement {
   const { t, locale } = useLocale();
   // The check that stopped or paused the purchase comes first; rule order is kept inside each group.
   const ran = decision.rules.filter((r) => r.result !== "SKIPPED").sort((a, b) => ORDER[statusOf(a)] - ORDER[statusOf(b)]);
@@ -61,7 +63,13 @@ export function ReceiptChecks({ decision, prov, api }: { readonly decision: Deci
               <span className="rc-check__text">
                 <span className="rc-check__name">{t(ruleWords(rule))}</span>
                 {status !== "pass" && rule.template_id ? (
-                  <span className="rc-check__why"><TemplateSentence templateId={rule.template_id} inputs={{ ...rule.inputs, verdict: rule.verdict }} locale={locale} prov={prov} judge={decision.judge.provider} api={api} /></span>
+                  <span className="rc-check__why">
+                    {plain ? (
+                      <PlainReason decision={reasonDecisionFor(decision, rule)} prov={prov} locale={locale} api={api} />
+                    ) : (
+                      <TemplateSentence templateId={rule.template_id} inputs={{ ...rule.inputs, verdict: rule.verdict }} locale={locale} prov={prov} judge={decision.judge.provider} api={api} />
+                    )}
+                  </span>
                 ) : null}
               </span>
               <span className="rc-check__status">{t(s.words)}</span>

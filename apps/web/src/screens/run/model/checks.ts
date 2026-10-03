@@ -1,6 +1,7 @@
 // The "Why?" sheet's plain checks: five groups a shopper understands (budget, rules, seller, Wally's read of the
 // listing, card limit), plus "your answer" and "checkout price" when those decided. Each group takes the latest
 // decision in the chain that actually evaluated it, so a checkout stop (R12) still shows the budget check it passed.
+import { isLanguageSkip } from "@wally/core/explain";
 import type { Decision } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import type { LabelPair } from "../../../i18n/label";
@@ -87,6 +88,7 @@ const LISTING: Readonly<Record<string, LabelPair>> = {
 function listingLine(rules: readonly Rule[], status: CheckStatus): LabelPair {
   if (status === "pass") return R.listingPass;
   const fail = firstFail(rules);
+  if (fail?.template_id === "R10.unavailable" && isLanguageSkip(fail.inputs)) return R.listingLanguage;
   return (fail ? (LISTING[fail.template_id ?? ""] ?? LISTING[fail.check ?? ""]) : undefined) ?? R.listingUnsure;
 }
 

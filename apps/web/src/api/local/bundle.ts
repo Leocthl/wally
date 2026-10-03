@@ -13,9 +13,9 @@ import { judgeRecordingsFrom, shopRecordingsFrom } from "./recordings";
 
 const LISTINGS = import.meta.glob<unknown>("@fixtures/listings/*.json", { eager: true, import: "default" });
 const CAPTURES = import.meta.glob<unknown>("@fixtures/scameter/*.json", { eager: true, import: "default" });
-const SHOP_ITEMS = import.meta.glob<unknown>("@fixtures/shop/items.json", { eager: true, import: "default" });
-const SHOP_CAPTURES = import.meta.glob<unknown>("@fixtures/shop/scameter/*.json", { eager: true, import: "default" });
-const SHOP_JUDGE = import.meta.glob<unknown>("@fixtures/shop/judge.json", { eager: true, import: "default" });
+const SHOP_ITEMS = import.meta.glob<unknown>("../../../../../data/photo-shelf/items.json", { eager: true, import: "default" });
+const SHOP_CAPTURES = import.meta.glob<unknown>("../../../../../data/photo-shelf/scameter/*.json", { eager: true, import: "default" });
+const SHOP_JUDGE = import.meta.glob<unknown>("../../../../../data/photo-shelf/judge.json", { eager: true, import: "default" });
 const JUDGE = import.meta.glob<unknown>("@fixtures/judge/*.json", { eager: true, import: "default" });
 const PLANNER_FIXTURES = import.meta.glob<string>("@fixtures/planner/*.json", { eager: true, query: "?raw", import: "default" });
 const PLANNER_SCENARIOS = import.meta.glob<string>("../../../../../data/scenarios/planner/*.json", { eager: true, query: "?raw", import: "default" });
@@ -57,13 +57,13 @@ function plannerRecords(): readonly PlannerReplayRecord[] {
 /** Validates and assembles the bundle. Throws on any bad file (fail closed: no half-loaded demo). */
 export function loadBundle(): LocalBundle {
   const table = parseScenarioTable(boothTable);
-  const shopItems = fixtureFiles("shop", SHOP_ITEMS)[0];
+  const shopItems = fixtureFiles("photo-shelf", SHOP_ITEMS)[0];
   const catalogue = buildCatalogue(
     {
       listings: fixtureFiles("listings", LISTINGS),
       referenceCart: { name: "carts/attempt-1.json", raw: referenceCart },
       captures: fixtureFiles("scameter", CAPTURES),
-      ...(shopItems === undefined ? {} : { shop: { items: shopItems, captures: fixtureFiles("shop/scameter", SHOP_CAPTURES) } }),
+      ...(shopItems === undefined ? {} : { shop: { items: shopItems, captures: fixtureFiles("photo-shelf/scameter", SHOP_CAPTURES) } }),
     },
     table,
   );

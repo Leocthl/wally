@@ -9,6 +9,7 @@ import { EvidenceScreen } from "../src/screens/EvidenceScreen";
 import { LocaleProvider, type Locale } from "../src/ui/locale";
 import { CLEAN, honestyProblems } from "./evidenceFigures";
 import { harnessFile, wiringFile } from "./evidenceFixtures";
+import { developerModeForFile } from "./helpers/devMode";
 
 function run(raw: Record<string, unknown>): HarnessRun {
   const parsed = parseHarnessFile("harness-1-live.json", raw);
@@ -25,6 +26,8 @@ function show(locale: Locale, r: HarnessRun = run(harnessFile())): HTMLElement {
 }
 
 const CJK = new RegExp("[\\u3400-\\u9fff]");
+
+developerModeForFile(); // plain is the default; these tests are about the developer view
 
 describe("Why trust Wally?", () => {
   it("leads with the title and the bottom line in words, before the picker and the charts", () => {

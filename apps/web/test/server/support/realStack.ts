@@ -1,6 +1,7 @@
 // Real-stack helpers: the composed booth on the real orchestrator with an in-memory log, a seeded SIMULATED rail and
 // ephemeral keys. Tests skip themselves while @wally/core/orchestrator is still the contract stub (lane e-orch).
 import { createOrchestrator } from "@wally/core/orchestrator";
+import type { JudgePort } from "@wally/core/ports";
 import { MemoryLogStore } from "@wally/core/testing";
 import { seededRandom } from "@wally/rail-sim";
 import { ephemeralKeys } from "../../../server/booth/keys";
@@ -23,15 +24,16 @@ export async function layaUp(baseUrl = "http://127.0.0.1:8808"): Promise<boolean
   }
 }
 
-/** A started booth; env defaults to the replay judge and planner (deterministic, offline). */
-export async function bootReal(env: Readonly<Record<string, string>> = {}, seed = 7): Promise<Booth> {
+/** A started booth; env defaults to the replay judge and planner (deterministic, offline). `judge` replaces the one env would build. */
+export async function bootReal(env: Readonly<Record<string, string>> = {}, seed = 7, judge?: JudgePort): Promise<Booth> {
   const booth = composeBooth({
     env: { JUDGE_PROVIDER: "replay", PLANNER_PROVIDER: "replay", ...env },
     store: new MemoryLogStore(),
     railRandom: () => seededRandom(seed),
     keys: ephemeralKeys,
     tickMs: null,
-    warmUp: env["JUDGE_PROVIDER"] === "laya",
+    warmUp: env["JUDGE_PROVIDER"] === "laya" && judge === undefined,
+    ...(judge === undefined ? {} : { judge }),
   });
   await booth.start();
   return booth;

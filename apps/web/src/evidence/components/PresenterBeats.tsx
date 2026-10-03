@@ -2,20 +2,26 @@
 // compact big-number view of the default run with the wiring banner and T-H1/T-H2; #/evidence is the deeper view.
 import type { ReactElement } from "react";
 import { Tx } from "./Tx";
+import { useDisplayMode } from "../../state/displayMode";
 import { loadHarnessRuns, type Loaded } from "../data";
 import { DM8, DM9 } from "../dm9";
+import { DM9_PLAIN } from "../dm9Plain";
 import { pickRun, wiringStatus } from "../select";
 import { E } from "../strings";
 import type { HarnessRun } from "../types";
 import { AcceptanceStrip } from "./AcceptanceStrip";
 import { BigNumbers } from "./BigNumbers";
+import { PlainStage } from "./plain/PlainStage";
 import "../evidence.css";
+import "../plain.css";
 
 const BUNDLED = loadHarnessRuns();
 
 export function Dm8View({ harness = BUNDLED }: { readonly harness?: Loaded<HarnessRun> }): ReactElement {
+  const [mode] = useDisplayMode();
   const pick = pickRun(harness.items);
   const run = harness.items.find((r) => r.file === pick?.file) ?? null;
+  if (mode === "plain") return <PlainStage run={run} />;
   if (run === null) return <div className="ev ev--stage" data-beat="DM8"><Tx as="p" text={E.unreadableNone} className="ev-unreadable" /></div>;
   const status = wiringStatus(run);
   return (
@@ -36,11 +42,13 @@ export function Dm8View({ harness = BUNDLED }: { readonly harness?: Loaded<Harne
   );
 }
 
+/** The closing card: plain words by default; developer mode keeps the exact lines with their register and rule IDs. */
 export function Dm9Card(): ReactElement {
+  const [mode] = useDisplayMode();
   return (
-    <div className="ev ev--stage" data-beat="DM9">
+    <div className="ev ev--stage" data-beat="DM9" data-mode={mode}>
       <div className="ev-dm9">
-        {DM9.map((col) => (
+        {(mode === "plain" ? DM9_PLAIN : DM9).map((col) => (
           <section key={col.id} className="ev-dm9__col" aria-labelledby={`ev-dm9-${col.id}`} data-dm9={col.id}>
             <h2 id={`ev-dm9-${col.id}`} className="ev-dm9__title"><Tx text={col.title} /></h2>
             <ul className="ev-dm9__lines">

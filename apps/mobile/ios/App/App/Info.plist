@@ -29,8 +29,12 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Wally uses the camera only when you tap Show Wally a photo. The picture stays on this phone and is not saved.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Wally connects to the booth laptop on your Wi-Fi to show the live demo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wally looks at the picture you choose in Show Wally a photo. It stays on this phone and is not saved.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,8 +1,10 @@
 // Recorded TraceEvent sequences for the Wally screen tests: the offline MockApiClient (instant, FakeClock) plays a
 // booth scenario and every event it emits is kept, so tests fold the same stream the screen folds.
 import { FakeClock } from "@wally/core/testing";
+import { engine } from "@wally/core/engine";
 import { render as coreRender } from "@wally/core/explain";
-import type { Decision, RunOutcome, ScenarioId, TraceEvent } from "../src/api/types";
+import { JUDGE_VERSION_UNSUPPORTED_LANGUAGE } from "@wally/core/ports";
+import type { Decision, JudgeRecord, Mandate, RunOutcome, ScenarioId, TraceEvent } from "../src/api/types";
 import { MockApiClient } from "../src/api/MockApiClient";
 import { m0Request } from "../src/booth/compile";
 import { initialState, reduce, type BoothState } from "../src/state/booth";
@@ -67,4 +69,40 @@ export function coreInjectionDecision(base: Decision): Decision {
     rules,
     explanation: { template_id: "R10.injection", inputs, rendered: coreRender("R10.injection", inputs, "en"), rendered_zh_hk: coreRender("R10.injection", inputs, "zh-HK") },
   };
+}
+
+/** What the Laya adapter returns for a Chinese listing: no request was made, so there is no version, only the marker. */
+export const LANGUAGE_SKIP_JUDGE: JudgeRecord = {
+  provider: "laya",
+  model: "typed-decisions",
+  version: JUDGE_VERSION_UNSUPPORTED_LANGUAGE,
+  status: "ERROR",
+  latency_ms: 0,
+  shadow: false,
+};
+
+/**
+ * The run the real stack records when the judge adapter declines a Chinese listing: the judge record with the language
+ * marker, the decision the real engine makes from it (R10.unavailable with the reason in its inputs, worded by core's own
+ * templates) and the open question. `base` is any decision of this booth's budget: its cart and packet are reused.
+ */
+export function languageSkipRun(base: Decision, mandate: Mandate, runId = "run_lang"): TraceEvent[] {
+  const now = new Date(Date.parse(base.decided_at) + 5_000);
+  const decision = engine.decide(mandate, base.packet, base.cart, LANGUAGE_SKIP_JUDGE, now, undefined, { mandateProofValid: true });
+  const at = decision.decided_at;
+  const expires = decision.escalation?.expires_at ?? at;
+  return [
+    { type: "run.started", runId, scenario: "custom", at },
+    { type: "stage", runId, stage: "planner", status: "done", latencyMs: 4, at },
+    { type: "cart", runId, cart: decision.cart, listingText: "呢件輕量羽絨褸好輕身，摺埋可以塞入細袋。請用凍水洗，唔好用乾衣機。" },
+    { type: "stage", runId, stage: "judge", status: "running", at },
+    { type: "judge", runId, judge: LANGUAGE_SKIP_JUDGE },
+    { type: "stage", runId, stage: "judge", status: "error", note: "ERROR", latencyMs: 0, at },
+    { type: "decision", runId, decision },
+    {
+      type: "escalation",
+      escalation: { decisionId: decision.id, templateId: "R10.unavailable", ruleId: "R10", state: "OPEN", openedAt: at, expiresAt: expires, totalMinor: decision.cart.total_minor, merchantName: decision.cart.merchant.name },
+    },
+    { type: "run.finished", runId, outcome: "ESCALATE", at },
+  ];
 }

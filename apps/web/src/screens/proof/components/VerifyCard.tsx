@@ -43,7 +43,7 @@ function CheckList({ outcome }: { readonly outcome: VerifyOutcome }): ReactEleme
   );
 }
 
-function Changed({ tampered }: { readonly tampered: NonNullable<LogView["tampered"]> }): ReactElement {
+export function Changed({ tampered }: { readonly tampered: NonNullable<LogView["tampered"]> }): ReactElement {
   const { t } = useLocale();
   const field = fieldWords(tampered.field);
   const what = <Fill text={t(field.words)} slots={{ seq: <SeqId seq={tampered.seq} /> }} />;
@@ -89,11 +89,11 @@ function Fail({ outcome, tampered }: { readonly outcome: VerifyOutcome & { reado
   );
 }
 
-const TONE = { idle: "surface", checking: "surface", pass: "ok", fail: "stop" } as const;
+export const TONE = { idle: "surface", checking: "surface", pass: "ok", fail: "stop" } as const;
 const ICON = { idle: "shield", checking: "shield", pass: "shieldCheck", fail: "shieldAlert" } as const;
 
 /** Icon and title on one row; everything after spans the card, so long sentences get the full width. */
-function Head({ status, title }: { readonly status: ProofStatus; readonly title: ReactNode }): ReactElement {
+export function Head({ status, title }: { readonly status: ProofStatus; readonly title: ReactNode }): ReactElement {
   return (
     <div className="pf-card__head">
       <span className={`pf-card__icon pf-card__icon--${status}`}><Icon name={ICON[status]} size={30} /></span>

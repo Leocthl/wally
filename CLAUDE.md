@@ -47,7 +47,7 @@ packages/harness                            lane D
 
 ## Commands
 - **Docs checks** (stdlib Python): `python3 scripts/docs-check.py` (caps, unknown F-IDs, numbers without an ID, PAN-like runs, style; `--update-register` refreshes the Used-in column) and `python3 scripts/trace-check.py` (SR/E traceability, ID coverage, links).
-- **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`.
+- **Workspace** (pnpm): `pnpm install`, `pnpm typecheck`, `pnpm lint` (includes the import-boundary tests), `pnpm test`, `pnpm coverage` (core line gate [F44]), `pnpm build`, `pnpm gen:types` (schemas to types and precompiled validators; commit the output; CI runs `node scripts/gen-types.mjs --check`), `pnpm docs:check`, `pnpm invariants` (T-I1 to T-I8, one line each, about half a minute: run it live when a judge asks).
 - **Booth**: `pnpm demo` (preflight, build if needed, API and UI on 127.0.0.1:8787), `pnpm demo:lan` (the same for phones: `HOST` or `--lan`, pairing token, QR in About and Presenter [F92]), `pnpm demo:reset` (new demo keys, empty logs, back to the sealed packet), `pnpm keys:gen` (throwaway keys into gitignored `.keys/`), `pnpm verify-log <log> <public-keys> [checkpoint]`, `pnpm verifier` (builds the one-file offline page), `pnpm pages:build` (on-device app plus verifier as a static site in `apps/web/dist-pages`; `pnpm --filter @wally/web e2e:pages` checks it under `/wally/`; `.github/workflows/pages.yml` deploys it once the repo is public). Routes: `GET /api/health /info /snapshot /log /export /events` (SSE) `/family /lan`; `POST /api/seal /scenario/:id /propose /ask /alternatives /compile /revoke /escalation/answer /verify /tamper /restore /reset`.
 - **Phones**: on-device page `?api=local`; native shells `pnpm --filter @wally/mobile sync`, then `ios:sim` or `android:apk` (`apps/mobile/README.md`).
 - **Evidence**: `pnpm harness -- --seed 7 --n 150 --judge live|recorded [--record --provisional <reason>]`, `pnpm --filter @wally/agent judge:fit`.
@@ -62,7 +62,7 @@ packages/harness                            lane D
 - **Qwen**: evaluated on author-written cases with no held-out set [F68]; picked by `auto` when it answers; a later outage shows as no proposal. The fixed booth buttons fall back to the recorded planner output when the live planner declines; free-text asks never do.
 - **Family**: the offline verifier cannot check the parent chain; Mum's credential is exported for reading.
 - **LAN, voice, devices**: plain http with one shared token [F92]; voice needs the browser's speech service; checked on a simulator and an emulator only.
-- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, public repo and licence.
+- **Human tasks pending**: real-card decline and shop probe [F39, F40], manual-route stopwatch [F80], native zh-HK read, the public flip (the licence is Apache-2.0, chosen 2026-10-03).
 
 ## Working agreements
 - **Parallel by default**: one Claude Code session per lane in its own git worktree (`.worktrees/<name>`) on branch `lane/<name>`, committing there; X merges at gates; never two sessions in one package.

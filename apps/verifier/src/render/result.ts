@@ -14,12 +14,12 @@ import { brokenAt, S, type Bi } from "../strings";
 type Checked = Extract<RunResult, { kind: "checked" }>;
 
 /** The round status disc: shield-check on green, shield-alert on red, a dashed shield for NOT VERIFIED. */
-function badge(name: IconName, text: Bi): HTMLElement {
+export function badge(name: IconName, text: Bi): HTMLElement {
   return el("p", { class: "verdict__badge" }, [el("span", { class: "verdict__disc" }, [icon(name, 30)]), bi(text, "span", "verdict__word")]);
 }
 
 /** A value that is text from the log (an id, a hash) is shown as is in both languages; a sentence is a Bi. */
-function fact(label: Bi, value: Bi | string, mono = false): HTMLElement {
+export function fact(label: Bi, value: Bi | string, mono = false): HTMLElement {
   return el("div", { class: "fact" }, [el("dt", {}, [bi(label)]), el("dd", mono ? { class: "mono" } : {}, [typeof value === "string" ? value : bi(value)])]);
 }
 

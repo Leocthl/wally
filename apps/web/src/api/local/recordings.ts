@@ -52,7 +52,7 @@ export function judgeRecordingsFrom(judgeFiles: BundledFiles, listingFiles: Bund
 }
 
 /**
- * Judge answers for the photo shelf (data/fixtures/shop/judge.json), recorded from live Laya by scripts/record-shop-judge.ts.
+ * Judge answers for the photo shelf (data/photo-shelf/judge.json), recorded from live Laya by scripts/record-shop-judge.ts.
  * One record per shelf item, keyed by the SHA-256 of that item's listing text; a record made for other text is a load error
  * (re-record), so an edited listing can never be judged by a stale answer. A shelf item with no record is a load error too.
  */

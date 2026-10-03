@@ -24,6 +24,7 @@ const RUN = {
   stepRead: label("Wally reads the listing", "Wally 閱讀商品資料"), // NEEDS-REVIEW
   stepReadDetail: label("Read as data, never as orders", "只當資料，唔當指令"), // NEEDS-REVIEW
   stepReadOffline: label("The checker is offline, so Wally will ask you", "檢查器離線，Wally 會先問你"), // NEEDS-REVIEW
+  stepReadLanguage: label("The checker reads English best, so Wally will ask you", "檢查器最啱讀英文，Wally 會先問你"), // NEEDS-REVIEW
   stepRules: label("Rules check", "規則檢查"), // NEEDS-REVIEW
   stepRulesDetail: label("Fixed rules decide, not the AI", "由固定規則決定，唔係 AI"), // NEEDS-REVIEW
   stepRulesPass: label("All your rules pass", "全部規則通過"), // NEEDS-REVIEW
@@ -109,6 +110,7 @@ const RUN = {
   reasonR10Scope: label("This might not fit your rules.", "呢件貨品可能唔符合你的規則。"), // NEEDS-REVIEW
   reasonR10Unsure: label("Wally isn't sure about this one.", "Wally 對呢件貨品冇把握。"), // NEEDS-REVIEW
   reasonR10Offline: label("Wally's checker is offline, so it asked you first.", "Wally 的檢查器離線，所以先問你。"), // NEEDS-REVIEW
+  reasonR10Language: label("Wally's listing checker reads English best and could not check this listing, so it asks you.", "Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。"), // NEEDS-REVIEW
   reasonR12: label("The price changed at checkout, so Wally cancelled the card.", "結帳時價格有變，Wally 已取消張卡。"), // NEEDS-REVIEW
   reasonUnknown: label("A fixed rule stopped this.", "固定規則攔截咗。"), // NEEDS-REVIEW
 
@@ -154,6 +156,7 @@ const RUN = {
   listingScope: label("Might not fit your rules", "可能唔符合你的規則"), // NEEDS-REVIEW
   listingUnsure: label("Wally wasn't sure", "Wally 冇把握"), // NEEDS-REVIEW
   listingOffline: label("The checker was offline, so Wally asked you", "檢查器離線，Wally 先問你"), // NEEDS-REVIEW
+  listingLanguage: label("The checker reads English best and couldn't read this, so Wally asked you", "檢查器最啱讀英文，今次未能讀到，Wally 先問你"), // NEEDS-REVIEW
   cardPass: label("Within what a one-off card can hold", "喺一次性卡上限之內"), // NEEDS-REVIEW
   cardStop: label("More than a one-off card can hold", "超出一次性卡上限"), // NEEDS-REVIEW
   answerStop: label("No yes in time", "未有及時批准"), // NEEDS-REVIEW
@@ -279,7 +282,7 @@ const SHELL = {
   "home.pastCards": label("Earlier cards", "較早的卡"), // NEEDS-REVIEW
   "home.recent": label("Recent", "最近"), // NEEDS-REVIEW
   "home.seeAll": label("See all", "查看全部"), // NEEDS-REVIEW
-  "home.recentEmpty": label("Nothing yet. Try asking Wally below.", "暫時未有。喺下面試吓叫 Wally 做嘢。"), // NEEDS-REVIEW
+  "home.recentEmpty": label("Nothing yet. Your first purchase shows up here.", "暫時未有，第一次購買會喺呢度顯示。"), // NEEDS-REVIEW
   "home.outcome.APPROVE": label("Approved", "已批准"), // NEEDS-REVIEW
   "home.outcome.DENY": label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
   "home.outcome.ESCALATE": label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
@@ -362,7 +365,7 @@ const SHELL = {
   "seal.what": label("What Wally can buy", "Wally 可以買甚麼"), // NEEDS-REVIEW
   "seal.sellers": label("Sellers", "賣家"), // NEEDS-REVIEW
   "seal.verifiedOnly": label("Verified sellers only", "只限認證賣家"), // NEEDS-REVIEW
-  "seal.verifiedHint": label("Wally checks scam reports before every buy.", "每次購買前，Wally 都會查詐騙紀錄。"), // NEEDS-REVIEW
+  "seal.verifiedHint": label("Wally checks the seller against a seller list before every buy.", "每次購買前，Wally 都會對照賣家名單。"), // NEEDS-REVIEW
   "seal.until": label("Until", "有效至"), // NEEDS-REVIEW
   "seal.askAbove": label("Ask me above", "超過此金額要問我"), // NEEDS-REVIEW
   "seal.cap": label("Most per buy", "每次最多"), // NEEDS-REVIEW
@@ -520,7 +523,7 @@ export const UI = {
       R6: label("A shop and category you allow", "屬你允許的商戶及類別"), // NEEDS-REVIEW
       R7: label("Not too many cards in a short time", "短時間內沒有發太多卡"), // NEEDS-REVIEW
       R8: label("Not too many cards open at once", "同時有效的卡不算多"), // NEEDS-REVIEW
-      R9: label("Seller checked against scam reports", "已查核賣家詐騙紀錄"), // NEEDS-REVIEW
+      R9: label("Seller checked against a seller list", "已對照賣家名單查核"), // NEEDS-REVIEW
       R9NoRecord: label("No scam record found for the seller (not proof of safety)", "賣家查無詐騙紀錄（不代表安全）"), // NEEDS-REVIEW
       R10scope: label("The item fits what you asked for", "貨品符合你的要求"), // NEEDS-REVIEW
       R10injection: label("The listing text gives no orders", "商品文字沒有夾帶指令"), // NEEDS-REVIEW
@@ -579,7 +582,7 @@ export const UI = {
     yourWords: label("In your words", "你的原話"), // NEEDS-REVIEW
     ruleBudget: label("Budget {amount}", "預算 {amount}"), // NEEDS-REVIEW
     ruleCategories: label("Only these kinds of things", "只限這些類別"), // NEEDS-REVIEW
-    ruleSellers: label("Sellers checked against scam reports first", "賣家先查核詐騙紀錄"), // NEEDS-REVIEW
+    ruleSellers: label("Sellers checked against a seller list first", "賣家先對照名單查核"), // NEEDS-REVIEW
     ruleCap: label("Each purchase at most {amount}", "每次購買最多 {amount}"), // NEEDS-REVIEW
     ruleAsk: label("Asks you above {amount}", "超過 {amount} 要你確認"), // NEEDS-REVIEW
     ruleUntil: label("Valid until {time} (Hong Kong time)", "有效至 {time}（香港時間）"), // NEEDS-REVIEW

@@ -1,4 +1,4 @@
-// Records data/fixtures/shop/judge.json: one judge answer per photo-shelf item, from the running local Laya server, so the
+// Records data/photo-shelf/judge.json: one judge answer per photo-shelf item, from the running local Laya server, so the
 // on-device build (which has no judge model) can approve a picked item the way the booth does. Same call the booth makes:
 // the real cart the cart builder makes for the item, the demo mandate M0, option-order rotations averaged. Raw
 // probabilities only (R10 applies the thresholds). Any failed call writes nothing.
@@ -65,5 +65,5 @@ const envelope = {
   note: `Recorded from live Laya on ${values.date} (model typed-decisions, option-order rotations averaged) for the SIMULATED photo-shelf listings, with the real cart the cart builder makes for each and the demo mandate M0. MEASURED(1) raw probabilities on SIMULATED listings; R10 applies the thresholds. Served by the on-device replay judge, keyed by the SHA-256 of the listing text.`,
   data: { records },
 };
-writeFileSync(join(DATA, "fixtures/shop/judge.json"), `${JSON.stringify(envelope, null, 2)}\n`);
+writeFileSync(join(DATA, "photo-shelf/judge.json"), `${JSON.stringify(envelope, null, 2)}\n`);
 process.stdout.write(`wrote ${records.length} records\n`);

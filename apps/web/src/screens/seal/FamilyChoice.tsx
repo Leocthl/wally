@@ -98,16 +98,21 @@ export function FamilyChoice({ source, onChange, summary, failed }: FamilyChoice
   );
 }
 
+export interface FamilySealOptions {
+  /** Start on my own budget even when the budget now held is Mum's (a first budget replaces it; it does not top it up). */
+  readonly startOwn?: boolean;
+}
+
 /**
  * The family choice for the Seal screen. `amountText` is the amount field as typed. A budget that is already Mum's starts
  * on Mum's (Top up and Change the rules keep its source); everything else starts on my own budget.
  */
-export function useFamilySeal(amountText: string): FamilySeal {
+export function useFamilySeal(amountText: string, { startOwn = false }: FamilySealOptions = {}): FamilySeal {
   const { api, info, state } = useBoothContext();
   const { t } = useLocale();
   const mode = useRouteParam(PARAM.mode);
   const available = info?.features?.family === true && typeof api.family === "function";
-  const [source, setSource] = useState<Source>(() => (mode !== "welcome" && state.mandate?.parent !== undefined ? "mum" : "own"));
+  const [source, setSource] = useState<Source>(() => (!startOwn && mode !== "welcome" && state.mandate?.parent !== undefined ? "mum" : "own"));
   const [summary, setSummary] = useState<FamilySummary | null>(null);
   const [failed, setFailed] = useState(false);
   const mum = available && source === "mum";

@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -35,6 +35,17 @@ describe("recordFixtures", () => {
     expect(envelope.note).toMatch(/Recorded from live Laya on 2026-10-02/);
     expect(envelope.note).toContain("55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851");
     expect(envelope.note).toContain("wording v0");
+  });
+
+  it("records a Chinese listing from the raw checkpoint: the language gate is off for this tool", async () => {
+    const file = join(dir, "listings/apparel-tee.json");
+    const envelope = JSON.parse(readFileSync(file, "utf8")) as { data: { text: string } };
+    writeFileSync(file, JSON.stringify({ ...envelope, data: { ...envelope.data, text: "呢件純棉T恤好舒服，著落去好透氣。請用凍水洗，唔好用乾衣機。有問題可以 DM 我哋。" } }));
+    const written = await recordFixtures(options());
+    expect(written.map((w) => w.name)).toContain("apparel-tee");
+    const asked = mock.judgeRequests().map((r) => (r.body as { state: { listing: { description: string } } }).state.listing.description);
+    expect(asked.some((d) => d.includes("呢件純棉"))).toBe(true);
+    expect(loadReplayRecordings(dir)).toHaveLength(6);
   });
 
   it("writes nothing when a call fails: a recording is always an OK answer", async () => {

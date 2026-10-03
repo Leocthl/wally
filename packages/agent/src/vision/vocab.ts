@@ -1,6 +1,6 @@
 // The words the photo reader may answer with. Every field is an enum or a short bounded list: the model never writes
 // free text, a price or a brand, and a picture that says "ignore your rules" can only ever produce these values. The
-// shop fixtures (data/fixtures/shop) and the matcher use the same words, so a picture and an item compare directly.
+// shop fixtures (data/photo-shelf) and the matcher use the same words, so a picture and an item compare directly.
 
 export const KINDS = [
   "tee",

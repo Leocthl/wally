@@ -23,6 +23,12 @@ export function parseChip(raw: unknown): FileChip | null {
   return { kind, text: raw.trim() };
 }
 
+/** The sample size a MEASURED or RECORDED chip carries ("n=150"), or null for a chip that does not say. */
+export function chipSampleSize(chip: FileChip): number | null {
+  const m = /\bn=(\d+)/.exec(chip.text);
+  return m === null ? null : Number(m[1]);
+}
+
 export const SIMULATED_CHIP: FileChip = { kind: "SIMULATED", text: "SIMULATED" };
 export const ASSUMED_CHIP: FileChip = { kind: "ASSUMED", text: "ASSUMED" };
 

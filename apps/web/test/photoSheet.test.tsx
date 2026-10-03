@@ -1,4 +1,4 @@
-// Show Wally a photo in the real app on a test client: the camera button in the Ask sheet and the card in Try asking, the
+// Show Wally a photo in the real app on a test client: the camera button and the shortcut in the Ask sheet and the row on Home, the
 // sheet that reads a picture (the canvas work is stubbed: jsdom has no canvas), the chips, the four cards with the budget
 // badge, and the buy that goes to ask() with the picked listing id. The booth side is the real see() over the bundled shop.
 import { FakeClock } from "@wally/core/testing";
@@ -100,13 +100,14 @@ async function choosePicture(user: ReturnType<typeof userEvent.setup>, locale: "
 }
 
 describe("the entry points", () => {
-  it("shows the camera button in the Ask sheet and the card in Try asking when the booth can look and ask", async () => {
+  it("shows the row on Home, and the camera button and the shortcut in the Ask sheet, when the booth can look and ask", async () => {
     const user = await boot(new PhotoClient("palette"));
     expect(document.querySelector('main [data-slot="photo-card"]')).not.toBeNull();
     await user.click(screen.getByRole("button", { name: /^Ask$/ }));
     const ask = await screen.findByRole("dialog");
     expect(within(ask).getAllByRole("button", { name: "Show Wally a photo" })).toHaveLength(2); // the camera button in the field and the pill in the shortcuts
-    expect(ask.querySelectorAll('[data-slot="photo-card"]')).toHaveLength(1);
+    expect(ask.querySelectorAll('[data-slot="photo-pill"]')).toHaveLength(1);
+    expect(ask.querySelectorAll('[data-slot="photo-card"]')).toHaveLength(0); // the row belongs to Home
   });
 
   it("shows neither on a client with no see(), or one that cannot ask", async () => {
@@ -115,6 +116,7 @@ describe("the entry points", () => {
     await user.click(screen.getByRole("button", { name: /^Ask$/ }));
     const ask = await screen.findByRole("dialog");
     expect(ask.querySelector('[data-slot="photo-button"]')).toBeNull();
+    expect(ask.querySelector('[data-slot="photo-pill"]')).toBeNull();
   });
 
   it("the input offers the camera or the library: any image, no capture attribute", async () => {
@@ -127,7 +129,7 @@ describe("the entry points", () => {
     expect(input).toHaveAttribute("aria-hidden", "true");
   });
 
-  it("the Budget card opens the same sheet", async () => {
+  it("the row on Home opens the same sheet", async () => {
     const client = new PhotoClient("palette");
     const user = await boot(client);
     const input = document.querySelector<HTMLInputElement>('main input[data-slot="photo-file"]');

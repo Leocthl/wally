@@ -1,6 +1,7 @@
 // STUB explanation templates: renders the documented examples (docs/01 Stop catalogue) until lane A's explain module
 // merges. Same signature as core's Render, so the swap is one line in renderStop.ts. zh-HK lines are drafts for the
 // native read owed in C-12. Pure: no I/O, no clock, no LLM prose (D4).
+import { isLanguageSkip } from "@wally/core/explain";
 import type { TemplateId } from "@wally/core/ports";
 import { formatHkd } from "../domain/money";
 import { formatHkTime } from "../domain/time";
@@ -105,8 +106,11 @@ export const TEMPLATES: Readonly<Record<TemplateId, Template>> = {
     zh: (i) => `${askZh(10)}判斷器建議由你決定（${prob(i, "p")} 高於 ${prob(i, "threshold")}）。`,
   },
   "R10.unavailable": {
-    en: () => "Escalated by R10. The judge could not check this listing, so it asks you.",
-    zh: () => `${askZh(10)}判斷器未能檢查這個商品頁，所以交由你決定。`,
+    en: (i) =>
+      isLanguageSkip(i)
+        ? "Escalated by R10. Wally's listing checker reads English best and could not check this listing, so it asks you."
+        : "Escalated by R10. The judge could not check this listing, so it asks you.",
+    zh: (i) => (isLanguageSkip(i) ? `${askZh(10)}Wally 嘅貨品說明檢查器最啱讀英文，今次未能檢查呢個貨品，所以請你決定。` : `${askZh(10)}判斷器未能檢查這個商品頁，所以交由你決定。`),
   },
   "R11.expired": {
     en: (i) => `Stopped by R11. No answer in ${seconds(i, "window_s")}.`,

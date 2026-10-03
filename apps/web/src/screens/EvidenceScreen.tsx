@@ -1,7 +1,9 @@
-// #/evidence, "Why trust Wally?": the harness B0/B1/B2 results with k/n, intervals and chips, the acceptance targets,
-// the judge on its own, the manual route (E3) and observed captures (E5). Data is bundled at build time (no network).
-// Reading order: wiring banner (when the file says it is not product evidence), the bottom line in words, the run
-// picker, the big numbers, targets, charts, every metric, per category; then the judge; then the human files.
+// #/evidence, "Why trust Wally?". Plain mode (the default) is a headline sentence and five cards in plain words, with the
+// full developer view one tap away under "How we know". Developer mode is the harness B0/B1/B2 results with k/n, intervals
+// and chips, the acceptance targets, the judge on its own, the manual route (E3) and observed captures (E5). Data is
+// bundled at build time (no network); both views read the same loaded files.
+// Developer reading order: wiring banner (when the file says it is not product evidence), the bottom line in words, the
+// run picker, the big numbers, targets, charts, every metric, per category; then the judge; then the human files.
 import { useState, type ReactElement } from "react";
 import { evidenceFile, loadHarnessRuns, loadJudgeFits, type Loaded } from "../evidence/data";
 import { CategoryPanel } from "../evidence/components/CategoryPanel";
@@ -9,6 +11,7 @@ import { HarnessSection } from "../evidence/components/HarnessSection";
 import { Headline } from "../evidence/components/Headline";
 import { CapturesPanel, ManualRoutePanel } from "../evidence/components/HumanPanels";
 import { JudgePanel } from "../evidence/components/JudgePanel";
+import { PlainEvidence } from "../evidence/components/plain/PlainEvidence";
 import { RunPicker, UnreadablePanel, WiringBanner } from "../evidence/components/RunStatus";
 import { Tx } from "../evidence/components/Tx";
 import { parseCaptures, parseManualRoute, type Captures, type ManualRoute } from "../evidence/humanGuard";
@@ -17,9 +20,11 @@ import { pickRun, sortRuns, wiringStatus } from "../evidence/select";
 import { E } from "../evidence/strings";
 import type { HarnessRun, Parsed } from "../evidence/types";
 import { UI } from "../i18n/ui";
+import { useDisplayMode } from "../state/displayMode";
 import { useLocale } from "../ui/locale";
 import { TopBar } from "../ui/Nav";
 import "../evidence/evidence.css";
+import "../evidence/plain.css";
 
 const EU = UI.evidenceUi;
 const parseOrNull = <T,>(raw: unknown, parse: (x: unknown) => Parsed<T>): Parsed<T> | null => (raw === undefined ? null : parse(raw));
@@ -53,27 +58,53 @@ export interface EvidenceScreenProps {
   readonly captures?: Parsed<Captures> | null;
 }
 
-export function EvidenceScreen({ harness = BUNDLED.harness, judge = BUNDLED.judge, manual = BUNDLED.manual, captures = BUNDLED.captures }: EvidenceScreenProps): ReactElement {
-  const { t, locale } = useLocale();
-  const runs = sortRuns(harness.items);
+interface BodyProps {
+  readonly harness: Loaded<HarnessRun>;
+  readonly judge: Loaded<JudgeFit>;
+  readonly manual: Parsed<ManualRoute> | null;
+  readonly captures: Parsed<Captures> | null;
+  readonly runs: readonly HarnessRun[];
+  readonly selected: HarnessRun | null;
+  readonly chosen: string | null;
+  readonly onChoose: (file: string) => void;
+}
+
+/** Everything under the lead of the developer view: the run, the judge and the human files. */
+function DeveloperBody({ harness, judge, manual, captures, runs, selected, chosen, onChoose }: BodyProps): ReactElement {
   const pick = pickRun(runs);
-  const [chosen, setChosen] = useState<string | null>(null);
-  const selected = runs.find((r) => r.file === chosen) ?? runs.find((r) => r.file === pick?.file) ?? null;
   return (
-    <div className="ev" lang={locale} data-screen="evidence">
-      <TopBar large title={t(EU.title)} />
-      <Tx as="p" text={EU.lead} className="ev-lead" />
+    <>
       <UnreadablePanel files={[...harness.unreadable, ...judge.unreadable]} />
       {selected === null || pick === null ? (
         <Tx as="p" text={E.unreadableNone} className="ev-unreadable" />
       ) : (
-        <Chosen run={selected} picker={<RunPicker runs={runs} selected={selected} reason={chosen === null ? pick.reason : "visitor"} onSelect={setChosen} />} />
+        <Chosen run={selected} picker={<RunPicker runs={runs} selected={selected} reason={chosen === null ? pick.reason : "visitor"} onSelect={onChoose} />} />
       )}
       <h2 className="ev-part"><Tx text={EU.judgeSection} /></h2>
       <JudgePanel fit={judge.items[0] ?? null} corpus={selected?.injectionCorpus ?? null} />
       <h2 className="ev-part"><Tx text={EU.humanSection} /></h2>
       <ManualRoutePanel parsed={manual} />
       <CapturesPanel parsed={captures} />
+    </>
+  );
+}
+
+export function EvidenceScreen({ harness = BUNDLED.harness, judge = BUNDLED.judge, manual = BUNDLED.manual, captures = BUNDLED.captures }: EvidenceScreenProps): ReactElement {
+  const { t, locale } = useLocale();
+  const [mode] = useDisplayMode();
+  const runs = sortRuns(harness.items);
+  const pick = pickRun(runs);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const selected = runs.find((r) => r.file === chosen) ?? runs.find((r) => r.file === pick?.file) ?? null;
+  const body = <DeveloperBody harness={harness} judge={judge} manual={manual} captures={captures} runs={runs} selected={selected} chosen={chosen} onChoose={setChosen} />;
+  if (mode === "plain") {
+    return <PlainEvidence run={selected} unreadable={harness.unreadable.length + judge.unreadable.length > 0} renderDetails={() => body} />;
+  }
+  return (
+    <div className="ev" lang={locale} data-screen="evidence" data-mode="developer">
+      <TopBar large title={t(EU.title)} />
+      <Tx as="p" text={EU.lead} className="ev-lead" />
+      {body}
     </div>
   );
 }

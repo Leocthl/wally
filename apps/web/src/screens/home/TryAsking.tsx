@@ -1,13 +1,19 @@
 // "Try asking" (replaces the booth ScenarioPicker): the scenarios as grouped cards, Buy, Stops, Card and Budget. One tap
-// runs it and shows Wally at work. Used on the Budget screen and inside the Ask sheet.
-import { useId, type ReactElement } from "react";
+// runs it and shows Wally at work. Used on the Budget screen and inside the Ask sheet. A person who told Wally their taste
+// sees the cards that fit first inside each group, the best fits tagged "For you" (screens/home/tryRank.ts): the same
+// cards, the same scenarios, only the order and a tag change.
+import { useId, useMemo, type ReactElement } from "react";
 import type { ScenarioId } from "../../api/types";
+import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
+import { useProfile } from "../../state/useProfile";
+import { Tag } from "../../ui/Chip";
 import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
-import { PhotoCard } from "../photo/PhotoEntry";
+import { PhotoPill } from "../photo/PhotoEntry";
 import { FAMILY_GROUP, TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
+import { rankTryItems, type RankedTry } from "./tryRank";
 
 export interface TryAskingProps {
   readonly onRun: (id: ScenarioId) => void;
@@ -19,11 +25,11 @@ export interface TryAskingProps {
   readonly variant?: "cards" | "pills";
   /** Add Mum's budget (two scenarios) when the booth offers family budgets. Default off. */
   readonly family?: boolean;
-  /** Show Wally a photo: when given, the photo card leads the list and hands the chosen picture to this. Default off. */
+  /** Show Wally a photo: when given, the pills variant starts with its shortcut and hands the chosen picture to this. Default off. */
   readonly onPhoto?: (file: File) => void;
 }
 
-function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<Omit<TryAskingProps, "family" | "onPhoto">>): ReactElement {
+function Group({ group, ranked, onRun, busy, headingLevel, variant }: { readonly group: TryGroup; readonly ranked: RankedTry } & Required<Omit<TryAskingProps, "family" | "onPhoto">>): ReactElement {
   const { t } = useLocale();
   const id = useId();
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -31,12 +37,13 @@ function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: 
     <div className="home-try__group" role="group" aria-labelledby={id}>
       <Heading id={id} className="home-try__group-title">{t(UI[`home.group.${group}`])}</Heading>
       <ul className="home-try__grid">
-        {TRY_ITEMS.filter((s) => s.group === group).map((s) => (
+        {ranked.items.filter((s) => s.group === group).map((s) => (
           <li key={s.id}>
-            <button type="button" className="home-try__card" data-scenario={s.id} disabled={busy} onClick={() => onRun(s.id)}>
+            <button type="button" className="home-try__card" data-scenario={s.id} data-for-you={ranked.forYou.has(s.id) || undefined} disabled={busy} onClick={() => onRun(s.id)}>
               <span className={cx("home-try__icon", `home-try__icon--${s.tone}`)}><Icon name={s.icon} size={20} /></span>
               <span className="home-try__title">{t(UI[`home.sc.${s.id}`])}</span>
               {variant === "cards" ? <span className="home-try__desc">{t(UI[`home.sc.${s.id}.d`])}</span> : null}
+              {variant === "cards" && ranked.forYou.has(s.id) ? <Tag tone="primary" size="sm" icon={<Icon name="sparkle" size={12} />} className="home-try__for-you">{t(OB.home.forYou)}</Tag> : null}
             </button>
           </li>
         ))}
@@ -46,11 +53,13 @@ function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: 
 }
 
 export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false, onPhoto }: TryAskingProps): ReactElement {
+  const { profile } = useProfile();
+  const ranked = useMemo(() => rankTryItems(TRY_ITEMS, profile), [profile]);
   return (
     <div className={cx("home-try", `home-try--${variant}`)}>
-      {onPhoto ? <PhotoCard onFile={onPhoto} variant={variant} busy={busy} /> : null}
+      {onPhoto && variant === "pills" ? <PhotoPill onFile={onPhoto} busy={busy} /> : null}
       {(family ? [...TRY_GROUPS, FAMILY_GROUP] : TRY_GROUPS).map((g) => (
-        <Group key={g} group={g} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
+        <Group key={g} group={g} ranked={ranked} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
       ))}
     </div>
   );

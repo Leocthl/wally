@@ -6,10 +6,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // A port unlikely to clash with other local previews; reuseExistingServer is off so a stranger on the port fails loudly.
-const PORT = 4517;
+// WALLY_E2E_PORT picks another one when two checkouts run the specs on the same Mac at once.
+const PORT = Number(process.env["WALLY_E2E_PORT"] ?? 4517);
 const URL = `http://127.0.0.1:${PORT}`;
 /** Ignored by git and eslint like every dist/ (root .gitignore, eslint.config.js). */
 const OUT_DIR = "dist/e2e";
+/** The first run (src/screens/onboarding) is off for every spec but its own: the flag is in storage when the page opens. */
+const ONBOARDED = { cookies: [], origins: [{ origin: URL, localStorage: [{ name: "wally:onboarded", value: "1" }] }] };
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +22,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"]],
-  use: { baseURL: URL, trace: "off", screenshot: "off" },
+  use: { baseURL: URL, trace: "off", screenshot: "off", storageState: ONBOARDED },
   webServer: {
     command: `pnpm exec vite build --outDir ${OUT_DIR} --emptyOutDir && pnpm exec vite preview --outDir ${OUT_DIR} --host 127.0.0.1 --port ${PORT} --strictPort`,
     env: { VITE_API: "local" },

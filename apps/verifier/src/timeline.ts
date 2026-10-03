@@ -1,8 +1,10 @@
 // Compact per-entry timeline: a tick for each entry before the first failure, a cross on it, "not checked" after.
-// Labels (seq, kind, time) are read from the unverified lines and shown as text; status comes from the report.
+// Labels (seq, kind, time) are read from the unverified lines and shown as text; status comes from the report. The plain
+// view's label ("Approved") is chosen here too, from the same line (plain/events.ts), so the renderers never see a line.
 import type { Checkpoint, ParsedLog, VerifyReport } from "@wally/core/verify";
 import { ownInteger, ownString } from "./entry-fields";
 import { LIMITS } from "./limits";
+import { eventKeyOf, type EventKey } from "./plain/events";
 
 export type RowStatus = "ok" | "broken" | "unchecked";
 export type CheckpointStatus = "none" | "ok" | "broken" | "unchecked";
@@ -13,6 +15,8 @@ export interface TimelineRow {
   readonly kind: string;
   readonly ts: string;
   readonly status: RowStatus;
+  /** Which plain label the row gets ("Approved"); a row built without one reads as "A receipt". */
+  readonly event?: EventKey;
 }
 
 export interface Timeline {
@@ -26,10 +30,16 @@ function cell(value: string | undefined, fallback: string): string {
 }
 
 function label(parsed: ParsedLog, index: number): Omit<TimelineRow, "status"> {
-  if (parsed.badLines.has(index)) return { index, seq: "?", kind: "unreadable line", ts: "" };
+  if (parsed.badLines.has(index)) return { index, seq: "?", kind: "unreadable line", ts: "", event: "other" };
   const entry = parsed.entries[index];
   const seq = ownInteger(entry, "seq");
-  return { index, seq: seq === undefined ? "?" : String(seq), kind: cell(ownString(entry, "kind"), "?"), ts: cell(ownString(entry, "ts"), "") };
+  return {
+    index,
+    seq: seq === undefined ? "?" : String(seq),
+    kind: cell(ownString(entry, "kind"), "?"),
+    ts: cell(ownString(entry, "ts"), ""),
+    event: eventKeyOf(entry),
+  };
 }
 
 /** TRUNCATED at a seq inside the log: the checkpoint names that entry and its hash differs (rewritten). */

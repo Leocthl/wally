@@ -6,6 +6,7 @@ import { UI } from "../../../i18n/ui";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
 import { Sheet } from "../../../ui/Overlay";
+import { PLAIN } from "../plainStrings";
 
 const P = UI.proof;
 export const VERIFIER_HREF = "/verifier/";
@@ -107,21 +108,28 @@ function useFiles(open: boolean, exporter: Exporter): { readonly files: Files | 
   return { files, failed };
 }
 
-export function ExportSheet({ open, onClose, exporter }: { readonly open: boolean; readonly onClose: () => void; readonly exporter: Exporter }): ReactElement {
+/** The sheet's words: the technical names in developer mode, everyday ones in plain mode. The files are the same. */
+const EXPORT_WORDS = {
+  developer: { title: P.exportTitle, body: P.exportBody, log: P.exportLog, keys: P.exportKeys, checkpoint: P.exportCheckpoint, failed: P.exportFailed, parent: UI.family.exportParent, parentNote: UI.family.exportParentNote },
+  plain: { title: PLAIN.save.title, body: PLAIN.save.body, log: PLAIN.save.receipts, keys: PLAIN.save.keys, checkpoint: PLAIN.save.checkpoint, failed: PLAIN.save.failed, parent: PLAIN.save.parent, parentNote: PLAIN.save.parentNote },
+} as const;
+
+export function ExportSheet({ open, onClose, exporter, plain = false }: { readonly open: boolean; readonly onClose: () => void; readonly exporter: Exporter; readonly plain?: boolean }): ReactElement {
   const { t } = useLocale();
   const { files, failed } = useFiles(open, exporter);
+  const w = EXPORT_WORDS[plain ? "plain" : "developer"];
   const links = files
     ? ([
-        [files.log, "wally-receipts.jsonl", P.exportLog, "receipt"],
-        [files.keys, "wally-public-keys.json", P.exportKeys, "lock"],
-        [files.checkpoint, "wally-checkpoint.json", P.exportCheckpoint, "check"],
-        ...(files.parent === undefined ? [] : ([[files.parent, "parent-credential.json", UI.family.exportParent, "shieldCheck"]] as const)),
+        [files.log, "wally-receipts.jsonl", w.log, "receipt"],
+        [files.keys, "wally-public-keys.json", w.keys, "lock"],
+        [files.checkpoint, "wally-checkpoint.json", w.checkpoint, "check"],
+        ...(files.parent === undefined ? [] : ([[files.parent, "parent-credential.json", w.parent, "shieldCheck"]] as const)),
       ] as const)
     : [];
   return (
-    <Sheet open={open} onClose={onClose} title={t(P.exportTitle)} description={t(P.exportBody)}>
+    <Sheet open={open} onClose={onClose} title={t(w.title)} description={t(w.body)}>
       <div className="pf-export">
-        {failed ? <p className="pf-export__error" role="alert">{t(P.exportFailed)}</p> : null}
+        {failed ? <p className="pf-export__error" role="alert">{t(w.failed)}</p> : null}
         {links.map(([href, name, words, icon]) => (
           <a key={name} className="w-btn w-btn--secondary w-btn--md w-btn--block" href={href} download={name}>
             <span className="w-btn__icon"><Icon name={icon} size={20} /></span>
@@ -129,7 +137,7 @@ export function ExportSheet({ open, onClose, exporter }: { readonly open: boolea
             <span className="w-btn__icon"><Icon name="download" size={20} /></span>
           </a>
         ))}
-        {files?.parent === undefined ? null : <p className="pf-export__note">{t(UI.family.exportParentNote)}</p>}
+        {files?.parent === undefined ? null : <p className="pf-export__note">{t(w.parentNote)}</p>}
       </div>
     </Sheet>
   );

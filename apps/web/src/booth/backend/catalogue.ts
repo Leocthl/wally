@@ -48,7 +48,7 @@ export interface CatalogueSources {
   readonly referenceCart: FixtureFile;
   /** data/fixtures/scameter/*.json */
   readonly captures: readonly FixtureFile[];
-  /** data/fixtures/shop: the photo shelf (items.json) and the captures only it uses (scameter/*.json). Optional. */
+  /** data/photo-shelf: the photo shelf (items.json) and the captures only it uses (scameter/*.json). Optional. */
   readonly shop?: { readonly items: FixtureFile; readonly captures: readonly FixtureFile[] };
 }
 

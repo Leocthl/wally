@@ -12,7 +12,7 @@ import { useLocale } from "../../../ui/locale";
 import { Sheet } from "../../../ui/Overlay";
 import { Card } from "../../../ui/Surface";
 import { Wally } from "../../../wally/Wally";
-import { plainReason } from "../model/reason";
+import { checkerIsOffline, plainReason } from "../model/reason";
 import type { Result } from "../model/screen";
 import { Countdown, Deal, useOkClock, YesDoes } from "./okParts";
 
@@ -44,7 +44,7 @@ export function NeedsOk({ result, headingRef, answering, onAnswer, onWhy, now }:
     <div className="run-stack" data-run-state="needsOk">
       <Card tone="warn" padding="lg" className="run-ask">
         <div className="run-ask__head">
-          <Wally state={chain.current.explanation?.template_id === "R10.unavailable" ? "offline" : "thinking"} size={64} decorative />
+          <Wally state={checkerIsOffline(chain.current) ? "offline" : "thinking"} size={64} decorative />
           <h2 className="run-ask__title" tabIndex={-1} ref={sheetOpen ? undefined : headingRef}>{t(R.needsOkTitle)}</h2>
         </div>
         <p className="run-ask__reason">{reason}</p>

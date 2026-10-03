@@ -1,3 +1,16 @@
 /* The hidden file input behind the camera button and the photo card. It must stay in the DOM and clickable by script; it is
    never seen or reached by keyboard (the visible button is the control). */
 .photo-file { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; opacity: 0; pointer-events: none; }
+
+/* "Show Wally a photo" on Home: one calm row under the "What do you need?" row. */
+.home-photo { display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: var(--tap-xl); margin-top: calc(-1 * var(--sp-2)); padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.home-photo:active { border-color: var(--c-primary); transform: scale(0.99); }
+.home-photo:disabled { cursor: progress; opacity: 0.55; }
+.home-photo__icon { display: inline-grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--c-primary-tint); color: var(--c-primary-ink); }
+.home-photo__text { display: grid; flex: 1; min-width: 0; gap: var(--sp-1); }
+.home-photo__title { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+.home-photo__desc { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.home-photo__chevron { flex: none; color: var(--c-ink-muted); }
+@media (hover: hover) and (pointer: fine) {
+  .home-photo:hover:not(:disabled) { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
+}

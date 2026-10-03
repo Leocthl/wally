@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mountVerifier } from "../src/app";
+import { mountDeveloper, resetMode } from "./helpers";
 
 let root: HTMLElement;
 const q = <T extends Element>(selector: string): T => {
@@ -19,11 +19,12 @@ beforeEach(() => {
   window.localStorage.clear();
   root = document.createElement("div");
   document.body.replaceChildren(root);
-  mountVerifier(root);
+  mountDeveloper(root); // the markup pinned here is the technical page's; both modes are in mode-a11y.test.ts
 });
 afterEach(() => {
   document.body.replaceChildren();
   document.documentElement.removeAttribute("data-lang");
+  resetMode();
 });
 
 describe("focus", () => {

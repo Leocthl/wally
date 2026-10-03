@@ -1,6 +1,7 @@
 // Where a picture comes in: a hidden file input that offers the camera or the library on a phone, the camera button inside
-// the Ask field (next to the mic) and the "Show Wally a photo" card in Try asking. They only hand a File to the shell; the
-// sheet that reads it (PhotoSheet) is loaded the first time one is chosen, so these few lines are all the first load pays for.
+// the Ask field (next to the mic), the "Show Wally a photo" row on Home and the shortcut among the Ask sheet's pills. They
+// only hand a File to the shell; the sheet that reads it (PhotoSheet) is loaded the first time one is chosen, so these few
+// lines are all the first load pays for.
 import { useCallback, useRef, type ChangeEvent, type ReactElement } from "react";
 import { PHOTO } from "../../i18n/photo";
 import "./photo-entry.css";
@@ -42,24 +43,44 @@ export function PhotoButton({ onFile, disabled = false }: { readonly onFile: (fi
   );
 }
 
-/** The "Show Wally a photo" card (Budget) or pill (Ask sheet shortcuts), styled with the Try asking cards. */
-export function PhotoCard({ onFile, variant, busy = false }: { readonly onFile: (file: File) => void; readonly variant: "cards" | "pills"; readonly busy?: boolean }): ReactElement {
+/** The "Show Wally a photo" shortcut among the Ask sheet's pills, styled with the Try asking pills. */
+export function PhotoPill({ onFile, busy = false }: { readonly onFile: (file: File) => void; readonly busy?: boolean }): ReactElement {
   const { t } = useLocale();
   const picker = usePhotoPicker(onFile);
   return (
     <div className="home-try__group">
       <ul className="home-try__grid">
         <li>
-          <button type="button" className="home-try__card" data-slot="photo-card" disabled={busy} onClick={picker.open}>
+          <button type="button" className="home-try__card" data-slot="photo-pill" disabled={busy} onClick={picker.open}>
             <span className={cx("home-try__icon", "home-try__icon--primary")}>
               <Icon name="camera" size={20} />
             </span>
             <span className="home-try__title">{t(PHOTO.entryTitle)}</span>
-            {variant === "cards" ? <span className="home-try__desc">{t(PHOTO.entryDesc)}</span> : null}
           </button>
           {picker.input}
         </li>
       </ul>
     </div>
+  );
+}
+
+/** The "Show Wally a photo" row on Home, right under the "What do you need?" row (screens/home/slots.tsx). */
+export function PhotoRow({ onFile, busy = false }: { readonly onFile: (file: File) => void; readonly busy?: boolean }): ReactElement {
+  const { t } = useLocale();
+  const picker = usePhotoPicker(onFile);
+  return (
+    <>
+      <button type="button" className="home-photo" data-slot="photo-card" disabled={busy} onClick={picker.open}>
+        <span className="home-photo__icon" aria-hidden="true">
+          <Icon name="camera" size={22} />
+        </span>
+        <span className="home-photo__text">
+          <span className="home-photo__title">{t(PHOTO.entryTitle)}</span>
+          <span className="home-photo__desc">{t(PHOTO.entryDesc)}</span>
+        </span>
+        <Icon name="chevronRight" size={20} className="home-photo__chevron" />
+      </button>
+      {picker.input}
+    </>
   );
 }

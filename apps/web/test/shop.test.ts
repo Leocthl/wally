@@ -1,6 +1,7 @@
 // @vitest-environment node
 // The photo shelf: 30 SIMULATED items in four shops, kept apart from every list that existing flows are built from. The
 // Ask shelf, the scenario listing sets and the derived listings must be exactly what they were before the shelf existed.
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SHOP_KINDS } from "@wally/agent/vision";
@@ -40,6 +41,24 @@ describe("the photo shelf stays off every existing list", () => {
     for (const entry of entries) {
       expect(urls.has(entry.listing.url), entry.listing.url).toBe(false);
       expect(catalogue.listings.has(entry.item.id)).toBe(false);
+    }
+  });
+});
+
+describe("the shelf files stay out of the core fixtures tree, with the same card-number guard (I8)", () => {
+  const SHELF_DIR = join(ROOT, "photo-shelf");
+  const files = ["items.json", "judge.json", "scameter/demo-shoes.json"];
+
+  it("sits next to data/fixtures, not inside it (its envelope names schemas the core fixture checks do not know)", () => {
+    expect(existsSync(join(ROOT, "fixtures", "shop"))).toBe(false);
+    for (const file of files) expect(existsSync(join(SHELF_DIR, file)), file).toBe(true);
+  });
+
+  it("holds no card-number-like digit run and no CVV", () => {
+    for (const file of files) {
+      const text = readFileSync(join(SHELF_DIR, file), "utf8");
+      expect(text, file).not.toMatch(/(?:\d[ -]?){13,19}/);
+      expect(text.toLowerCase(), file).not.toMatch(/cvv/);
     }
   });
 });

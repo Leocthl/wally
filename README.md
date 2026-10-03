@@ -1,6 +1,7 @@
 # Wally
 
 - A sealed-budget wallet for AI shopping agents. The card rail is **SIMULATED**. Not affiliated with HKT, Tap & Go or Mastercard.
+- **Live demo**: https://wally-dev.vercel.app opens the on-device app in any browser: the real engine and rules with recorded model answers, no server. The booth Mac runs the live models.
 - **Built** during HacKU 2026 (48 h), FinTech track "Give a Machine a Wallet - Agentic Commerce" [F13]. Code freeze 2026-10-04 13:00 HKT; no changes after it [F16].
 
 ## What it does
@@ -23,7 +24,7 @@
 | Every number | Tagged in the [facts register](docs/facts-register.md) |
 
 ## Run it three ways
-- No API key. Node 22.12 or newer and pnpm. Model weights are fetched once and not committed.
+- No API key. **Needs**: Node 22.18 or newer, pnpm, Python 3.13 with `uv` (Laya), `brew install llama.cpp` (Qwen), Xcode or Android Studio only for the native shells. Model weights are fetched once and not committed.
 1. **Booth Mac** (live judge and planner):
 ```sh
 pnpm install
@@ -39,6 +40,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 | Command | Does |
 |---|---|
 | `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm coverage` | CI steps; `pnpm gen:types` after a schema change |
+| `pnpm invariants` | the eight invariant tests, one line each (about 30 s) |
 | `pnpm demo:reset` | new demo keys, empty logs, back to the sealed budget |
 | `pnpm harness -- --seed 7 --n 150 --judge live` | replay harness, B0 B1 B2 |
 | `pnpm verifier`, `pnpm verify-log <log> <keys>` | offline verifier page, log check |
@@ -48,7 +50,7 @@ pnpm demo                                            # http://127.0.0.1:8787
 - **Harness**, seed 7, 150 SIMULATED scenarios, commit da2c814: 0/120 over-limit mints, 61/66 legitimate approved (92.4%); the full pipeline stopped all 84 stop cases, a model-only gate let 43 through, rules without the judge 28; decision latency p50 159.7 ms, p95 388.9 ms [F69]. Counts among generated scenarios, not a proof.
 - **Judge** alone let 8/40 attack items through, 6/20 held out; the seller gate is inert [F36, F69]. The rules and the rail limit use no model.
 - **Qwen**: 25 calls over 26 author-written scenarios, no held-out set, few Cantonese cases [F68].
-- **Tests**: about 3,600; core coverage about 96%; CI green on GitHub for every pushed commit [F91].
+- **Tests**: over 4,000 automated tests; core line coverage above 95%; exact numbers and the last green CI commit in [F91].
 - **Shortcuts**: the booth server holds the delegator's demo key, and Mum's for a family budget. The offline page cannot check the parent link.
 - **Not done**: manual-route stopwatch; native zh-HK read; a physical-phone test. LAN is plain http with one shared token [F92]. Voice uses the browser's speech service.
 
@@ -65,4 +67,4 @@ pnpm demo                                            # http://127.0.0.1:8787
 - **AI coding assistants** were used, as the event rules allow; the team can explain every module [F16].
 
 ## Licence
-Not chosen yet. Built for HacKU 2026. No logos or brand assets used.
+Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)). Built for HacKU 2026. No logos or brand assets used. Third-party code and models keep their own licences: [THIRD_PARTY.md](THIRD_PARTY.md).

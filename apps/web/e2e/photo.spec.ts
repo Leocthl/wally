@@ -274,10 +274,10 @@ test.describe("widths and dark, axe", () => {
   }
 });
 
-test.describe("the Budget screen card", () => {
+test.describe("the row on Home", () => {
   test.use({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 
-  test("Show Wally a photo is in Try asking and opens the same sheet", async ({ page }) => {
+  test("Show Wally a photo sits under the ask row on Home and opens the same sheet", async ({ page }) => {
     phoneOnly();
     await page.goto("/?api=local#/budget");
     await expect(page.getByRole("meter")).toBeVisible();
@@ -285,8 +285,8 @@ test.describe("the Budget screen card", () => {
     await card.scrollIntoViewIfNeeded();
     await expect(card).toContainText("Show Wally a photo");
     await settled(page);
-    await shot(page, "11-budget-try-asking");
-    expect(await blocking(page), "budget with the photo card").toEqual([]);
+    await shot(page, "11-home-photo-row");
+    expect(await blocking(page), "Home with the photo row").toEqual([]);
     await page.locator('main input[data-slot="photo-file"]').setInputFiles({ name: "look.png", mimeType: "image/png", buffer: NAVY_PICTURE });
     await expect(page.getByRole("dialog", { name: "Show Wally a photo" })).toBeVisible();
   });

@@ -116,7 +116,9 @@ test("Needs your OK: the Budget banner leads to the question and Approve makes t
   await expect(wally(page).getByRole("article", { name: "One-off card" })).toBeVisible();
 });
 
-test("Verify passes, Try to tamper breaks it at the changed receipt, Restore passes again", async ({ page }) => {
+test("Verify passes, Try to tamper breaks it at the changed receipt, Restore passes again (the developer view)", async ({ page }) => {
+  await page.goto("/?api=mock&dev=1#/booth"); // plain words are the default; ?dev=1 opens the developer view the beforeEach did not
+  await expect(page.getByRole("meter")).toBeVisible();
   await press(page, "normal");
   await page.getByRole("link", { name: "Proof", exact: true }).click();
   const card = page.locator(".pf-card");
@@ -125,7 +127,7 @@ test("Verify passes, Try to tamper breaks it at the changed receipt, Restore pas
   await page.getByRole("button", { name: "Try to tamper" }).click();
   await expect(card).toHaveAttribute("data-status", "fail");
   await expect(card).toContainText(/Broken at receipt #\d/);
-  await page.getByRole("button", { name: "Restore" }).click();
+  await page.getByRole("button", { name: "Restore", exact: true }).click();
   await expect(card).toHaveAttribute("data-status", "pass");
 });
 

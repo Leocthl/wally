@@ -28,6 +28,7 @@
 - **Next**: a `WebCryptoAsyncSigner` and an `IndexedDbKeyStore` behind the same interface; the client then signs seal, revoke and answers with them.
 
 ## Audit (s-audit report, section 5a)
+- **Status**: these are the audit's requirements for a phone-held key. Today only the offline verifier page carries a strict CSP; the app itself ships without one.
 - **While the page runs, the key is usable**: non-extractable stops copying the key, not using it. XSS or a malicious same-origin page can call `sign` for as long as it runs.
 - **Strict CSP**: no inline script except by hash, no `unsafe-eval` (the schema validators are compiled ahead of time, so the verifier and this page need none), `connect-src` limited to the booth server in live mode and `'none'` in on-device mode, no third-party script.
 - **Confirmation screen shows what is signed**: before each signature, the page renders the decoded payload (mandate rules and budget, the revoke target, the escalation decision and choice) from the same object the core signs, and signs only after an explicit press. `signWithAsync` hands the signer the exact bytes, so the screen can hash and show them.

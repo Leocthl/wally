@@ -1,7 +1,10 @@
 // DM7 on the big screen: the Proof card (verify, the chain strip, what was and was not checked) next to Try to tamper and
-// Restore, each followed by a fresh check, and the latest receipts. The stored receipts are never changed.
+// Restore, each followed by a fresh check, and the latest receipts. The stored receipts are never changed. Plain mode (the
+// default) shows the same beat in everyday words (screens/proof/components/PlainProofStage.tsx); this file keeps the
+// developer beat exactly: the card with hashes, the #seq and the hash of each latest receipt.
 import { useMemo, useState, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
+import { useDisplayMode } from "../../state/displayMode";
 import { Tx } from "../../evidence/components/Tx";
 import { UI } from "../../i18n/ui";
 import { Button } from "../../ui/Button";
@@ -10,6 +13,7 @@ import { useLocale } from "../../ui/locale";
 import { ChipScope } from "../../components/ChipScope";
 import { SIMULATED } from "../../domain/provenance";
 import { HashId, SeqId } from "../proof/components/Fill";
+import { PlainProofStage } from "../proof/components/PlainProofStage";
 import { VerifyCard, type ProofStatus } from "../proof/components/VerifyCard";
 import { newestFirst, toReceipts } from "../proof/receipts";
 import { receiptTitle, STATE_META } from "../proof/receiptWords";
@@ -17,6 +21,11 @@ import { receiptTitle, STATE_META } from "../proof/receiptWords";
 const LATEST = 5;
 
 export function ProofStage(): ReactElement {
+  const [mode] = useDisplayMode();
+  return mode === "plain" ? <PlainProofStage /> : <DeveloperProofStage />;
+}
+
+function DeveloperProofStage(): ReactElement {
   const booth = useBoothContext();
   const { state, verifyOutcome, busy, api } = booth;
   const { t } = useLocale();

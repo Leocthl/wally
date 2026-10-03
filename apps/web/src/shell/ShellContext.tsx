@@ -23,6 +23,11 @@ export function useShell(): ShellApi {
   return api;
 }
 
+/** The shell's actions, or null where a screen or a sheet is mounted without the shell (a test, a storybook): nothing to throw about. */
+export function useOptionalShell(): ShellApi | null {
+  return useContext(ShellContext);
+}
+
 /** undefined: no reset waiting. Otherwise the mandate id the reset started from. */
 function useResetWatch(): (from: string | null) => void {
   const booth = useBoothContext();

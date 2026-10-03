@@ -13,6 +13,7 @@ export type DiagnosticReason =
   | "input_too_large"
   | "internal"
   | "no_recording"
+  | "unsupported_language"
   | FailureReason;
 
 /**

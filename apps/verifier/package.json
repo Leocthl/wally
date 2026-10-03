@@ -2,6 +2,7 @@
   "name": "@wally/verifier",
   "version": "0.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Offline receipt verifier: one self-contained index.html (lane C). Imports only @wally/core/verify and types",
   "type": "module",
   "scripts": {

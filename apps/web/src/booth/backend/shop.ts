@@ -1,4 +1,4 @@
-// The photo shelf: SIMULATED shop items a picture can be matched to (data/fixtures/shop/items.json). Each item becomes a
+// The photo shelf: SIMULATED shop items a picture can be matched to (data/photo-shelf/items.json). Each item becomes a
 // ListingRecord the normal pipeline buys from (planner proposal fixed by code, then judge, rules R1 to R12 and the
 // one-off card). They live apart from `Catalogue.listings` on purpose: the Ask shelf, every booth scenario and the
 // recorded planner sets are built from `listings` alone, so none of them can ever see a photo item. Portable.
@@ -115,7 +115,7 @@ function entryOf(raw: unknown, index: number, merchants: Obj, observedAt: string
 }
 
 /**
- * Reads data/fixtures/shop/items.json. `captureRefs` are the Scameter captures the catalogue holds: an item naming one
+ * Reads data/photo-shelf/items.json. `captureRefs` are the Scameter captures the catalogue holds: an item naming one
  * that is missing is a start-up error, never a silent "not checked". Ids, urls and titles must each be unique.
  */
 export function buildShop(file: ShopFile, captureRefs: ReadonlySet<string>): Shop {

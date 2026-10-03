@@ -7,6 +7,7 @@ import { BRAND } from "../brand";
 import { LISTING_TEXT_HARD_CAP } from "../booth/scenarios";
 import { useBoothContext } from "../hooks/useBooth";
 import { UI } from "../i18n/ui";
+import { useAskExample } from "../state/useProfile";
 import { Button, IconButton } from "../ui/Button";
 import { TextArea, TextField } from "../ui/Form";
 import { Icon } from "../ui/icons";
@@ -14,9 +15,9 @@ import { useLocale } from "../ui/locale";
 import { Sheet } from "../ui/Overlay";
 import { TryAsking } from "../screens/home/TryAsking";
 import { PhotoButton } from "../screens/photo/PhotoEntry";
+import { usePhotoEntry } from "../screens/photo/usePhotoEntry";
 import { noteAsk } from "../screens/run/askEcho";
 import { useAsker, useProposer, useScenarioRunner } from "./actions";
-import { useShell } from "./ShellContext";
 import { useVoiceInput } from "./voice/useVoiceInput";
 import { VoiceButton, VoiceStatusLine } from "./voice/VoiceButton";
 
@@ -63,6 +64,7 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
 function AskField({ onAsk, busy, onSent, onPhoto }: { readonly onAsk: AskWally; readonly busy: boolean; readonly onSent: () => void; readonly onPhoto?: ((file: File) => void) | undefined }): ReactElement {
   const { t } = useLocale();
   const { info } = useBoothContext();
+  const example = useAskExample();
   const [text, setText] = useState("");
   const voice = useVoiceInput({ value: text, onText: setText, maxLength: ASK_MAX_CHARS });
   const trimmed = text.trim();
@@ -80,7 +82,7 @@ function AskField({ onAsk, busy, onSent, onPhoto }: { readonly onAsk: AskWally; 
         variant="pill"
         label={t(UI["shell.askFieldLabel"](BRAND.name))}
         hideLabel
-        placeholder={t(UI["shell.askExample"])}
+        placeholder={example}
         hint={onDevice ? t(UI["shell.askLiveHint"]) : undefined}
         enterKeyHint="send"
         maxLength={ASK_MAX_CHARS}
@@ -102,8 +104,7 @@ export interface AskSheetProps {
 
 export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement {
   const { t } = useLocale();
-  const { busy, info, api } = useBoothContext();
-  const { showPhoto } = useShell();
+  const { busy, info } = useBoothContext();
   const run = useScenarioRunner();
   const propose = useProposer();
   const asker = useAsker();
@@ -120,7 +121,7 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
     [sender],
   );
   // Show Wally a photo needs both halves: see() to read the picture and ask() to buy the pick.
-  const onPhoto = typeof api.see === "function" && info?.features?.ask === true ? showPhoto : undefined;
+  const onPhoto = usePhotoEntry();
   const pick = (id: ScenarioId): void => {
     onClose();
     run(id);

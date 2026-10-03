@@ -1,7 +1,7 @@
 // Node loader for the SIMULATED catalogue: reads data/fixtures (listings, the reference cart, Scameter captures) and
 // hands the parsed files to the portable builder (src/booth/backend/catalogue.ts), shared with the on-device client.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { ReplayRecording } from "@wally/agent/judge";
 import { shopRecordingsFrom } from "../../src/api/local/recordings";
 import { buildCatalogue, CatalogueError, type Catalogue, type CatalogueSources, type FixtureFile } from "../../src/booth/backend/catalogue";
@@ -35,15 +35,20 @@ function readDir(dir: string): readonly FixtureFile[] {
     .map((f) => readJson(join(dir, f)));
 }
 
-/** data/fixtures/shop, when it exists: the photo shelf and the captures only it uses. */
-function readShop(fixturesDir: string): CatalogueSources["shop"] {
-  const dir = join(fixturesDir, "shop");
+/**
+ * data/photo-shelf, next to data/fixtures: the photo shelf is not one of the core schemas the fixtures tree is checked
+ * against, so it keeps out of that tree.
+ */
+export const shopDirFor = (fixturesDir: string): string => join(dirname(fixturesDir), "photo-shelf");
+
+/** The photo shelf and the captures only it uses, when the directory exists. */
+function readShop(dir: string): CatalogueSources["shop"] {
   if (!existsSync(join(dir, "items.json"))) return undefined;
   return { items: readJson(join(dir, "items.json")), captures: existsSync(join(dir, "scameter")) ? readDir(join(dir, "scameter")) : [] };
 }
 
 export function loadCatalogue(fixturesDir: string, table: ScenarioTable): Catalogue {
-  const shop = readShop(fixturesDir);
+  const shop = readShop(shopDirFor(fixturesDir));
   const sources: CatalogueSources = {
     listings: readDir(join(fixturesDir, "listings")),
     referenceCart: readJson(join(fixturesDir, "carts", "attempt-1.json")),
@@ -54,11 +59,11 @@ export function loadCatalogue(fixturesDir: string, table: ScenarioTable): Catalo
 }
 
 /**
- * For the replay judge only: the recorded Laya answers for the photo shelf (data/fixtures/shop/judge.json), so a photo pick
+ * For the replay judge only: the recorded Laya answers for the photo shelf (data/photo-shelf/judge.json), so a photo pick
  * is judged like any listing when Laya is down. Nothing without a shelf; a shelf with no usable answers file is a start-up
  * error (the answers must match each item's text), never a silent "no recording".
  */
 export function loadShopRecordings(fixturesDir: string, catalogue: Catalogue): readonly ReplayRecording[] {
   if (catalogue.shop.size === 0) return [];
-  return shopRecordingsFrom(readJson(join(fixturesDir, "shop", "judge.json")).raw, catalogue.shop);
+  return shopRecordingsFrom(readJson(join(shopDirFor(fixturesDir), "judge.json")).raw, catalogue.shop);
 }

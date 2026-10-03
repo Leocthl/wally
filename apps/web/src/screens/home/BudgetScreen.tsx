@@ -1,24 +1,34 @@
-// Budget (#/budget, also #/ and #/booth): the budget card, a waiting "Needs your OK", the one-off cards, Recent, Try
-// asking, and Manage this budget. Everything reads the booth state through the selectors, never its own copy.
-import { useEffect, type ReactElement } from "react";
+// Budget (#/budget, also #/ and #/booth), a shopper's home: Wally's greeting and the budget card, the "What do you need?" row,
+// Ideas for you, a waiting "Needs your OK", the one-off cards, Recent, the booth's scenario cards in a disclosure (Demo scenarios,
+// for judges), and Manage this budget. Everything reads the booth state through the selectors, never its own copy.
+import { useCallback, useEffect, type ReactElement } from "react";
 import { useBoothContext } from "../../hooks/useBooth";
 import { navigate, PARAM, routeHref, useRouteParam } from "../../hooks/useRoute";
+import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
 import { IosInstallHint } from "../../pwa/InstallUi";
+import { useProfile } from "../../state/useProfile";
 import { Card, Skeleton } from "../../ui/Surface";
 import { useLocale } from "../../ui/locale";
 import { useToast } from "../../ui/Toast";
 import { Wally } from "../../wally/Wally";
-import { attempt, revealConsole, useScenarioRunner } from "../../shell/actions";
+import { attempt, revealConsole, useAsker, useScenarioRunner } from "../../shell/actions";
+import { noteAsk } from "../run/askEcho";
 import { ResetDemo } from "../../shell/ResetDemo";
-import { useShell } from "../../shell/ShellContext";
 import { CardsSection } from "../console/CardsSection";
 import { ConsoleSection } from "../console/ConsoleSection";
 import { EscalationBanner } from "../console/EscalationBanner";
 import { BudgetHero } from "./BudgetHero";
+import { Composer } from "./Composer";
+import { DemoScenarios } from "./DemoScenarios";
 import { useFamilyRunner } from "./familyRun";
+import { Ideas } from "./IdeasSection";
+import type { Idea } from "./ideas";
 import { RecentSection } from "./RecentSection";
 import { cardGroups, decisionTitle, openEscalations, recentDecisions } from "./selectors";
+import { PhotoCardSlot } from "./slots";
+import { TRY_ITEMS } from "./tryCatalog";
+import { rankTryItems } from "./tryRank";
 import { TryAsking } from "./TryAsking";
 import "./home.css";
 
@@ -74,10 +84,24 @@ export function BudgetScreen(): ReactElement {
   const { state, busy } = booth;
   const { t } = useLocale();
   const toast = useToast();
-  const run = useFamilyRunner(useScenarioRunner());
-  const { showPhoto } = useShell();
+  const runScenario = useScenarioRunner();
+  const run = useFamilyRunner(runScenario);
+  const asker = useAsker();
   const focus = useRouteParam(PARAM.focus);
+  const { profile } = useProfile();
   const loaded = state.packet !== null && state.mandate !== null;
+  // A person who told Wally their taste sees their picks first among the scenario cards; the lead says so.
+  const personal = rankTryItems(TRY_ITEMS, profile).forYou.size > 0;
+  // An idea asks Wally for the item as if it were typed; a booth that cannot take a typed ask runs the same item's scenario.
+  const askIdea = useCallback(
+    (idea: Idea) => {
+      if (asker) {
+        noteAsk(idea.ask);
+        asker(idea.ask);
+      } else runScenario(idea.scenario);
+    },
+    [asker, runScenario],
+  );
 
   // #/budget?focus=console (the old #/console, Cancel the budget): reveal once, then drop the param so later changes
   // on this screen never pull the page down again.
@@ -104,16 +128,17 @@ export function BudgetScreen(): ReactElement {
     <div className="home">
       <IosInstallHint />
       <BudgetHero packet={packet} mandate={mandate} />
-      {closed ? <Closed why={closed} /> : null}
+      {closed ? <Closed why={closed} /> : <Composer />}
+      {closed ? null : <PhotoCardSlot />}
       {waiting.map((e) => <EscalationBanner key={e.decisionId} escalation={e} title={decisionTitle(state, e.decisionId)} />)}
+      {closed ? null : <Ideas onAsk={askIdea} busy={busy} />}
       <CardsSection active={cards.active} past={cards.past} />
       <RecentSection rows={recentDecisions(state)} />
-      <section className="home-block" aria-labelledby="home-try-title">
-        <h2 id="home-try-title" className="home-block__title">{t(UI["home.tryAsking"])}</h2>
-        <p className="home-block__lead">{t(UI["home.tryLead"])}</p>
-        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} {...(typeof booth.api.see === "function" && booth.info?.features?.ask === true ? { onPhoto: showPhoto } : {})} />
+      {/* Manage this budget stays the last block: the "Cancel the budget" scenario scrolls to it, and from the cards above it that is a short way. */}
+      <DemoScenarios lead={t(personal ? OB.home.tryLead : OB.home.demoLead)}>
+        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
         <div className="home-block__foot"><ResetDemo /></div>
-      </section>
+      </DemoScenarios>
       <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />
     </div>
   );
