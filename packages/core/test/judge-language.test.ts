@@ -126,9 +126,10 @@ describe("the engine with a skipped record", () => {
     expect(validateDecision(d).ok).toBe(true);
   });
 
-  it("does not move the config hash: the language reason is not a threshold", () => {
-    expect(engine.config).toEqual(ENGINE_CONFIG);
-    expect(JSON.stringify(engine.config)).not.toMatch(/language|cjk/i);
+  it("does not move the config hash: the language reason is not a threshold, and the decision records the pinned hash", () => {
+    const PINNED = "a9ea2b0393fa95ecaa16bea6192f6caafac8f761b922cbf94d5d43c160a6096d"; // engine-hash-pinned.test.ts
+    expect(engine.configSha256).toBe(PINNED);
+    expect(decide(SKIPPED).engine.config_sha256).toBe(PINNED);
   });
 
   it("never approves on its own, whatever else the record says (I3, I5)", () => {

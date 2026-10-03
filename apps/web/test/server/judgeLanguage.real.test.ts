@@ -133,11 +133,17 @@ describe.skipIf(!REAL)("a Chinese listing on the real stack", () => {
     expect((await booth.backend.snapshot()).cards).toHaveLength(0);
   });
 
-  it("a Chinese listing cannot loosen a hard rule: a flagged seller is still denied outright", async () => {
-    const { booth } = await boot();
-    const flagged = await booth.backend.runScenario("flagged");
-    expect(flagged.outcome).toBe("DENY");
-    expect((await decisionOf(booth, flagged.decisionId))?.explanation?.template_id).toBe("R9.flagged");
+  it("a hard rule still outranks the question: with the card pace used up, a Chinese listing is denied by R7, not asked about", async () => {
+    const { booth, events, laya } = await boot();
+    for (let i = 0; i < 3; i += 1) expect((await booth.backend.propose({ listingText: ENGLISH })).outcome).toBe("APPROVE");
+    const run = await booth.backend.propose({ listingText: CHINESE });
+    expect(run.outcome).toBe("DENY");
+    const decision = await decisionOf(booth, run.decisionId);
+    expect(decision?.explanation?.template_id).toBe("R7.velocity");
+    expect(decision?.rules.find((r) => r.id === "R10")).toMatchObject({ result: "FAIL", verdict: "ESCALATE", template_id: "R10.unavailable" }); // the gate ran; the hard rule won
+    expect(mintedOn(events, run.runId)).toBe(0);
+    expect(laya.scored()).toBe(3); // only the three English listings were scored
+    expect((await booth.backend.snapshot()).escalations.filter((e) => e.state === "OPEN")).toEqual([]);
   });
 });
 
