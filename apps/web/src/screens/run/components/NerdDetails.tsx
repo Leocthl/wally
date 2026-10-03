@@ -7,9 +7,11 @@ import type { Decision, TemplateId } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import { ASSUMED, cartProv, judgeProv, type Prov } from "../../../domain/provenance";
 import { UI } from "../../../i18n/ui";
+import { useIsDeveloper } from "../../../state/displayMode";
 import { ProvenanceChip } from "../../../ui/Chip";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
+import { receiptNumber } from "../../proof/receiptNo";
 import { engineLine } from "../model/reason";
 import { receiptHref } from "../useDecisionParam";
 
@@ -90,6 +92,7 @@ const render = (id: string, inputs: Readonly<Record<string, unknown>>, locale: "
 
 export function NerdDetails({ decision, seq }: { readonly decision: Decision; readonly seq: number | undefined }): ReactElement {
   const { t, locale } = useLocale();
+  const developer = useIsDeveloper();
   const line = engineLine(decision, locale, render);
   const judge = decision.judge;
   const judgeChip = judgeProv(judge.provider);
@@ -118,7 +121,8 @@ export function NerdDetails({ decision, seq }: { readonly decision: Decision; re
         </div>
         <dl className="run-nerd-ids">
           <div><dt>{t(R.decisionId)}</dt><dd><code data-ident data-selectable>{decision.id}</code></dd></div>
-          {seq === undefined ? null : <div><dt>{t(R.receiptNo)}</dt><dd><code data-ident>#{seq}</code></dd></div>}
+          {/* The number a person reads on Receipts and Home (counted from 1); developer mode keeps the log's own #seq. */}
+          {seq === undefined ? null : <div><dt>{t(R.receiptNo)}</dt><dd><code data-ident>{developer ? `#${seq}` : receiptNumber(seq)}</code></dd></div>}
         </dl>
         <a className="run-link" href={receiptHref(decision.id)}>{t(R.seeReceipt)} <Icon name="chevronRight" size={18} /></a>
       </div>

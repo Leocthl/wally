@@ -2,7 +2,9 @@
 // reconnects with capped exponential backoff, and delivers TraceEvents to listeners in arrival order. Buffers are
 // bounded: a line longer than MAX_LINE_CHARS drops the connection (and reconnects) instead of growing memory.
 // The server sends `: ready <seq>` on connect; waitFor(seq) lets a caller wait until it has seen the events a
-// request caused, so a resolved API call means its trace events were already delivered.
+// request caused, so a resolved API call means its trace events were already delivered. onReconnect(listener) fires each time
+// the connection comes BACK after a break (never on the first connect): events from the gap are not replayed, so the page reads
+// the booth again, and a booth that restarted is a new booth.
 import type { TraceEvent, TraceListener, Unsubscribe } from "../types";
 
 export interface EventStreamOptions {
@@ -35,6 +37,8 @@ export class EventStream {
   #seqWaiters: readonly Waiter[] = [];
   #pendingId: number | null = null;
   #pendingData: readonly string[] = [];
+  #everConnected = false;
+  #reconnectListeners: ReadonlySet<() => void> = new Set();
 
   constructor(opts: EventStreamOptions) {
     this.#opts = opts;
@@ -49,6 +53,14 @@ export class EventStream {
     this.start();
     return () => {
       this.#listeners = new Set([...this.#listeners].filter((l) => l !== listener));
+    };
+  }
+
+  /** Calls the listener each time the connection comes back after a break. Returns the way to stop. */
+  onReconnect(listener: () => void): Unsubscribe {
+    this.#reconnectListeners = new Set([...this.#reconnectListeners, listener]);
+    return () => {
+      this.#reconnectListeners = new Set([...this.#reconnectListeners].filter((l) => l !== listener));
     };
   }
 
@@ -162,10 +174,24 @@ export class EventStream {
   }
 
   #onReady(serverSeq: number): void {
-    // Events before this connection are not replayed (clients read /api/snapshot), so count them as seen.
-    this.#delivered = Math.max(this.#delivered, serverSeq);
+    // Events before this connection are not replayed (clients read /api/snapshot), so count them as seen. The server's own number
+    // is the count now: a booth that restarted starts again from a lower one, and the old count would make a new event look delivered.
+    this.#delivered = serverSeq;
+    const back = this.#everConnected && !this.#connected;
+    this.#everConnected = true;
     this.#setConnected(true);
     this.#markDelivered(serverSeq);
+    if (back) this.#tellReconnected();
+  }
+
+  #tellReconnected(): void {
+    for (const listener of this.#reconnectListeners) {
+      try {
+        listener();
+      } catch {
+        // a failing listener must not stop the others or the stream
+      }
+    }
   }
 
   #markDelivered(seq: number): void {

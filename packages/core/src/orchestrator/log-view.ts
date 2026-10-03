@@ -66,13 +66,18 @@ export function escalationViewOf(decision: Decision, state: EscalationView["stat
   };
 }
 
-/** Every ESCALATE in the log, with the state its resolving decision recorded (OPEN while none exists). */
-export function escalationViews(entries: readonly LogEntry[]): readonly EscalationView[] {
+/**
+ * Every ESCALATE in the log, with the state its resolving decision recorded. One nobody has resolved is OPEN, or CLOSED once the
+ * budget behind it is cancelled or has ended (`budgetOver`, by default read from the log): a question that can no longer be
+ * answered must not look answerable. Only the view changes; the log gains nothing.
+ */
+export function escalationViews(entries: readonly LogEntry[], budgetOver: boolean = isRevoked(entries) || hasPacketExpired(entries)): readonly EscalationView[] {
   const all = decisions(entries);
+  const unresolved = budgetOver ? "CLOSED" : "OPEN";
   return all.flatMap((d) => {
     if (d.outcome !== "ESCALATE") return [];
     const resolution = all.find((r) => r.resolves === d.id);
-    const view = escalationViewOf(d, resolution?.escalation?.state ?? (resolution === undefined ? "OPEN" : "DENIED"));
+    const view = escalationViewOf(d, resolution?.escalation?.state ?? (resolution === undefined ? unresolved : "DENIED"));
     return view === null ? [] : [view];
   });
 }

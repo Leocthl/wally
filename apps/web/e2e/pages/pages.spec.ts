@@ -58,7 +58,7 @@ test.afterAll(async () => {
 
 test("boots on-device from /wally/ with no /api request", async () => {
   await page.goto(app);
-  await expect(onDeviceNote(page)).toContainText("On-device mode: recorded answers, nothing leaves your phone");
+  await expect(onDeviceNote(page)).toContainText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.");
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$800 left of HK\$800, SIMULATED/);
   expect(requested.filter((u) => u.pathname.includes("/api"))).toEqual([]);
   expect(requested.length).toBeGreaterThan(5);
@@ -141,7 +141,7 @@ test("a Try asking card runs a purchase on-device and shows the one-off card", a
 
 test("a reload under /wally/ keeps the session: the budget and the card are still there, kept in this page's own storage", async () => {
   await page.reload();
-  await expect(onDeviceNote(page)).toContainText("On-device mode: recorded answers, nothing leaves your phone");
+  await expect(onDeviceNote(page)).toContainText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.");
   await expect(onDeviceNote(page)).not.toContainText("session ended");
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", /HK\$541 left of HK\$800/);
   await expect(page.locator('[data-card-state="USED"]')).toHaveCount(1);
@@ -202,7 +202,7 @@ test("with the server gone, a reload still shows the app, from the service worke
   try {
     const reloaded = await page.reload();
     expect(reloaded?.fromServiceWorker()).toBe(true);
-    await expect(onDeviceNote(page)).toContainText("On-device mode: recorded answers, nothing leaves your phone");
+    await expect(onDeviceNote(page)).toContainText("Demo mode: Wally runs here on your phone with sample shop data. Nothing leaves your phone.");
     await expect(page.getByRole("meter")).toBeVisible();
     await page.locator('main [data-scenario="small"]').click();
     await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$120.");

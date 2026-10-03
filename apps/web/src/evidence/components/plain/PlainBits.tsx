@@ -4,6 +4,7 @@
 // direct .chip-scope__chips child holds a [data-chip] of the same kind.
 import { useId, useState, type ElementType, type ReactElement, type ReactNode } from "react";
 import { IconTick } from "../../../components/icons";
+import type { LabelPair } from "../../../i18n/label";
 import { cx } from "../../../ui/cx";
 import { CHIP_CLASS, chipSampleSize, type FileChip } from "../../chip";
 import { chipDetails, chipLabel, type Sentence } from "../../explainPlain";
@@ -84,4 +85,17 @@ export function PlainScope({ chips, className, as = "div", labelledBy, card, chi
 /** Marks a card whose figures come from a file that is not product evidence yet. */
 export function WiringStamp({ on }: { readonly on: boolean }): ReactElement | null {
   return on ? <p className="ev-stamp" data-wiring-stamp><Tx text={P.wiringStamp} /></p> : null;
+}
+
+/**
+ * A card behind its title, closed to begin with: the page opens on the headline and a short list, and a person opens the one
+ * thing they want to check. The card keeps its chips and its numbers inside; nothing is left out, only folded.
+ */
+export function PlainFold({ id, title, children }: { readonly id: string; readonly title: LabelPair; readonly children: ReactNode }): ReactElement {
+  return (
+    <details className="evp-fold" data-fold={id}>
+      <summary className="evp-fold__summary"><Tx text={title} /></summary>
+      <div className="evp-fold__body">{children}</div>
+    </details>
+  );
 }

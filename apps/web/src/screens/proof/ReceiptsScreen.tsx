@@ -15,22 +15,12 @@ import { useLocale, type Locale } from "../../ui/locale";
 import { TopBar } from "../../ui/Nav";
 import { List, Skeleton } from "../../ui/Surface";
 import { FilterChips, type FilterOption } from "./components/FilterChips";
+import { PurchaseRow } from "./components/PurchaseRow";
 import { ReceiptRow } from "./components/ReceiptRow";
 import { ReceiptSheet } from "./components/ReceiptSheet";
 import { TamperedBanner } from "./components/TamperedBanner";
-import {
-  countByFilter,
-  dayLabel,
-  decisionFromHash,
-  groupByDay,
-  matchesFilter,
-  newestFirst,
-  receiptForDecision,
-  RECEIPT_FILTERS,
-  type DayGroup,
-  type Receipt,
-  type ReceiptFilter,
-} from "./receipts";
+import { asSingles, countItemsByFilter, groupPurchases, itemMatchesFilter, itemsNewestFirst } from "./purchases";
+import { dayLabel, decisionFromHash, groupConsecutiveByDay, receiptForDecision, RECEIPT_FILTERS, type Receipt, type ReceiptFilter } from "./receipts";
 import { useStableReceipts } from "./useStableReceipts";
 import "./proof.css";
 import "./proofPlain.css";
@@ -42,10 +32,10 @@ function replaceHash(hash: string): void {
   if (window.location.hash !== hash) window.history.replaceState(window.history.state, "", hash);
 }
 
-function DayTitle({ group, locale, now }: { readonly group: DayGroup; readonly locale: Locale; readonly now: Date }): ReactElement {
+function DayTitle({ dayKey, locale, now }: { readonly dayKey: string; readonly locale: Locale; readonly now: Date }): ReactElement {
   const { t } = useLocale();
-  const label = dayLabel(group.key, now);
-  if (label.kind === "unknown") return <span className="mono" data-ident>{group.key}</span>;
+  const label = dayLabel(dayKey, now);
+  if (label.kind === "unknown") return <span className="mono" data-ident>{dayKey}</span>;
   if (label.kind !== "date") return <>{t(label.kind === "today" ? R.today : R.yesterday)}</>;
   const text =new Intl.DateTimeFormat(locale === "zh-HK" ? "zh-HK" : "en-HK", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Hong_Kong" }).format(label.date);
   return <NumText text={text} prov={SIMULATED} chip="scope" kind="time" />;
@@ -85,10 +75,11 @@ export function ReceiptsScreen(): ReactElement {
     }
   };
   const receipts = useStableReceipts(entries);
-  const ordered = useMemo(() => newestFirst(receipts), [receipts]);
-  const counts = useMemo(() => countByFilter(receipts), [receipts]);
+  // Plain mode lists a purchase once, with its receipts as the steps under it; developer mode lists every signed receipt.
+  const rows = useMemo(() => itemsNewestFirst(plain ? groupPurchases(receipts) : asSingles(receipts)), [plain, receipts]);
+  const counts = useMemo(() => countItemsByFilter(rows), [rows]);
   const [filter, setFilter] = useState<ReceiptFilter>("all");
-  const groups = useMemo(() => groupByDay(ordered.filter((r) => matchesFilter(r, filter))), [ordered, filter]);
+  const days = useMemo(() => groupConsecutiveByDay(rows.filter((row) => itemMatchesFilter(row, filter))), [rows, filter]);
   const options = useMemo<readonly FilterOption[]>(() => RECEIPT_FILTERS.map((id) => ({ id, label: FILTER_LABEL[id], count: counts[id] })), [counts]);
 
   const [openSeq, setOpenSeq] = useState<number | null>(null);
@@ -130,15 +121,21 @@ export function ReceiptsScreen(): ReactElement {
         <>
           <p className="rc-lead">{t(R.lead)}</p>
           <FilterChips options={options} value={filter} onChange={setFilter} label={t(R.filterLabel)} />
-          {groups.length === 0 ? (
+          {days.length === 0 ? (
             <EmptyState title={t(R.emptyFilter)} wally="idle" size={88} action={<button type="button" className="w-btn w-btn--ghost w-btn--sm" onClick={() => setFilter("all")}><span className="w-btn__label">{t(R.showAll)}</span></button>} />
           ) : (
-            groups.map((g) => (
-              <section key={g.key} className="rc-day" aria-labelledby={`rc-day-${g.key}`}>
+            days.map((day) => (
+              <section key={day.key} className="rc-day" aria-labelledby={`rc-day-${day.key}`}>
                 <ChipScope provs={[SIMULATED]} className="rc-day__scope" chipsClassName="rc-day__chips">
-                  <h2 id={`rc-day-${g.key}`} className="rc-day__title"><DayTitle group={g} locale={locale} now={now} /></h2>
+                  <h2 id={`rc-day-${day.key}`} className="rc-day__title"><DayTitle dayKey={day.key} locale={locale} now={now} /></h2>
                   <List inset className="rc-list">
-                    {g.receipts.map((r) => <ReceiptRow key={r.seq} receipt={r} onOpen={open} plain={plain} flagged={r.seq === changedSeq} />)}
+                    {day.list.map((row) =>
+                      row.kind === "purchase" ? (
+                        <PurchaseRow key={`purchase-${row.purchase.id}`} purchase={row.purchase} ts={row.ts} onOpen={open} changedSeq={changedSeq} />
+                      ) : (
+                        <ReceiptRow key={row.receipt.seq} receipt={row.receipt} onOpen={open} plain={plain} flagged={row.receipt.seq === changedSeq} />
+                      ),
+                    )}
                   </List>
                 </ChipScope>
               </section>

@@ -144,7 +144,7 @@ describe("a copy made in this visit is flagged the same way", () => {
     const { api, clock } = instantMock();
     await seed(api, clock, ["normal"]);
     await mountScreen(<><ReceiptsScreen /><Probe /></>, api, { hash: "#/receipts" });
-    await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(4));
+    await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(2)); // the budget sealed, and the purchase
     expect(document.querySelector("[data-tampered-banner]")).toBeNull();
     await act(async () => booth.tamper());
     expect(document.querySelector("[data-tampered-banner]")).not.toBeNull();
@@ -164,7 +164,7 @@ describe("on the on-device client", () => {
       await client.runScenario("normal");
       await client.tamper();
       const view = await mountScreen(<ReceiptsScreen />, client as ApiClient, { hash: "#/receipts" });
-      await waitFor(() => expect(document.querySelectorAll(".rc-row").length).toBeGreaterThan(2));
+      await waitFor(() => expect(document.querySelectorAll(".rc-row").length).toBeGreaterThanOrEqual(2));
       const root = document.querySelector<HTMLElement>('[data-screen="receipts"]')!;
       expect(root.firstElementChild).toHaveAttribute("data-tampered-banner");
       expect(document.querySelectorAll(".rc-row--flagged")).toHaveLength(1);

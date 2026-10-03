@@ -180,10 +180,39 @@ describe("stopped before paying", () => {
     expect(screen.queryByRole("button", { name: "See cheaper options" })).toBeNull();
   });
 
+  it("a category stop names the rules: Your budget is for Clothes only, and offers Edit rules with a note that it starts a new budget", async () => {
+    const m = await mountRun();
+    await m.run("off_category");
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Your budget is for Clothes only.");
+    expect(alert).not.toHaveTextContent("your rules let Wally buy");
+    expect(alert).toHaveTextContent("Your rules");
+    await m.user.click(screen.getByRole("button", { name: "Edit rules" }));
+    expect(window.location.hash).toBe("#/seal?mode=edit");
+    expect(screen.getByText("Locking in starts a new budget and new receipts.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pick something else" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ask Wally" })).toBeNull();
+    expectPlainSurface(m);
+  });
+
+  it("a stop for another reason offers no Edit rules", async () => {
+    const m = await mountRun();
+    await m.run("flagged");
+    expect(screen.queryByRole("button", { name: "Edit rules" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Ask Wally" })).toBeInTheDocument();
+  });
+
+  it("a category stop reads in 繁 with the rule named", async () => {
+    const m = await mountRun({ locale: "zh-HK" });
+    await m.run("off_category");
+    expect(screen.getByRole("alert")).toHaveTextContent("你的預算只限衣物。");
+    expect(screen.getByRole("button", { name: "修改規則" })).toBeInTheDocument();
+  });
+
   it("injected listing: the plain injection reason, never a probability", async () => {
     const m = await mountRun();
     await m.run("injected");
-    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to give Wally orders.");
+    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to tell Wally what to do.");
     expectPlainSurface(m);
   });
 
@@ -217,9 +246,12 @@ describe("needs your OK", () => {
     expect(within(dialog).getByText("Wally couldn't check this seller recently.")).toBeInTheDocument();
     expect(within(dialog).getByText(/Wally makes a one-off card for exactly HK\$259\./)).toBeInTheDocument();
     expect(within(dialog).getByRole("timer")).toHaveTextContent("60 s left");
+    // The clock is a promise, not a threat.
+    expect(dialog.querySelector(".run-countdown__promise")).toHaveTextContent("Wally waits 60 seconds, then cancels this for you.");
+    expect(within(dialog).queryByText("Time to answer")).toBeNull();
     expect(within(dialog).getByText(/Your answer can't override a fixed rule\./)).toBeInTheDocument();
     expect(within(dialog).getByText(/signed and saved as a receipt/)).toBeInTheDocument();
-    expect(dialog.querySelector('[aria-live="polite"]')).toHaveTextContent("You have 60 seconds to answer.");
+    expect(dialog.querySelector('[aria-live="polite"]')).toHaveTextContent("Wally waits 60 seconds, then cancels this for you.");
     const spy = vi.spyOn(m.mock, "answerEscalation");
     await act(async () => {
       await m.user.click(within(dialog).getByRole("button", { name: "Approve" }));
@@ -361,14 +393,14 @@ describe("the Why sheet", () => {
       { type: "decision", runId: "run_core", decision: { ...core, id: "dec_core0001" } },
       { type: "run.finished", runId: "run_core", outcome: "DENY", at },
     ]);
-    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to give Wally orders.");
+    expect(screen.getByRole("alert")).toHaveTextContent("The listing tried to tell Wally what to do.");
     await m.user.click(screen.getByRole("button", { name: "Why?" }));
     const sheet = await screen.findByRole("dialog");
     await m.user.click(within(sheet).getByText("Details for nerds"));
     const quote = sheet.querySelector(".run-nerd-quote");
     expect(quote).toHaveTextContent("Stopped by R10. Injection risk 0.92 is at or over 0.39.");
     expect(quote?.textContent).not.toContain("?");
-    expect(within(sheet).getByText("It tried to give Wally orders")).toBeInTheDocument();
+    expect(within(sheet).getByText("It tried to tell Wally what to do")).toBeInTheDocument();
   });
 });
 
@@ -460,6 +492,125 @@ describe("runs that end for a known reason", () => {
     ]);
     expect(screen.getByRole("heading", { name: "No cheaper option fits" })).toBeInTheDocument();
     expect(screen.getByText("Nothing cheaper fits what is left in your budget.")).toBeInTheDocument();
+  });
+});
+
+describe("after a no: where the screen leads", () => {
+  it("a stop on a cancelled budget leads to a new budget, not to another ask, and does not say money is still in the budget", async () => {
+    const m = await mountRun();
+    await m.run("normal");
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    await m.run("flagged");
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Stopped before paying");
+    expect(screen.queryByText(/is still in your budget/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ask Wally" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Top up budget" })).toBeNull();
+    await m.user.click(screen.getByRole("button", { name: "Start a new budget" }));
+    expect(window.location.hash).toBe("#/seal");
+  });
+
+  it("an open budget still says what is left, and offers Ask Wally", async () => {
+    const m = await mountRun();
+    await m.run("flagged");
+    expect(screen.getByText(/is still in your budget/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start a new budget" })).toBeNull();
+  });
+
+  it("Wally's idle screen on a cancelled budget says so and leads to a new budget", async () => {
+    const m = await mountRun();
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    expect(await screen.findByRole("heading", { name: "This budget is cancelled" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ask Wally" })).toBeNull();
+    await m.user.click(screen.getByRole("button", { name: "Start a new budget" }));
+    expect(window.location.hash).toBe("#/seal");
+  });
+
+  it("no cheaper option says what was tried, and offers to change the amount or pick something else", async () => {
+    const onAsk = vi.fn();
+    const m = await mountRun({ onAsk });
+    await m.run("normal");
+    await m.run("overflow");
+    await m.inject([
+      { type: "run.started", runId: "run_alt", scenario: "custom", at: "2026-10-03T03:00:00Z" },
+      { type: "stage", runId: "run_alt", stage: "planner", status: "done", at: "2026-10-03T03:00:01Z" },
+      { type: "run.finished", runId: "run_alt", outcome: "INFO", at: "2026-10-03T03:00:02Z", note: "english note", code: "NO_PROPOSAL:no_alternative" },
+    ]);
+    expect(screen.getByRole("heading", { name: "No cheaper option fits" })).toBeInTheDocument();
+    const tried = document.querySelector("[data-tried]")!;
+    expect(tried).toHaveTextContent("Wally looked for something cheaper than the Denim jacket that fits the HK$541 left in your budget, and found nothing. SIMULATED");
+    expect(tried.querySelector("[data-chip]")).toHaveTextContent("SIMULATED");
+    await m.user.click(screen.getByRole("button", { name: "Pick something else" }));
+    expect(onAsk).toHaveBeenCalledOnce();
+    await m.user.click(screen.getByRole("button", { name: "Change the amount" }));
+    expect(window.location.hash).toBe("#/seal?mode=topup");
+  });
+});
+
+describe("a question the budget outlived, and an answer that lost the race", () => {
+  it("cancelling the budget closes the open question: the sheet is gone, there is no Approve, and the screen says why", async () => {
+    const m = await mountRun();
+    await m.run("unverified");
+    expect(screen.getByRole("dialog", { name: "Needs your OK" })).toBeInTheDocument();
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "No thanks" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Review and answer" })).toBeNull();
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Stopped before paying");
+    expect(alert).toHaveTextContent("You cancelled this budget, so this question is closed.");
+    expect(alert).toHaveTextContent("Wally couldn't check this seller recently.");
+    expect(screen.queryByText(/is still in your budget/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Start a new budget" })).toBeInTheDocument();
+    expect(screen.queryByRole("timer")).toBeNull();
+  });
+
+  it("a budget that has ended closes it too, in its own words", async () => {
+    const m = await mountRun();
+    await m.run("unverified");
+    await m.inject([{ type: "packet", packet: { ...(await m.mock.snapshot()).packet!, status: "EXPIRED" } }]);
+    expect(screen.getByRole("alert")).toHaveTextContent("This budget has ended, so this question is closed.");
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  });
+
+  it("reads in 繁", async () => {
+    const m = await mountRun({ locale: "zh-HK" });
+    await m.run("unverified");
+    await act(async () => {
+      await m.mock.revoke();
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("你已取消預算，所以呢條問題已經結束。");
+  });
+
+  it("an answer that arrives after another screen answered says so, instead of a failure or a No it never gave", async () => {
+    const closed = Object.assign(new Error("This escalation is no longer open (answered, or stopped by R11)."), { code: "ESCALATION_CLOSED", status: 409 });
+    const m = await mountRun({ extend: { answerEscalation: async () => Promise.reject(closed) } });
+    await m.run("unverified");
+    const dialog = screen.getByRole("dialog", { name: "Needs your OK" });
+    await act(async () => {
+      await m.user.click(within(dialog).getByRole("button", { name: "Approve" }));
+    });
+    expect(await screen.findByText("Already answered on another screen.")).toBeInTheDocument();
+    expect(document.querySelector("[data-run-answered-elsewhere]")).not.toBeNull();
+    // Not a failure: no red banner, and the screen never claims a No.
+    expect(screen.queryByText(/stopped by R11/)).toBeNull();
+    expect(screen.queryByText("You said no, so Wally stopped it.")).toBeNull();
+  });
+
+  it("any other failure still shows as one", async () => {
+    const m = await mountRun({ extend: { answerEscalation: async () => Promise.reject(new Error("the booth fell over")) } });
+    await m.run("unverified");
+    await act(async () => {
+      await m.user.click(within(screen.getByRole("dialog", { name: "Needs your OK" })).getByRole("button", { name: "Approve" }));
+    });
+    expect(document.querySelector("[data-run-answered-elsewhere]")).toBeNull();
   });
 });
 

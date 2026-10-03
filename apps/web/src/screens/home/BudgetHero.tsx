@@ -1,8 +1,10 @@
 // The budget hero. Wally stands beside a speech bubble that says in one line what the budget is doing (ready, shopping
 // inside the rules, waiting for your OK, all used, cancelled, ended), and the card below carries the figures: what is
-// left in rolling digits, of the total and until when, a meter, spent and held on cards, and the rules as quiet tags.
+// left in rolling digits, of the total and until when, a meter, spent and set aside for cards, and the rules as quiet tags.
 // All figures are SIMULATED and share one chip in the card's corner. The mood is a pure function of the packet.
-import type { ReactElement } from "react";
+// Children sit between the greeting and the card: Home puts the "What do you need?" row there, so the way in is the first
+// thing under Wally's hello and the figures follow.
+import type { ReactElement, ReactNode } from "react";
 import { HERO } from "../../i18n/hero";
 import { OB } from "../../i18n/onboarding";
 import { UI } from "../../i18n/ui";
@@ -22,7 +24,12 @@ import "./hero.css";
 export { categoriesText, categoryName, meterText } from "./hero/heroParts";
 export type { HeroProps as BudgetHeroProps } from "./hero/heroParts";
 
-export function BudgetHero({ packet, mandate }: HeroProps): ReactElement {
+export interface BudgetHeroChildren {
+  /** Shown between the greeting and the budget card. */
+  readonly children?: ReactNode;
+}
+
+export function BudgetHero({ packet, mandate, children }: HeroProps & BudgetHeroChildren): ReactElement {
   const { t, locale } = useLocale();
   const mood = heroMood(packet);
   const nickname = useNickname();
@@ -39,7 +46,8 @@ export function BudgetHero({ packet, mandate }: HeroProps): ReactElement {
           <span className="home-hero__mood">{t(HERO.mood[mood])}</span>
         </p>
       </div>
-      <Card tone="hero" padding="lg" className="home-hero__card" data-chip-scope data-status={packet.status} aria-labelledby="home-hero-title">
+      {children}
+      <Card tone="hero" padding="md" className="home-hero__card" data-chip-scope data-status={packet.status} aria-labelledby="home-hero-title">
         <h1 id="home-hero-title" className="home-hero__kicker">{t(UI["home.heading"])}</h1>
         {active ? null : <Tag tone="on-hero" size="sm" className="home-hero__status" icon={<Icon name="lock" size={14} />}>{t(UI[`home.status.${packet.status}`])}</Tag>}
         <ScopeChip prov={PROV} className="home-hero__chip" />

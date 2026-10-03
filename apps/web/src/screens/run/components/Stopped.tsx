@@ -10,6 +10,7 @@ import { cx } from "../../../ui/cx";
 import { Icon } from "../../../ui/icons";
 import { useLocale } from "../../../ui/locale";
 import { Wally } from "../../../wally/Wally";
+import type { ClosedBudget } from "../model/closed";
 import { stopView } from "../model/stop";
 import type { Result } from "../model/screen";
 import { CardStory } from "./CardStory";
@@ -29,11 +30,16 @@ export interface StoppedProps {
   readonly onAsk: () => void;
   /** Present only when the client offers alternatives. */
   readonly onCheaper?: () => void;
+  /** Opens the rules to change them: offered on a stop the person's own rules caused. */
+  readonly onEditRules?: () => void;
+  /** The budget is cancelled or ended: the way on is a new budget, and nothing is "still in your budget". */
+  readonly closed?: ClosedBudget | null;
+  readonly onNewBudget?: () => void;
   /** What is left in the budget, for the safe strip. */
   readonly packet?: PacketState | null;
 }
 
-export function Stopped({ result, fresh, headingRef, onWhy, onTopUp, onAsk, onCheaper, packet }: StoppedProps): ReactElement | null {
+export function Stopped({ result, fresh, headingRef, onWhy, onTopUp, onAsk, onCheaper, onEditRules, closed = null, onNewBudget, packet }: StoppedProps): ReactElement | null {
   const { t } = useLocale();
   const view = stopView(result);
   if (!view) return null;
@@ -56,9 +62,9 @@ export function Stopped({ result, fresh, headingRef, onWhy, onTopUp, onAsk, onCh
         <ItemLine view={view} />
         {path ? <StopPath fresh={fresh} /> : null}
       </section>
-      <SafeStrip view={view} packet={packet} />
+      <SafeStrip view={view} packet={closed === null ? packet : null} />
       <CardStory story={story} limitMinor={result.card?.limit_minor ?? view.cart.total_minor} />
-      <StopActions view={view} onWhy={onWhy} onTopUp={onTopUp} onAsk={onAsk} onCheaper={onCheaper} />
+      <StopActions view={view} onWhy={onWhy} onTopUp={onTopUp} onAsk={onAsk} onCheaper={onCheaper} onEditRules={onEditRules} closed={closed !== null} onNewBudget={onNewBudget} />
       <Footnote />
     </div>
   );

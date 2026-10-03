@@ -132,8 +132,8 @@ describe("Whose money? in Seal", () => {
     expect(mumOption()).not.toBeChecked();
     expect(document.querySelector("[data-family-card]")).toBeNull();
     await user.click(next());
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(api.sealed.at(-1)).not.toHaveProperty("family");
     expect(api.sealed.at(-1)?.rules.budget.amount_minor).toBe(80_000);
   });
@@ -175,7 +175,7 @@ describe("Whose money? in Seal", () => {
     await user.clear(amount());
     await user.type(amount(), "900");
     await user.click(next());
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
   });
 
   it("the cap leaves with the choice: back on my own budget the same amount seals", async () => {
@@ -190,8 +190,8 @@ describe("Whose money? in Seal", () => {
     expect(screen.queryByText("That's more than Mum allows (HK$1,000)")).toBeNull();
     expect(document.querySelector("[data-family-card]")).toBeNull();
     await user.click(next());
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(api.sealed.at(-1)).not.toHaveProperty("family");
     expect(api.sealed.at(-1)?.rules.budget.amount_minor).toBe(150_000);
   });
@@ -204,8 +204,8 @@ describe("Whose money? in Seal", () => {
     await user.clear(amount());
     await user.type(amount(), "900");
     await user.click(next());
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(api.sealed.at(-1)).toMatchObject({ family: { parent: "mum" }, rules: { budget: { amount_minor: 90_000 } } });
   });
 
@@ -217,7 +217,7 @@ describe("Whose money? in Seal", () => {
     expect(await screen.findByText("Can't reach Mum's budget right now. Your own budget still works.")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "My own budget" }));
     await user.click(next());
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
   });
 
   it("reads in 繁 with the same figures", async () => {

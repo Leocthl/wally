@@ -212,7 +212,7 @@ describe("Cancel this budget in the app", () => {
     expect(document.querySelector('.oc[data-card-state="ACTIVE"]')).toBeNull();
     expect(document.querySelector('[data-card-state="VOIDED"]')).not.toBeNull();
     expect(screen.queryByRole("button", { name: /hold to cancel/i })).toBeNull();
-    expect(screen.getAllByRole("link", { name: /Set up a new budget/ })[0]).toHaveAttribute("href", "#/seal");
+    expect(screen.getAllByRole("link", { name: /Start a new budget/ })[0]).toHaveAttribute("href", "#/seal");
   });
 
   it("Top up and Change the rules open Seal prefilled", async () => {

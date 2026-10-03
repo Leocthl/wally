@@ -18,6 +18,7 @@ import { useLocale } from "../ui/locale";
 import { Segmented } from "../ui/Nav";
 import { Sheet } from "../ui/Overlay";
 import { List, ListRow } from "../ui/Surface";
+import { useIsBoothPage } from "../screens/home/demoMode";
 import { AboutPersonal } from "../screens/onboarding/AboutPersonal";
 import { BoothConnect } from "./BoothConnect";
 import { LegalNote } from "./LegalNote";
@@ -78,6 +79,8 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
   const { t } = useLocale();
   const { info } = useBoothContext();
   const [mode, setMode] = useDisplayMode();
+  const onBooth = useIsBoothPage();
+  const crew = mode === "developer" || onBooth;
   return (
     <Sheet open={open} onClose={onClose} title={t(UI["shell.aboutTitle"](BRAND.name))}>
       <div className="shell-about">
@@ -106,8 +109,9 @@ export function AboutSheet({ open, onClose, theme, onTheme }: AboutSheetProps): 
           <h3 id="about-more" className="shell-about__heading">{t(UI["shell.more"])}</h3>
           <List inset label={t(UI["shell.more"])}>
             <ListRow href={routeHref("evidence")} leading={<Icon name="shieldCheck" />} title={t(UI["shell.whyTrust"](BRAND.name))} chevron />
-            <ListRow href={routeHref("presenter")} leading={<Icon name="list" />} title={t(UI["shell.presenter"])} chevron />
-            <ListRow href={routeHref("styleguide")} leading={<Icon name="sparkle" />} title={t(UI["shell.styleguide"])} chevron />
+            {/* The stage and the style guide are for the crew: Developer mode, the booth's own pages, or nothing. */}
+            {crew ? <ListRow href={routeHref("presenter")} leading={<Icon name="list" />} title={t(UI["shell.presenter"])} chevron /> : null}
+            {crew ? <ListRow href={routeHref("styleguide")} leading={<Icon name="sparkle" />} title={t(UI["shell.styleguide"])} chevron /> : null}
           </List>
         </section>
         <ResetDemo variant="secondary" onStart={onClose} />

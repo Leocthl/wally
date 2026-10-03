@@ -90,3 +90,15 @@
 .evp--stage .evp-card__line { font-size: var(--text-lg); }
 .evp--stage .evp-bar__name, .evp--stage .evp-bar__value { font-size: var(--text-md); }
 @media (min-width: 60rem) { .evp-stage__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Folds: the page opens on the headline and a list of titles; each card opens where it is. */
+.evp-folds { display: grid; gap: var(--sp-2); }
+.evp-fold { border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
+.evp-fold__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: var(--tap-lg); padding: 0 var(--sp-4); border-radius: var(--r-lg); font-size: var(--text-md); font-weight: var(--weight-semibold); line-height: var(--lh-snug); cursor: pointer; list-style: none; }
+.evp-fold__summary::-webkit-details-marker { display: none; }
+.evp-fold__summary::after { content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-right: var(--sp-1); border-right: 2px solid var(--c-ink-muted); border-bottom: 2px solid var(--c-ink-muted); transform: rotate(45deg); }
+.evp-fold[open] > .evp-fold__summary::after { transform: rotate(-135deg); }
+.evp-fold__summary:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+.evp-fold__body { padding: 0 var(--sp-3) var(--sp-3); }
+/* The card inside needs no frame of its own: the fold is the frame. */
+.evp-fold__body > .evp-card, .evp-fold__body > .evp-legend { padding: var(--sp-2) var(--sp-1) var(--sp-1); border: 0; border-radius: 0; background: none; }

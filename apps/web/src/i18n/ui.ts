@@ -22,7 +22,7 @@ const RUN = {
   stepPickNow: label("Looking in shops you allow", "喺你允許的店舖搵緊"), // NEEDS-REVIEW
   stepPicked: (item: string): LabelPair => label(`Picked: ${item}`, `揀咗：${item}`), // NEEDS-REVIEW
   stepRead: label("Wally reads the listing", "Wally 閱讀商品資料"), // NEEDS-REVIEW
-  stepReadDetail: label("Read as data, never as orders", "只當資料，唔當指令"), // NEEDS-REVIEW
+  stepReadDetail: label("Only read, never followed as instructions", "只會閱讀，唔會當指令照做"), // NEEDS-REVIEW
   stepReadOffline: label("The checker is offline, so Wally will ask you", "檢查器離線，Wally 會先問你"), // NEEDS-REVIEW
   stepReadLanguage: label("The checker reads English best, so Wally will ask you", "檢查器最啱讀英文，Wally 會先問你"), // NEEDS-REVIEW
   stepRules: label("Rules check", "規則檢查"), // NEEDS-REVIEW
@@ -31,7 +31,7 @@ const RUN = {
   stepCard: label("One-off card", "一次性卡"), // NEEDS-REVIEW
   stepCardNow: label("Making a card for this amount only", "整緊一張只限呢個金額的卡"), // NEEDS-REVIEW
   stepCardDetail: label("Works once, for this amount only", "只可用一次，只限呢個金額"), // NEEDS-REVIEW
-  stepCardNone: label("No card was made", "沒有發出任何卡"), // NEEDS-REVIEW
+  stepCardNone: label("No card was made", "冇發出任何卡"), // NEEDS-REVIEW
   stepCardWait: label("Waits for your OK", "等你確認"), // NEEDS-REVIEW
   stepFailed: label("Something went wrong here", "呢一步出咗問題"), // NEEDS-REVIEW
   stepOf: (step: string, total: string, name: string): LabelPair => label(`Step ${step} of ${total}: ${name}`, `第 ${step} 步，共 ${total} 步：${name}`), // NEEDS-REVIEW
@@ -66,13 +66,19 @@ const RUN = {
   beatDeclined: label("Declined.", "已拒絕。"), // NEEDS-REVIEW
 
   stoppedTitle: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
-  noCard: label("No card was made. Nothing can be charged.", "沒有發出任何卡，不會有任何扣款。"), // NEEDS-REVIEW
+  noCard: label("No card was made. Nothing can be charged.", "冇發出任何卡，唔會有任何扣款。"), // NEEDS-REVIEW
   cardCancelled: label("The card was cancelled. Nothing more can be charged.", "卡已取消，不會再有扣款。"), // NEEDS-REVIEW
   cheaper: label("See cheaper options", "睇平啲的選擇"), // NEEDS-REVIEW
+  editRules: label("Edit rules", "修改規則"), // NEEDS-REVIEW
+  pickElse: label("Pick something else", "揀其他嘢"), // NEEDS-REVIEW
+  changeAmount: label("Change the amount", "更改金額"), // NEEDS-REVIEW
   topUp: label("Top up budget", "增加預算"), // NEEDS-REVIEW
   why: label("Why?", "點解？"), // NEEDS-REVIEW
   rulesDecided: label("Fixed rules decided this, not the AI.", "由固定規則決定，唔係 AI。"), // NEEDS-REVIEW
   youSaidNo: label("You said no, so Wally stopped it.", "你揀咗唔要，Wally 已攔截。"), // NEEDS-REVIEW
+  questionClosedCancelled: label("You cancelled this budget, so this question is closed.", "你已取消預算，所以呢條問題已經結束。"), // NEEDS-REVIEW
+  questionClosedEnded: label("This budget has ended, so this question is closed.", "呢個預算已到期，所以呢條問題已經結束。"), // NEEDS-REVIEW
+  alreadyAnswered: label("Already answered on another screen.", "已經喺另一個畫面回覆咗。"), // NEEDS-REVIEW
   nobodyAnswered: label("Nobody answered in time, so Wally stopped it.", "冇人及時回覆，Wally 已攔截。"), // NEEDS-REVIEW
   hardRuleAnyway: label("You said yes, but a fixed rule still stops this.", "你揀咗批准，但固定規則仍然攔截。"), // NEEDS-REVIEW
 
@@ -80,16 +86,16 @@ const RUN = {
   approve: label("Approve", "批准"), // NEEDS-REVIEW
   noThanks: label("No thanks", "唔使喇"), // NEEDS-REVIEW
   answerLimit: label("Your answer can't override a fixed rule.", "你的回覆唔可以推翻固定規則。"), // NEEDS-REVIEW
-  timeToAnswer: label("Time to answer", "回覆時限"), // NEEDS-REVIEW
   secondsLeft: (n: string): LabelPair => label(`${n} s left`, `尚餘 ${n} 秒`), // NEEDS-REVIEW
-  answerStart: (n: string): LabelPair => label(`You have ${n} seconds to answer.`, `你有 ${n} 秒回覆。`), // NEEDS-REVIEW
-  timesUp: label("Time's up. Wally is stopping it.", "時間到，Wally 會攔截。"), // NEEDS-REVIEW
+  // The clock on a question is told as a promise, not a threat: Wally waits, then cancels it for you.
+  waitsFor: (n: string): LabelPair => label(`Wally waits ${n} seconds, then cancels this for you.`, `Wally 會等 ${n} 秒，之後幫你取消。`), // NEEDS-REVIEW
+  timesUp: label("Time's up, so Wally cancelled this for you.", "時間到，Wally 已幫你取消。"), // NEEDS-REVIEW
   whyAsk: label("Why is Wally asking?", "Wally 點解問你？"), // NEEDS-REVIEW
 
   noPickTitle: label("Wally couldn't pick a clear item", "Wally 揀唔到合適的貨品"), // NEEDS-REVIEW
   noPickBody: label("Try describing it differently.", "試吓用另一個講法。"), // NEEDS-REVIEW
   errorTitle: label("Something went wrong, so nothing was bought", "出咗問題，所以冇買任何嘢"), // NEEDS-REVIEW
-  errorBody: label("No card was made. You can try again.", "沒有發出任何卡，可以再試。"), // NEEDS-REVIEW
+  errorBody: label("No card was made. You can try again.", "冇發出任何卡，可以再試。"), // NEEDS-REVIEW
   infoTitle: label("Nothing new to buy", "冇新嘢要買"), // NEEDS-REVIEW
   infoBody: label("Wally used the card it already made.", "Wally 用咗之前發出的卡。"), // NEEDS-REVIEW
 
@@ -101,11 +107,13 @@ const RUN = {
   reasonR4Ask: (total: string, ask: string): LabelPair => label(`It costs ${total}, more than the ${ask} you asked Wally to check with you first.`, `要 ${total}，超過你要求先問你的 ${ask}。`), // NEEDS-REVIEW
   reasonR5: (total: string, ceiling: string): LabelPair => label(`It costs ${total}, more than a one-off card can hold (${ceiling}).`, `要 ${total}，超過一次性卡上限（${ceiling}）。`), // NEEDS-REVIEW
   reasonR6: label("That isn't something your rules let Wally buy.", "你的規則唔容許 Wally 買呢樣嘢。"), // NEEDS-REVIEW
+  // The same stop with the rules named, from the categories the decision recorded: "Your budget is for Clothes only."
+  reasonR6Category: (en: string, zh: string): LabelPair => label(`Your budget is for ${en} only.`, `你的預算只限${zh}。`), // NEEDS-REVIEW
   reasonR7: label("Wally made too many cards in a short time. Try again later.", "短時間內發卡太多，請稍後再試。"), // NEEDS-REVIEW
   reasonR8: label("Too many one-off cards are still open. Use or cancel one first.", "未用的一次性卡太多，請先用或取消一張。"), // NEEDS-REVIEW
   reasonR9Flagged: label("This seller is flagged as a possible scam.", "呢個賣家被標記為可能詐騙。"), // NEEDS-REVIEW
   reasonR9Unverified: label("Wally couldn't check this seller recently.", "Wally 最近未能核實呢個賣家。"), // NEEDS-REVIEW
-  reasonR10Injection: label("The listing tried to give Wally orders. Wally reads listings as data, never as orders.", "商品資料試圖指揮 Wally。Wally 只當佢係資料，唔會照做。"), // NEEDS-REVIEW
+  reasonR10Injection: label("The listing tried to tell Wally what to do. Wally only reads listings and never follows them as instructions.", "商品資料試圖叫 Wally 照做。Wally 只會閱讀商品資料，唔會當指令照做。"), // NEEDS-REVIEW
   reasonR10Seller: label("The listing looks like it comes from a risky seller.", "商品資料顯示賣家風險高。"), // NEEDS-REVIEW
   reasonR10Scope: label("This might not fit your rules.", "呢件貨品可能唔符合你的規則。"), // NEEDS-REVIEW
   reasonR10Unsure: label("Wally isn't sure about this one.", "Wally 對呢件貨品冇把握。"), // NEEDS-REVIEW
@@ -150,8 +158,8 @@ const RUN = {
   sellerPass: label("Checked recently. No scam report found, which is not proof of safety.", "最近查過，未有詐騙紀錄，但唔代表一定安全。"), // NEEDS-REVIEW
   sellerStop: label("Flagged as a possible scam", "被標記為可能詐騙"), // NEEDS-REVIEW
   sellerAsk: label("Not checked recently", "最近未有查核"), // NEEDS-REVIEW
-  listingPass: label("Nothing odd. Read as data, never as orders.", "冇異樣，只當資料，唔當指令。"), // NEEDS-REVIEW
-  listingInjection: label("It tried to give Wally orders", "試圖指揮 Wally"), // NEEDS-REVIEW
+  listingPass: label("Nothing odd. Wally only reads it and never follows it as instructions.", "冇異樣。Wally 只會閱讀，唔會當指令照做。"), // NEEDS-REVIEW
+  listingInjection: label("It tried to tell Wally what to do", "試圖叫 Wally 照做"), // NEEDS-REVIEW
   listingSeller: label("Looks like a risky seller", "似係高風險賣家"), // NEEDS-REVIEW
   listingScope: label("Might not fit your rules", "可能唔符合你的規則"), // NEEDS-REVIEW
   listingUnsure: label("Wally wasn't sure", "Wally 冇把握"), // NEEDS-REVIEW
@@ -176,7 +184,7 @@ const RUN = {
   statusPaid: label("Paid", "已付款"), // NEEDS-REVIEW
   statusStopped: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
   statusNeedsOk: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
-  simulatedCard: label("Simulated card. No money moves.", "模擬卡，沒有真錢轉移。"), // NEEDS-REVIEW
+  simulatedCard: label("Simulated card. No money moves.", "模擬卡，冇真錢轉移。"), // NEEDS-REVIEW
 
   repeatApproved: label("You already have a one-off card for this. Nothing new was bought.", "你已經有一張呢樣嘢嘅一次性卡，冇再買新嘢。"), // NEEDS-REVIEW
   repeatAsked: label("Wally already asked you about this. It is waiting for your answer.", "Wally 已經問過你，等緊你回覆。"), // NEEDS-REVIEW
@@ -185,6 +193,8 @@ const RUN = {
   unknownAskBody: label("Wally only knows the sample asks here. Try one of the cards on Budget, or show a photo.", "呢度 Wally 只識得示範用嘅提問。請試預算頁的卡，或者俾 Wally 睇相。"), // NEEDS-REVIEW
   noCheaperTitle: label("No cheaper option fits", "冇更平而合適的選擇"), // NEEDS-REVIEW
   noCheaperBody: label("Nothing cheaper fits what is left in your budget.", "冇更平的貨品放得入你剩餘的預算。"), // NEEDS-REVIEW
+  // What was tried, when it is known: the item that was stopped and what the budget has left. {item} is text, {left} a figure.
+  noCheaperTried: label("Wally looked for something cheaper than the {item} that fits the {left} left in your budget, and found nothing.", "Wally 搵過比{item}平、又放得入預算剩餘 {left} 的貨品，但搵唔到。"), // NEEDS-REVIEW
 } as const;
 
 /** Lane b-shell strings (shell., home., seal., console.). Placeholders in braces take formatted figures as elements. */
@@ -222,7 +232,10 @@ const SHELL = {
   "shell.replayed": label("Replayed: recorded answers, no network", "重播：使用錄製答案，無需網絡"), // NEEDS-REVIEW
   "shell.replayedShort": label("Replayed", "重播"), // NEEDS-REVIEW
   "shell.liveShort": label("Live", "即時"), // NEEDS-REVIEW
-  "shell.railNote": label("The rail is SIMULATED. No money moves.", "發卡層屬模擬，沒有真錢轉移。"), // NEEDS-REVIEW
+  "shell.railNote": label("The rail is SIMULATED. No money moves.", "發卡層屬模擬，冇真錢轉移。"), // NEEDS-REVIEW
+  // The same fact in everyday words (everyone but Developer mode): the shop and the card are practice.
+  "shell.practiceNote": label("The shop and the card are a safe practice version. No real money moves.", "商店同卡都係安全嘅練習版本，唔會有真錢轉移。"), // NEEDS-REVIEW
+  "shell.simulatedAsk": label("SIMULATED: what does this mean?", "SIMULATED：呢個係咩意思？"), // NEEDS-REVIEW
   "shell.reset": label("Start the demo over", "重新開始示範"), // NEEDS-REVIEW
   "shell.resetBody": label("Back to a fresh budget with no cards and no receipts.", "回到全新預算，冇卡，冇收據。"), // NEEDS-REVIEW
   "shell.resetConfirm": label("Start over", "重新開始"), // NEEDS-REVIEW
@@ -250,7 +263,7 @@ const SHELL = {
   "home.of": label("of your {total} budget · until {until}", "總預算 {total} · 有效至 {until}"), // NEEDS-REVIEW
   "home.meter": label("{left} left of {total}, SIMULATED", "剩餘 {left}，總額 {total}，SIMULATED"), // NEEDS-REVIEW
   "home.spent": label("Spent", "已用"), // NEEDS-REVIEW
-  "home.held": label("On one-off cards", "一次性卡預留"), // NEEDS-REVIEW
+  "home.held": label("Set aside", "已預留"), // NEEDS-REVIEW
   "home.only": label("{things} only", "只限{things}"), // NEEDS-REVIEW
   "home.listJoin": label(", ", "、"), // NEEDS-REVIEW
   "home.cat.apparel": label("Clothes", "衣物"), // NEEDS-REVIEW
@@ -269,8 +282,8 @@ const SHELL = {
   "home.status.EXHAUSTED": label("All used", "已用完"), // NEEDS-REVIEW
   "home.cancelledTitle": label("This budget is cancelled", "呢個預算已取消"), // NEEDS-REVIEW
   "home.endedTitle": label("This budget has ended", "呢個預算已到期"), // NEEDS-REVIEW
-  "home.cancelledBody": label("Wally can't make new cards. Set up a new budget to keep shopping.", "Wally 唔可以再發卡。設定新預算就可以繼續購物。"), // NEEDS-REVIEW
-  "home.newBudget": label("Set up a new budget", "設定新預算"), // NEEDS-REVIEW
+  "home.cancelledBody": label("Wally can't make new cards. Start a new budget to keep shopping.", "Wally 唔可以再發卡。開始新預算就可以繼續購物。"), // NEEDS-REVIEW
+  "home.newBudget": label("Start a new budget", "開始新預算"), // NEEDS-REVIEW
   "home.usedUpTitle": label("This budget is all used", "呢個預算已用完"), // NEEDS-REVIEW
   "home.usedUpBody": label("Wally can't make a new card until you top up.", "增加預算之前，Wally 唔可以再發卡。"), // NEEDS-REVIEW
   "home.cards": label("One-off cards", "一次性卡"), // NEEDS-REVIEW
@@ -308,7 +321,7 @@ const SHELL = {
   "home.sc.flagged.d": label("Wally checks the seller first and stops before paying.", "Wally 先查賣家，付款前攔截。"), // NEEDS-REVIEW
   "home.sc.overflow": label("Shipping tips it over", "運費令總數超出"), // NEEDS-REVIEW
   "home.sc.overflow.d": label("A jacket plus shipping costs more than what's left.", "褸加運費超過剩餘預算。"), // NEEDS-REVIEW
-  "home.sc.injected": label("A listing that gives orders", "商品資料夾帶指令"), // NEEDS-REVIEW
+  "home.sc.injected": label("A listing that gives instructions", "商品資料夾帶指令"), // NEEDS-REVIEW
   "home.sc.injected.d": label("The listing tells Wally to ignore the rules. Wally won't.", "商品資料叫 Wally 唔理規則，Wally 唔會聽。"), // NEEDS-REVIEW
   "home.sc.off_category": label("Earbuds on a clothes budget", "用買衫預算買耳機"), // NEEDS-REVIEW
   "home.sc.off_category.d": label("Not something your rules allow.", "你的規則唔容許。"), // NEEDS-REVIEW
@@ -329,9 +342,9 @@ const SHELL = {
 
   "console.title": label("Manage this budget", "管理預算"), // NEEDS-REVIEW
   "console.topUp": label("Top up budget", "增加預算"), // NEEDS-REVIEW
-  "console.topUpHint": label("Seal a new budget with a bigger amount.", "用更大金額鎖定新預算。"), // NEEDS-REVIEW
+  "console.topUpHint": label("Lock in a new budget with a bigger amount.", "用更大金額鎖定新預算。"), // NEEDS-REVIEW
   "console.edit": label("Change the rules", "修改規則"), // NEEDS-REVIEW
-  "console.editHint": label("Seal a new budget with new rules.", "用新規則鎖定新預算。"), // NEEDS-REVIEW
+  "console.editHint": label("Lock in a new budget with new rules.", "用新規則鎖定新預算。"), // NEEDS-REVIEW
   "console.cancel": label("Cancel this budget", "取消預算"), // NEEDS-REVIEW
   "console.cancelHold": label("Hold to cancel this budget", "按住取消預算"), // NEEDS-REVIEW
   "console.cancelHint": label("Press and hold. Let go early and nothing happens.", "按住不放；提早放手就唔會取消。"), // NEEDS-REVIEW
@@ -359,7 +372,7 @@ const SHELL = {
   "seal.readTitle": label("What Wally understood", "Wally 讀到的內容"), // NEEDS-REVIEW
   "seal.readModel": label("Read by the local model.", "由本機模型讀取。"), // NEEDS-REVIEW
   "seal.readRules": label("Read by fixed rules.", "由固定規則讀取。"), // NEEDS-REVIEW
-  "seal.readCheck": label("Check each rule below and change what is wrong. Nothing is sealed until you say so.", "請檢查下面每項規則，有錯就改。你確認前唔會封存。"), // NEEDS-REVIEW
+  "seal.readCheck": label("Check each rule below and change what is wrong. Nothing is locked in until you say so.", "請檢查下面每項規則，有錯就改。你確認前唔會鎖定。"), // NEEDS-REVIEW
   "seal.readLeftOut": label("Left out of the suggestion", "未有放入建議"), // NEEDS-REVIEW
   "seal.notFound": label("Some rules weren't in your sentence. Check them below.", "句子未講齊所有規則，請喺下面檢查。"), // NEEDS-REVIEW
   "seal.untilCapped": label("That date is too far away for one budget, so Until is set to the latest day a budget can run to.", "個日期太遠，一個預算去唔到咁耐，「有效至」已經設為最遲可揀嘅一日。"), // NEEDS-REVIEW
@@ -377,18 +390,19 @@ const SHELL = {
   "seal.share": label("Most per buy, share of what's left", "每次最多佔剩餘的百分比"), // NEEDS-REVIEW
   "seal.errAmount": label("Enter an amount above zero.", "請輸入大於零的金額。"), // NEEDS-REVIEW
   "seal.errFormat": label("Use digits only, with up to two decimals.", "只可輸入數字，最多兩個小數位。"), // NEEDS-REVIEW
+  "seal.errTooBig": label("That amount is too large.", "金額太大。"), // NEEDS-REVIEW
   "seal.errPercent": label("Enter a whole percent between one and a hundred.", "請輸入一至一百之間的整數百分比。"), // NEEDS-REVIEW
   "seal.errCategory": label("Pick at least one thing Wally can buy.", "請最少揀一樣 Wally 可以買的東西。"), // NEEDS-REVIEW
   "seal.errUntil": label("Pick today or a later date.", "請揀今日或之後的日期。"), // NEEDS-REVIEW
   "seal.errDate": label("Pick a date.", "請揀日期。"), // NEEDS-REVIEW
   "seal.fixFirst": label("Fix the highlighted rules to continue.", "請先修正標示的規則。"), // NEEDS-REVIEW
   "seal.next": label("Next", "下一步"), // NEEDS-REVIEW
-  "seal.reviewTitle": label("Check and seal", "檢查並鎖定"), // NEEDS-REVIEW
-  "seal.reviewLead": label("Once sealed, Wally can't change these rules. Only you can, by sealing a new budget.", "鎖定之後 Wally 改唔到呢啲規則。只有你可以鎖定新預算去改。"), // NEEDS-REVIEW
-  "seal.newLog": label("Sealing starts a new budget and new receipts.", "鎖定會開始新預算同新收據。"), // NEEDS-REVIEW
-  "seal.seal": label("Seal budget", "鎖定預算"), // NEEDS-REVIEW
-  "seal.sealing": label("Sealing your budget", "正在鎖定預算"), // NEEDS-REVIEW
-  "seal.sealedTitle": label("Your budget is sealed", "你的預算已鎖定"), // NEEDS-REVIEW
+  "seal.reviewTitle": label("Check and lock in", "檢查並鎖定"), // NEEDS-REVIEW
+  "seal.reviewLead": label("Once locked in, Wally can't change these rules. Only you can, by locking in a new budget.", "鎖定之後 Wally 改唔到呢啲規則。只有你可以鎖定新預算去改。"), // NEEDS-REVIEW
+  "seal.newLog": label("Locking in starts a new budget and new receipts.", "鎖定會開始新預算同新收據。"), // NEEDS-REVIEW
+  "seal.seal": label("Lock in budget", "鎖定預算"), // NEEDS-REVIEW
+  "seal.sealing": label("Locking in your budget", "正在鎖定預算"), // NEEDS-REVIEW
+  "seal.sealedTitle": label("Your budget is locked in", "你的預算已鎖定"), // NEEDS-REVIEW
   "seal.sealedBody": label("The rules are signed. Wally can shop now, inside them.", "規則已簽署。Wally 而家可以喺規則之內購物。"), // NEEDS-REVIEW
   "seal.go": label("Go to your budget", "前往你的預算"), // NEEDS-REVIEW
   "seal.topUpTitle": label("Top up your budget", "增加預算"), // NEEDS-REVIEW
@@ -457,7 +471,7 @@ export const UI = {
     yesterday: label("Yesterday", "昨日"), // NEEDS-REVIEW
     emptyTitle: label("No receipts yet", "未有收據"), // NEEDS-REVIEW
     emptyBody: label("When Wally decides on a purchase, its signed receipt shows up here.", "Wally 每次決定買或不買，已簽署的收據都會在這裡出現。"), // NEEDS-REVIEW
-    emptyFilter: label("No receipts of this kind yet", "暫時沒有這類收據"), // NEEDS-REVIEW
+    emptyFilter: label("No receipts of this kind yet", "暫時冇呢類收據"), // NEEDS-REVIEW
     showAll: label("Show all receipts", "顯示全部收據"), // NEEDS-REVIEW
     loading: label("Loading receipts", "正在載入收據"), // NEEDS-REVIEW
     stateSealed: label("Rules signed", "規則已簽署"), // NEEDS-REVIEW
@@ -495,6 +509,9 @@ export const UI = {
     bodyCardExpired: label("The card was not used in time, so it expired. Its money is back in your budget.", "此卡未在時限內使用，已過期，款項已回到你的預算。"), // NEEDS-REVIEW
     bodyRevoked: label("Your rules no longer let Wally buy anything. Unused cards were cancelled.", "你的規則已不再容許 Wally 購物，未用的卡已取消。"), // NEEDS-REVIEW
     bodyExpired: label("Your budget reached its end date. Wally cannot buy with it any more.", "你的預算已到期，Wally 不能再用它購物。"), // NEEDS-REVIEW
+    // One purchase is one row; its receipts are the steps under it.
+    steps: label("{n} steps", "{n} 個步驟"), // NEEDS-REVIEW
+    stepsList: label("The steps of this purchase", "這次購買的步驟"), // NEEDS-REVIEW
     resolves: label("This closes an earlier receipt.", "這張收據了結了較早的一張。"), // NEEDS-REVIEW
     seeEarlier: label("See the earlier receipt", "查看較早的收據"), // NEEDS-REVIEW
     moneyTitle: label("Money", "金額"), // NEEDS-REVIEW
@@ -526,14 +543,14 @@ export const UI = {
       R4: label("Under your per-purchase limit", "未超出每次購買上限"), // NEEDS-REVIEW
       R5: label("Under the card ceiling", "未超出卡額上限"), // NEEDS-REVIEW
       R6: label("A shop and category you allow", "屬你允許的商戶及類別"), // NEEDS-REVIEW
-      R7: label("Not too many cards in a short time", "短時間內沒有發太多卡"), // NEEDS-REVIEW
+      R7: label("Not too many cards in a short time", "短時間內冇發太多卡"), // NEEDS-REVIEW
       R8: label("Not too many cards open at once", "同時有效的卡不算多"), // NEEDS-REVIEW
       R9: label("Seller checked against a seller list", "已對照賣家名單查核"), // NEEDS-REVIEW
       R9NoRecord: label("No scam record found for the seller (not proof of safety)", "賣家查無詐騙紀錄（不代表安全）"), // NEEDS-REVIEW
       R10scope: label("The item fits what you asked for", "貨品符合你的要求"), // NEEDS-REVIEW
-      R10injection: label("The listing text gives no orders", "商品文字沒有夾帶指令"), // NEEDS-REVIEW
+      R10injection: label("The listing text gives no instructions", "商品文字冇夾帶指令"), // NEEDS-REVIEW
       R10seller: label("The seller looks low risk", "賣家風險低"), // NEEDS-REVIEW
-      R10escalate: label("Nothing needed your OK", "沒有需要你確認的地方"), // NEEDS-REVIEW
+      R10escalate: label("Nothing needed your OK", "冇需要你確認嘅地方"), // NEEDS-REVIEW
       R10: label("The judge read the listing", "判斷器已閱讀商品頁"), // NEEDS-REVIEW
       R11: label("You answered in time", "你及時回覆"), // NEEDS-REVIEW
       R12: label("The price held at checkout", "結帳時價格不變"), // NEEDS-REVIEW
@@ -595,8 +612,8 @@ export const UI = {
     madeCard: label("Wally made a one-off card", "Wally 已發出一次性卡"), // NEEDS-REVIEW
     stopped: label("Stopped before paying", "付款前已攔截"), // NEEDS-REVIEW
     needsOk: label("Needs your OK", "需要你確認"), // NEEDS-REVIEW
-    failedRun: label("Something failed, so nothing was bought. No card was made.", "過程出錯，所以沒有購買，也沒有發卡。"), // NEEDS-REVIEW
-    noCardMade: label("No card was made. Nothing can be charged.", "沒有發卡，不會有任何扣款。"), // NEEDS-REVIEW
+    failedRun: label("Something failed, so nothing was bought. No card was made.", "過程出錯，所以冇購買，亦冇發卡。"), // NEEDS-REVIEW
+    noCardMade: label("No card was made. Nothing can be charged.", "冇發卡，唔會有任何扣款。"), // NEEDS-REVIEW
     exactly: label("A one-off card for exactly {amount}", "剛好 {amount} 的一次性卡"), // NEEDS-REVIEW
     atCheckout: label("At checkout", "結帳時"), // NEEDS-REVIEW
     beatPaid: label("Paid {amount}: exactly the card limit.", "已扣款 {amount}，剛好是卡額。"), // NEEDS-REVIEW
@@ -742,7 +759,7 @@ export const UI = {
     },
   },
 
-  simulated: label("Simulated. No money moves.", "模擬示範，沒有真錢轉移。"), // NEEDS-REVIEW
+  simulated: label("Simulated. No money moves.", "模擬示範，冇真錢轉移。"), // NEEDS-REVIEW
   simulatedShort: label("Simulated", "模擬"), // NEEDS-REVIEW
 
   // Lane b-run: the Wally screen (#/wally). Planner = "Wally picks", judge = "Wally reads the listing", engine = "Rules

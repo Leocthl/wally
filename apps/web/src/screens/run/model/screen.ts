@@ -3,13 +3,14 @@
 // The engine's outcome decides the result; nothing here re-derives a verdict.
 import type { CardRecord, EscalationView } from "../../../api/types";
 import { currentRun, type BoothState, type RunView } from "../../../state/booth";
+import { closedBudget, type ClosedBudget } from "../../../state/closedBudget";
 import { cardOf, cardUsedBy, chainOf, escalationOf, knownDecisions, runInvolves, type Chain } from "./chain";
 import { cardStory, type StoryItem } from "./story";
 
 export type ResultKind = "approved" | "stopped" | "needsOk" | "noPick" | "error" | "info";
 
-/** How an escalation ended, when the chain had one. */
-export type Answer = "yes" | "no" | "expired" | "yesButRule";
+/** How an escalation ended, when the chain had one. "cancelled" and "ended": nobody answered before the budget was over. */
+export type Answer = "yes" | "no" | "expired" | "yesButRule" | "cancelled" | "ended";
 
 export interface Result {
   readonly kind: ResultKind;
@@ -32,21 +33,31 @@ export interface Result {
 
 export type ScreenModel = { readonly kind: "idle" } | { readonly kind: "working"; readonly run: RunView } | { readonly kind: "result"; readonly result: Result };
 
-function answerOf(chain: Chain, escalation: EscalationView | undefined): Answer | undefined {
+/** A question that is still unanswered when the budget is cancelled or has ended is closed: there is nothing left to answer. */
+function closedAnswer(chain: Chain, over: ClosedBudget | null): "cancelled" | "ended" | undefined {
+  if (over === null || chain.current.outcome !== "ESCALATE") return undefined;
+  return over === "ended" ? "ended" : "cancelled";
+}
+
+function answerOf(chain: Chain, escalation: EscalationView | undefined, over: ClosedBudget | null): Answer | undefined {
+  const closed = closedAnswer(chain, over);
+  if (closed !== undefined) return closed;
   const resolution = chain.decisions.find((d) => d.resolves === chain.root.id && d.escalation !== undefined);
   const state = resolution?.escalation?.state ?? escalation?.state;
+  if (state === "CLOSED") return "cancelled";
   if (state === "EXPIRED") return "expired";
   if (state === "DENIED") return "no";
   if (state !== "APPROVED") return undefined;
   return resolution && resolution.outcome === "DENY" && resolution.explanation?.template_id !== "R12.price_drift" ? "yesButRule" : "yes";
 }
 
-function kindOf(chain: Chain): ResultKind {
+function kindOf(chain: Chain, over: ClosedBudget | null = null): ResultKind {
   switch (chain.current.outcome) {
     case "APPROVE":
       return "approved";
     case "ESCALATE":
-      return "needsOk";
+      // A question nobody can answer any more is a stop, told as one.
+      return closedAnswer(chain, over) === undefined ? "needsOk" : "stopped";
     case "DENY":
       return "stopped";
   }
@@ -55,9 +66,10 @@ function kindOf(chain: Chain): ResultKind {
 export function chainResult(state: BoothState, chain: Chain, run: RunView | undefined): Result {
   const card = cardOf(state, chain);
   const escalation = escalationOf(state, chain);
-  const answer = answerOf(chain, escalation);
+  const over = closedBudget(state);
+  const answer = answerOf(chain, escalation, over);
   return {
-    kind: kindOf(chain),
+    kind: kindOf(chain, over),
     key: chain.root.id,
     chain,
     story: cardStory(state, card, chain.decisions),
@@ -141,6 +153,7 @@ export interface HistoryRow {
 /** Recent purchases, newest first, one row per chain (a resolved question shows how it ended). */
 export function history(state: BoothState, limit: number, exclude?: string): readonly HistoryRow[] {
   const all = knownDecisions(state);
+  const over = closedBudget(state);
   const roots = all.filter((d) => d.resolves === undefined || !all.some((p) => p.id === d.resolves));
   return [...roots]
     .reverse()
@@ -150,6 +163,6 @@ export function history(state: BoothState, limit: number, exclude?: string): rea
       const chain = chainOf(all, root.id);
       if (!chain) return [];
       const story = cardStory(state, cardOf(state, chain), chain.decisions);
-      return [{ chain, kind: kindOf(chain), paid: story.some((s) => s.tone === "ok") }];
+      return [{ chain, kind: kindOf(chain, over), paid: story.some((s) => s.tone === "ok") }];
     });
 }

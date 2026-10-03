@@ -108,9 +108,28 @@ describe("which state the Wally screen shows", () => {
     expect(plainReason(r.chain?.current as Decision)).toEqual(R.reasonR10Injection);
   });
 
-  it("off-category item: stopped by your rules", async () => {
+  it("off-category item: stopped by your rules, which the reason names", async () => {
     const r = resultOf((await play("off_category")).state());
-    expect(plainReason(r.chain?.current as Decision)).toEqual(R.reasonR6);
+    expect(plainReason(r.chain?.current as Decision)).toEqual(R.reasonR6Category("Clothes", "衣物"));
+    expect(plainReason(r.chain?.current as Decision).en).toBe("Your budget is for Clothes only.");
+  });
+
+  it("a stop about the shop, or with no allowed list recorded, keeps the general sentence", async () => {
+    const decision = (await play("off_category")).state();
+    const base = resultOf(decision).chain?.current as Decision;
+    const withInputs = (inputs: Record<string, unknown>): Decision => ({ ...base, explanation: { ...base.explanation!, inputs } });
+    expect(plainReason(withInputs({ reason: "merchant_denied", domain: "x.example", deny: ["x.example"] }))).toEqual(R.reasonR6);
+    expect(plainReason(withInputs({ reason: "merchant_not_allowed", domain: "x.example", allow: [] }))).toEqual(R.reasonR6);
+    expect(plainReason(withInputs({}))).toEqual(R.reasonR6);
+  });
+
+  it("names the categories as the engine records them (categories is the allowed list there), several joined, an unknown one as written", async () => {
+    const base = resultOf((await play("off_category")).state()).chain?.current as Decision;
+    const withInputs = (inputs: Record<string, unknown>): Decision => ({ ...base, explanation: { ...base.explanation!, inputs } });
+    const engine = withInputs({ reason: "category", categories: ["apparel", "footwear"], item_categories: ["electronics"], off_categories: ["electronics"] });
+    expect(plainReason(engine).en).toBe("Your budget is for Clothes, Shoes only.");
+    expect(plainReason(engine).zh).toBe("你的預算只限衣物、鞋。");
+    expect(plainReason(withInputs({ reason: "category", categories: ["pet_food"] })).en).toBe("Your budget is for pet_food only.");
   });
 });
 

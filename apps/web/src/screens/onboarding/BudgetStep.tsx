@@ -67,9 +67,9 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
   // Ready means a budget Wally can shop in now. One that is cancelled, ended or all used is not that: the form is offered.
   const live = mandate !== null && packet !== null && packet.status === "ACTIVE" && !booth.state.revoked;
   const mine = ceremony.sealing || ceremony.sealedForm !== null;
-  const skipping: SkipControl = { onSkip: skip.onSkip, busy: skip.busy || ceremony.sealing };
-  // Skip uses the ready-made budget when there is none; with one held it seals nothing. Said wherever Skip could be mistaken for "use mine".
-  const skipNote = mandate === null ? <p className="onb-skipnote">{t(OB.budget.skipNote)}</p> : null;
+  // Skip uses the ready-made budget when there is none (the note under the link says so); with one held, or once this one is
+  // being sealed, it seals nothing.
+  const skipping: SkipControl = { onSkip: skip.onSkip, busy: skip.busy || ceremony.sealing, readyMade: skip.readyMade && mandate === null && !mine };
 
   const review = (): void => {
     setShowErrors(true);
@@ -145,7 +145,7 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
 
   if (view === "review") {
     return (
-      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={skipNote}>
+      <StepFrame key="review" step="budget" wally="idle" title={t(UI["seal.reviewTitle"])} dir="fwd" skip={skipping} actions={null}>
         <ReviewStep form={form} sealing={false} replacing={replacing} onEdit={() => setView("pick")} onSeal={() => void seal()} />
       </StepFrame>
     );
@@ -160,13 +160,10 @@ export function BudgetStep({ draft, onDraft, onBack, onDone, onRetry, dir, skip 
       dir={dir}
       skip={skipping}
       actions={
-        <>
-          <div className="onb-actions__row">
-            {backButton}
-            <Button size="lg" className="onb-actions__grow" iconEnd={<Icon name="chevronRight" size={20} />} onClick={review} data-next>{t(OB.budget.review)}</Button>
-          </div>
-          {skipNote}
-        </>
+        <div className="onb-actions__row">
+          {backButton}
+          <Button size="lg" className="onb-actions__grow" iconEnd={<Icon name="chevronRight" size={20} />} onClick={review} data-next>{t(OB.budget.review)}</Button>
+        </div>
       }
     >
       <BudgetPicker draft={draft} onDraft={onDraft} errors={errors} showErrors={showErrors} until={until.day} capped={until.capped} now={now} family={family} onSubmit={review} />

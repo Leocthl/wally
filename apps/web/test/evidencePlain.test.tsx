@@ -64,6 +64,59 @@ const card = (c: HTMLElement, id: string): HTMLElement => {
 const text = (el: Element | null): string => (el?.textContent ?? "").replace(/\s+/g, " ").trim();
 const ENGINEERS = /\b(B0|B1|B2|CI|p50|p95|T-H\d|F38|seed|commit|deterministic|pipeline|Wilson|interval|JSON|harness)\b|MEASURED\(/;
 
+/** The words a person reads without opening anything: closed folds leave their bodies out. */
+function wordsShown(c: HTMLElement): number {
+  const clone = c.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll("details:not([open]) > :not(summary)").forEach((n) => n.remove());
+  clone.querySelectorAll(".sr-only").forEach((n) => n.remove());
+  return text(clone).split(" ").filter(Boolean).length;
+}
+
+describe("the page opens on the headline and a short list", () => {
+  it("folds the layers key and the five cards behind their titles, in the same order, closed to begin with", () => {
+    const c = show(run(realistic()));
+    const folds = [...c.querySelectorAll<HTMLDetailsElement>("details.evp-fold")];
+    expect(folds.map((f) => f.dataset["fold"])).toEqual(["layers", "limit", "risky", "tricks", "honest", "speed"]);
+    expect(folds.map((f) => text(f.querySelector("summary")))).toEqual(["What each layer adds", "Went over the limit", "Stopped before paying", "Trick listings", "Approved", "Speed"]);
+    for (const f of folds) expect(f.open, f.dataset["fold"]).toBe(false);
+  });
+
+  it("keeps where Wally still gets it wrong open: the limits are not something to tap for", () => {
+    const c = show(run(realistic()));
+    const wrong = card(c, "wrong");
+    expect(wrong.closest("details")).toBeNull();
+    expect(text(wrong)).toContain("Wally blocked 5 of 66 honest purchases by mistake.");
+  });
+
+  it("reads a few hundred words before anything is opened (it was over six hundred), and every number is still in the page", () => {
+    const c = show(run(realistic()));
+    expect(wordsShown(c)).toBeLessThan(260);
+    expect(text(card(c, "limit").querySelector(".evp-big"))).toBe("0 of 150 purchases");
+    expect(text(card(c, "risky").querySelector(".evp-big"))).toBe("84 of 84 risky purchases");
+  });
+
+  it("says each title once when a fold is open: the card keeps its own for screen readers, and the summary shows it", () => {
+    const c = show(run(realistic()));
+    for (const fold of c.querySelectorAll("details.evp-fold")) {
+      const inner = fold.querySelector(".evp-card__title, .evp-legend h3");
+      expect(inner, fold.getAttribute("data-fold") ?? "").toHaveClass("sr-only");
+    }
+  });
+
+  it("opens with a tap and keeps the chip of the card inside", async () => {
+    const c = show(run(realistic()));
+    const user = userEvent.setup();
+    await user.click(c.querySelector('[data-fold="limit"] summary')!);
+    expect(c.querySelector<HTMLDetailsElement>('[data-fold="limit"]')?.open).toBe(true);
+    expect(card(c, "limit").querySelector("[data-chip]")).not.toBeNull();
+  });
+
+  it("reads in 繁", () => {
+    const c = show(run(realistic()), "zh-HK");
+    expect([...c.querySelectorAll("details.evp-fold summary")].map((n) => text(n)).slice(0, 2)).toEqual(["每一層加了甚麼", "超出上限"]);
+  });
+});
+
 describe("plain is the default", () => {
   it("opens in plain words: the title, the headline and the cards in order", () => {
     const c = show(run(realistic()));

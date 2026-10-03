@@ -5,6 +5,7 @@ import {
   boothFlag,
   DEMO_OPEN_KEY,
   demoDefaultOpen,
+  isBoothPage,
   isLoopbackHost,
   readStoredChoice,
   rememberChoice,
@@ -101,5 +102,23 @@ describe("the remembered choice", () => {
     expect(() => rememberChoice(true, refusing)).not.toThrow();
     expect(readStoredChoice(null)).toBeNull();
     expect(() => rememberChoice(true, null)).not.toThrow();
+  });
+});
+
+describe("isBoothPage: where the cards are \"for judges\"", () => {
+  it("is the booth Mac, a ?booth=1 link and presenter mode, and nobody else's phone", () => {
+    expect(isBoothPage({ ...phone, hostname: "127.0.0.1" })).toBe(true);
+    expect(isBoothPage({ ...phone, hostname: "localhost" })).toBe(true);
+    expect(isBoothPage({ ...phone, search: "?booth=1" })).toBe(true);
+    expect(isBoothPage({ ...phone, hash: "#/budget?booth=1" })).toBe(true);
+    expect(isBoothPage({ ...phone, presenter: true })).toBe(true);
+    expect(isBoothPage(phone)).toBe(false);
+    expect(isBoothPage({ ...phone, hostname: "wally.example" })).toBe(false);
+  });
+
+  it("is not the phone app on its own localhost address, and not a choice remembered by the person", () => {
+    expect(isBoothPage({ ...phone, hostname: "localhost", native: true })).toBe(false);
+    expect(isBoothPage({ ...phone, stored: true })).toBe(false);
+    expect(isBoothPage({ ...phone, stored: false, hostname: "127.0.0.1" })).toBe(true);
   });
 });

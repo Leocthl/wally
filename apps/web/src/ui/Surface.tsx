@@ -78,6 +78,8 @@ export interface ListRowProps {
   readonly tone?: "primary" | "ok" | "stop" | "warn" | "neutral";
   readonly className?: string;
   readonly lang?: string;
+  /** More inside the same list item, under the row's own target (never inside it, where a control cannot nest): a list of steps. */
+  readonly extra?: ReactNode;
 }
 
 function RowBody({ title, subtitle, leading, trailing, chevron, tone = "primary" }: Pick<ListRowProps, "title" | "subtitle" | "leading" | "trailing" | "chevron" | "tone">): ReactElement {
@@ -94,15 +96,15 @@ function RowBody({ title, subtitle, leading, trailing, chevron, tone = "primary"
   );
 }
 
-export function ListRow({ href, onClick, className, lang, ...body }: ListRowProps): ReactElement {
+export function ListRow({ href, onClick, className, lang, extra, ...body }: ListRowProps): ReactElement {
   const inner = <RowBody {...body} />;
   if (href !== undefined) {
-    return <li className={cx("w-row", className)} lang={lang}><a className="w-row__hit" href={href}>{inner}</a></li>;
+    return <li className={cx("w-row", className)} lang={lang}><a className="w-row__hit" href={href}>{inner}</a>{extra}</li>;
   }
   if (onClick) {
-    return <li className={cx("w-row", className)} lang={lang}><button type="button" className="w-row__hit" onClick={onClick}>{inner}</button></li>;
+    return <li className={cx("w-row", className)} lang={lang}><button type="button" className="w-row__hit" onClick={onClick}>{inner}</button>{extra}</li>;
   }
-  return <li className={cx("w-row", className)} lang={lang}><div className="w-row__hit w-row__hit--static">{inner}</div></li>;
+  return <li className={cx("w-row", className)} lang={lang}><div className="w-row__hit w-row__hit--static">{inner}</div>{extra}</li>;
 }
 
 export interface SkeletonProps {

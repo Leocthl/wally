@@ -127,9 +127,9 @@ describe("the four steps", () => {
     expect((await api.snapshot()).mandate).toBeNull();
     await user.click(screen.getByRole("radio", { name: "Two weeks" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeInTheDocument();
     const snap = await api.snapshot();
     expect(snap.mandate?.rules.budget.amount_minor).toBe(50_000);
     expect(snap.mandate?.rules.categories).toEqual(["footwear"]);
@@ -258,10 +258,10 @@ describe("Your first budget", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Your first budget" })).toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: /^Amount/ }), "650");
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     expect(document.querySelector(".seal-summary")).toHaveTextContent("HK$650");
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect((await api.snapshot()).packet?.budget_minor).toBe(65_000);
   });
 
@@ -294,22 +294,22 @@ describe("Your first budget", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "What's your style?" })).toBeInTheDocument();
   });
 
-  it("Edit on Check and seal returns to the form with the choices kept", async () => {
+  it("Edit on Check and lock in returns to the form with the choices kept", async () => {
     const { user } = await toBudget();
     await user.click(await screen.findByRole("radio", { name: "HK$1,200" }));
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    await screen.findByRole("heading", { level: 1, name: "Check and seal" });
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
     await user.click(screen.getByRole("button", { name: "Edit" }));
     expect(await screen.findByRole("radio", { name: "HK$1,200" })).toBeChecked();
   });
 
-  it("stays on Check and seal when sealing fails, and says nothing was charged", async () => {
+  it("stays on Check and lock in when sealing fails, and says nothing was charged", async () => {
     const { user } = await toBudget({ api: new SealAlwaysFails() });
     await user.click(await screen.findByRole("button", { name: "Review budget" }));
-    await user.click(await screen.findByRole("button", { name: /Seal budget/ }));
+    await user.click(await screen.findByRole("button", { name: /Lock in budget/ }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("That didn't go through. Nothing was charged."));
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
-    expect(screen.queryByText("Your budget is sealed")).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
+    expect(screen.queryByText("Your budget is locked in")).toBeNull();
   });
 
   it("skips the form when the booth already holds a budget: Your budget is ready, then Continue", async () => {
@@ -421,7 +421,7 @@ describe("storage that holds nonsense", () => {
 });
 
 describe("Skip is on every step, and never a dead end", () => {
-  it("is there and enabled on Hello, Your taste, the form, Check and seal and the sealed screen", async () => {
+  it("is there and enabled on Hello, Your taste, the form, Check and lock in and the sealed screen", async () => {
     const { user } = await openFirstRun();
     await hello();
     expect(skip()).toBeEnabled();
@@ -432,10 +432,10 @@ describe("Skip is on every step, and never a dead end", () => {
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
     expect(skip()).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    await screen.findByRole("heading", { level: 1, name: "Check and seal" });
+    await screen.findByRole("heading", { level: 1, name: "Check and lock in" });
     expect(skip()).toBeEnabled();
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(skip()).toBeEnabled();
     await user.click(skip());
     expect(await tourCard()).toBeInTheDocument();
@@ -467,8 +467,8 @@ describe("what the person tells Wally stays on the device", () => {
     await user.click(nextButton());
     await screen.findByRole("heading", { level: 1, name: "Your first budget" });
     await user.click(screen.getByRole("button", { name: "Review budget" }));
-    await user.click(await screen.findByRole("button", { name: /Seal budget/ }));
-    await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" });
+    await user.click(await screen.findByRole("button", { name: /Lock in budget/ }));
+    await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" });
     expect(api.sent).toHaveLength(1);
     for (const secret of ["Zed", "streetwear", "Streetwear", "rust", "Rust"]) expect(api.sent[0], secret).not.toContain(secret);
     expect(window.localStorage.getItem(PROFILE_KEY)).toContain("Zed");

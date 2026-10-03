@@ -15,7 +15,8 @@ export async function snapshotInQueue(ctx: Ctx, sealed: Sealed): Promise<Orchest
     mandate: sealed.mandate,
     packet: state.packet,
     cards: cardViews(state.entries),
-    escalations: escalationViews(state.entries),
+    // The packet is folded at snapshot time, so a budget that has run past its date is over here even before a tick logs it.
+    escalations: escalationViews(state.entries, state.packet.status === "REVOKED" || state.packet.status === "EXPIRED"),
     log: state.entries,
     head: last === undefined ? null : checkpointOf(last),
   };

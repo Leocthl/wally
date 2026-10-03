@@ -1,15 +1,20 @@
 // The frame every first-run step shares: a progress bar and an always-visible Skip on top, Wally with a different face
 // per step beside the step's title, the body, and the actions pinned at the bottom under the thumb. Full screen, no sheet.
 // The title is the step's h1 and takes focus when the step arrives, so a screen reader hears where it is.
-import { useEffect, useRef, type ReactElement, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactElement, type ReactNode } from "react";
 import { OB } from "../../i18n/onboarding";
+import { SIMULATED } from "../../domain/provenance";
 import { Button } from "../../ui/Button";
 import { cx } from "../../ui/cx";
 import { useLocale } from "../../ui/locale";
 import { Wally, type WallyState } from "../../wally/Wally";
 import { ConnectionBanners } from "../../shell/Connection";
+import { Fill, Money, ScopeChip } from "../../shell/figures";
+import { readyMadeBudgetMinor } from "./ensureBudget";
 import type { SetupStep } from "./setupProgress";
 import "./onboarding.css";
+
+const NOTE_ID = "onb-skip-note";
 
 export type StepId = SetupStep;
 export const STEP_ORDER: readonly StepId[] = ["hello", "taste", "budget"];
@@ -20,6 +25,8 @@ export interface SkipControl {
   readonly onSkip: () => void;
   /** Leaving is under way (the ready-made budget is being sealed): the button waits. */
   readonly busy: boolean;
+  /** Skip would seal the ready-made budget (there is none yet): the note under the link says so before the person taps. */
+  readonly readyMade: boolean;
 }
 
 export interface StepFrameProps {
@@ -55,6 +62,20 @@ function Progress({ at }: { readonly at: number }): ReactElement {
   );
 }
 
+/** "Skip uses a ready-made HK$800 budget for clothes": the amount is the booth's own ready-made one [F20], SIMULATED like every amount. */
+function SkipNote({ id }: { readonly id: string }): ReactElement {
+  const { t } = useLocale();
+  const amount = useMemo(() => readyMadeBudgetMinor(), []);
+  return (
+    <p id={id} className="onb-skiphint" data-skip-note data-chip-scope>
+      <span>
+        <Fill text={t(OB.skipNote)} slots={{ amount: <Money minor={amount} prov={SIMULATED} /> }} />
+      </span>
+      <ScopeChip prov={SIMULATED} />
+    </p>
+  );
+}
+
 export function StepFrame({ step, wally, big = false, title, dir, skip, children, actions, className }: StepFrameProps): ReactElement {
   const { t, locale } = useLocale();
   const heading = useRef<HTMLHeadingElement>(null);
@@ -65,12 +86,6 @@ export function StepFrame({ step, wally, big = false, title, dir, skip, children
   }, []);
   return (
     <div className={cx("onb", className)} lang={locale} data-onboarding data-step={step} data-dir={dir}>
-      <header className="onb-top">
-        <Progress at={STEP_ORDER.indexOf(step) + 1} />
-        <Button variant="ghost" size="sm" className="onb-skip" loading={skip.busy} onClick={skip.onSkip} data-skip>
-          {t(OB.skip)}
-        </Button>
-      </header>
       <ConnectionBanners />
       <main className="onb-main">
         <div className="onb-hero" data-big={big || undefined}>
@@ -79,6 +94,15 @@ export function StepFrame({ step, wally, big = false, title, dir, skip, children
         </div>
         {children}
       </main>
+      {/* The progress bar and Skip are the top bar on the screen (CSS order), but come after the step's own controls in the page:
+          the title takes focus on arrival, so Tab goes through the step first, then Skip, then Back and Next. */}
+      <header className="onb-top">
+        <Progress at={STEP_ORDER.indexOf(step) + 1} />
+        <Button variant="ghost" size="sm" className="onb-skip" loading={skip.busy} onClick={skip.onSkip} aria-describedby={skip.readyMade ? NOTE_ID : undefined} data-skip>
+          {t(OB.skip)}
+        </Button>
+      </header>
+      {skip.readyMade ? <SkipNote id={NOTE_ID} /> : null}
       <div className="onb-actions">{actions}</div>
     </div>
   );

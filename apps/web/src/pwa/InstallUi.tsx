@@ -1,6 +1,7 @@
 // Install UX. InstallRow (for a Settings or About sheet): "Install" on Chrome and Edge via the saved prompt,
 // "Installed" when running standalone, browser-menu advice otherwise. IosInstallHint: a one-time, dismissible card
-// with the Share then "Add to Home Screen" steps, only on iOS Safari outside the installed app.
+// with the Share then "Add to Home Screen" steps, only on iOS Safari outside the installed app, and (on Home) only once
+// the person has made a first purchase or come back for a second visit.
 import { useState, useSyncExternalStore, type ReactElement } from "react";
 import "../design/ui/pwa.css";
 import { UI } from "../i18n/ui";
@@ -64,12 +65,17 @@ export function InstallRow(): ReactElement {
 export interface IosInstallHintProps {
   /** Show regardless of platform (style guide). */
   readonly force?: boolean;
+  /**
+   * Whether the card has earned its place yet: Home passes true after the first completed purchase or on a second visit, and
+   * not before, so a new person sees Wally and the budget first. Defaults to true for callers that decide for themselves.
+   */
+  readonly ready?: boolean;
 }
 
-export function IosInstallHint({ force = false }: IosInstallHintProps): ReactElement | null {
+export function IosInstallHint({ force = false, ready = true }: IosInstallHintProps): ReactElement | null {
   const { t } = useLocale();
   const [visible, setVisible] = useState(() => force || shouldShowIosHint(readPlatform(), readDismissed()));
-  if (!visible) return null;
+  if (!visible || (!force && !ready)) return null;
   const dismiss = (): void => {
     saveDismissed();
     setVisible(false);

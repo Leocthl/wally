@@ -6,6 +6,8 @@ import { label, type LabelPair } from "./label";
 
 export const OB = {
   skip: label("Skip", "略過"), // NEEDS-REVIEW
+  // Under the Skip link while no budget exists yet: Skip seals the ready-made one, and says so before it does.
+  skipNote: label("Skip uses a ready-made {amount} budget for clothes.", "略過會用現成嘅 {amount} 預算買衫。"), // NEEDS-REVIEW
   next: label("Next", "下一步"), // NEEDS-REVIEW
   back: label("Back", "返回"), // NEEDS-REVIEW
   continue: label("Continue", "繼續"), // NEEDS-REVIEW
@@ -64,8 +66,8 @@ export const OB = {
     pickDate: label("Pick a date", "揀日期"), // NEEDS-REVIEW
     ends: label("Ends {until}", "{until} 結束"), // NEEDS-REVIEW
     cutShort: label("A budget can run for a month at most, so the date is set to the latest day.", "一個預算最長維持一個月，所以日期已設為最遲可揀嘅一日。"), // NEEDS-REVIEW
+    cutShortAmount: label("A budget can be {max} at most, the limit of one card, so the amount is set to that.", "一個預算最多 {max}，即一張卡嘅上限，所以金額已設為上限。"), // NEEDS-REVIEW
     review: label("Review budget", "檢查預算"), // NEEDS-REVIEW
-    skipNote: label("Or skip to use a ready-made budget.", "或者略過，用現成預算。"), // NEEDS-REVIEW
     loading: label("Getting your budget ready", "正在準備你的預算"), // NEEDS-REVIEW
     readyTitle: label("Your budget is ready", "你的預算準備好了"), // NEEDS-REVIEW
     readyBody: label("Wally can shop inside it now. You can top up or cancel it any time under Manage this budget.", "Wally 而家可以喺預算之內購物。你隨時可以喺「管理預算」增加或取消。"), // NEEDS-REVIEW
@@ -113,11 +115,18 @@ export const OB = {
     forYou: label("For you", "啱你"), // NEEDS-REVIEW
     composer: label("What do you need?", "你需要啲咩？"), // NEEDS-REVIEW
     demo: label("Demo scenarios (for judges)", "示範情境（供評審使用）"), // NEEDS-REVIEW
+    // On a friend's phone the same cards are just a demo: no word about judges (the booth, ?booth=1 and presenter mode keep the long label).
+    demoPlain: label("Demo scenarios", "示範情境"), // NEEDS-REVIEW
     demoLead: label("Each one runs the real rules on a simulated shop.", "每一個都用真規則，喺模擬商店運行。"), // NEEDS-REVIEW
   },
 
   ideas: {
     title: label("Ideas for you", "為你推介"), // NEEDS-REVIEW
+    // The preview sheet an idea opens before anything is bought. Figures arrive formatted, so no digit lives here.
+    from: label("From the demo shop", "來自示範商店"), // NEEDS-REVIEW
+    buy: label("Ask Wally to buy this", "叫 Wally 買呢件"), // NEEDS-REVIEW
+    checks: label("Wally checks this against your rules before any card is made.", "Wally 會先按你的規則檢查，通過先會發卡。"), // NEEDS-REVIEW
+    shipping: label("{price} plus {shipping} shipping", "{price} 加 {shipping} 運費"), // NEEDS-REVIEW
     item: {
       tee: label("Cotton tee", "純棉T恤"), // NEEDS-REVIEW
       socks: label("Ankle socks", "短襪"), // NEEDS-REVIEW

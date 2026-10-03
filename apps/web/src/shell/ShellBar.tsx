@@ -1,15 +1,17 @@
 // The top bar on every screen: the name (from BRAND) with Wally, a quiet SIMULATED note, EN | 繁, and About.
-import type { ReactElement } from "react";
+import { useEffect, useId, useState, type ReactElement } from "react";
 import { BRAND } from "../brand";
 import { SIMULATED } from "../domain/provenance";
 import { routeHref } from "../hooks/useRoute";
 import { UI } from "../i18n/ui";
+import { useIsDeveloper } from "../state/displayMode";
 import { IconButton } from "../ui/Button";
 import { ProvenanceChip } from "../ui/Chip";
 import { Icon } from "../ui/icons";
 import { useLocale, type Locale } from "../ui/locale";
 import { Segmented } from "../ui/Nav";
 import { Wally } from "../wally/Wally";
+import "./simulatedTip.css";
 
 export function LanguageSwitch({ size = "sm" }: { readonly size?: "sm" | "md" }): ReactElement {
   const { t, locale, setLocale } = useLocale();
@@ -28,13 +30,41 @@ export function LanguageSwitch({ size = "sm" }: { readonly size?: "sm" | "md" })
   );
 }
 
-/** One note per page: the chip says SIMULATED, the hidden sentence says what that means. */
+/**
+ * One note per page: the chip says SIMULATED, the hidden sentence says what that means. The chip is a button too: a tap says it
+ * in everyday words ("The shop and the card are a safe practice version. No real money moves."), and Developer mode keeps the
+ * engineers' sentence about the rail. Escape, a tap anywhere else or moving to another screen puts it away.
+ */
 export function SimulatedNote(): ReactElement {
   const { t } = useLocale();
+  const developer = useIsDeveloper();
+  const [open, setOpen] = useState(false);
+  const tip = useId();
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (): void => setOpen(false);
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") close();
+    };
+    const onPointer = (e: PointerEvent): void => {
+      if (!(e.target instanceof Element) || e.target.closest("[data-sim-root]") === null) close();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    window.addEventListener("hashchange", close);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("hashchange", close);
+    };
+  }, [open]);
   return (
-    <span className="shell-sim" role="note" title={t(UI.simulated)}>
-      <span aria-hidden="true"><ProvenanceChip prov={SIMULATED} /></span>
+    <span className="shell-sim" role="note" title={t(UI.simulated)} data-sim-root>
+      <button type="button" className="shell-sim__button" aria-expanded={open} aria-controls={tip} aria-label={t(UI["shell.simulatedAsk"])} onClick={() => setOpen((o) => !o)} data-sim-button>
+        <span aria-hidden="true"><ProvenanceChip prov={SIMULATED} /></span>
+      </button>
       <span className="sr-only">{t(UI.simulated)}</span>
+      {open ? <span id={tip} className="shell-sim__tip" role="status" data-sim-tip>{t(UI[developer ? "shell.railNote" : "shell.practiceNote"])}</span> : null}
     </span>
   );
 }
