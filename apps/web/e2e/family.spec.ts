@@ -26,8 +26,8 @@ test("Mum's budget: the ceiling, the cap, the sealed budget with its tag, the re
 
   await amount.fill("800");
   await page.getByRole("button", { name: /^Next/ }).click();
-  await page.getByRole("button", { name: /Seal budget/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+  await page.getByRole("button", { name: /Lock in budget/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
   await page.getByRole("link", { name: /Go to your budget/ }).click();
   await expect(tags(page)).toContainText("From Mum's budget");
   await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
@@ -51,8 +51,8 @@ test("my own budget is unchanged: no cap, no tag", async ({ page }) => {
   await amount.fill("1500");
   await expect(page.getByText(/more than Mum allows/)).toHaveCount(0);
   await page.getByRole("button", { name: /^Next/ }).click();
-  await page.getByRole("button", { name: /Seal budget/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+  await page.getByRole("button", { name: /Lock in budget/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
   await page.getByRole("link", { name: /Go to your budget/ }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$1,500 left of HK$1,500, SIMULATED");
   await expect(tags(page)).not.toContainText("From Mum's budget");

@@ -3,7 +3,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Decision, LogEntry } from "../src/api/types";
-import { cardGroups, currentEntries, openEscalations, recentDecisions } from "../src/screens/home/selectors";
+import { cardGroups, currentEntries, openEscalations, recentPurchases } from "../src/screens/home/selectors";
 import { initialState, type BoothState } from "../src/state/booth";
 import { bootApp, go, press } from "./helpers/app";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
@@ -18,7 +18,7 @@ describe("budget card", () => {
     expect(hero).toHaveTextContent(/HK\$800\s*of your HK\$800 budget · until \d{1,2} \w{3}/);
     expect(screen.getByRole("meter", { name: "Budget left" })).toHaveAttribute("aria-valuetext", "HK$800 left of HK$800, SIMULATED");
     expect(hero).toHaveTextContent("SpentHK$0");
-    expect(hero).toHaveTextContent("On one-off cardsHK$0");
+    expect(hero).toHaveTextContent("Set asideHK$0");
     const tags = within(hero).getByRole("list", { name: "Rules Wally must follow" });
     expect(within(tags).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Clothes only", "Verified sellers", "Signed rules"]);
     expect(hero.querySelector(':scope > .fig-chip [data-prov="SIMULATED"]')).not.toBeNull();
@@ -35,7 +35,9 @@ describe("budget card", () => {
     await waitFor(() => expect(screen.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED"));
     const recent = screen.getByRole("list", { name: "Recent" });
     const first = within(recent).getAllByRole("link")[0]!;
-    expect(first).toHaveTextContent(/Approved · #\d+/);
+    // One purchase is one row, worded by where it ended up, and numbered the way the Receipts list numbers it (the decision is receipt 2).
+    expect(first).toHaveTextContent("Paid · Receipt 2");
+    expect(first).not.toHaveTextContent("#");
     expect(first).toHaveTextContent("HK$259");
     expect(first).toHaveTextContent("Cotton tee");
     expect(first).not.toHaveTextContent("(SIMULATED)"); // the chip says it; the fixture's suffix does not repeat it
@@ -49,7 +51,7 @@ describe("budget card", () => {
     await go("#/budget");
     const rows = within(screen.getByRole("list", { name: "Recent" })).getAllByRole("link");
     expect(rows).toHaveLength(3);
-    expect(rows.map((r) => r.querySelector("[data-outcome]")?.getAttribute("data-outcome"))).toEqual(["DENY", "DENY", "DENY"]);
+    expect(rows.map((r) => r.querySelector("[data-state]")?.getAttribute("data-state"))).toEqual(["stopped", "stopped", "stopped"]);
     expect(rows[0]).toHaveTextContent("Stopped before paying");
     expect(screen.getByRole("link", { name: "See all" })).toHaveAttribute("href", "#/receipts");
   });
@@ -105,14 +107,25 @@ describe("selectors", () => {
     const fresh = entry(1, "log_new", "DECISION", decision("dec_new", "DENY", "Hoodie", 200));
     const state = stateWith([fresh], "log_new");
     expect(currentEntries(state)).toEqual([fresh]);
-    expect(recentDecisions(state).map((r) => r.id)).toEqual(["dec_new"]);
+    expect(recentPurchases(state).map((r) => r.id)).toEqual(["dec_new"]);
   });
 
   it("show a purchase once, as its final state, when a later decision closes it", () => {
     const asked = entry(1, "log", "DECISION", decision("dec_1", "ESCALATE", "Tee", 25900));
     const expired = entry(2, "log", "DECISION", decision("dec_2", "DENY", "Tee", 25900, "dec_1"));
-    const rows = recentDecisions(stateWith([asked, expired], "log"));
-    expect(rows).toEqual([{ id: "dec_2", seq: 2, outcome: "DENY", title: "Tee", merchant: "Demo", totalMinor: 25900, at: "2026-10-03T02:00:00Z" }]);
+    const rows = recentPurchases(stateWith([asked, expired], "log"));
+    // The row is the purchase: it carries the decision it started with (the number and the link) and where it ended up.
+    expect(rows).toEqual([{ id: "dec_1", seq: 1, state: "stopped", title: "Tee", merchant: "Demo", totalMinor: 25900, at: "2026-10-03T02:00:00Z" }]);
+  });
+
+  it("make one row of a purchase's decision, card and charge, and leave the budget's own receipts out", () => {
+    const approved = entry(1, "log", "DECISION", decision("dec_1", "APPROVE", "Tee", 25900));
+    const minted = entry(2, "log", "CARD_MINTED", { id: "card_1", decision_id: "dec_1", limit_minor: 25900, merchant_lock: "demo.example" });
+    const charged = entry(3, "log", "CARD_EVENT", { card_id: "card_1", event: "AUTHORISED", amount_minor: 25900, at: "2026-10-03T02:00:00Z" });
+    const sealed = entry(0, "log", "MANDATE_SEALED", { credentialSubject: { rules: { budget: { amount_minor: 80000 } } } });
+    const rows = recentPurchases(stateWith([sealed, approved, minted, charged], "log"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: "dec_1", seq: 1, state: "paid", totalMinor: 25900 });
   });
 
   it("group cards: ready first, the rest after, newest first", () => {

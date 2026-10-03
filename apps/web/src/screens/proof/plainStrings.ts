@@ -32,7 +32,7 @@ export const PLAIN = {
 
   // The timeline
   timelineTitle: label("Your receipts, in order", "你的收據，按次序"), // NEEDS-REVIEW
-  receiptNo: label("Receipt {n}", "第 {n} 張收據"), // NEEDS-REVIEW
+  receiptNo: label("Receipt {n}", "第 {n} 張收據"), // NEEDS-REVIEW (the same words as RECEIPT_NO in receiptNo.ts, which Home uses without this table; a test pins them equal)
   untouched: label("Untouched", "完好"), // NEEDS-REVIEW
   changed: label("Changed", "已被改動"), // NEEDS-REVIEW
   notChecked: label("Not checked", "未檢查"), // NEEDS-REVIEW

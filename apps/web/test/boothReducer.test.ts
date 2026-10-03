@@ -93,6 +93,38 @@ describe("booth reducer", () => {
     expect(state.log.entries).toHaveLength(1);
   });
 
+  it("closes a question nobody answered when the budget is cancelled, and leaves answered ones as they were", async () => {
+    const state = await play(async (c) => {
+      await c.runScenario("unverified");
+      await c.revoke();
+    });
+    expect(state.revoked).toBe(true);
+    expect(state.escalations.map((e) => e.state)).toEqual(["CLOSED"]);
+    const answered = await play(async (c) => {
+      const run = await c.runScenario("unverified");
+      await c.answerEscalation({ decisionId: run.decisionId ?? "", choice: "DENY" });
+      await c.revoke();
+    });
+    expect(answered.escalations.map((e) => e.state)).toEqual(["DENIED"]);
+  });
+
+  it("closes an open question that arrives in a snapshot of a cancelled or ended budget", async () => {
+    const clock = new FakeClock();
+    const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
+    await client.seal(m0SealRequest(clock.now()));
+    await client.runScenario("unverified");
+    const snap = await client.snapshot();
+    expect(snap.escalations.map((e) => e.state)).toEqual(["OPEN"]);
+    expect(fromSnapshot(snap).escalations.map((e) => e.state)).toEqual(["OPEN"]);
+    for (const status of ["REVOKED", "EXPIRED"] as const) {
+      const over = reduce(initialState(), { type: "snapshot", snapshot: { ...snap, packet: { ...snap.packet!, status } } });
+      expect(over.escalations.map((e) => e.state), status).toEqual(["CLOSED"]);
+    }
+    // All used is not over: the budget can be topped up, and the question stands.
+    const used = reduce(initialState(), { type: "snapshot", snapshot: { ...snap, packet: { ...snap.packet!, status: "EXHAUSTED" } } });
+    expect(used.escalations.map((e) => e.state)).toEqual(["OPEN"]);
+  });
+
   it("starts over when a new seal brings a different log: earlier log, cards, escalations and runs do not carry over", async () => {
     const clock = new FakeClock();
     const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
@@ -148,5 +180,61 @@ describe("booth reducer", () => {
     expect(state.cards).toHaveLength(1);
     expect(state.packet?.remaining_minor).toBe(54_100);
     expect(state.runs).toHaveLength(0);
+  });
+
+  describe("resync (the booth read again after the connection came back)", () => {
+    it("takes the booth's truth for the log, the cards and the questions, and keeps the finished runs of the same budget", async () => {
+      const clock = new FakeClock();
+      const client = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
+      let state = initialState();
+      client.subscribe((e) => {
+        state = reduce(deepFreeze(state), e as BoothAction);
+      });
+      await client.seal(m0SealRequest(clock.now()));
+      await client.runScenario("normal");
+      const before = state;
+      // The page missed a second purchase while the connection was down: only the snapshot knows it.
+      const missed = new MockApiClient({ clock, sleep: async () => undefined, pace: 0 });
+      await missed.seal(m0SealRequest(clock.now()));
+      await missed.runScenario("normal");
+      const snapshot = await missed.snapshot();
+      const synced = reduce(before, { type: "resync", snapshot: { ...snapshot, packet: snapshot.packet === null ? null : { ...snapshot.packet, log_id: before.packet?.log_id ?? snapshot.packet.log_id } } });
+      expect(synced.runs).toEqual(before.runs);
+      expect(synced.log.entries.length).toBe(snapshot.log.entries.length);
+      expect(synced.cards).toEqual(snapshot.cards);
+    });
+
+    it("drops the runs when the booth is another one (its log has another id), as a fresh load would", async () => {
+      const state = await play(async (c) => void (await c.runScenario("normal")));
+      const other = new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
+      await other.seal(m0SealRequest(new Date("2026-10-03T03:00:00Z")));
+      await other.seal(m0SealRequest(new Date("2026-10-03T03:00:05Z"))); // a seal starts a new log: this booth is on its second
+      const snapshot = await other.snapshot();
+      expect(snapshot.packet?.log_id).not.toBe(state.packet?.log_id);
+      const synced = reduce(state, { type: "resync", snapshot });
+      expect(synced.runs).toEqual([]);
+      expect(synced.packet?.log_id).toBe(snapshot.packet?.log_id);
+    });
+
+    it("drops a run the page never heard finish: the booth moved on without it", async () => {
+      const state = await play(async (c) => void (await c.runScenario("normal")));
+      const cutOff = reduce(state, { type: "run.started", runId: "run_cut", scenario: "custom", at: "2026-10-03T02:00:00Z" });
+      const client = new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
+      await client.seal(m0SealRequest(new Date()));
+      const snapshot = await client.snapshot();
+      const synced = reduce(cutOff, { type: "resync", snapshot: { ...snapshot, packet: snapshot.packet === null ? null : { ...snapshot.packet, log_id: cutOff.packet?.log_id ?? snapshot.packet.log_id } } });
+      expect(synced.runs).toEqual([]);
+    });
+
+    it("closes a question the booth says is over, and a budget that is cancelled closes the open ones", async () => {
+      const state = await play(async (c) => void (await c.runScenario("normal")));
+      const client = new MockApiClient({ clock: new FakeClock(), sleep: async () => undefined, pace: 0 });
+      await client.seal(m0SealRequest(new Date()));
+      await client.revoke();
+      const snapshot = await client.snapshot();
+      const synced = reduce(state, { type: "resync", snapshot });
+      expect(synced.revoked).toBe(true);
+      expect(synced.escalations.some((e) => e.state === "OPEN")).toBe(false);
+    });
   });
 });

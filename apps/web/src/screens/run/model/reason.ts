@@ -6,6 +6,7 @@ import type { Decision } from "../../../api/types";
 import { formatHkd } from "../../../domain/money";
 import type { LabelPair } from "../../../i18n/label";
 import { UI } from "../../../i18n/ui";
+import { categoriesLabel } from "./categories";
 
 const R = UI.run;
 
@@ -22,6 +23,19 @@ function money(value: number | undefined): string | undefined {
 }
 
 type Inputs = Readonly<Record<string, unknown>>;
+
+const strings = (value: unknown): readonly string[] => (Array.isArray(value) ? value.filter((c): c is string => typeof c === "string") : []);
+
+/**
+ * The categories the person's budget allows, as an R6 decision recorded them. The engine records them under `categories` (with
+ * the offending ones under `off_categories` and reason "category"); the offline mock records the allowed list as `allowed` and
+ * keeps the offending item's categories under `categories`. A stop about the shop, not the category, names none.
+ */
+export function allowedCategories(inputs: Inputs): readonly string[] {
+  if (inputs["reason"] === "merchant_denied" || inputs["reason"] === "merchant_not_allowed") return [];
+  const named = strings(inputs["allowed"]);
+  return named.length > 0 ? named : strings(inputs["categories"]);
+}
 
 /** Each template's plain sentence; null when a figure it needs was not recorded (then a figure-free line is used). */
 const BY_TEMPLATE: Readonly<Record<string, (i: Inputs, d: Decision) => LabelPair | null>> = {
@@ -48,7 +62,13 @@ const BY_TEMPLATE: Readonly<Record<string, (i: Inputs, d: Decision) => LabelPair
     const ceiling = money(minor(i, "ceiling_minor"));
     return total && ceiling ? R.reasonR5(total, ceiling) : null;
   },
-  "R6.off_mandate": () => R.reasonR6,
+  "R6.off_mandate": (i) => {
+    // A category stop names the rules it broke ("Your budget is for Clothes only."); a shop stop keeps the general sentence.
+    const allowed = allowedCategories(i);
+    if (allowed.length === 0) return R.reasonR6;
+    const things = categoriesLabel(allowed);
+    return R.reasonR6Category(things.en, things.zh);
+  },
   "R7.velocity": () => R.reasonR7,
   "R8.max_active": () => R.reasonR8,
   "R9.flagged": () => R.reasonR9Flagged,

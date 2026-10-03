@@ -28,12 +28,17 @@ export function parseHkd(text: string): number | null {
   return neg ? -minor : minor;
 }
 
-/** Whole dollars to minor units for typed input (HK$ field in a rule chip). Null when not a non-negative number. */
+/**
+ * Whole dollars to minor units for typed input (HK$ field in a rule chip). Null when not a non-negative number, and null when the
+ * amount is too large to hold as an integer of minor units (a 16-digit paste): such text is not an amount, and the formatter
+ * would refuse it.
+ */
 export function dollarsToMinor(input: string): number | null {
   const text = input.trim();
   if (!/^\d+(\.\d{1,2})?$/.test(text)) return null;
   const [whole = "0", frac = ""] = text.split(".");
-  return Number.parseInt(whole, 10) * CENTS_PER_DOLLAR + Number.parseInt(frac.padEnd(2, "0") || "0", 10);
+  const minor = Number.parseInt(whole, 10) * CENTS_PER_DOLLAR + Number.parseInt(frac.padEnd(2, "0") || "0", 10);
+  return Number.isSafeInteger(minor) ? minor : null;
 }
 
 export function minorToDollarsText(minor: number): string {

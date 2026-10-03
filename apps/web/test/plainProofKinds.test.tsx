@@ -6,9 +6,12 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { VerifyOutcome } from "../src/api/types";
 import { ProofScreen } from "../src/screens/proof/ProofScreen";
+import { groupPurchases } from "../src/screens/proof/purchases";
+import { toReceipts } from "../src/screens/proof/receipts";
 import { ReceiptsScreen } from "../src/screens/proof/ReceiptsScreen";
 import { developerMode } from "./helpers/devMode";
 import { delegate, instantMock, mountScreen, seed } from "./helpers/proofHarness";
+import { receiptButton } from "./helpers/receiptButton";
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -72,10 +75,11 @@ describe("Receipts (plain) never names an entry kind", () => {
     const seen = new Set(entries.map((e) => `${e.kind}${e.kind === "CARD_EVENT" ? `:${e.payload.event}` : e.kind === "DECISION" ? `:${e.payload.outcome}` : ""}`));
     for (const needed of ["MANDATE_SEALED", "MANDATE_REVOKED", "CARD_MINTED", "DECISION:APPROVE", "DECISION:DENY", "DECISION:ESCALATE", "CARD_EVENT:AUTHORISED", "CARD_EVENT:VOIDED"]) expect(seen.has(needed), needed).toBe(true);
     const { user } = await mountScreen(<ReceiptsScreen />, api, { hash: "#/receipts" });
-    await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(entries.length));
+    // One row per purchase; every receipt is still reachable, a step's by opening its purchase's steps.
+    await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(groupPurchases(toReceipts(entries)).length));
     expect(kindsIn(bodyText())).toEqual([]);
     for (const entry of entries) {
-      await user.click(document.querySelector(`[data-seq="${entry.seq}"]`)!.closest("button")!);
+      await user.click(await receiptButton(user, entry.seq));
       const sheet = await screen.findByRole("dialog");
       expect(sheet.querySelector("details"), `receipt ${entry.seq + 1}`).not.toBeNull();
       expect(sheet.querySelector("pre")).toBeNull();

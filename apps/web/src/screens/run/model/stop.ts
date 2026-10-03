@@ -18,6 +18,9 @@ export function isBudgetStop(decision: Decision): boolean {
 /** The lead sentence: how a question ended, when it did; else the rule's own plain reason. */
 export function leadFor(answer: Answer | undefined, decision: Decision): { readonly lead: LabelPair; readonly reason?: LabelPair } {
   if (answer === "no") return { lead: R.youSaidNo };
+  // A question the budget outlived: said as it is, with the reason it was asked kept under it.
+  if (answer === "cancelled") return { lead: R.questionClosedCancelled, reason: plainReason(decision) };
+  if (answer === "ended") return { lead: R.questionClosedEnded, reason: plainReason(decision) };
   if (answer === "expired") return { lead: R.nobodyAnswered };
   if (answer === "yesButRule") return { lead: R.hardRuleAnyway, reason: plainReason(decision) };
   return { lead: plainReason(decision) };
@@ -31,6 +34,8 @@ export interface StopView {
   readonly chip?: LabelPair;
   /** A top-up can help (R3, R4). */
   readonly budget: boolean;
+  /** The person's own rules decided it (R6: a category or a shop they did not allow), so editing them can help. */
+  readonly editRules: boolean;
   /** A card had been made and was cancelled (a price change at checkout). */
   readonly cancelled: boolean;
 }
@@ -47,6 +52,7 @@ export function stopView(result: Result): StopView | null {
     ...(reason ? { reason } : {}),
     ...(chip ? { chip } : {}),
     budget: isBudgetStop(decision),
+    editRules: templateOf(decision)?.startsWith("R6.") === true,
     cancelled: result.card !== undefined,
   };
 }

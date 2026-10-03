@@ -37,7 +37,7 @@ describe("the presenter's stops in plain words", () => {
     expect(numsWithoutChip(document.body)).toEqual([]);
 
     await stepTo(h, 1);
-    await waitFor(() => expect(stop("R10.injection")).toHaveTextContent("The listing tried to give Wally orders."));
+    await waitFor(() => expect(stop("R10.injection")).toHaveTextContent("The listing tried to tell Wally what to do."));
     expect(stop("R10.injection")).not.toHaveTextContent(/Injection risk|\d\.\d\d/);
     expect(visibleText(document.body)).not.toMatch(ENGINEERS);
     expect(bareFigures(document.body)).toEqual([]);

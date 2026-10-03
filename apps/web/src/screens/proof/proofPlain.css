@@ -157,3 +157,31 @@
 .pr-proof .pf-banner__change { font-size: var(--text-lg); }
 .pr-receipt[data-changed] { background: var(--c-stop-tint); }
 .pr-receipt__changed { color: var(--c-stop-ink); font-weight: var(--weight-bold); }
+
+/* ---------- One purchase in the Receipts list: the row, and the steps behind it ---------- */
+/* The steps sit under the row's own target, in the same list item: a toggle that is a full 44 px line, then one line per receipt. */
+.rc-steps { display: grid; padding: 0 var(--sp-4) var(--sp-1) calc(var(--sp-4) + 2.5rem + var(--sp-3)); }
+.rc-steps__toggle { display: flex; align-items: center; gap: var(--sp-1); min-height: var(--tap); margin-left: calc(-1 * var(--sp-2)); padding: 0 var(--sp-2); border: 0; border-radius: var(--r-md); background: transparent; color: var(--c-ink-muted); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); text-align: left; cursor: pointer; }
+.rc-steps__toggle:active { background: var(--c-surface-sunken); }
+.rc-steps__chevron { flex: none; }
+.rc-steps[data-open] .rc-steps__chevron { transform: rotate(90deg); }
+.rc-steps__list { display: grid; margin: 0 0 var(--sp-2); padding: 0; list-style: none; border-left: 2px solid var(--c-line); }
+.rc-steps__list[hidden] { display: none; }
+.rc-step { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--sp-3); width: 100%; min-height: var(--tap); padding: var(--sp-1) var(--sp-2); border: 0; border-radius: var(--r-md); background: transparent; color: var(--c-ink); font: inherit; text-align: left; cursor: pointer; }
+.rc-step:active { background: var(--c-surface-sunken); }
+.rc-step--changed { background: var(--c-stop-tint); }
+.rc-step__icon { display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--c-primary-tint); color: var(--c-primary-ink); }
+.rc-step__icon--ok { background: var(--c-ok-tint); color: var(--c-ok-ink); }
+.rc-step__icon--stop { background: var(--c-stop-tint); color: var(--c-stop-ink); }
+.rc-step__icon--warn { background: var(--c-warn-tint); color: var(--c-warn-ink); }
+.rc-step__icon--neutral { background: var(--c-surface-sunken); color: var(--c-ink-muted); }
+.rc-step__text { display: grid; min-width: 0; gap: 0.0625rem; }
+.rc-step__what { font-weight: var(--weight-semibold); line-height: var(--lh-snug); }
+.rc-step__meta { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.rc-step__meta .num { display: inline-flex; flex-wrap: nowrap; }
+.rc-step__meta .num__v { font-family: var(--font-sans); font-weight: var(--weight-regular, 400); color: inherit; }
+
+/* The arrow turns when the steps open, and only where motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .rc-steps__chevron { transition: transform var(--dur-fast) var(--ease-out); }
+}

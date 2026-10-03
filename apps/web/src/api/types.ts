@@ -49,7 +49,8 @@ export interface EscalationView {
   readonly decisionId: string;
   readonly templateId: TemplateId;
   readonly ruleId: string;
-  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED";
+  /** CLOSED: nobody answered before the budget was cancelled or ended, so there is nothing left to answer. */
+  readonly state: "OPEN" | "APPROVED" | "DENIED" | "EXPIRED" | "CLOSED";
   readonly openedAt: string;
   readonly expiresAt: string;
   readonly totalMinor: number;
@@ -377,4 +378,9 @@ export interface ApiClient {
   restore(): Promise<LogView>;
   reset(): Promise<void>;
   subscribe(listener: TraceListener): Unsubscribe;
+  /**
+   * The live connection came back after a break (the booth restarted, or the phone lost the network). Events from the gap are not
+   * replayed, so the page reads the booth again. Only a client with a live connection offers it (never fires on the first connect).
+   */
+  onReconnect?(listener: () => void): Unsubscribe;
 }

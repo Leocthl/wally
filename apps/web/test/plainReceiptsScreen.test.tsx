@@ -1,25 +1,28 @@
-// #/receipts in plain mode: a row says its state and its receipt number (no hash, no #seq), the sheet's heading line says
-// "Receipt 4 · time", a stop is worded like the Wally screen words it (no rule id), and everything technical (rule ids,
-// comparators, the engine's sentence, hashes, JSON) sits behind ONE "Show the details". Developer mode keeps the old markup.
+// #/receipts in plain mode: one purchase is one row (its decision, one-off card and charge are the "3 steps" under it), a row says
+// its state and its receipt number (no hash, no #seq), the sheet's heading line says "Receipt 4 · time", a stop is worded like the
+// Wally screen words it (no rule id), and everything technical (rule ids, comparators, the engine's sentence, hashes, JSON) sits
+// behind ONE "Show the details". Developer mode keeps the old markup: every signed receipt is a row of its own.
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { groupPurchases } from "../src/screens/proof/purchases";
+import { toReceipts } from "../src/screens/proof/receipts";
 import { ReceiptsScreen } from "../src/screens/proof/ReceiptsScreen";
 import { bareFigures, numsWithoutChip } from "./helpers/figures";
 import { developerMode } from "./helpers/devMode";
 import { instantMock, mountScreen, seed } from "./helpers/proofHarness";
+import { receiptButton } from "./helpers/receiptButton";
 
 vi.setConfig({ testTimeout: 30_000 });
 
-async function seeded(steps: Parameters<typeof seed>[2], opts?: Parameters<typeof mountScreen>[2]) {
+async function seeded(steps: Parameters<typeof seed>[2], opts?: Parameters<typeof mountScreen>[2], flat = false) {
   const { api, clock } = instantMock();
   await seed(api, clock, steps);
   const view = await mountScreen(<ReceiptsScreen />, api, opts);
   const entries = (await api.getLog()).entries;
-  await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(entries.length));
+  // One row per purchase (its receipts are the steps under it), and one per receipt that belongs to none; developer mode (flat) has a row per receipt.
+  await waitFor(() => expect(document.querySelectorAll(".rc-row")).toHaveLength(flat ? entries.length : groupPurchases(toReceipts(entries)).length));
   return { ...view, api, entries };
 }
-
-const rowButton = (seq: number): HTMLButtonElement => document.querySelector(`[data-seq="${seq}"]`)!.closest("button")!;
 
 /** Text a person reads in an element, leaving out whatever sits inside a disclosure. */
 function visibleText(root: Element): string {
@@ -42,10 +45,34 @@ const LEAKS: readonly (readonly [string, RegExp])[] = [
 ];
 
 describe("Receipts (plain): the list", () => {
+  it("lists a bought item once, as one purchase with its receipts under it, not as three charges", async () => {
+    const { user, entries } = await seeded(["normal"]);
+    expect(entries.map((e) => e.kind)).toEqual(["MANDATE_SEALED", "DECISION", "CARD_MINTED", "CARD_EVENT"]);
+    const rows = [...document.querySelectorAll(".rc-row")];
+    expect(rows).toHaveLength(2); // the budget sealed, and the purchase
+    const purchase = rows.find((r) => r.classList.contains("rc-purchase"))!;
+    expect(purchase).toHaveTextContent("Cotton tee");
+    expect(purchase.querySelector(".rc-row__meta")).toHaveTextContent("Paid · Receipt 2");
+    // HK$259 is on the list once (the HK$800 is the budget sealed).
+    expect([...document.querySelectorAll(".rc-row__amount")].map((a) => a.textContent)).toEqual(["HK$259", "HK$800"]);
+    expect([...purchase.querySelectorAll(".rc-row__amount")].map((a) => a.textContent)).toEqual(["HK$259"]);
+    // The steps are behind "3 steps", closed to begin with, and each one is a receipt of its own.
+    const toggle = purchase.querySelector<HTMLButtonElement>("[data-steps-toggle]")!;
+    expect(toggle).toHaveTextContent("3 steps");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(purchase.querySelector(".rc-steps__list")).toHaveAttribute("hidden");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    const steps = [...purchase.querySelectorAll<HTMLElement>(".rc-step")];
+    expect(steps.map((s) => s.querySelector(".rc-step__what")?.textContent)).toEqual(["Approved", "One-off card made", "Charged"]);
+    expect(steps.map((s) => s.querySelector(".rc-step__meta")?.textContent?.replace(/ · \d\d:\d\d$/, ""))).toEqual(["Receipt 2", "Receipt 3", "Receipt 4"]);
+    expect(purchase.textContent).not.toContain("#");
+  });
+
   it("says the state and the receipt number in each row, and keeps the hash and #seq out", async () => {
-    const { entries } = await seeded(["normal", "flagged", "overflow"]);
+    const { user, entries } = await seeded(["normal", "flagged", "overflow"]);
     const r3 = entries.find((e) => e.kind === "DECISION" && e.payload.outcome === "DENY" && e.payload.explanation?.template_id === "R3.over_remaining")!;
-    const row = rowButton(r3.seq);
+    const row = await receiptButton(user, r3.seq);
     const meta = row.querySelector<HTMLElement>(".rc-row__meta")!;
     expect(meta).toHaveTextContent(`Stopped before paying · Receipt ${r3.seq + 1}`);
     expect(meta).toHaveAttribute("data-seq", String(r3.seq));
@@ -53,25 +80,39 @@ describe("Receipts (plain): the list", () => {
     expect(row.textContent).not.toContain(r3.entry_hash.slice(0, 8));
     expect(row.textContent).not.toContain("#");
     expect(row).toHaveTextContent("HK$550");
-    for (const e of entries) expect(rowButton(e.seq).textContent, `receipt ${e.seq + 1}`).not.toMatch(/[0-9a-f]{8}/);
+    for (const e of entries) expect((await receiptButton(user, e.seq)).textContent, `receipt ${e.seq + 1}`).not.toMatch(/[0-9a-f]{8}/);
     expect(bareFigures(document.body)).toEqual([]);
     expect(numsWithoutChip(document.body)).toEqual([]);
   });
 
-  it("keeps the filters, the counts and the newest-first order", async () => {
-    const { user, entries } = await seeded(["normal", "flagged", "unverified", "overflow"]);
-    const metas = [...document.querySelectorAll<HTMLElement>(".rc-row__meta")];
-    expect(metas.map((m) => Number(m.dataset["seq"]))).toEqual(entries.map((e) => e.seq).reverse());
-    const group = screen.getByRole("radiogroup", { name: "Show" });
-    expect(within(group).getAllByRole("radio").map((r) => r.textContent)).toEqual(["All7", "Approved1", "Stopped2", "Needs OK1", "Cards2"]);
-    await user.click(within(group).getByRole("radio", { name: /Stopped/ }));
-    expect([...document.querySelectorAll(".rc-row__meta")].map((m) => m.getAttribute("data-state"))).toEqual(["stopped", "stopped"]);
+  it("numbers a purchase by its decision, the number Home's Recent shows for it", async () => {
+    const { entries } = await seeded(["flagged", "normal"]);
+    const decisions = entries.filter((e) => e.kind === "DECISION");
+    const metas = [...document.querySelectorAll<HTMLElement>(".rc-row__meta")].filter((m) => m.dataset["purchase"] !== undefined);
+    // Newest first: the bought item (its decision is the second decision), then the stop.
+    expect(metas.map((m) => m.textContent)).toEqual([`Paid · Receipt ${decisions[1]!.seq + 1}`, `Stopped before paying · Receipt ${decisions[0]!.seq + 1}`]);
   });
 
-  it("speaks 繁: the state and 第 N 張收據", async () => {
+  it("keeps the filters, the counts and the newest-first order, counting purchases", async () => {
+    const { user, entries } = await seeded(["normal", "flagged", "unverified", "overflow"]);
+    const metas = [...document.querySelectorAll<HTMLElement>(".rc-row__meta")];
+    const seqs = metas.map((m) => Number(m.dataset["seq"]));
+    expect(seqs).toHaveLength(5); // the budget sealed + four purchases, not seven receipts
+    expect(seqs).toEqual([...seqs].sort((a, b) => b - a));
+    expect(seqs.at(-1)).toBe(entries[0]!.seq);
+    const group = screen.getByRole("radiogroup", { name: "Show" });
+    expect(within(group).getAllByRole("radio").map((r) => r.textContent)).toEqual(["All5", "Approved1", "Stopped2", "Needs OK1", "Cards1"]);
+    await user.click(within(group).getByRole("radio", { name: /Stopped/ }));
+    expect([...document.querySelectorAll(".rc-row__meta")].map((m) => m.getAttribute("data-state"))).toEqual(["stopped", "stopped"]);
+    await user.click(within(group).getByRole("radio", { name: /Cards/ }));
+    expect([...document.querySelectorAll(".rc-row__meta")].map((m) => m.getAttribute("data-state"))).toEqual(["paid"]);
+  });
+
+  it("speaks 繁: the state, 第 N 張收據 and the steps", async () => {
     const { entries } = await seeded(["normal", "flagged"], { locale: "zh-HK" });
     const stop = entries.find((e) => e.kind === "DECISION" && e.payload.outcome === "DENY")!;
-    expect(rowButton(stop.seq).querySelector(".rc-row__meta")).toHaveTextContent(`付款前已攔截 · 第 ${stop.seq + 1} 張收據`);
+    expect(document.querySelector(`.rc-row__meta[data-seq="${stop.seq}"]`)).toHaveTextContent(`付款前已攔截 · 第 ${stop.seq + 1} 張收據`);
+    expect(document.querySelector("[data-steps-toggle]")).toHaveTextContent("3 個步驟");
   });
 });
 
@@ -79,7 +120,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
   it("heads the sheet with the receipt number and the time, without the hash", async () => {
     const { user, entries } = await seeded(["normal"]);
     const approved = entries.find((e) => e.kind === "DECISION")!;
-    await user.click(rowButton(approved.seq));
+    await user.click(await receiptButton(user, approved.seq));
     const sheet = await screen.findByRole("dialog", { name: "Approved" });
     const meta = sheet.querySelector(".rc-hero__meta")!;
     expect(meta).toHaveTextContent(/^Receipt 2\s*·\s*\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
@@ -90,7 +131,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
   it("words a stop the way the Wally screen words it: no rule id, with the figures chipped", async () => {
     const { user, entries } = await seeded(["normal", "overflow"]);
     const stop = entries.find((e) => e.kind === "DECISION" && e.payload.outcome === "DENY")!;
-    await user.click(rowButton(stop.seq));
+    await user.click(await receiptButton(user, stop.seq));
     const sheet = await screen.findByRole("dialog", { name: "Stopped before paying" });
     expect(sheet.querySelector(".rc-hero__summary")).toHaveTextContent("It costs HK$550 with shipping, but only HK$541 is left in your budget.");
     const r3 = sheet.querySelector('[data-rule="R3"]')!;
@@ -106,7 +147,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
   it("words a question the same way", async () => {
     const { user, entries } = await seeded(["unverified"]);
     const asked = entries.find((e) => e.kind === "DECISION")!;
-    await user.click(rowButton(asked.seq));
+    await user.click(await receiptButton(user, asked.seq));
     const sheet = await screen.findByRole("dialog", { name: "Needs your OK" });
     expect(sheet.querySelector(".rc-hero__summary")).toHaveTextContent("Wally couldn't check this seller recently.");
     expect(visibleText(sheet)).not.toMatch(/\bR\d{1,2}\b/);
@@ -115,7 +156,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
   it("puts everything technical behind one Show the details, closed to begin with", async () => {
     const { user, entries } = await seeded(["normal", "overflow"]);
     const stop = entries.find((e) => e.kind === "DECISION" && e.payload.outcome === "DENY")!;
-    await user.click(rowButton(stop.seq));
+    await user.click(await receiptButton(user, stop.seq));
     const sheet = await screen.findByRole("dialog", { name: "Stopped before paying" });
     const disclosures = sheet.querySelectorAll("details");
     expect(disclosures).toHaveLength(1);
@@ -141,7 +182,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
     const { user, entries } = await seeded(["normal"]);
     const minted = entries.find((e) => e.kind === "CARD_MINTED")!;
     if (minted.kind !== "CARD_MINTED") throw new Error("card");
-    await user.click(rowButton(minted.seq));
+    await user.click(await receiptButton(user, minted.seq));
     const sheet = await screen.findByRole("dialog", { name: "One-off card" });
     expect(sheet.querySelectorAll("details")).toHaveLength(1);
     expect(sheet.querySelector("details summary")).toHaveTextContent("Show the details");
@@ -156,7 +197,7 @@ describe("Receipts (plain): a receipt's sheet", () => {
     const { user, entries } = await seeded([...steps]);
     expect(entries.length).toBeGreaterThan(12);
     for (const entry of entries) {
-      await user.click(rowButton(entry.seq));
+      await user.click(await receiptButton(user, entry.seq));
       const sheet = await screen.findByRole("dialog");
       const text = visibleText(sheet);
       for (const [name, pattern] of LEAKS) expect(text, `${name} on receipt ${entry.seq + 1} (${entry.kind}): ${text}`).not.toMatch(pattern);
@@ -179,17 +220,22 @@ describe("Receipts (plain): a receipt's sheet", () => {
   it("speaks 繁 in the sheet: the heading line and the one disclosure", async () => {
     const { user, entries } = await seeded(["normal"], { locale: "zh-HK" });
     const approved = entries.find((e) => e.kind === "DECISION")!;
-    await user.click(rowButton(approved.seq));
+    await user.click(await receiptButton(user, approved.seq));
     const sheet = await screen.findByRole("dialog", { name: "已批准" });
     expect(sheet.querySelector(".rc-hero__meta")).toHaveTextContent("第 2 張收據");
     expect(sheet.querySelector("details summary")).toHaveTextContent("顯示詳情");
   });
 });
 
+/** Developer mode lists every signed receipt as a row of its own, so a receipt's row is found by its number. */
+const rowButton = (seq: number): HTMLButtonElement => document.querySelector(`[data-seq="${seq}"]`)!.closest("button")!;
+
 describe("Receipts (developer): the screens as they were", () => {
   it("keeps #seq and the hash in each row, the hash in the sheet, and the two disclosures", async () => {
     developerMode();
-    const { user, entries } = await seeded(["normal", "overflow"]);
+    const { user, entries } = await seeded(["normal", "overflow"], undefined, true);
+    expect(document.querySelectorAll(".rc-purchase")).toHaveLength(0);
+    expect(document.querySelector("[data-steps-toggle]")).toBeNull();
     const stop = entries.find((e) => e.kind === "DECISION" && e.payload.outcome === "DENY")!;
     const row = rowButton(stop.seq);
     expect(row).toHaveTextContent(`#${stop.seq}`);

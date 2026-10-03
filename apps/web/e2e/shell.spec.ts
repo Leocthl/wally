@@ -37,7 +37,7 @@ test("runs Normal purchase from Try asking and shows it in Recent and on the bud
   await page.getByRole("link", { name: "Budget", exact: true }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$541 left of HK$800, SIMULATED");
   const first = page.getByRole("list", { name: "Recent" }).getByRole("link").first();
-  await expect(first).toContainText("Approved");
+  await expect(first).toContainText("Paid · Receipt 2");
   await expect(first).toContainText("HK$259");
   await first.click();
   await expect(page).toHaveURL(/#\/wally\?d=dec_/);
@@ -59,7 +59,7 @@ test("About switches the language to 繁 and the theme to dark, and remembers bo
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
-test("seals a budget through the whole flow: Meet Wally, Describe, Check and seal, Sealed", async ({ page }) => {
+test("seals a budget through the whole flow: Meet Wally, Describe, Check and lock in, Sealed", async ({ page }) => {
   await page.goto("/?api=mock#/seal?mode=welcome");
   await expect(page.getByRole("heading", { name: "Meet Wally" })).toBeVisible();
   await page.getByRole("button", { name: /^Start/ }).click();
@@ -69,9 +69,9 @@ test("seals a budget through the whole flow: Meet Wally, Describe, Check and sea
   await expect(page.getByText("Enter an amount above zero.")).toBeVisible();
   await page.getByRole("textbox", { name: /^Amount/ }).fill("650");
   await page.getByRole("button", { name: /^Next/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Check and seal" })).toBeVisible();
-  await page.getByRole("button", { name: /Seal budget/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeVisible();
+  await page.getByRole("button", { name: /Lock in budget/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
   await page.getByRole("link", { name: /Go to your budget/ }).click();
   await expect(page.getByRole("meter")).toHaveAttribute("aria-valuetext", "HK$650 left of HK$650, SIMULATED");
   await expect(page.getByRole("region", { name: "Your budget" })).toContainText("Shoes only");
@@ -87,7 +87,7 @@ test("cancels the budget: hold, confirm, the card stops working and a new budget
   await expect(page.getByText("This budget is cancelled")).toBeVisible();
   await expect(page.locator('[data-card-state="VOIDED"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "Hold to cancel this budget" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Set up a new budget" }).first().click();
+  await page.getByRole("link", { name: "Start a new budget" }).first().click();
   await expect(page).toHaveURL(/#\/seal$/);
   await expect(page.getByRole("heading", { level: 1, name: "Describe your budget" })).toBeVisible();
 });

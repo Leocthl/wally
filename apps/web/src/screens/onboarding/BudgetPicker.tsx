@@ -10,13 +10,13 @@ import { Switch, TextField } from "../../ui/Form";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
 import { Segmented } from "../../ui/Nav";
-import { Fig, Fill, ScopeChip } from "../../shell/figures";
+import { Fig, Fill, Money, ScopeChip } from "../../shell/figures";
 import { formatLongDay } from "../../shell/format";
 import { categoryName } from "../home/BudgetHero";
 import type { FamilySeal } from "../seal/FamilyChoice";
 import { CATEGORY_SLUGS, endOfHkDay, hkDay, type FormErrors } from "../seal/sealModel";
 import { ChipGroup } from "./controls";
-import { HOW_LONG, isDay, maxDay, type BudgetDraft, type HowLong } from "./budgetModel";
+import { BUDGET_CEILING_MINOR, capAmount, HOW_LONG, isDay, maxDay, type BudgetDraft, type HowLong } from "./budgetModel";
 import { PresetPicker } from "./PresetPicker";
 
 export interface BudgetPickerProps {
@@ -48,6 +48,8 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
     return key !== undefined && showErrors ? t(UI[key]) : undefined;
   };
   const today = hkDay(now.toISOString());
+  // A typed amount above one card's limit is cut to it, and said so (never silently).
+  const amountCut = draft.amount === "custom" && capAmount(draft.custom).capped;
   return (
     <div className="onb-body" data-chip-scope>
       <ScopeChip prov={SIMULATED} className="onb-scope" />
@@ -76,6 +78,12 @@ export function BudgetPicker({ draft, onDraft, errors, showErrors, until, capped
           />
         ) : family.notes.amount ? (
           <p className="onb-note" role="status"><Icon name="alert" size={16} /> {family.notes.amount}</p>
+        ) : null}
+        {amountCut ? (
+          <p className="onb-note" role="status" data-amount-cut>
+            <Icon name="info" size={16} />
+            <span><Fill text={t(OB.budget.cutShortAmount)} slots={{ max: <Money minor={BUDGET_CEILING_MINOR} prov={SIMULATED} /> }} /></span>
+          </p>
         ) : null}
       </div>
 

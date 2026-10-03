@@ -24,6 +24,13 @@ test("plain by default: the headline, the key to the layers, and one card per id
   await expect(page.locator('[data-screen="evidence"]')).toHaveAttribute("data-mode", "plain");
   const hero = page.locator('[data-plain-card="hero"]');
   await expect(hero.getByRole("heading", { level: 2 })).toContainText("On our own test set, Wally");
+  // The page opens on the headline and a short list: each idea sits behind its title (and "Where Wally still gets it wrong" is open).
+  await expect(page.locator("details[data-fold]")).toHaveCount(6);
+  await expect(page.locator("details[data-fold][open]")).toHaveCount(0);
+  await expect(page.locator('[data-plain-card="wrong"]')).toBeVisible();
+  await expect(page.locator('[data-plain-card="limit"]')).not.toBeVisible();
+  // Open the plain folds only: "How we know" is the developer view, and has the engineers' words on purpose.
+  await page.locator("details[data-fold]").evaluateAll((all) => all.forEach((d) => ((d as HTMLDetailsElement).open = true)));
   await expect(page.locator('[data-plain-card="layers"] dt')).toHaveText(["Rules only", "Wally", "AI alone"]);
   for (const id of ["limit", "risky", "tricks", "honest", "speed", "wrong"]) await expect(page.locator(`[data-plain-card="${id}"]`)).toBeAttached();
   const visible = (await page.locator("main").innerText()).replace(/\s+/g, " ");
@@ -34,6 +41,7 @@ test("plain by default: the headline, the key to the layers, and one card per id
 
 test("a chip says where the numbers come from, and opens what that means", async ({ page }) => {
   await page.goto(PLAIN);
+  await page.locator('details[data-fold="honest"] summary').click();
   const card = page.locator('[data-plain-card="honest"]');
   const chip = card.getByRole("button", { name: /Measured on \d+ of our own test shoppers/ });
   await chip.scrollIntoViewIfNeeded();

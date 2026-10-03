@@ -6,8 +6,8 @@ import { label, type LabelPair } from "./label";
 export const RUNX = {
   // Stopped before paying
   stampStopped: label("Stopped", "已攔截"), // NEEDS-REVIEW
-  noCardTitle: label("No card was made", "沒有發出任何卡"), // NEEDS-REVIEW
-  nothingCharged: label("Nothing can be charged.", "不會有任何扣款。"), // NEEDS-REVIEW
+  noCardTitle: label("No card was made", "冇發出任何卡"), // NEEDS-REVIEW
+  nothingCharged: label("Nothing can be charged.", "唔會有任何扣款。"), // NEEDS-REVIEW
   budgetUntouched: (amount: string): LabelPair => label(`${amount} is still in your budget.`, `你的預算仍有 ${amount}。`), // NEEDS-REVIEW
   notBought: label("Not bought", "未有購買"), // NEEDS-REVIEW
   stoppedAt: label("Stopped at the rules check", "喺規則檢查攔截"), // NEEDS-REVIEW
@@ -19,7 +19,7 @@ export const RUNX = {
   pathCard: label("Card", "卡"), // NEEDS-REVIEW
   pathDone: label("done", "完成"), // NEEDS-REVIEW
   pathStopped: label("stopped here", "喺呢度攔截"), // NEEDS-REVIEW
-  pathNone: label("no card made", "沒有發卡"), // NEEDS-REVIEW
+  pathNone: label("no card made", "冇發卡"), // NEEDS-REVIEW
 
   // The one-off card
   cardLabel: label("One-off card", "一次性卡"), // NEEDS-REVIEW

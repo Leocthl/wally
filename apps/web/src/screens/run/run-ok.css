@@ -22,8 +22,9 @@
 .run-yes__list svg { flex: none; margin-top: 0.125rem; color: var(--c-primary-ink); }
 
 .run-countdown { display: grid; gap: var(--sp-2); }
-.run-countdown__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
-.run-countdown__left { font-variant-numeric: var(--num); color: var(--c-warn-ink); }
-.run-countdown__track { display: block; height: 0.5rem; border-radius: var(--r-pill); background: var(--c-surface); overflow: hidden; }
+.run-countdown__promise { margin: 0; color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.run-countdown__row { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.run-countdown__left { flex: none; font-variant-numeric: var(--num); color: var(--c-warn-ink); }
+.run-countdown__track { display: block; flex: 1; min-width: 0; height: 0.5rem; border-radius: var(--r-pill); background: var(--c-surface); overflow: hidden; }
 .run-countdown__fill { display: block; height: 100%; border-radius: inherit; background: var(--c-warn); transform-origin: left center; transition: transform var(--dur-tick) linear; }
 .run-countdown[data-over] .run-countdown__fill { transform: scaleX(0) !important; }

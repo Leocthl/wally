@@ -16,7 +16,9 @@
   box-shadow: var(--shadow-1);
   line-height: var(--lh-snug);
 }
-.home-hero__hi { font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); }
+/* A long unbroken nickname (24 wide letters) wraps inside the bubble instead of stretching the page: the grid track may shrink. */
+.home-hero__bubble { grid-template-columns: minmax(0, 1fr); }
+.home-hero__hi { font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: var(--track-tight); overflow-wrap: anywhere; }
 .home-hero__mood { color: var(--c-ink-muted); }
 .home-hero:not([data-mood="fresh"]) .home-hero__mood { color: var(--c-ink); font-weight: var(--weight-semibold); }
 .home-hero[data-mood="waiting"] .home-hero__bubble { border-color: transparent; background: var(--c-warn-tint); }
@@ -25,15 +27,18 @@
 .home-hero__card { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: var(--sp-2); }
 .home-hero__card > :not(.home-hero__kicker, .home-hero__status, .home-hero__chip) { grid-column: 1 / -1; }
 .home-hero__kicker { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--c-on-hero); line-height: var(--lh-snug); }
-.home-hero__stat { margin-top: var(--sp-3); }
-.home-hero__stat .w-stat__value { font-size: clamp(var(--text-4xl), 13vw, var(--text-5xl)); }
+.home-hero__stat { margin-top: var(--sp-2); }
+/* The budget number follows the phone's width, and never the text size alone: at 200% text the rem floor would be wider than the card. */
+.home-hero__stat .w-stat__value { font-size: min(clamp(var(--text-4xl), 13vw, var(--text-5xl)), 16vw); }
 /* The rolling digits sit in a window with room above and below for the roll (NumberFlow's mask); pull the box back so the
    figure keeps the spacing the plain text had. */
 .home-hero__stat .w-stat__value { margin-block: -0.2em; }
 .home-hero__stat .fig, .home-hero .w-stat__sub .fig { color: inherit; }
-.home-hero__meter { margin-top: var(--sp-4); }
-.home-hero__minis { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin-top: var(--sp-3); }
-.home-hero__tags { margin-top: var(--sp-4); }
+.home-hero__meter { margin-top: var(--sp-3); }
+/* Spent and set aside sit on one line each (label, then figure), so the pair costs one row of the card, not two. */
+.home-hero__minis { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); margin-top: var(--sp-3); }
+.home-hero__minis .hero-mini { display: flex; align-items: baseline; gap: var(--sp-2); }
+.home-hero__tags { margin-top: var(--sp-3); }
 /* A cancelled or ended budget stays readable but steps back: less colour, the words say why. */
 .home-hero__card:is([data-status="REVOKED"], [data-status="EXPIRED"]) { filter: saturate(0.35); }
 

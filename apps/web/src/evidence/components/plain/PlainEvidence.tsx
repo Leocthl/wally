@@ -14,7 +14,7 @@ import { P } from "../../plainStrings";
 import type { HarnessRun } from "../../types";
 import { Tx } from "../Tx";
 import { HonestCard, LimitCard, RiskyCard, SpeedCard, TricksCard, WrongCard } from "./PlainCards";
-import { FilledSentence, PlainScope, WiringStamp } from "./PlainBits";
+import { FilledSentence, PlainFold, PlainScope, WiringStamp } from "./PlainBits";
 
 const EU = UI.evidenceUi;
 
@@ -43,7 +43,7 @@ export function Hero({ model }: { readonly model: PlainModel }): ReactElement | 
 }
 
 /** A short key to the three layers the bars show, only the ones this run has. */
-function Legend({ model }: { readonly model: PlainModel }): ReactElement {
+function Legend({ model, folded = false }: { readonly model: PlainModel; readonly folded?: boolean }): ReactElement {
   const id = useId();
   const all = [model.limit, model.risky, model.tricks, model.honest];
   const rules = all.some((v) => v?.rules != null);
@@ -55,7 +55,7 @@ function Legend({ model }: { readonly model: PlainModel }): ReactElement {
   ];
   return (
     <section className="evp-legend" aria-labelledby={id} data-plain-card="layers">
-      <h3 id={id} className="evp-card__title"><Tx text={P.layersTitle} /></h3>
+      <h3 id={id} className={folded ? "sr-only" : "evp-card__title"}><Tx text={P.layersTitle} /></h3>
       <dl className="evp-legend__list">
         {rows.map((r) => (
           <div key={r.who} className="evp-legend__row">
@@ -83,18 +83,24 @@ export function hasFigures(model: PlainModel): boolean {
   return model.limit !== null || model.risky !== null || model.tricks !== null || model.honest !== null || model.judgeMiss !== null || model.speed.kind !== "absent";
 }
 
+/**
+ * The page opens on the headline and then a short list: what each layer adds, and the five things the numbers are about, each
+ * behind its title. Where Wally still gets it wrong stays open: the limits are not something to tap for.
+ */
 function Figures({ model }: { readonly model: PlainModel }): ReactElement {
   const wiring = model.wiringOnly;
   return (
     <>
       {wiring ? <WiringNote /> : null}
       <Hero model={model} />
-      <Legend model={model} />
-      {model.limit === null ? null : <LimitCard v={model.limit} wiring={wiring} />}
-      {model.risky === null ? null : <RiskyCard v={model.risky} kinds={model.riskyKinds} wiring={wiring} />}
-      {model.tricks === null ? null : <TricksCard v={model.tricks} wiring={wiring} />}
-      {model.honest === null ? null : <HonestCard v={model.honest} wiring={wiring} />}
-      <SpeedCard speed={model.speed} wiring={wiring} />
+      <div className="evp-folds">
+        <PlainFold id="layers" title={P.layersTitle}><Legend model={model} folded /></PlainFold>
+        {model.limit === null ? null : <PlainFold id="limit" title={P.limitTitle}><LimitCard v={model.limit} wiring={wiring} folded /></PlainFold>}
+        {model.risky === null ? null : <PlainFold id="risky" title={P.riskyTitle}><RiskyCard v={model.risky} kinds={model.riskyKinds} wiring={wiring} folded /></PlainFold>}
+        {model.tricks === null ? null : <PlainFold id="tricks" title={P.tricksTitle}><TricksCard v={model.tricks} wiring={wiring} folded /></PlainFold>}
+        {model.honest === null ? null : <PlainFold id="honest" title={P.honestTitle}><HonestCard v={model.honest} wiring={wiring} folded /></PlainFold>}
+        {model.speed.kind === "absent" ? null : <PlainFold id="speed" title={P.speedTitle}><SpeedCard speed={model.speed} wiring={wiring} folded /></PlainFold>}
+      </div>
       <WrongCard model={model} wiring={wiring} />
       <Tx as="p" text={practiceSentence().text} className="evp-foot" />
     </>

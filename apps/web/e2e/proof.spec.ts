@@ -28,10 +28,13 @@ test("Receipts: rows by day, filters, a sheet, and the deep link", async ({ page
   await expect(page.locator(".rc-day__title").first()).toBeVisible();
   await noSidewaysScroll(page);
   await page.getByRole("radio", { name: /Approved/ }).click();
-  const approved = page.locator('.rc-row__meta[data-state="approved"]').first();
-  await expect(approved).toBeVisible();
-  await expect(approved).toContainText(/Receipt \d/);
-  await approved.click();
+  // One purchase is one row: the item, where it ended up, its receipt number, and its steps behind a toggle.
+  const bought = page.locator('.rc-row__meta[data-state="paid"]').first();
+  await expect(bought).toBeVisible();
+  await expect(bought).toContainText("Paid · Receipt 2");
+  await expect(page.locator(".rc-purchase")).toHaveCount(1);
+  await expect(page.locator(".rc-purchase [data-steps-toggle]")).toContainText("3 steps");
+  await bought.click();
   const sheet = page.getByRole("dialog");
   await expect(sheet).toBeVisible();
   await expect(sheet.locator("details summary")).toHaveText("Show the details");

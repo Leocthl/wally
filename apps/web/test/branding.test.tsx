@@ -48,11 +48,15 @@ describe("rendered screens", () => {
     for (const svg of document.querySelectorAll("svg")) expect(svg.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("keeps the prototype footer and the SIMULATED rail line in the About sheet", async () => {
+  it("keeps the prototype footer and says the shop and the card are practice in the About sheet; Developer mode keeps the rail line", async () => {
     const h = await bootApp("#/budget");
     await h.user.click(screen.getByRole("button", { name: /About and settings/ }));
     expect(await screen.findByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeInTheDocument();
-    expect(screen.getByText("The rail is SIMULATED. No money moves.")).toBeInTheDocument();
+    expect(screen.getByText("The shop and the card are a safe practice version. No real money moves.")).toBeInTheDocument();
+    expect(screen.queryByText("The rail is SIMULATED. No money moves.")).toBeNull();
+    await h.user.click(screen.getByRole("switch", { name: /Show technical details/ }));
+    expect(await screen.findByText("The rail is SIMULATED. No money moves.")).toBeInTheDocument();
+    expect(screen.queryByText("The shop and the card are a safe practice version. No real money moves.")).toBeNull();
   });
 
   it("marks every Chinese run lang=zh-HK, after the app has shown every kind of content", async () => {

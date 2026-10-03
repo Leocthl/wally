@@ -4,9 +4,9 @@
 // same rules through the booth's reader (a test holds that). Amounts: HK$800 is the booth's ready-made budget [F20]; the
 // others are choices a visitor can change (as in screens/seal/examples.ts).
 import { DEFAULT_COMPILER_LIMITS } from "@wally/agent/compiler";
-import { formatHkd } from "../../domain/money";
+import { dollarsToMinor, formatHkd, minorToDollarsText } from "../../domain/money";
 import type { Profile } from "../../state/profile";
-import { CATEGORY_SLUGS, hkDay, moneyOf, monthEndDay, type RulesForm } from "../seal/sealModel";
+import { CATEGORY_SLUGS, cleanMoney, hkDay, moneyOf, monthEndDay, type RulesForm } from "../seal/sealModel";
 import type { Locale } from "../../ui/locale";
 
 export const PRESETS_HKD = [300, 500, 800, 1200] as const;
@@ -21,6 +21,8 @@ const TWO_WEEKS_DAYS = 14;
 const DATE_DEFAULT_DAYS = 7;
 /** The longest a budget may run (the compiler's limit, the one the Seal sentence reader cuts to). */
 const MAX_DAYS = DEFAULT_COMPILER_LIMITS.maxPeriodDays;
+/** The most a first budget may be: one card's limit [F1.ceiling], the compiler's budget ceiling (a larger typed amount is cut to it). */
+export const BUDGET_CEILING_MINOR = DEFAULT_COMPILER_LIMITS.ceilingMinor;
 
 export interface BudgetDraft {
   readonly amount: Preset | "custom";
@@ -73,11 +75,24 @@ export function untilOf(draft: BudgetDraft, now: Date): { readonly day: string; 
   return capUntil(draft.date, now);
 }
 
+/**
+ * A typed amount cut to the most one card can hold, and whether it was cut (the picker says so, as it does for a date that was
+ * cut). Text that is not an amount is left as it is: the field's own message says what is wrong with it. Never throws, whatever
+ * is pasted in (a 16-digit number is simply over the limit).
+ */
+export function capAmount(text: string, ceilingMinor: number = BUDGET_CEILING_MINOR): { readonly text: string; readonly capped: boolean } {
+  const clean = cleanMoney(text);
+  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return { text, capped: false };
+  const minor = dollarsToMinor(clean);
+  if (minor !== null && minor <= ceilingMinor) return { text, capped: false };
+  return { text: minorToDollarsText(ceilingMinor), capped: true };
+}
+
 const inSealOrder = (slugs: readonly string[]): readonly string[] => CATEGORY_SLUGS.filter((s) => slugs.includes(s));
 
 export function formOf(draft: BudgetDraft, now: Date): RulesForm {
   return {
-    amount: draft.amount === "custom" ? draft.custom : String(draft.amount),
+    amount: draft.amount === "custom" ? capAmount(draft.custom).text : String(draft.amount),
     categories: inSealOrder(draft.categories),
     verifiedOnly: draft.verifiedOnly,
     until: untilOf(draft, now).day,

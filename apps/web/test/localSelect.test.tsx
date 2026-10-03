@@ -53,10 +53,12 @@ describe("selectApi", () => {
 });
 
 describe("OnDeviceNote", () => {
-  it("says plainly that answers are recorded and nothing leaves the phone, in both languages", () => {
+  it("says plainly that this is a demo on the phone with sample shop data and nothing leaves it, in both languages", () => {
     render(<OnDeviceNote />);
     const note = screen.getByText(ON_DEVICE_NOTE);
     expect(note.closest("[data-api-mode]")).toHaveAttribute("data-api-mode", "local");
-    expect(note.closest("[data-api-mode]")?.querySelector('[lang="zh-HK"]')?.textContent).not.toBe("");
+    expect(note.closest("[data-api-mode]")?.querySelector('[lang="zh-HK"]')?.textContent).toBe("示範模式：Wally 喺你部手機上運行，用示範商店資料。資料不會離開你的手機。");
+    // A shopper's words: no "recorded answers" (it reads as a pretend AI), and no "on-device mode" jargon.
+    expect(note.textContent).not.toMatch(/recorded|on-device/i);
   });
 });

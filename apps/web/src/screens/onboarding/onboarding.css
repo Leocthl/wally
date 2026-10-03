@@ -19,8 +19,10 @@
   .onb { border-inline: 1px solid var(--c-line); box-shadow: var(--shadow-2); }
 }
 
-/* Top: where we are, and the way out. */
+/* Top: where we are, and the way out. It is after the step in the page (so Skip is not the last stop when the title has focus,
+   and not the first either) and first on the screen. */
 .onb-top {
+  order: -2;
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
@@ -35,6 +37,10 @@
 .onb-progress__seg[data-state="done"] { background: var(--c-primary); }
 .onb-progress__seg[data-state="now"] { flex-grow: 2; background: var(--c-primary); }
 .onb-skip { flex: none; margin-right: calc(-1 * var(--sp-2)); }
+/* Under the Skip link while Skip would seal the ready-made budget: what it does, said before the tap. In the flow, not sticky, so
+   it costs the short phones nothing once the person has scrolled on. */
+.onb-skiphint { order: -2; margin: 0; padding: 0 max(var(--gutter), var(--safe-right)) var(--sp-2) max(var(--gutter), var(--safe-left)); color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); text-align: right; }
+.onb-skiphint .fig-chip { margin-inline-start: var(--sp-2); vertical-align: middle; }
 
 /* Main column. */
 .onb-main { flex: 1; display: grid; align-content: start; gap: var(--sp-5); min-width: 0; padding: var(--sp-3) max(var(--gutter), var(--safe-right)) var(--sp-5) max(var(--gutter), var(--safe-left)); }
@@ -137,7 +143,6 @@
 /* Two buttons share the row on the narrowest phone: tighter sides so a label stays on one line. */
 .onb-actions__row .w-btn--lg { padding-inline: var(--sp-4); }
 .onb-actions__grow { flex: 1; min-width: 0; }
-.onb-skipnote { color: var(--c-ink-muted); font-size: var(--text-sm); text-align: center; }
 
 /* The quick tour: a ring on the target, a card above the tab bar. The page behind waits. */
 .tour { position: fixed; inset: 0; z-index: var(--z-dialog); }

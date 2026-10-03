@@ -395,7 +395,7 @@ describe("Proof (plain): around the card", () => {
     expect(screen.queryByRole("button", { name: "Save a copy of the receipts" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Export receipts" })).toBeNull();
     expect(screen.getByText("Prototype. Not affiliated with HKT, Tap & Go or Mastercard.")).toBeInTheDocument();
-    expect(screen.getByText("The rail is SIMULATED.")).toBeInTheDocument();
+    expect(screen.getByText("The shop and the card are a safe practice version. No real money moves.")).toBeInTheDocument();
   });
 
   it("saves the receipts as three files with plain names when the client can export", async () => {

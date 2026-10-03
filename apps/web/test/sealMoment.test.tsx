@@ -1,4 +1,4 @@
-// The seal moment: on Check and seal the lock closes where the person pressed, the haptic fires with it, the card reads
+// The seal moment: on Check and lock in the lock closes where the person pressed, the haptic fires with it, the card reads
 // Signed and the button Sealed; only then (after --dur-ceremony) the sealed screen takes over. Reduced motion (duration 0)
 // goes straight on. Back is disabled while it plays.
 import { render, screen, waitFor } from "@testing-library/react";
@@ -22,7 +22,7 @@ function firstRun() {
 async function toReview(user: ReturnType<typeof userEvent.setup>): Promise<void> {
   await user.click(await screen.findByRole("button", { name: /^Start/ }));
   await user.click(screen.getByRole("button", { name: /^Next/ }));
-  expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
 }
 
 describe("the seal moment", () => {
@@ -39,26 +39,26 @@ describe("the seal moment", () => {
     const { user } = firstRun();
     await toReview(user);
     expect(document.querySelector('.seal-lock[data-locked="false"]')).not.toBeNull();
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
     // The moment plays on this screen.
-    const sealed = await screen.findByRole("button", { name: "Sealed" });
+    const sealed = await screen.findByRole("button", { name: "Locked in" });
     expect(sealed).toHaveAttribute("aria-disabled", "true");
     expect(document.querySelector(".seal-review")).toHaveAttribute("data-sealed");
     expect(document.querySelector('.seal-lock[data-locked="true"]')).not.toBeNull();
     expect(document.querySelector(".seal-summary")).toHaveAttribute("data-signed");
     expect(screen.getByText("Signed")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Check and seal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Check and lock in" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
     expect(vibrate).toHaveBeenCalledWith([...HAPTIC_PATTERNS.success]);
     // Then the sealed screen, with the lock already settled (no second close).
-    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is sealed" }, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Your budget is locked in" }, { timeout: 3000 })).toBeInTheDocument();
     expect(document.querySelector(".seal-lock[data-settled]")).not.toBeNull();
   });
 
   it("goes straight to the sealed screen when the moment has no duration (reduced motion)", async () => {
     const { user } = firstRun();
     await toReview(user);
-    await user.click(screen.getByRole("button", { name: /Seal budget/ }));
-    await waitFor(() => expect(screen.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /Lock in budget/ }));
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeInTheDocument());
   });
 });

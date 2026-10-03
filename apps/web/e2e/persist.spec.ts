@@ -46,30 +46,38 @@ async function seal300(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { level: 1, name: "Top up your budget" })).toBeVisible();
   await page.getByRole("textbox", { name: /^Amount/ }).fill("300");
   await page.getByRole("button", { name: /^Next/ }).click();
-  await page.getByRole("button", { name: /Seal budget/ }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your budget is sealed" })).toBeVisible();
+  await page.getByRole("button", { name: /Lock in budget/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Your budget is locked in" })).toBeVisible();
   await page.getByRole("link", { name: /Go to your budget/ }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$300 left of HK$300, SIMULATED");
+}
+
+/** An idea on Home opens a preview first; its "Ask Wally to buy this" is what shops. */
+async function buyIdea(page: Page, id: string): Promise<void> {
+  await page.locator(`main [data-idea="${id}"]`).click();
+  await page.locator("[data-idea-buy]").click();
 }
 
 test("HK$300 sealed, socks bought, reload: the budget, the used card and the receipts are all still there", async ({ page }) => {
   await skipFirstRun(page);
   await seal300(page);
-  await page.locator('main [data-idea="socks"]').click();
+  await buyIdea(page, "socks");
   await expect(page).toHaveURL(/#\/wally$/);
   await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$120.");
 
   // Straight away, without waiting for the short pause before a save: the page going away writes the session.
   await page.reload();
   await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
-  await expect(page.locator('[data-api-mode="local"]')).toContainText("On-device mode");
+  await expect(page.locator('[data-api-mode="local"]')).toContainText("Demo mode");
   await expect(page.locator('[data-api-mode="local"]')).not.toContainText("session ended");
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Budget", exact: true }).click();
   await expect(meter(page)).toHaveAttribute("aria-valuetext", "HK$180 left of HK$300, SIMULATED");
   await expect(page.locator('[data-card-state="USED"]')).toHaveCount(1);
 
   await page.goto("/#/receipts");
-  await expect(page.getByText("Paid at Demo Apparel")).toHaveCount(1);
+  // One purchase is one row (its decision, card and charge are the "3 steps"); the seal is the other, and there is no second one.
+  await expect(page.getByText(/Ankle socks, 3 pairs/)).toHaveCount(1);
+  await expect(page.locator("[data-steps-toggle]")).toHaveText("3 steps");
   await expect(page.getByText("Budget sealed")).toHaveCount(1); // not a second one
   expect(await stored(page)).not.toBeNull();
 
@@ -87,7 +95,7 @@ test("HK$300 sealed, socks bought, reload: the budget, the used card and the rec
 test("Start the demo over forgets the session: nothing is stored, and a reload shows a fresh HK$800 budget with no cards", async ({ page }) => {
   await skipFirstRun(page);
   await seal300(page);
-  await page.locator('main [data-idea="socks"]').click();
+  await buyIdea(page, "socks");
   await expect(page.locator('[data-screen="wally"] [data-kind="exact"]')).toContainText("Charged the exact HK$120.");
   await page.reload();
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Budget", exact: true }).click();
