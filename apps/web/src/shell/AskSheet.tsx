@@ -13,8 +13,10 @@ import { Icon } from "../ui/icons";
 import { useLocale } from "../ui/locale";
 import { Sheet } from "../ui/Overlay";
 import { TryAsking } from "../screens/home/TryAsking";
+import { PhotoButton } from "../screens/photo/PhotoEntry";
 import { noteAsk } from "../screens/run/askEcho";
 import { useAsker, useProposer, useScenarioRunner } from "./actions";
+import { useShell } from "./ShellContext";
 import { useVoiceInput } from "./voice/useVoiceInput";
 import { VoiceButton, VoiceStatusLine } from "./voice/VoiceButton";
 
@@ -58,7 +60,7 @@ function TrickBox({ onSend, busy }: { readonly onSend: (text: string) => void; r
 }
 
 /** The natural-language field: Wally reads the request, the rules decide. Shown when this booth can take a typed ask. */
-function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly busy: boolean; readonly onSent: () => void }): ReactElement {
+function AskField({ onAsk, busy, onSent, onPhoto }: { readonly onAsk: AskWally; readonly busy: boolean; readonly onSent: () => void; readonly onPhoto?: ((file: File) => void) | undefined }): ReactElement {
   const { t } = useLocale();
   const { info } = useBoothContext();
   const [text, setText] = useState("");
@@ -84,7 +86,7 @@ function AskField({ onAsk, busy, onSent }: { readonly onAsk: AskWally; readonly 
         maxLength={ASK_MAX_CHARS}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        trailing={<><VoiceButton voice={voice} /><IconButton type="submit" variant="primary" label={t(UI["shell.askSend"])} icon={<Icon name="arrowUp" />} disabled={busy || trimmed.length === 0} /></>}
+        trailing={<><VoiceButton voice={voice} />{onPhoto ? <PhotoButton onFile={onPhoto} disabled={busy} /> : null}<IconButton type="submit" variant="primary" label={t(UI["shell.askSend"])} icon={<Icon name="arrowUp" />} disabled={busy || trimmed.length === 0} /></>}
       />
       <VoiceStatusLine voice={voice} />
     </form>
@@ -100,7 +102,8 @@ export interface AskSheetProps {
 
 export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement {
   const { t } = useLocale();
-  const { busy, info } = useBoothContext();
+  const { busy, info, api } = useBoothContext();
+  const { showPhoto } = useShell();
   const run = useScenarioRunner();
   const propose = useProposer();
   const asker = useAsker();
@@ -116,6 +119,8 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
         : undefined,
     [sender],
   );
+  // Show Wally a photo needs both halves: see() to read the picture and ask() to buy the pick.
+  const onPhoto = typeof api.see === "function" && info?.features?.ask === true ? showPhoto : undefined;
   const pick = (id: ScenarioId): void => {
     onClose();
     run(id);
@@ -127,10 +132,10 @@ export function AskSheet({ open, onClose, onAsk }: AskSheetProps): ReactElement 
   return (
     <Sheet open={open} onClose={onClose} title={t(UI["shell.askTitle"](BRAND.name))} description={t(UI["shell.askLead"])}>
       <div className="shell-ask">
-        {ask ? <AskField onAsk={ask} busy={busy} onSent={onClose} /> : info?.kind === "local" ? <p className="shell-ask__hint">{t(UI["shell.askLiveHint"])}</p> : null}
+        {ask ? <AskField onAsk={ask} busy={busy} onSent={onClose} onPhoto={onPhoto} /> : info?.kind === "local" ? <p className="shell-ask__hint">{t(UI["shell.askLiveHint"])}</p> : null}
         {/* The trick box first: it is what only this sheet offers (Budget already lists the scenarios as cards). */}
         <TrickBox onSend={send} busy={busy} />
-        <TryAsking onRun={pick} busy={busy} variant="pills" />
+        <TryAsking onRun={pick} busy={busy} variant="pills" {...(onPhoto ? { onPhoto } : {})} />
       </div>
     </Sheet>
   );

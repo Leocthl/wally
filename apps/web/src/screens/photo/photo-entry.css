@@ -1,0 +1,3 @@
+/* The hidden file input behind the camera button and the photo card. It must stay in the DOM and clickable by script; it is
+   never seen or reached by keyboard (the visible button is the control). */
+.photo-file { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; opacity: 0; pointer-events: none; }

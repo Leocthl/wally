@@ -6,6 +6,7 @@ import { UI } from "../../i18n/ui";
 import { cx } from "../../ui/cx";
 import { Icon } from "../../ui/icons";
 import { useLocale } from "../../ui/locale";
+import { PhotoCard } from "../photo/PhotoEntry";
 import { FAMILY_GROUP, TRY_GROUPS, TRY_ITEMS, type TryGroup } from "./tryCatalog";
 
 export interface TryAskingProps {
@@ -18,9 +19,11 @@ export interface TryAskingProps {
   readonly variant?: "cards" | "pills";
   /** Add Mum's budget (two scenarios) when the booth offers family budgets. Default off. */
   readonly family?: boolean;
+  /** Show Wally a photo: when given, the photo card leads the list and hands the chosen picture to this. Default off. */
+  readonly onPhoto?: (file: File) => void;
 }
 
-function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<Omit<TryAskingProps, "family">>): ReactElement {
+function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: TryGroup } & Required<Omit<TryAskingProps, "family" | "onPhoto">>): ReactElement {
   const { t } = useLocale();
   const id = useId();
   const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -42,9 +45,10 @@ function Group({ group, onRun, busy, headingLevel, variant }: { readonly group: 
   );
 }
 
-export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false }: TryAskingProps): ReactElement {
+export function TryAsking({ onRun, busy, headingLevel = 3, variant = "cards", family = false, onPhoto }: TryAskingProps): ReactElement {
   return (
     <div className={cx("home-try", `home-try--${variant}`)}>
+      {onPhoto ? <PhotoCard onFile={onPhoto} variant={variant} busy={busy} /> : null}
       {(family ? [...TRY_GROUPS, FAMILY_GROUP] : TRY_GROUPS).map((g) => (
         <Group key={g} group={g} onRun={onRun} busy={busy} headingLevel={headingLevel} variant={variant} />
       ))}

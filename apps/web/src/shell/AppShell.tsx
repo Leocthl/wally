@@ -1,6 +1,6 @@
 // The app shell: top bar, the routed screen, the bottom tabs with the raised Ask button, the Ask and About sheets, and
 // the connection and failure states. A phone-width column on wide screens; the presenter screen gets the full width.
-import { Suspense, useCallback, useEffect, useRef, useState, type MouseEvent, type ReactElement } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type MouseEvent, type ReactElement } from "react";
 import { BRAND } from "../brand";
 import { useBoothContext } from "../hooks/useBooth";
 import { navigate, routeHref, useRoute, type Route } from "../hooks/useRoute";
@@ -21,6 +21,9 @@ import { ShellBar } from "./ShellBar";
 import { ShellProvider } from "./ShellContext";
 import { useTheme } from "./theme";
 import "./shell.css";
+
+// Show Wally a photo: the sheet that reads a picture is its own chunk, loaded the first time a picture is chosen.
+const PhotoSheet = lazy(() => import("../screens/photo/PhotoSheet"));
 
 const PREFETCH_DELAY_MS = 1200;
 /** Screens that never show the tab bar: Seal is a focused flow, the presenter is a stage. */
@@ -104,6 +107,7 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
   const [theme, setTheme] = useTheme();
   const [asking, setAsking] = useState(false);
   const [about, setAbout] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
   const tabs = useTabs();
   useDocumentLang(locale);
   useFirstRunGate(route);
@@ -114,9 +118,14 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
   useEffect(() => {
     setAsking(false);
     setAbout(false);
+    setPhoto(null);
   }, [route.name]);
 
   const openAsk = useCallback(() => setAsking(true), []);
+  const showPhoto = useCallback((file: File) => {
+    setAsking(false);
+    setPhoto(file);
+  }, []);
   const openAbout = useCallback(() => setAbout(true), []);
   // Screens without a handle on the shell (Wally's idle and stopped states) ask for the sheet with a window event.
   useEffect(() => {
@@ -133,7 +142,7 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
   const failedToLoad = info === null && error !== null;
 
   return (
-    <ShellProvider openAsk={openAsk} openAbout={openAbout}>
+    <ShellProvider openAsk={openAsk} openAbout={openAbout} showPhoto={showPhoto}>
       <div className={cx("shell-app", wide && "shell-app--wide", tabbar && "shell-app--tabs")} data-route={route.name} lang={locale} data-chip-scope>
         <a className="sr-only" href="#main" onClick={skip}>{t(UI["shell.skip"])}</a>
         <ShellBar onAbout={openAbout} />
@@ -154,6 +163,11 @@ export function AppShell({ onRetry, suggestRules, onAsk }: AppShellProps): React
         ) : null}
         <AskSheet open={asking} onClose={() => setAsking(false)} {...(onAsk ? { onAsk } : {})} />
         <AboutSheet open={about} onClose={() => setAbout(false)} theme={theme} onTheme={setTheme} />
+        {photo !== null ? (
+          <Suspense fallback={null}>
+            <PhotoSheet file={photo} onClose={() => setPhoto(null)} onPickFile={showPhoto} />
+          </Suspense>
+        ) : null}
       </div>
     </ShellProvider>
   );

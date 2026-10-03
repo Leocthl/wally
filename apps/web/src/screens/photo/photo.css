@@ -1,0 +1,88 @@
+/* Show Wally a photo: the sheet that reads a picture. Tokens only; every duration is a --dur token; loops run only where the
+   person has not asked for reduced motion. Touch targets are at least --tap (44 px). */
+
+/* Wally is looking */
+.photo-looking { display: grid; justify-items: center; gap: var(--sp-4); padding: var(--sp-4) 0 var(--sp-5); text-align: center; }
+.photo-looking__frame { position: relative; width: 9rem; aspect-ratio: 3 / 4; overflow: hidden; border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface-sunken); }
+.photo-looking__img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-looking__scan { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, var(--c-accent-tint) 45%, var(--c-accent) 50%, var(--c-accent-tint) 55%, transparent 100%); opacity: 0.55; transform: translateY(-40%); }
+@media (prefers-reduced-motion: no-preference) {
+  .photo-looking__scan { animation: photo-scan var(--dur-idle) var(--ease-in-out) infinite alternate; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-looking__scan { transform: none; opacity: 0.18; }
+}
+@keyframes photo-scan { from { transform: translateY(-45%); } to { transform: translateY(45%); } }
+.photo-looking__title { font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.photo-looking__detail { color: var(--c-ink-muted); font-size: var(--text-sm); }
+
+/* The result */
+.photo { display: grid; gap: var(--sp-5); padding-bottom: var(--sp-2); }
+.photo-seen { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: start; }
+.photo-seen__img { display: block; width: 5.5rem; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-sunken); }
+.photo-seen__text { display: grid; gap: var(--sp-2); min-width: 0; }
+.photo-seen__label { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.photo-plates { display: grid; gap: var(--sp-1); }
+.photo-plates__title, .photo-group__title { font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--c-ink-muted); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.photo-plates__dots { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 0 calc(-1 * var(--sp-2)); }
+.photo-dot { position: relative; display: grid; place-items: center; width: var(--tap); height: var(--tap); padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; touch-action: manipulation; }
+.photo-dot__fill { width: 1.75rem; height: 1.75rem; border: 2px solid var(--c-line-strong); border-radius: 50%; transition: transform var(--dur-fast) var(--ease-out); }
+.photo-dot:active .photo-dot__fill { transform: scale(0.92); }
+.photo-dot[aria-pressed="true"] .photo-dot__fill { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+.photo-dot__check { position: absolute; right: 0.3rem; bottom: 0.3rem; display: none; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); }
+.photo-dot[aria-pressed="true"] .photo-dot__check { display: grid; }
+
+.photo-note { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--c-info-tint); color: var(--c-info-ink); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.photo-note svg { flex: none; margin-top: 0.1rem; }
+
+/* Chips */
+.photo-edit { display: grid; gap: var(--sp-4); }
+.photo-group { display: grid; gap: var(--sp-2); }
+.photo-group--attention .photo-group__title { color: var(--c-primary-ink); }
+.photo-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.photo-chip { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--tap); padding: 0 var(--sp-4); border: 1px solid var(--c-line-strong); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink); font: inherit; font-weight: var(--weight-medium); line-height: 1.2; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
+.photo-chip:active { background: var(--c-surface-sunken); }
+.photo-chip[aria-checked="true"], .photo-chip[aria-pressed="true"] { border-color: var(--c-primary); background: var(--c-primary-tint); color: var(--c-primary-ink); font-weight: var(--weight-semibold); }
+.photo-chip__swatch { flex: none; width: 1rem; height: 1rem; border: 1px solid var(--c-line-strong); border-radius: 50%; }
+.photo-chip__check { display: none; flex: none; }
+.photo-chip[aria-checked="true"] .photo-chip__check, .photo-chip[aria-pressed="true"] .photo-chip__check { display: inline-flex; }
+.photo-group--attention .photo-chip { border-color: var(--c-primary); }
+.photo-more { padding: var(--sp-1) var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); }
+.photo-more > summary { display: flex; align-items: center; justify-content: space-between; min-height: var(--tap); font-weight: var(--weight-semibold); cursor: pointer; list-style: none; }
+.photo-more > summary::-webkit-details-marker { display: none; }
+.photo-more > summary::after { content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-right: var(--sp-1); border-right: 2px solid var(--c-ink-muted); border-bottom: 2px solid var(--c-ink-muted); transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease-out); }
+.photo-more[open] > summary::after { transform: rotate(-135deg); }
+.photo-more__body { display: grid; gap: var(--sp-4); padding: var(--sp-2) 0 var(--sp-3); }
+
+/* The shop */
+.photo-shop { display: grid; gap: var(--sp-3); }
+.photo-shop__title { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: var(--lh-snug); }
+.photo-shop__empty { padding: var(--sp-4); border: 1px dashed var(--c-line-strong); border-radius: var(--r-lg); color: var(--c-ink-muted); text-align: center; }
+.photo-shop__note, .photo-privacy { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.photo-privacy { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.photo-privacy svg { flex: none; margin-top: 0.1rem; }
+.photo-matches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); transition: opacity var(--dur-fast) var(--ease-out); }
+.photo-matches[data-refreshing] { opacity: 0.6; }
+.photo-card { position: relative; min-width: 0; display: grid; align-content: start; gap: var(--sp-2); width: 100%; padding: var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.photo-card:active { transform: scale(0.98); }
+.photo-card[aria-checked="true"] { border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-primary); }
+.photo-card__art { display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--r-md); background: var(--c-surface-sunken); color: var(--c-ink); }
+.photo-card__art svg { width: 78%; height: auto; }
+.photo-card__name { padding: 0 var(--sp-1); font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.photo-card__more { display: grid; gap: var(--sp-1); padding: 0 var(--sp-1) var(--sp-1); justify-items: start; }
+.photo-card__shop, .photo-card__reason, .photo-card__ship { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.photo-card__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); }
+.photo-card__amount { font-weight: var(--weight-bold); font-variant-numeric: var(--num); }
+.photo-card__picked { position: absolute; top: var(--sp-3); right: var(--sp-3); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--c-primary); color: var(--c-on-primary); box-shadow: var(--shadow-1); }
+
+/* The buy bar (the sheet's footer) */
+.photo-buy { display: grid; gap: var(--sp-2); }
+.photo-buy__line { font-weight: var(--weight-semibold); line-height: var(--lh-snug); overflow-wrap: anywhere; }
+.photo-buy__shop { color: var(--c-ink-muted); font-weight: var(--weight-regular); }
+.photo-buy__note, .photo-buy__hint { color: var(--c-ink-muted); font-size: var(--text-sm); line-height: var(--lh-snug); }
+.photo-buy__hint { text-align: center; }
+
+@media (hover: hover) and (pointer: fine) {
+  .photo-chip:hover { border-color: var(--c-ink-muted); }
+  .photo-card:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-1); }
+}

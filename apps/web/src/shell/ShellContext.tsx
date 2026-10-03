@@ -11,6 +11,8 @@ export interface ShellApi {
   readonly openAsk: () => void;
   readonly openAbout: () => void;
   readonly startReset: () => void;
+  /** Show Wally a photo: opens the photo sheet on this picture (the sheet's chunk loads on first use). */
+  readonly showPhoto: (file: File) => void;
 }
 
 const ShellContext = createContext<ShellApi | null>(null);
@@ -39,7 +41,9 @@ function useResetWatch(): (from: string | null) => void {
   return setFrom;
 }
 
-export function ShellProvider({ openAsk, openAbout, children }: { readonly openAsk: () => void; readonly openAbout: () => void; readonly children: ReactNode }): ReactElement {
+const NO_PHOTO = (): void => undefined;
+
+export function ShellProvider({ openAsk, openAbout, showPhoto = NO_PHOTO, children }: { readonly openAsk: () => void; readonly openAbout: () => void; readonly showPhoto?: (file: File) => void; readonly children: ReactNode }): ReactElement {
   const booth = useBoothContext();
   const watch = useResetWatch();
   const { reset } = booth;
@@ -49,6 +53,6 @@ export function ShellProvider({ openAsk, openAbout, children }: { readonly openA
     navigate("budget");
     void reset();
   }, [watch, mandateId, reset]);
-  const api = useMemo<ShellApi>(() => ({ openAsk, openAbout, startReset }), [openAsk, openAbout, startReset]);
+  const api = useMemo<ShellApi>(() => ({ openAsk, openAbout, startReset, showPhoto }), [openAsk, openAbout, startReset, showPhoto]);
   return <ShellContext.Provider value={api}>{children}</ShellContext.Provider>;
 }

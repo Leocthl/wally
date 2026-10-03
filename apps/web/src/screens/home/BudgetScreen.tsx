@@ -11,6 +11,7 @@ import { useToast } from "../../ui/Toast";
 import { Wally } from "../../wally/Wally";
 import { attempt, revealConsole, useScenarioRunner } from "../../shell/actions";
 import { ResetDemo } from "../../shell/ResetDemo";
+import { useShell } from "../../shell/ShellContext";
 import { CardsSection } from "../console/CardsSection";
 import { ConsoleSection } from "../console/ConsoleSection";
 import { EscalationBanner } from "../console/EscalationBanner";
@@ -74,6 +75,7 @@ export function BudgetScreen(): ReactElement {
   const { t } = useLocale();
   const toast = useToast();
   const run = useFamilyRunner(useScenarioRunner());
+  const { showPhoto } = useShell();
   const focus = useRouteParam(PARAM.focus);
   const loaded = state.packet !== null && state.mandate !== null;
 
@@ -109,7 +111,7 @@ export function BudgetScreen(): ReactElement {
       <section className="home-block" aria-labelledby="home-try-title">
         <h2 id="home-try-title" className="home-block__title">{t(UI["home.tryAsking"])}</h2>
         <p className="home-block__lead">{t(UI["home.tryLead"])}</p>
-        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} />
+        <TryAsking onRun={run} busy={busy} family={booth.info?.features?.family === true} {...(typeof booth.api.see === "function" && booth.info?.features?.ask === true ? { onPhoto: showPhoto } : {})} />
         <div className="home-block__foot"><ResetDemo /></div>
       </section>
       <ConsoleSection active={active} busy={busy} onCancel={() => void cancel()} />
