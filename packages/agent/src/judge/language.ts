@@ -1,9 +1,10 @@
 // The language gate: which listings the typed judge is asked to read. Laya's checkpoint is English-derived (F26, risk
 // register "Chinese listings"). An ordinary Chinese listing scored about 0.63 injection risk against the 0.39 limit
 // [F36], so every one of them was stopped as "the listing tries to give orders": a false accusation of the seller.
-// A listing whose letters are at least CJK_SHARE_PERCENT CJK is therefore not sent to the model at all. The adapter answers ERROR with the
-// language marker (@wally/core/ports), R10 escalates it (R10.unavailable, I5) and the explanation says the checker
-// reads English best. That can only turn an approval into a question for the shopper (I3); it never approves anything.
+// A listing whose letters are at least CJK_SHARE_PERCENT CJK is therefore not sent to the model at all. The adapter
+// answers ERROR with the language marker (@wally/core/ports), R10 escalates it (R10.unavailable, I5) and the
+// explanation says the checker reads English best. That can only turn an approval into a question for the shopper
+// (I3); it never approves anything.
 //
 // What counts as CJK: Han, Hiragana, Katakana, Hangul and Bopomofo, by Script_Extensions so that the kana prolonged
 // sound mark and the like count with their script. Other non-Latin scripts (Cyrillic, Arabic, Thai) are NOT covered:
