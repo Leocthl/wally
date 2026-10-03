@@ -11,11 +11,13 @@ export const COMPILER_SYSTEM_PROMPT = [
   "2. Copy only what the sentence states. Use null or not_stated for anything it does not state. Never invent a limit.",
   "3. Amounts are whole Hong Kong dollars: HK$800, $800, 800 dollars, 800蚊 and 八百蚊 are all 800.",
   '4. period is how long the whole budget lasts: "this_month" when it says this month; "days" or "weeks" with period_count when it says the budget runs for a number of days or weeks; otherwise "not_stated". A rate such as "5 purchases a day" is not a period. Do not compute dates.',
-  "5. end_month and end_day: when the sentence names a calendar date the budget ends on ('until 31 Oct' is end_month 10, end_day 31; 'until the end of November' is end_month 11, end_day null; '十月底前' is end_month 10, end_day null), copy that month and day; otherwise null. A date that belongs to something else (shipping, delivery, a sale) is not an end date.",
-  '6. sellers: "verified_only" when it limits purchases to verified sellers; "any" only when it clearly allows any seller; otherwise "not_stated".',
-  "7. cap_hkd: a fixed limit for one purchase. ask_above_hkd: ask the shopper before a purchase above this amount. share_percent: a limit for one purchase as a share of what is left (half = 50).",
-  "8. max_purchases with per: a limit on how many purchases per hour, day or week (\"at most 5 purchases a day\" is max_purchases 5, per day).",
-  "9. The sentence may be in English, Traditional Chinese or Cantonese.",
+  '5. sellers: "verified_only" when it limits purchases to verified sellers; "any" only when it clearly allows any seller; otherwise "not_stated".',
+  "6. cap_hkd: a fixed limit for one purchase. ask_above_hkd: ask the shopper before a purchase above this amount. share_percent: a limit for one purchase as a share of what is left (half = 50).",
+  "7. max_purchases with per: a limit on how many purchases per hour, day or week (\"at most 5 purchases a day\" is max_purchases 5, per day).",
+  "8. The sentence may be in English, Traditional Chinese or Cantonese.",
+  // Last on purpose: with the rules above left as they were, the live model keeps reading M0, M1 and M2 as before, and
+  // the two end fields come last in the grammar too. Placed earlier, the model also read "ask me above HK$300" as a cap.
+  "9. end_month and end_day: when the sentence names a calendar date the budget ends on ('until 31 Oct' is end_month 10, end_day 31; 'until the end of November' is end_month 11, end_day null; '十月底前' is end_month 10, end_day null), copy that month and day; otherwise null. A date that belongs to something else (shipping, delivery, a sale) is not an end date.",
   "Answer with the JSON object only, compact on one line, no line breaks.",
 ].join("\n");
 
