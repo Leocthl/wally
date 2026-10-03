@@ -183,6 +183,8 @@
 .ev-big__row[data-baseline="B0"] .ev-big__fill { background: repeating-linear-gradient(45deg, var(--c-ink-muted) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--c-ink-muted); }
 .ev-big__row[data-baseline="B2"] .ev-big__fill { background: var(--c-primary); }
 .ev-big--stage .ev-big__track { display: none; }
+/* What the figure above counts, against what target T-H1 counts: one quiet line under the figures. */
+.ev-big__scope { margin: var(--sp-2) 0 0; font-size: var(--text-sm); color: var(--c-ink-muted); }
 
 /* Stage (presenter DM8): one full-width row per metric, B0 and B2 side by side, legible from the back of the room. */
 .ev--stage { gap: var(--sp-4); }
@@ -195,6 +197,7 @@
 .ev-big--stage .ev-big__pct { font-size: var(--text-2xl); }
 .ev-big--stage .ev-big__title { font-size: var(--text-2xl); }
 .ev-big--stage .ev-big__who { font-size: var(--text-lg); }
+.ev-big--stage .ev-big__scope { grid-column: 1 / -1; font-size: var(--text-lg); }
 .ev-big--stage .ev-big__card > .chip-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-1) var(--sp-5); }
 .ev-big--stage .ev-big__card > .chip-scope > .chip-scope__chips { grid-column: 1 / -1; margin-bottom: 0; }
 .ev-big--stage .ev-stamp { display: none; }

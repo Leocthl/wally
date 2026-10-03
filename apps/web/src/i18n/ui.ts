@@ -539,6 +539,7 @@ export const UI = {
     back: label("Proof", "證明"), // NEEDS-REVIEW
     headlineTitle: label("In this run, the full pipeline against a model-only gate", "今次運行：完整流程對比純模型把關"), // NEEDS-REVIEW
     headlineNote: label("Where the full pipeline is worse is shown as plainly as where it is better.", "完整流程較差的地方，會和較好的地方一樣清楚列出。"), // NEEDS-REVIEW
+    overspendScope: label("{b} overspent in {k} of {n} scenarios. Target {id} counts only the {m} deterministic ones.", "{b} 在 {n} 個情境中有 {k} 個超支。目標 {id} 只計其中 {m} 個確定性情境。"), // NEEDS-REVIEW
     acceptanceShort: label("Targets", "目標"), // NEEDS-REVIEW
     numbersTitle: label("The numbers", "數字"), // NEEDS-REVIEW
     judgeSection: label("The judge on its own", "判斷器本身"), // NEEDS-REVIEW
