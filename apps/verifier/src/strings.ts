@@ -26,7 +26,7 @@ export const S = {
   tamper: { en: "Tamper", zh: "竄改" }, // NEEDS-REVIEW zh-HK
   restore: { en: "Restore", zh: "還原" }, // NEEDS-REVIEW zh-HK
   pass: { en: "PASS", zh: "驗證通過" }, // NEEDS-REVIEW zh-HK
-  fail: { en: "FAIL", zh: "已中斷" }, // NEEDS-REVIEW zh-HK
+  fail: { en: "FAIL", zh: "驗證失敗" }, // NEEDS-REVIEW zh-HK
   notVerified: { en: "NOT VERIFIED", zh: "未驗證" }, // NEEDS-REVIEW zh-HK
   idle: {
     en: "Not verified yet. Load the demo log, or paste your receipts and their public keys, then press Verify.",
@@ -62,7 +62,7 @@ export const S = {
   },
   footer: {
     en: "Prototype. Not affiliated with HKT, Tap & Go or Mastercard. Demo keys are throwaway; the rail is SIMULATED.",
-    zh: "原型。與 HKT、Tap & Go 或 Mastercard 無關。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
+    zh: "原型作品。與 HKT、Tap & Go 及 Mastercard 並無關連。示範金鑰只供一次性使用；發卡層為模擬。", // NEEDS-REVIEW zh-HK
   },
 } as const satisfies Record<string, Bi>;
 
